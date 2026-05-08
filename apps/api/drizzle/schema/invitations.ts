@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
 import { invitationStatusEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum, sendStatusEnum } from './enums';
 import { users } from './users';
@@ -37,7 +37,9 @@ export const participants = pgTable('participants', {
   rsvpStatus: rsvpStatusEnum('rsvp_status').notNull().default('undecided'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  uniqueIndex('uq_participants_user_invitation').on(t.userId, t.invitationId),
+]);
 
 export const invitationSendLogs = pgTable('invitation_send_logs', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),

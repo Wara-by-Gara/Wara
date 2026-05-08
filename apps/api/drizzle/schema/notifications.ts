@@ -1,4 +1,5 @@
-import { pgTable, text, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, check } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { notificationTypeEnum, notificationTargetTypeEnum } from './enums';
 import { users } from './users';
@@ -14,11 +15,13 @@ export const notifications = pgTable('notifications', {
   isRead: boolean('is_read').notNull().default(false),
   readAt: timestamp('read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  check('check_notification_target', sql`(${t.targetType} IS NOT NULL AND ${t.targetId} IS NOT NULL) OR (${t.targetType} IS NULL AND ${t.targetId} IS NULL)`),
+]);
 
 export const notificationSettings = pgTable('notification_settings', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
   isRemind: boolean('is_remind').notNull().default(true),
   isFeedback: boolean('is_feedback').notNull().default(true),
   isInvitationDate: boolean('is_invitation_date').notNull().default(true),
