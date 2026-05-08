@@ -1,0 +1,33 @@
+import { pgTable, text, varchar, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { ulid } from 'ulid';
+import { genderEnum, userRoleEnum, socialProviderEnum } from './enums';
+
+export const users = pgTable('users', {
+  id: text('id').primaryKey().$defaultFn(() => ulid()),
+  email: varchar('email', { length: 255 }),
+  profileImageUrl: text('profile_image_url'),
+  name: varchar('name', { length: 100 }),
+  nickname: varchar('nickname', { length: 8 }),
+  birthYear: integer('birth_year'),
+  gender: genderEnum('gender'),
+  role: userRoleEnum('role').notNull().default('member'),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+export const socialAccounts = pgTable('social_accounts', {
+  id: text('id').primaryKey().$defaultFn(() => ulid()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  provider: socialProviderEnum('provider').notNull(),
+  providerAccountId: text('provider_account_id').notNull(),
+  rawProfile: jsonb('raw_profile'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type SocialAccount = typeof socialAccounts.$inferSelect;
+export type NewSocialAccount = typeof socialAccounts.$inferInsert;
