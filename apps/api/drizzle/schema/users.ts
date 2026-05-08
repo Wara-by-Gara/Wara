@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, integer, timestamp, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
 import { genderEnum, userRoleEnum, socialProviderEnum } from './enums';
 
@@ -25,7 +25,10 @@ export const socialAccounts = pgTable('social_accounts', {
   rawProfile: jsonb('raw_profile'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  uniqueIndex('uq_social_accounts_user_provider').on(t.userId, t.provider),
+  uniqueIndex('uq_social_accounts_provider_account').on(t.provider, t.providerAccountId),
+]);
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
