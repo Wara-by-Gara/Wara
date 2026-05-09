@@ -9,18 +9,20 @@
 
 ## 목차
 
-1. [Auth](#auth)
-2. [Users](#users)
-3. [Invitation Templates](#invitation-templates)
-4. [Invitations](#invitations)
-5. [Event Location](#event-location)
-6. [Participants](#participants)
-7. [Invitation Send Logs](#invitation-send-logs)
-8. [Missions](#missions)
-9. [Participant Locations](#participant-locations)
-10. [Photos](#photos)
-11. [Feedbacks](#feedbacks)
-12. [Notifications](#notifications)
+- [API 설계 문서](#api-설계-문서)
+  - [목차](#목차)
+  - [Auth](#auth)
+  - [Users](#users)
+  - [Invitation Templates](#invitation-templates)
+  - [Invitations](#invitations)
+  - [Event Location](#event-location)
+  - [Participants](#participants)
+  - [Invitation Send Logs](#invitation-send-logs)
+  - [Missions](#missions)
+  - [Participant Locations](#participant-locations)
+  - [Photos](#photos)
+  - [Feedbacks](#feedbacks)
+  - [Notifications](#notifications)
 
 ---
 
@@ -28,9 +30,11 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| POST | `/auth/login` | 소셜 로그인 | ❌ | provider + code → JWT 발급 |
-| POST | `/auth/logout` | 로그아웃 | ✅ | |
-| POST | `/auth/refresh` | 토큰 갱신 | ❌ | refresh token |
+| GET | `/auth/{provider}` | Kakao, Naver 로그인 redirect | ❌ | state 생성 → Redis 저장 → Kakao로 302 |
+| GET | `/auth/{provider}/callback` | Kakao, Naver OAuth callback | ❌ | code + state 검증 → JWT 발급 → 프론트로 302 |
+| POST | `/auth/apple/callback` | Apple OAuth callback | ❌ | Apple이 form-data로 POST. id_token + code + user(최초 1회만) |
+| POST | `/auth/logout` | 로그아웃 | ✅ | refresh token 무효화 |
+| POST | `/auth/refresh` | 토큰 갱신 | ❌ | refresh token → 새 access token |
 
 ---
 
@@ -38,11 +42,12 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
+| GET | `/users/:id` | 다른 사용자 프로필 조회 | ✅ | id, nickname, profileImageUrl, name만 반환 |
 | GET | `/users/me` | 내 프로필 조회 | ✅ | |
 | PATCH | `/users/me` | 내 프로필 수정 | ✅ | |
 | DELETE | `/users/me` | 회원 탈퇴 | ✅ | soft delete |
-| GET | `/users/me/social-accounts` | 연결된 소셜 계정 목록 | ✅ | |
-| DELETE | `/users/me/social-accounts/:provider` | 소셜 계정 연결 해제 | ✅ | provider: kakao \| naver \| apple |
+| GET | `/users/me/socials` | 연결된 소셜 계정 목록 | ✅ | |
+| DELETE | `/users/me/socials/:provider` | 소셜 계정 연결 해제 | ✅ | provider: kakao \| naver \| apple |
 
 ---
 
@@ -50,11 +55,11 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitation-templates` | 템플릿 목록 | ❌ | isActive=true 필터 |
-| GET | `/invitation-templates/:id` | 템플릿 단건 | ❌ | |
-| POST | `/invitation-templates` | 템플릿 생성 | ✅ | admin only |
-| PATCH | `/invitation-templates/:id` | 템플릿 수정 | ✅ | admin only |
-| DELETE | `/invitation-templates/:id` | 템플릿 삭제 | ✅ | admin only |
+| GET | `/invitation/templates` | 템플릿 목록 | ❌ | isActive=true 필터 |
+| GET | `/invitation/templates/:id` | 템플릿 상세 | ❌ | |
+| POST | `/invitation/templates` | 템플릿 생성 | ✅ | admin only |
+| PATCH | `/invitation/templates/:id` | 템플릿 수정 | ✅ | admin only |
+| DELETE | `/invitation/templates/:id` | 템플릿 삭제 | ✅ | admin only |
 
 ---
 
@@ -63,10 +68,9 @@
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
 | GET | `/invitations` | 내 초대장 목록 | ✅ | userId는 JWT 추출 |
-| GET | `/invitations/:id` | 초대장 단건 | ✅ | |
+| GET | `/invitations/:id` | 초대장 상세 | ❌ | 비로그인 접근 가능. RSVP는 별도 인증 필요 |
 | POST | `/invitations` | 초대장 생성 | ✅ | 생성자는 HOST로 participants 자동 등록 |
 | PATCH | `/invitations/:id` | 초대장 수정 | ✅ | HOST만 |
-| PATCH | `/invitations/:id/status` | 상태 전이 (active → closed) | ✅ | HOST만 |
 | DELETE | `/invitations/:id` | 초대장 삭제 | ✅ | HOST만 |
 
 ---
@@ -77,9 +81,9 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/event-location` | 행사 장소 조회 | ✅ | |
-| PUT | `/invitations/:invitationId/event-location` | 행사 장소 등록/수정 | ✅ | upsert, HOST만 |
-| DELETE | `/invitations/:invitationId/event-location` | 행사 장소 삭제 | ✅ | HOST만 |
+| GET | `/invitations/:invitationId/location` | 행사 장소 조회 | ✅ | |
+| PUT | `/invitations/:invitationId/location` | 행사 장소 등록/수정 | ✅ | upsert, HOST만 |
+| DELETE | `/invitations/:invitationId/location` | 행사 장소 삭제 | ✅ | HOST만 |
 
 ---
 
@@ -88,7 +92,7 @@
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
 | GET | `/invitations/:invitationId/participants` | 참가자 목록 | ✅ | |
-| POST | `/invitations/:invitationId/participants` | 참가 등록 (RSVP) | ✅ | memberRole: GUEST로 생성 |
+| POST | `/invitations/:invitationId/participants` | 참가 등록 (RSVP) | ✅ | |
 | PATCH | `/invitations/:invitationId/participants/:id/rsvp` | RSVP 상태 변경 | ✅ | 본인만. rsvpStatus: attending \| undecided \| absent \| cancelled |
 | DELETE | `/invitations/:invitationId/participants/:id` | 참가 취소 | ✅ | 본인 또는 HOST |
 
@@ -98,8 +102,8 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/send-logs` | 전송 이력 조회 | ✅ | HOST만 |
-| POST | `/invitations/:invitationId/send-logs` | 전송 이력 기록 | ✅ | channel: link \| kakao \| sms \| email \| dm |
+| GET | `/invitations/:invitationId/logs` | 전송 이력 조회 | ✅ | HOST만 |
+| POST | `/invitations/:invitationId/logs` | 전송 이력 기록 | ✅ | channel: link \| kakao \| sms \| email \| dm |
 
 ---
 
@@ -108,8 +112,8 @@
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
 | GET | `/invitations/:invitationId/missions` | 미션 목록 | ✅ | |
-| GET | `/invitations/:invitationId/missions/:id` | 미션 단건 | ✅ | |
 | POST | `/invitations/:invitationId/missions` | 미션 생성 | ✅ | HOST만 |
+| PATCH | `/invitations/:invitationId/missions/:id` | 미션 수정 | ✅ | HOST만. content 수정 |
 | DELETE | `/invitations/:invitationId/missions/:id` | 미션 삭제 | ✅ | HOST만 |
 
 ---
@@ -118,8 +122,8 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/participant-locations` | 참가자 위치 전체 조회 | ✅ | |
-| PUT | `/invitations/:invitationId/participant-locations/me` | 내 위치 업데이트 | ✅ | upsert |
+| GET | `/invitations/:invitationId/participant/locations` | 참가자 위치 전체 조회 | ✅ | |
+| PUT | `/invitations/:invitationId/participant/me/location` | 내 위치 업데이트 | ✅ | upsert |
 
 ---
 
@@ -127,9 +131,10 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
+| POST | `/photos/presigned-url` | S3 업로드용 presigned URL 발급 | ✅ | body: { contentType }. 반환: { presignedUrl, key } |
 | GET | `/invitations/:invitationId/photos` | 사진 목록 | ✅ | deletedAt IS NULL, 페이지네이션 |
-| GET | `/invitations/:invitationId/photos/:id` | 사진 단건 | ✅ | viewCount 증가 |
-| POST | `/invitations/:invitationId/photos` | 사진 업로드 | ✅ | missionId optional |
+| GET | `/invitations/:invitationId/photos/:id` | 사진 상세 | ✅ | viewCount 증가 |
+| POST | `/invitations/:invitationId/photos` | 사진 등록 | ✅ | S3 업로드 완료 후 key 등록. body: { key } |
 | DELETE | `/invitations/:invitationId/photos/:id` | 사진 삭제 | ✅ | soft delete, 본인만 |
 | POST | `/invitations/:invitationId/photos/:photoId/likes` | 사진 좋아요 | ✅ | 중복 시 409 |
 | DELETE | `/invitations/:invitationId/photos/:photoId/likes` | 사진 좋아요 취소 | ✅ | |
@@ -159,11 +164,12 @@
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
 | GET | `/notifications` | 알림 목록 | ✅ | 페이지네이션, userId JWT 추출 |
+| GET | `/notifications/unread` |  읽지 않는 알림 | ✅ | 카운트용 🔴 |
 | PATCH | `/notifications/:id/read` | 알림 읽음 처리 | ✅ | |
-| PATCH | `/notifications/read-all` | 전체 읽음 처리 | ✅ | |
+| PATCH | `/notifications/readAll` | 전체 읽음 처리 | ✅ | |
 | GET | `/notifications/settings` | 알림 설정 조회 | ✅ | |
 | PATCH | `/notifications/settings` | 알림 설정 수정 | ✅ | upsert |
 
 ---
 
-> **총 53개 엔드포인트**
+> **총 57개 엔드포인트**
