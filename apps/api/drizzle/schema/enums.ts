@@ -1,0 +1,30 @@
+import { pgEnum } from 'drizzle-orm/pg-core';
+
+export const genderEnum = pgEnum('gender', ['female', 'male']);
+export const userRoleEnum = pgEnum('user_role', ['member', 'admin']);
+
+export const socialProviderEnum = pgEnum('social_provider', ['kakao', 'naver', 'apple']);
+
+export const invitationStatusEnum = pgEnum('invitation_status', ['active', 'closed']);
+
+export const memberRoleEnum = pgEnum('member_role', ['HOST', 'GUEST']);
+export const rsvpStatusEnum = pgEnum('rsvp_status', ['attending', 'undecided', 'absent', 'cancelled']);
+
+export const sendChannelEnum = pgEnum('send_channel', ['link', 'kakao', 'sms', 'email', 'dm']);
+export const sendStatusEnum = pgEnum('send_status', ['sent', 'opened', 'responded', 'failed']);
+
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'remind',
+  'participantLocations',
+  'eventLocations',
+  'feedback',
+  'invitation_date',
+  'photo',
+]);
+export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
+  'photo',
+  'feedback',
+  'invitation',
+  'mission',
+  'participantLocations',
+]);
