@@ -1,0 +1,21 @@
+node_modules
+.git
+.gitignore
+.turbo
+
+# 각 앱의 빌드 결과물
+apps/api/dist
+apps/web/.next
+
+# 환경 파일 (컨테이너에 직접 주입해야 함)
+**/.env
+**/.env.*
+!**/.env.example
+
+# 로그
+**/*.log
+**/npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
