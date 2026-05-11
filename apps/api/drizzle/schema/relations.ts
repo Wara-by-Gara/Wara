@@ -53,7 +53,6 @@ export const participantsRelations = relations(participants, ({ one, many }) => 
 export const photosRelations = relations(photos, ({ one, many }) => ({
   participant: one(participants, { fields: [photos.participantId], references: [participants.id] }),
   invitation: one(invitations, { fields: [photos.invitationId], references: [invitations.id] }),
-  mission: one(missions, { fields: [photos.missionId], references: [missions.id] }),
   feedbacks: many(feedbacks),
   likes: many(photoLikes),
 }));
