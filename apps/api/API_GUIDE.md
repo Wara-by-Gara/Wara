@@ -529,6 +529,68 @@ pnpm --filter @wara/api build
 
 ---
 
+## Part 6: 모든 도메인의 기본 DTO 목록
+
+### 각 도메인별로 준비된 DTO
+
+모든 도메인이 동일한 Zod 패턴을 따릅니다. 다음은 현재 구현된 DTO 목록입니다:
+
+| 도메인 | 파일 | 용도 |
+|--------|------|------|
+| **auth** | `social-login.dto.ts` | 소셜 로그인 (kakao/naver/apple) |
+| **users** | `update-user.dto.ts` | 프로필 수정 (nickname, name, birthYear, gender, profileImageUrl) |
+| **invitations** | `create-invitation.dto.ts` | 초대장 생성 (title, description, mainImageKey, templateId, eventStartAt, isMissionEnabled) |
+|  | `update-invitation.dto.ts` | 초대장 수정 (위 필드 모두 optional) |
+| **participants** | `join-invitation.dto.ts` | 초대장 참가 (빈 body) |
+|  | `update-rsvp.dto.ts` | RSVP 상태 수정 (attending/undecided/absent/cancelled) |
+| **templates** | `create-template.dto.ts` | 템플릿 생성 (name, previewImageKey, theme, font, effect, isActive) |
+|  | `update-template.dto.ts` | 템플릿 수정 (위 필드 모두 optional) |
+| **locations** | `set-event-location.dto.ts` | 행사 위치 설정 (address, placeName, detailAddress, lat, lng, placeId) |
+|  | `update-participant-location.dto.ts` | 참가자 위치 업데이트 (lat, lng, accuracy, isArrived) |
+| **missions** | `create-mission.dto.ts` | 미션 생성 (content) |
+| **photos** | `upload-photo.dto.ts` | 사진 업로드 (imageKey) |
+| **feedbacks** | `create-feedback.dto.ts` | 피드백 생성 (content, invitationId\|photoId, parentId) |
+|  | `update-feedback.dto.ts` | 피드백 수정 (content만) |
+| **notifications** | `update-notification.dto.ts` | 알림 읽음 표시 (isRead) |
+|  | `update-notification-settings.dto.ts` | 알림 설정 (isRemind, isFeedback, isInvitationDate, isPhoto, isMission, isParticipantLocations, isEventLocations) |
+
+### DTO 사용 패턴
+
+모든 DTO는 동일한 구조를 따릅니다:
+
+```typescript
+// src/xxx/dto/yyy.dto.ts
+import { z } from 'zod';
+
+export const YyySchema = z.object({
+  field1: z.string().min(1),
+  field2: z.number().optional(),
+  field3: z.enum(['value1', 'value2']).optional(),
+});
+
+export type YyyDto = z.infer<typeof YyySchema>;
+```
+
+**Controller에서 사용**:
+```typescript
+@Post()
+create(
+  @Body(new ZodValidationPipe(YyySchema)) dto: YyyDto
+) {
+  return this.service.create(dto);
+}
+```
+
+### DTO 설계 원칙
+
+1. **CREATE DTO** — 클라이언트가 반드시 입력해야 하는 필드만
+2. **UPDATE DTO** — 수정 가능한 필드는 모두 optional (PATCH 의미론)
+3. **열거형 값** — Drizzle과 분리해서 Zod에 직접 정의
+4. **Validation** — 좌표 범위(lat -90~90, lng -180~180), 숫자 범위(accuracy >= 0) 등 포함
+5. **조건부 필드** — 예: feedbacks의 `invitationId | photoId` (둘 중 하나 필수) → `.refine()` 사용
+
+---
+
 ## 참고 자료
 
 - **Drizzle ORM**: https://orm.drizzle.team (쿼리 문법)
