@@ -35,7 +35,11 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
 
   // Cookie 파싱: Refresh Token 쿠키 읽기
-  app.use(cookieParser());
+  const cookieSecret = process.env.COOKIE_SECRET;
+  if (!cookieSecret) {
+    throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  }
+  app.use(cookieParser(cookieSecret));
 
   await app.listen(process.env.PORT ?? 3000);
 }
