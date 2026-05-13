@@ -3,23 +3,16 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UserRole } from '../enums/role.enum';
-import {
-  BLOCKLIST_REPOSITORY,
-  IBlocklistRepository,
-} from '../repositories/blocklist.repository.interface';
+import { BlocklistRepository } from '../repositories/blocklist.repository';
 
 @Injectable()
 export class BlocklistGuard implements CanActivate {
-  constructor(
-    @Inject(BLOCKLIST_REPOSITORY)
-    private readonly blocklistRepository: IBlocklistRepository,
-  ) {}
+  constructor(private readonly blocklistRepository: BlocklistRepository) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();

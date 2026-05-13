@@ -1,6 +1,5 @@
 import {
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,15 +7,12 @@ import { UserRole } from '../../common/enums/role.enum';
 import { UpdateUserStatusDto } from '../dto/update-user-status.dto';
 import {
   AdminUserView,
-  IUserRepository,
-  USER_REPOSITORY,
-} from '../repositories/user.repository.interface';
+  UserRepository,
+} from '../repositories/user.repository';
 
 @Injectable()
 export class AdminUsersService {
-  constructor(
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async updateStatus(
     actorId: string,

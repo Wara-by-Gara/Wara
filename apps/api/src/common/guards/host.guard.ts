@@ -3,7 +3,6 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,17 +10,13 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { MEMBER_ROLE_KEY } from '../decorators/member-role.decorator';
 import { MemberRole } from '../enums/member-role.enum';
-import {
-  IParticipantRepository,
-  PARTICIPANT_REPOSITORY,
-} from '../repositories/participant.repository.interface';
+import { ParticipantRepository } from '../repositories/participant.repository';
 
 @Injectable()
 export class HostGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @Inject(PARTICIPANT_REPOSITORY)
-    private readonly participantRepository: IParticipantRepository,
+    private readonly participantRepository: ParticipantRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

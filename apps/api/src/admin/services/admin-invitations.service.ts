@@ -1,16 +1,14 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateInvitationStatusDto } from '../dto/update-invitation-status.dto';
 import {
   AdminInvitationView,
-  IInvitationAdminRepository,
-  INVITATION_ADMIN_REPOSITORY,
-} from '../repositories/invitation-admin.repository.interface';
+  InvitationAdminRepository,
+} from '../repositories/invitation-admin.repository';
 
 @Injectable()
 export class AdminInvitationsService {
   constructor(
-    @Inject(INVITATION_ADMIN_REPOSITORY)
-    private readonly invitationRepository: IInvitationAdminRepository,
+    private readonly invitationRepository: InvitationAdminRepository,
   ) {}
 
   async updateStatus(
