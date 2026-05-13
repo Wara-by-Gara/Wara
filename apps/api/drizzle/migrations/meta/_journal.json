@@ -22,6 +22,13 @@
       "when": 1778227573879,
       "tag": "0002_parched_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778633991311,
+      "tag": "0003_unique_hydra",
+      "breakpoints": true
     }
   ]
 }
