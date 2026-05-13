@@ -1,9 +1,7 @@
 import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DRIZZLE } from '../database/database.module';
-import { users, socialAccounts } from '../../drizzle/schema';
-import type * as schema from '../../drizzle/schema';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import { users, socialAccounts, refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
 
 export interface UpsertSocialAccountParams {
   provider: 'kakao' | 'naver' | 'apple';
@@ -19,7 +17,7 @@ export interface UpsertSocialAccountResult {
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
   async upsertSocialAccount(params: UpsertSocialAccountParams): Promise<UpsertSocialAccountResult> {
     const { provider, providerAccountId, email, name } = params;
@@ -64,5 +62,41 @@ export class AuthRepository {
     } catch {
       throw new InternalServerErrorException('소셜 계정 처리 중 오류가 발생했습니다.');
     }
+  }
+
+  async saveRefreshToken(
+    data: Pick<NewRefreshToken, 'userId' | 'tokenHash' | 'expiresAt' | 'deviceInfo' | 'ipAddress'>,
+  ): Promise<void> {
+    await this.db.insert(refreshTokens).values(data);
+  }
+
+  async findValidRefreshToken(tokenHash: string) {
+    return await this.db.query.refreshTokens.findFirst({
+      where: (t, { and, eq, isNull, gt }) =>
+        and(
+          eq(t.tokenHash, tokenHash),
+          isNull(t.revokedAt),
+          gt(t.expiresAt, new Date()),
+        ),
+    });
+  }
+
+  async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          eq(refreshTokens.tokenHash, tokenHash),
+        ),
+      );
+  }
+
+  async findUserById(userId: string) {
+    return await this.db.query.users.findFirst({
+      where: (t, { eq, isNull, and }) =>
+        and(eq(t.id, userId), isNull(t.deletedAt)),
+    });
   }
 }
