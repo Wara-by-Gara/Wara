@@ -1,11 +1,11 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { AuthService } from '../auth.service';
+import { AppleService } from './apple.service';
 import { AppleCallbackDto, AppleCallbackSchema } from './apple-callback.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 
 @Controller('auth')
 export class AppleController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly appleService: AppleService) {}
 
   // Apple은 카카오/네이버와 달리 redirect 없이 바로 POST로 callback이 옴
   // Content-Type: application/x-www-form-urlencoded
@@ -13,7 +13,10 @@ export class AppleController {
   async appleCallback(
     @Body(new ZodValidationPipe(AppleCallbackSchema)) dto: AppleCallbackDto,
   ) {
+    const verified = await this.appleService.verifyAndExtract(dto);
+
     // TODO: 하림님(Repository) + 숙희님(JWT) 작업 머지 후 연결
-    // return this.authService.appleLogin(dto);
+    // return this.appleService.login(verified);
+    return verified;
   }
 }
