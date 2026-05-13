@@ -2,22 +2,17 @@ import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import {
-  INVITATION_REPOSITORY,
-  IInvitationRepository,
-} from '../repositories/invitation.repository.interface';
+import { InvitationRepository } from '../repositories/invitation.repository';
 
 @Injectable()
 export class PrivateInvitationGuard implements CanActivate {
   constructor(
-    @Inject(INVITATION_REPOSITORY)
-    private readonly invitationRepository: IInvitationRepository,
+    private readonly invitationRepository: InvitationRepository,
     private readonly jwtService: JwtService,
   ) {}
 
