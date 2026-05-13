@@ -41,6 +41,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.0.0",
     "@types/node": "^22.0.0",
+    "@types/passport-jwt": "^4.0.1",
     "@wara/eslint-config": "workspace:*",
     "@wara/tsconfig": "workspace:*",
     "dotenv-cli": "^11.0.0",
