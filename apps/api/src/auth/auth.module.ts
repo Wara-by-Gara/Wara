@@ -2,18 +2,21 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { AdminScopeGuard } from './guards/admin-scope.guard';
-import { BlocklistGuard } from './guards/blocklist.guard';
-import { HostGuard } from './guards/host.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PrivateInvitationGuard } from './guards/private-invitation.guard';
-import { RolesGuard } from './guards/roles.guard';
-import { BLOCKLIST_REPOSITORY } from './repositories/blocklist.repository.interface';
-import { MockBlocklistRepository } from './repositories/blocklist.repository.mock';
-import { INVITATION_REPOSITORY } from './repositories/invitation.repository.interface';
-import { MockInvitationRepository } from './repositories/invitation.repository.mock';
-import { PARTICIPANT_REPOSITORY } from './repositories/participant.repository.interface';
-import { MockParticipantRepository } from './repositories/participant.repository.mock';
+import { AdminScopeGuard } from '../common/guards/admin-scope.guard';
+import { BlocklistGuard } from '../common/guards/blocklist.guard';
+import { HostGuard } from '../common/guards/host.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PrivateInvitationGuard } from '../common/guards/private-invitation.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { AuthController } from './auth.controller';
+import { AuthRepository } from './auth.repository';
+import { AuthService } from './auth.service';
+import { BLOCKLIST_REPOSITORY } from '../common/repositories/blocklist.repository.interface';
+import { MockBlocklistRepository } from '../common/repositories/blocklist.repository.mock';
+import { INVITATION_REPOSITORY } from '../common/repositories/invitation.repository.interface';
+import { MockInvitationRepository } from '../common/repositories/invitation.repository.mock';
+import { PARTICIPANT_REPOSITORY } from '../common/repositories/participant.repository.interface';
+import { MockParticipantRepository } from '../common/repositories/participant.repository.mock';
 
 @Module({
   imports: [
@@ -26,7 +29,10 @@ import { MockParticipantRepository } from './repositories/participant.repository
       }),
     }),
   ],
+  controllers: [AuthController],
   providers: [
+    AuthService,
+    AuthRepository,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: AdminScopeGuard },
