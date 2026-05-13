@@ -1,19 +1,32 @@
 flowchart TD
-    A["Controller / Service 리턴값"] --> B["ResponseFormatInterceptor.intercept()"]
-    B --> C{"isPaginatedResult(value)?<br/><br/>data: Array<br/>+ meta.hasNext 존재"}
+    Ctrl["Controller 리턴값<br/>(Service 결과 그대로 통과)"] --> Interceptor["ResponseFormatInterceptor.intercept()<br/>★ main.ts useGlobalInterceptors —<br/>모든 endpoint 자동 적용 ★"]
+    Interceptor --> Check{"isPaginatedResult(value)?"}
 
-    C -- yes --> D["{ success: true,<br/>data: value.data,<br/>meta: value.meta }"]
-    C -- no --> E["{ success: true,<br/>data: value }"]
+    Check -- yes --> Pag["{ success: true,<br/>data: value.data,<br/>meta: value.meta }"]
+    Check -- no --> Single["{ success: true,<br/>data: value }"]
 
-    D --> F["HTTP Response"]
-    E --> F
+    Pag --> HTTP[HTTP Response]
+    Single --> HTTP
 
-    G["일반 controller<br/>return user;<br/>return [item, item];"] -.사용 예시.-> A
-    H["paginated controller<br/>return {<br/>  data: items,<br/>  meta: {<br/>    nextCursor,<br/>    hasNext,<br/>    total?<br/>  }<br/>};"] -.사용 예시.-> A
+    subgraph TypeGuard ["isPaginatedResult 타입 가드 조건 (전부 충족 시 yes)"]
+        direction TB
+        C1["1. typeof value === 'object'"]
+        C2["2. value !== null"]
+        C3["3. Array.isArray(value.data)"]
+        C4["4. typeof value.meta === 'object' && meta !== null"]
+        C5["5. 'hasNext' in value.meta"]
+    end
+    Check -.조건.-> TypeGuard
 
-    classDef paginated fill:#d4edda,stroke:#155724,color:#155724
+    subgraph FailureNote ["※ 실패 case는 별도 흐름"]
+        F["throw HttpException → AllExceptionsFilter/<br/>HttpExceptionFilter가 처리<br/>→ { success: false, error: { code, type, message },<br/>meta: { requestId, timestamp } }"]
+    end
+
+    classDef pag fill:#d4edda,stroke:#155724,color:#155724
     classDef single fill:#d1ecf1,stroke:#0c5460,color:#0c5460
-    classDef example fill:#fff3cd,stroke:#856404,color:#856404,font-size:11px
-    class D paginated
-    class E single
-    class G,H example
+    classDef global fill:#cfe2ff,stroke:#084298,color:#084298
+    classDef note fill:#f8f9fa,stroke:#6c757d,color:#6c757d,font-size:11px
+    class Pag pag
+    class Single single
+    class Interceptor global
+    class C1,C2,C3,C4,C5,F note
