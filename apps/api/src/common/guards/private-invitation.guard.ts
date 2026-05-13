@@ -9,6 +9,12 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { InvitationRepository } from '../repositories/invitation.repository';
 
+const INVITATION_ACCESS_TOKEN_HEADER = 'x-invitation-access-token';
+
+type InvitationAccessPayload = {
+  invitationId: string;
+};
+
 @Injectable()
 export class PrivateInvitationGuard implements CanActivate {
   constructor(
@@ -27,16 +33,24 @@ export class PrivateInvitationGuard implements CanActivate {
     const isPrivate = await this.invitationRepository.isPrivate(invitationId);
     if (!isPrivate) return true;
 
-    const accessToken = request.headers['x-access-token'];
+    const accessToken = request.headers[INVITATION_ACCESS_TOKEN_HEADER];
     if (typeof accessToken !== 'string' || accessToken.length === 0) {
       throw new UnauthorizedException('PASSWORD_REQUIRED');
     }
 
+    let payload: InvitationAccessPayload;
     try {
-      await this.jwtService.verifyAsync(accessToken);
-      return true;
+      payload = await this.jwtService.verifyAsync<InvitationAccessPayload>(
+        accessToken,
+      );
     } catch {
       throw new UnauthorizedException('PASSWORD_REQUIRED');
     }
+
+    if (payload.invitationId !== invitationId) {
+      throw new UnauthorizedException('PASSWORD_REQUIRED');
+    }
+
+    return true;
   }
 }
