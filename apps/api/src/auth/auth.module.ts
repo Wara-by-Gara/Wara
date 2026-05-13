@@ -10,9 +10,13 @@ import { AppleService } from './apple/apple.service';
 @Module({
   imports: [
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.getOrThrow<string>('JWT_SECRET'),
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        signOptions: {
+          expiresIn: config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800),
+        },
       }),
     }),
   ],
