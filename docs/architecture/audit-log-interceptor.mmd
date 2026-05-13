@@ -1,7 +1,7 @@
 sequenceDiagram
     autonumber
     participant Client as Admin User
-    participant Interceptor as AuditLogInterceptor
+    participant Interceptor as AuditLogInterceptor<br/>(APP_INTERCEPTOR 글로벌)
     participant Reflector
     participant Handler as Controller<br/>(@AdminAction)
     participant Repo as AuditLogRepository
@@ -17,18 +17,20 @@ sequenceDiagram
     else 메타데이터 있음
         Reflector-->>Interceptor: AdminActionMeta { action, targetType }
         Interceptor->>Handler: next.handle()
-        Handler-->>Interceptor: 정상 응답
-        Interceptor-->>Client: response (즉시 반환)
+        Handler-->>Interceptor: 응답값
 
-        Note over Interceptor,Repo: 비동기 기록 (tap operator,<br/>응답 지연 0)
+        Note over Interceptor: tap operator<br/>응답을 client에<br/>통과시키며<br/>동시에 side effect 실행<br/>(응답 지연 0)
 
-        Interceptor->>Interceptor: maskSensitive(req.body)<br/>password / token / secret → '***'
-        Interceptor->>Repo: insert({adminUserId, action,<br/>targetType, targetId,<br/>requestBody, responseStatus,<br/>ipAddress, userAgent})
+        Interceptor-->>Client: 응답 전달
+
+        Interceptor->>Interceptor: maskSensitive(req.body)<br/>password / token / secret / accessToken / refreshToken → '***'
+        Interceptor->>Interceptor: extractTargetId(req.params.id)
+        Interceptor->>Repo: insert({adminUserId: user?.id ?? 'unknown',<br/>action, targetType, targetId,<br/>requestBody (masked), responseStatus,<br/>ipAddress, userAgent})
 
         alt INSERT 성공
             Repo-->>Interceptor: void
         else INSERT 실패
             Repo--xInterceptor: Error (DB 장애 등)
-            Interceptor->>Logger: logger.error<br/>(응답에는 영향 X)
+            Interceptor->>Logger: logger.error<br/>(응답에는 이미 전달돼 영향 X)
         end
     end
