@@ -1,1 +1,6 @@
-pnpm install
+changed=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)
+
+if echo "$changed" | grep -qE "package\.json|pnpm-lock\.yaml"; then
+  echo "패키지 변경 감지 → pnpm install 실행"
+  pnpm install
+fi
