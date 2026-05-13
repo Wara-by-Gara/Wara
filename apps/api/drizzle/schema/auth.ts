@@ -9,6 +9,9 @@ export const refreshTokens = pgTable('refresh_tokens', {
   tokenHash: text('token_hash').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  deviceInfo: text('device_info'),
+  ipAddress: text('ip_address'),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('idx_refresh_tokens_user').on(t.userId),
