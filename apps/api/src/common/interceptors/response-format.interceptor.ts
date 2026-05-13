@@ -1,28 +1,29 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable, map } from 'rxjs';
+import { isPaginatedResult } from '../types/paginated-result.type';
 
 /**
- * 응답 형식 자동 래핑 인터셉터
- * SKILL Rule: Service에서 데이터만 return하면 interceptor가 자동으로 감쌈
+ * 응답 envelope 자동 래핑 인터셉터.
  *
- * 원본 Service 응답:
- *   return { id: '123', name: 'John' };
+ * - Service가 단일 데이터를 반환:
+ *     { id: '123' }  →  { success: true, data: { id: '123' } }
  *
- * 최종 HTTP 응답:
- *   { success: true, data: { id: '123', name: 'John' } }
+ * - Service가 PaginatedResult<T>를 반환 (cursor 페이지네이션):
+ *     { data: [...], meta: { nextCursor, hasNext, total? } }
+ *       →  { success: true, data: [...], meta: { ... } }
  *
- * main.ts에서 글로벌 등록:
- *   app.useGlobalInterceptors(new ResponseFormatInterceptor());
+ * main.ts에서 글로벌 등록 (`app.useGlobalInterceptors`).
  */
 @Injectable()
 export class ResponseFormatInterceptor implements NestInterceptor {
-  intercept(_: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(_: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      map(data => ({
-        success: true,
-        data,
-      })),
+      map((value) => {
+        if (isPaginatedResult(value)) {
+          return { success: true, data: value.data, meta: value.meta };
+        }
+        return { success: true, data: value };
+      }),
     );
   }
 }
