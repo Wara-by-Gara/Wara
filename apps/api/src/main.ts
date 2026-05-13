@@ -9,8 +9,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   // JWT_SECRET 없으면 서버 시작 즉시 종료
   // 하드코딩된 폴백 시크릿으로 실수로 배포되는 것을 방지
-  if (!process.env.JWT_SECRET) {
-    throw new Error('[보안] JWT_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  if (!process.env.JWT_ACCESS_SECRET) {
+    throw new Error('[보안] JWT_ACCESS_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
 
   const app = await NestFactory.create(AppModule);

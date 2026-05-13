@@ -1,86 +1,64 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, and, isNull, gt } from 'drizzle-orm';
-import { DRIZZLE } from '../database/database.module';
-import * as schema from '../../drizzle/schema';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import { refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  /**
-   * 유효한 Refresh Token 조회
-   * tokenHash로 조회 + revokedAt IS NULL (유효함) + expiresAt > now (만료 안 됨)
-   */
-  async findValidByTokenHash(tokenHash: string) {
-    const result = await this.db
-      .select()
-      .from(schema.refreshTokens)
-      .where(
-        and(
-          eq(schema.refreshTokens.tokenHash, tokenHash),
-          isNull(schema.refreshTokens.revokedAt),
-          gt(schema.refreshTokens.expiresAt, new Date()),
-        ),
-      )
-      .limit(1);
-
-    return result[0] ?? null;
+  async saveRefreshToken(
+    data: Pick<
+      NewRefreshToken,
+      'userId' | 'tokenHash' | 'expiresAt' | 'deviceInfo' | 'ipAddress'
+    >,
+  ): Promise<void> {
+    await this.db.insert(refreshTokens).values(data);
   }
 
-  /**
-   * Refresh Token 무효화 (soft delete)
-   * revokedAt을 현재 시간으로 설정
-   */
-  async revokeByTokenHash(tokenHash: string) {
+  async findValidRefreshToken(tokenHash: string) {
+    return await this.db.query.refreshTokens.findFirst({
+      where: (t, { and, eq, isNull, gt }) =>
+        and(
+          eq(t.tokenHash, tokenHash),
+          isNull(t.revokedAt),
+          gt(t.expiresAt, new Date()),
+        ),
+    });
+  }
+
+  async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
     await this.db
-      .update(schema.refreshTokens)
+      .update(refreshTokens)
       .set({ revokedAt: new Date() })
-      .where(eq(schema.refreshTokens.tokenHash, tokenHash));
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          eq(refreshTokens.tokenHash, tokenHash),
+        ),
+      );
   }
 
   /**
    * 사용자의 모든 Refresh Token 무효화 (전체 기기 로그아웃)
    * 해당 userId의 모든 유효한 토큰을 revoke
    */
-  async revokeAllByUserId(userId: string) {
+  async revokeAllByUserId(userId: string): Promise<void> {
     await this.db
-      .update(schema.refreshTokens)
+      .update(refreshTokens)
       .set({ revokedAt: new Date() })
       .where(
         and(
-          eq(schema.refreshTokens.userId, userId),
-          isNull(schema.refreshTokens.revokedAt),
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
         ),
       );
   }
 
-  /**
-   * 새 Refresh Token 저장
-   * tokenHash (해시된 토큰), expiresAt, 선택사항 deviceInfo/ipAddress
-   */
-  async createRefreshToken(data: {
-    userId: string;
-    tokenHash: string;
-    expiresAt: Date;
-    deviceInfo?: string;
-    ipAddress?: string;
-  }) {
-    const result = await this.db
-      .insert(schema.refreshTokens)
-      .values(data)
-      .returning();
-
-    return result[0];
-  }
-
-  /**
-   * Refresh Token 사용 기록 업데이트
-   * lastUsedAt을 현재 시간으로 설정
-   */
-  async updateLastUsedAt(tokenHash: string) {
-    await this.db
-      .update(schema.refreshTokens)
-      .set({ lastUsedAt: new Date() })
-      .where(eq(schema.refreshTokens.tokenHash, tokenHash));
+  async findUserById(userId: string) {
+    return await this.db.query.users.findFirst({
+      where: (t, { eq, isNull, and }) =>
+        and(eq(t.id, userId), isNull(t.deletedAt)),
+    });
   }
 }
