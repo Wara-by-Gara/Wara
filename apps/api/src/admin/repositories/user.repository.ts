@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserRole } from '../../common/enums/role.enum';
 
-export interface AdminUserView {
+export type AdminUserView = {
   id: string;
   email: string | null;
   name: string | null;
@@ -10,13 +10,13 @@ export interface AdminUserView {
   deletedAt: Date | null;
   promotedBy: string | null;
   promotedAt: Date | null;
-}
+};
 
-export interface UpdateUserStatusInput {
+export type UpdateUserStatusInput = {
   role?: UserRole;
   deleted?: boolean;
   promotedBy?: string;
-}
+};
 
 /**
  * Admin이 사용하는 user 조회/수정 Repository.

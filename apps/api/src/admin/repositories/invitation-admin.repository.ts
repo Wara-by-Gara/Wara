@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-export interface AdminInvitationView {
+export type AdminInvitationView = {
   id: string;
   userId: string;
   title: string;
   status: 'active' | 'closed';
   closedAt: Date | null;
   closedReason: string | null;
-}
+};
 
 /**
  * Admin이 사용하는 invitation 조회/강제 종료 Repository.
