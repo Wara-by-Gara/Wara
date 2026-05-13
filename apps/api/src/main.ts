@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -32,6 +33,9 @@ async function bootstrap() {
   // AllExceptionsFilter가 먼저 실행되어 모든 예외 처리
   // HttpExceptionFilter는 HttpException만 처리 (더 상세한 로직)
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
+  // Cookie 파싱: Refresh Token 쿠키 읽기
+  app.use(cookieParser());
 
   await app.listen(process.env.PORT ?? 3000);
 }
