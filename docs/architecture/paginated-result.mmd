@@ -1,0 +1,19 @@
+flowchart TD
+    A["Controller / Service 리턴값"] --> B["ResponseFormatInterceptor.intercept()"]
+    B --> C{"isPaginatedResult(value)?<br/><br/>data: Array<br/>+ meta.hasNext 존재"}
+
+    C -- yes --> D["{ success: true,<br/>data: value.data,<br/>meta: value.meta }"]
+    C -- no --> E["{ success: true,<br/>data: value }"]
+
+    D --> F["HTTP Response"]
+    E --> F
+
+    G["일반 controller<br/>return user;<br/>return [item, item];"] -.사용 예시.-> A
+    H["paginated controller<br/>return {<br/>  data: items,<br/>  meta: {<br/>    nextCursor,<br/>    hasNext,<br/>    total?<br/>  }<br/>};"] -.사용 예시.-> A
+
+    classDef paginated fill:#d4edda,stroke:#155724,color:#155724
+    classDef single fill:#d1ecf1,stroke:#0c5460,color:#0c5460
+    classDef example fill:#fff3cd,stroke:#856404,color:#856404,font-size:11px
+    class D paginated
+    class E single
+    class G,H example
