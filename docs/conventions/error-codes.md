@@ -60,7 +60,6 @@
 | code | HTTP | type | 발생 조건 |
 |---|---|---|---|
 | `INSUFFICIENT_ROLE` | 403 | authorization | `RolesGuard` 또는 `HostGuard`에서 `user.role` / `member_role` 매칭 실패 |
-| `INSUFFICIENT_SCOPE` | 403 | authorization | `AdminScopeGuard` — admin role은 있지만 JWT `scope`에 `'admin'` 없음 (위조 방지) |
 | `ACCESS_REVOKED` | 403 | authorization | `BlocklistGuard` — invitation_blocklists에 차단된 user (admin 제외) |
 
 ### Admin — 관리자 작업 (담당: 수훈)

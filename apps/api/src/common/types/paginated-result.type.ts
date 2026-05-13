@@ -1,13 +1,13 @@
-export interface PaginatedMeta {
+export type PaginatedMeta = {
   nextCursor: string | null;
   hasNext: boolean;
   total?: number;
-}
+};
 
-export interface PaginatedResult<T> {
+export type PaginatedResult<T> = {
   data: T[];
   meta: PaginatedMeta;
-}
+};
 
 export const isPaginatedResult = (
   value: unknown,
