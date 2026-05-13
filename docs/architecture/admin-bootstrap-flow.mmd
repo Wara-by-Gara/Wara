@@ -1,0 +1,28 @@
+flowchart TD
+    OAuth["OAuth Callback<br/>1조: 현제 / 민성 / 우진"] --> FindOrCreate["user = userRepo.findOrCreate(profile)"]
+    FindOrCreate --> Ensure["adminBootstrap.ensureAdminRoleIfEligible(user)"]
+    Ensure --> Check{"user.id ∈<br/>INITIAL_ADMIN_USER_IDS env?"}
+
+    Check -- no --> ReturnAsIs["user 그대로 반환"]
+    Check -- yes --> AlreadyAdmin{"user.role<br/>=== 'admin'?"}
+
+    AlreadyAdmin -- yes --> ReturnAsIs
+    AlreadyAdmin -- no --> Update["userRepo.updateRole(user.id, ADMIN)<br/>← DB UPDATE (1회, idempotent)"]
+    Update --> Log["logger.log<br/>'Initial admin promoted'"]
+    Log --> ReturnAdmin["role=admin user 반환"]
+
+    ReturnAsIs --> JWT["JwtService.sign(payload)<br/>← 숙희: scope = role==='admin' ? ['admin'] : []"]
+    ReturnAdmin --> JWT
+    JWT --> Response["클라이언트에 access/refresh 토큰 응답"]
+
+    Note1["env 변경 즉시 반영 X<br/>(다음 로그인 시 매칭)"]
+    Note2["강등은 자동으로 일어나지 않음<br/>(추가만 반영)"]
+    Note1 -.-> Check
+    Note2 -.-> AlreadyAdmin
+
+    classDef extn fill:#fff3cd,stroke:#856404,color:#856404
+    classDef db fill:#d1ecf1,stroke:#0c5460,color:#0c5460
+    classDef note fill:#f8f9fa,stroke:#6c757d,color:#6c757d,font-size:11px
+    class OAuth,JWT extn
+    class Update db
+    class Note1,Note2 note
