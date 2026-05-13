@@ -3,12 +3,14 @@ import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly repository: AuthRepository,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   private hashToken(token: string): string {
@@ -23,8 +25,11 @@ export class AuthService {
     const rawToken = randomBytes(40).toString('hex');
     const tokenHash = this.hashToken(rawToken);
 
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 14);
+    const refreshExpiresIn = this.config.get<number>(
+      'JWT_REFRESH_EXPIRES_IN',
+      1209600,
+    );
+    const expiresAt = new Date(Date.now() + refreshExpiresIn * 1000);
 
     await this.repository.saveRefreshToken({ userId, tokenHash, expiresAt });
 

@@ -5,7 +5,7 @@ import { and, eq } from 'drizzle-orm';
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject(DRIZZLE) private db: DrizzleDB) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
   async saveRefreshToken(data: {
     userId: string;
