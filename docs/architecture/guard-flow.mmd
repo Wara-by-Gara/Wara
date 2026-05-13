@@ -1,0 +1,19 @@
+flowchart TD
+    Req[HTTP Request] --> Public{"@Public?"}
+    Public -- yes --> Handler[Controller Handler]
+    Public -- no --> Jwt["JwtAuthGuard<br/>토큰 검증 + req.user 주입"]
+    Jwt -- "401 TOKEN_EXPIRED / TOKEN_INVALID" --> Reject1[Reject]
+    Jwt -- ok --> Roles["RolesGuard<br/>@Roles · @AdminOnly"]
+    Roles -- "403 INSUFFICIENT_ROLE" --> Reject2[Reject]
+    Roles -- ok --> EndpointGuards{"endpoint별 @UseGuards"}
+    EndpointGuards -- none --> Handler
+    EndpointGuards -- Blocklist --> Block["BlocklistGuard<br/>invitation_blocklists 조회"]
+    Block -- "403 ACCESS_REVOKED" --> Reject3[Reject]
+    Block -- ok --> Host["HostGuard<br/>@RequireMemberRole<br/>ParticipantRepository"]
+    Host -- "403 INSUFFICIENT_ROLE" --> Reject4[Reject]
+    Host -- ok --> Private["PrivateInvitationGuard<br/>x-invitation-access-token 검증"]
+    Private -- "401 PASSWORD_REQUIRED" --> Reject5[Reject]
+    Private -- ok --> Handler
+
+    classDef reject fill:#f8d7da,stroke:#c9302c,color:#721c24
+    class Reject1,Reject2,Reject3,Reject4,Reject5 reject
