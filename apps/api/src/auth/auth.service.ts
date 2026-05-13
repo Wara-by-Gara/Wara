@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { AuthRepository } from './auth.repository';
 
 @Injectable()
@@ -15,16 +16,24 @@ export class AuthService {
     }
 
     try {
+      // raw token을 해시로 변환 (DB에는 tokenHash만 저장)
+      const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
       // TODO(숙희): 숙희 Token 서비스에서 Refresh Token 검증
       // const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
       // const decoded = { userId: '...' };
 
-      // TODO(하림): 하림 Repository에서 DB의 Refresh Token 확인
-      // const storedToken = await this.repository.findByToken(refreshToken);
-      // if (!storedToken) throw new UnauthorizedException('Invalid refresh token');
+      // DB의 Refresh Token 확인 (유효한 것만: revokedAt IS NULL + expiresAt > now)
+      const storedToken = await this.repository.findValidByTokenHash(tokenHash);
+      if (!storedToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // 사용 기록 업데이트
+      await this.repository.updateLastUsedAt(tokenHash);
 
       // 임시: userId는 decoded에서 나올 것
-      const userId = 'TODO_userId_from_decoded';
+      const userId = storedToken.userId;
 
       // TODO(숙희): 새 Access Token 발급
       // const newAccessToken = await this.tokenService.generateAccessToken(userId);
@@ -40,7 +49,7 @@ export class AuthService {
 
   /**
    * 로그아웃: Refresh Token 무효화
-   * Cookie의 Refresh Token을 DB에서 삭제
+   * Cookie의 Refresh Token을 DB에서 revoke (soft delete)
    */
   async logout(refreshToken: string) {
     if (!refreshToken) {
@@ -48,8 +57,10 @@ export class AuthService {
     }
 
     try {
-      // TODO(하림): 하림 Repository에서 Refresh Token 삭제 (단건 로그아웃)
-      // await this.repository.deleteByToken(refreshToken);
+      const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
+      // Refresh Token 무효화 (revokedAt 설정)
+      await this.repository.revokeByTokenHash(tokenHash);
 
       return { message: 'Logged out successfully' };
     } catch (error) {
