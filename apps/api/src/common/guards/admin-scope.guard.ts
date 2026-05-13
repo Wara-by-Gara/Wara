@@ -7,22 +7,21 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UserRole } from '../enums/role.enum';
+import { ADMIN_SCOPE_KEY } from '../decorators/admin-only.decorator';
+
+const ADMIN_SCOPE_VALUE = 'admin';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class AdminScopeGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      ROLES_KEY,
+    const requireAdminScope = this.reflector.getAllAndOverride<boolean>(
+      ADMIN_SCOPE_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true;
-    }
+    if (!requireAdminScope) return true;
 
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
@@ -31,8 +30,8 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('TOKEN_INVALID');
     }
 
-    if (!requiredRoles.some((role) => role === user.role)) {
-      throw new ForbiddenException('INSUFFICIENT_ROLE');
+    if (!Array.isArray(user.scope) || !user.scope.includes(ADMIN_SCOPE_VALUE)) {
+      throw new ForbiddenException('INSUFFICIENT_SCOPE');
     }
 
     return true;
