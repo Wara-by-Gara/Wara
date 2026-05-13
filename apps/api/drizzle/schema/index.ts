@@ -1,5 +1,6 @@
 export * from './enums';
 export * from './users';
+export * from './auth';
 export * from './invitations';
 export * from './locations';
 export * from './missions';
