@@ -5,25 +5,29 @@ import { createHash, randomUUID } from 'crypto';
 import { AuthRepository } from '../auth.repository';
 import { KakaoLoginDto } from './kakao-login.dto';
 
-interface KakaoUserInfo {
-  id: number;
-  kakao_account?: {
-    email?: string;
-    profile?: {
-      nickname?: string;
-      profile_image_url?: string;
-    };
-  };
+class KakaoProfile {
+  nickname?: string;
+  profile_image_url?: string;
 }
 
-interface KakaoTokenResponse {
+class KakaoAccount {
+  email?: string;
+  profile?: KakaoProfile;
+}
+
+class KakaoUserInfo {
+  id: number;
+  kakao_account?: KakaoAccount;
+}
+
+class KakaoTokenResponse {
   access_token: string;
   token_type: string;
   refresh_token: string;
   expires_in: number;
 }
 
-export interface AuthTokensResult {
+export class AuthTokensResult {
   accessToken: string;
   refreshToken: string;
   isNew: boolean;
@@ -95,7 +99,11 @@ export class KakaoService {
       expiresAt: refreshExpiresAt,
     });
 
-    return { ...tokens, isNew: result.isNew };
+    const tokenResult = new AuthTokensResult();
+    tokenResult.accessToken = tokens.accessToken;
+    tokenResult.refreshToken = tokens.refreshToken;
+    tokenResult.isNew = result.isNew;
+    return tokenResult;
   }
 
   private async fetchKakaoProfile(accessToken: string): Promise<KakaoUserInfo> {
