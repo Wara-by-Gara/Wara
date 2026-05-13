@@ -13,10 +13,6 @@ export class AppleController {
   async appleCallback(
     @Body(new ZodValidationPipe(AppleCallbackSchema)) dto: AppleCallbackDto,
   ) {
-    const verified = await this.appleService.verifyAndExtract(dto);
-
-    // TODO: 하림님(Repository) + 숙희님(JWT) 작업 머지 후 연결
-    // return this.appleService.login(verified);
-    return verified;
+    return this.appleService.login(dto);
   }
 }
