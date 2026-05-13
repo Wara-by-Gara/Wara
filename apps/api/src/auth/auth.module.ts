@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { AdminScopeGuard } from '../common/guards/admin-scope.guard';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -32,7 +31,6 @@ import { AuthService } from './auth.service';
     AuthRepository,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
-    { provide: APP_GUARD, useClass: AdminScopeGuard },
     ParticipantRepository,
     BlocklistRepository,
     InvitationRepository,

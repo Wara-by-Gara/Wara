@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-export interface AuditLogEntry {
+export type AuditLogEntry = {
   adminUserId: string;
   action: string;
   targetType: string | null;
@@ -9,7 +9,7 @@ export interface AuditLogEntry {
   responseStatus: number;
   ipAddress: string | null;
   userAgent: string | null;
-}
+};
 
 /**
  * Admin 작업 감사 로그 Repository.

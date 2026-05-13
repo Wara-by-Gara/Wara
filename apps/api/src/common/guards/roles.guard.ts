@@ -31,7 +31,7 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('TOKEN_INVALID');
     }
 
-    if (!requiredRoles.some((role) => role === user.role)) {
+    if (!requiredRoles.includes(user.role)) {
       throw new ForbiddenException('INSUFFICIENT_ROLE');
     }
 
