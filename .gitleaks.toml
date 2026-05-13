@@ -1,0 +1,6 @@
+[allowlist]
+  description = "False positive allowlist"
+  commits = [
+    # NestJS 기본 README 템플릿에 포함된 CircleCI 예시 토큰 (실제 시크릿 아님)
+    "70dae19bcb2f91bd6e2441921213bbc85611a668",
+  ]
