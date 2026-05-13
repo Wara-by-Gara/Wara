@@ -1,7 +1,6 @@
 import {
   CallHandler,
   ExecutionContext,
-  Inject,
   Injectable,
   Logger,
   NestInterceptor,
@@ -15,9 +14,9 @@ import {
   AdminActionMeta,
 } from '../decorators/admin-action.decorator';
 import {
-  AUDIT_LOG_REPOSITORY,
-  IAuditLogRepository,
-} from '../repositories/audit-log.repository.interface';
+  AuditLogEntry,
+  AuditLogRepository,
+} from '../repositories/audit-log.repository';
 
 const SENSITIVE_FIELD_REGEX = /password|token|secret|access[_-]?token|refresh[_-]?token/i;
 const MASK = '***';
@@ -28,8 +27,7 @@ export class AuditLogInterceptor implements NestInterceptor {
 
   constructor(
     private readonly reflector: Reflector,
-    @Inject(AUDIT_LOG_REPOSITORY)
-    private readonly auditLogRepository: IAuditLogRepository,
+    private readonly auditLogRepository: AuditLogRepository,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -81,7 +79,7 @@ export class AuditLogInterceptor implements NestInterceptor {
     return result;
   }
 
-  private recordAsync(entry: Parameters<IAuditLogRepository['insert']>[0]): void {
+  private recordAsync(entry: AuditLogEntry): void {
     this.auditLogRepository.insert(entry).catch((err) => {
       this.logger.error(
         `Audit log insert failed (admin=${entry.adminUserId}, action=${entry.action})`,

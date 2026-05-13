@@ -1,11 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '../../common/enums/role.enum';
 import {
   AdminUserView,
-  IUserRepository,
-  USER_REPOSITORY,
-} from '../repositories/user.repository.interface';
+  UserRepository,
+} from '../repositories/user.repository';
 
 @Injectable()
 export class AdminBootstrapService {
@@ -14,7 +13,7 @@ export class AdminBootstrapService {
 
   constructor(
     configService: ConfigService,
-    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
+    private readonly userRepository: UserRepository,
   ) {
     const csv = configService.get<string>('INITIAL_ADMIN_USER_IDS', '');
     this.initialAdminIds = new Set(

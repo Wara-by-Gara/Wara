@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { users, socialAccounts } from './users';
+import { refreshTokens } from './auth';
 import {
   invitations,
   invitationTemplates,
@@ -14,6 +15,7 @@ import { notifications, notificationSettings } from './notifications';
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   socialAccounts: many(socialAccounts),
+  refreshTokens: many(refreshTokens),
   invitations: many(invitations),
   participants: many(participants),
   notifications: many(notifications),
@@ -21,6 +23,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.id],
     references: [notificationSettings.userId],
   }),
+}));
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, { fields: [refreshTokens.userId], references: [users.id] }),
 }));
 
 export const socialAccountsRelations = relations(socialAccounts, ({ one }) => ({
