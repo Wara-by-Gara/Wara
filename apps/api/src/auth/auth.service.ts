@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
@@ -7,6 +7,8 @@ import { AuthRepository } from './auth.repository';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly repository: AuthRepository,
     private readonly jwtService: JwtService,
@@ -45,11 +47,15 @@ export class AuthService {
     return rawToken;
   }
 
-  async refresh(rawRefreshToken: string) {
+  async refresh(
+    rawRefreshToken: string,
+    options?: { deviceInfo?: string; ipAddress?: string },
+  ) {
     const tokenHash = this.hashToken(rawRefreshToken);
     const stored = await this.repository.findValidRefreshToken(tokenHash);
 
     if (!stored) {
+      this.logger.warn('Refresh token not found or invalid');
       throw new UnauthorizedException('TOKEN_INVALID');
     }
 
@@ -57,9 +63,11 @@ export class AuthService {
 
     const user = await this.repository.findUserById(stored.userId);
     if (!user) {
-      throw new UnauthorizedException('TOKEN_INVALID');
+      this.logger.warn(`User not found: ${stored.userId}`);
+      throw new UnauthorizedException('USER_NOT_FOUND');
     }
 
+    this.logger.debug(`Token refreshed for user: ${user.id}`);
     const payload: JwtPayload = {
       id: user.id,
       role: user.role,
@@ -68,35 +76,22 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.issueAccessToken(payload),
-      this.issueRefreshToken(user.id),
+      this.issueRefreshToken(user.id, options),
     ]);
     return { accessToken, refreshToken };
   }
 
-  /**
-   * 로그아웃: Refresh Token 무효화
-   * Cookie의 Refresh Token을 DB에서 revoke (soft delete)
-   */
-  async logout(rawRefreshToken: string) {
-    if (!rawRefreshToken) {
-      throw new UnauthorizedException('Refresh token not provided');
+  async logout(rawRefreshToken: string): Promise<void> {
+    const tokenHash = this.hashToken(rawRefreshToken);
+    const stored = await this.repository.findValidRefreshToken(tokenHash);
+
+    // 이미 만료/무효화된 토큰 → idempotent: 로그아웃된 상태로 간주하고 성공 처리
+    if (!stored) {
+      this.logger.debug('Logout called with invalid or expired token (idempotent)');
+      return;
     }
 
-    try {
-      const tokenHash = this.hashToken(rawRefreshToken);
-
-      // 유효한 토큰 확인 후 userId 가져오기
-      const stored = await this.repository.findValidRefreshToken(tokenHash);
-      if (!stored) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      // Refresh Token 무효화 (revokedAt 설정)
-      await this.repository.revokeRefreshToken(stored.userId, tokenHash);
-
-      return { message: 'Logged out successfully' };
-    } catch (error) {
-      throw new UnauthorizedException('Failed to logout');
-    }
+    await this.repository.revokeRefreshToken(stored.userId, tokenHash);
+    this.logger.debug(`User logged out: ${stored.userId}`);
   }
 }
