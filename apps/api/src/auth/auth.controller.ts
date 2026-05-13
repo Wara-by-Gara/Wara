@@ -1,46 +1,48 @@
-import { Controller, Post, Res, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Public } from './../common/decorators/public.decorator';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 
-/**
- * 인증 컨트롤러
- *
- * Cookie 옵션 (모든 엔드포인트):
- * - httpOnly: true (XSS 방어)
- * - secure: true (HTTPS만, 프로덕션)
- * - sameSite: 'strict' (CSRF 방어)
- * - maxAge: 7일
- */
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { RefreshTokenDto, RefreshTokenSchema } from './dto/refresh-token.dto';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   /**
-   * Refresh Token으로 새 Access Token 발급
+   * Refresh Token으로 새 Access Token + 새 Refresh Token 발급
    * POST /auth/refresh
    *
-   * Cookie에서 refreshToken 읽기 → 검증 → 새 accessToken 발급 → 응답 body에 포함
+   * Body에서 refreshToken 읽기 → 검증 → 새 토큰들 발급 → 쿠키 설정
    */
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
-    @Req() req: Request,
+    @Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies['refreshToken'];
-    const result = await this.authService.refreshToken(refreshToken);
+    const result = await this.authService.refresh(body.refreshToken);
 
-    // 새 Refresh Token도 발급하는 경우 (선택사항)
-    // res.cookie('refreshToken', newRefreshToken, { ... });
+    // 새 Refresh Token을 httpOnly 쿠키로 설정
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+    });
 
-    return result;
+    // 응답에는 accessToken만 포함 (refreshToken은 쿠키로 관리)
+    return { accessToken: result.accessToken };
   }
 
   /**
    * 로그아웃: Refresh Token 무효화
    * POST /auth/logout
    *
-   * Cookie에서 refreshToken 읽기 → DB에서 삭제 → Cookie 삭제
+   * Cookie에서 refreshToken 읽기 → DB에서 revoke → Cookie 삭제
    */
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
