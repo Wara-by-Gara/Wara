@@ -15,7 +15,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.0.0",
+    "@wara/tsconfig": "workspace:*",
+    "@wara/eslint-config": "workspace:*",
     "typescript": "^5.7.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
