@@ -21,7 +21,10 @@ export class AuthService {
     return await this.jwtService.signAsync(payload);
   }
 
-  async issueRefreshToken(userId: string): Promise<string> {
+  async issueRefreshToken(
+    userId: string,
+    options?: { deviceInfo?: string; ipAddress?: string },
+  ): Promise<string> {
     const rawToken = randomBytes(40).toString('hex');
     const tokenHash = this.hashToken(rawToken);
 
@@ -31,7 +34,13 @@ export class AuthService {
     );
     const expiresAt = new Date(Date.now() + refreshExpiresIn * 1000);
 
-    await this.repository.saveRefreshToken({ userId, tokenHash, expiresAt });
+    await this.repository.saveRefreshToken({
+      userId,
+      tokenHash,
+      expiresAt,
+      deviceInfo: options?.deviceInfo,
+      ipAddress: options?.ipAddress,
+    });
 
     return rawToken;
   }
@@ -41,14 +50,14 @@ export class AuthService {
     const stored = await this.repository.findValidRefreshToken(tokenHash);
 
     if (!stored) {
-      throw new UnauthorizedException('토큰이 유효하지 않습니다');
+      throw new UnauthorizedException('TOKEN_INVALID');
     }
 
     await this.repository.revokeRefreshToken(stored.userId, tokenHash);
 
     const user = await this.repository.findUserById(stored.userId);
     if (!user) {
-      throw new UnauthorizedException('토큰이 유효하지 않습니다');
+      throw new UnauthorizedException('TOKEN_INVALID');
     }
 
     const payload: JwtPayload = {

@@ -1,21 +1,22 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { refreshTokens } from '../../drizzle/schema';
+import { refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
 import { and, eq } from 'drizzle-orm';
 
 @Injectable()
 export class AuthRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  async saveRefreshToken(data: {
-    userId: string;
-    tokenHash: string;
-    expiresAt: Date;
-  }): Promise<void> {
+  async saveRefreshToken(
+    data: Pick<
+      NewRefreshToken,
+      'userId' | 'tokenHash' | 'expiresAt' | 'deviceInfo' | 'ipAddress'
+    >,
+  ): Promise<void> {
     await this.db.insert(refreshTokens).values(data);
   }
 
-  async findValidRefreshToken( tokenHash: string) {
+  async findValidRefreshToken(tokenHash: string) {
     return await this.db.query.refreshTokens.findFirst({
       where: (t, { and, eq, isNull, gt }) =>
         and(
@@ -40,7 +41,8 @@ export class AuthRepository {
 
   async findUserById(userId: string) {
     return await this.db.query.users.findFirst({
-      where: (t, { eq }) => eq(t.id, userId),
+      where: (t, { eq, isNull, and }) =>
+        and(eq(t.id, userId), isNull(t.deletedAt)),
     });
   }
 }
