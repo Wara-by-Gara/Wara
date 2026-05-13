@@ -8,12 +8,16 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "turbo": "^2.9.10",
-    "prettier": "^3.4.2",
+    "@commitlint/config-conventional": "^21.0.1",
     "@types/node": "^22.0.0",
+    "commitlint": "^21.0.1",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "turbo": "^2.9.10",
     "typescript": "^5.7.0"
   },
   "engines": {
