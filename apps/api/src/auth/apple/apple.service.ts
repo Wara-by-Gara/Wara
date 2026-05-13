@@ -5,10 +5,12 @@ import { randomUUID } from 'crypto';
 import appleSignin from 'apple-signin-auth';
 import { AppleCallbackDto } from './apple-callback.dto';
 import { AuthRepository } from '../auth.repository';
+import { AuthService } from '../auth.service';
+import type { JwtPayload } from '../../common/types/jwt-payload.type';
 
 export interface AppleLoginResult {
-  userId: string;
-  isNew: boolean;
+  accessToken: string;
+  refreshToken: string;
 }
 
 @Injectable()
@@ -17,6 +19,7 @@ export class AppleService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly authRepository: AuthRepository,
+    private readonly authService: AuthService,
   ) {}
 
   generateState(): string {
@@ -37,18 +40,30 @@ export class AppleService {
       ? [dto.user.name.firstName, dto.user.name.lastName].filter(Boolean).join(' ')
       : undefined;
 
-    const result = await this.authRepository.upsertSocialAccount({
+    const { userId } = await this.authRepository.upsertSocialAccount({
       provider: 'apple',
       providerAccountId: payload.sub,
       email: payload.email ?? dto.user?.email,
       name,
     });
 
-    // TODO: 숙희님(JWT) 작업 머지 후 추가
-    // - access token + refresh token 발급
-    // - refresh token hash → refresh_tokens 테이블 저장
+    const user = await this.authRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException('유저 정보를 찾을 수 없습니다.');
+    }
 
-    return result;
+    const jwtPayload: JwtPayload = {
+      id: user.id,
+      role: user.role,
+      scope: user.role === 'admin' ? ['admin'] : [],
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.authService.issueAccessToken(jwtPayload),
+      this.authService.issueRefreshToken(userId),
+    ]);
+
+    return { accessToken, refreshToken };
   }
 
   private verifyState(state: string): void {
