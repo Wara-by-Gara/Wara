@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import appleSignin from 'apple-signin-auth';
 import { AppleCallbackDto } from './apple-callback.dto';
 import { AuthRepository } from '../auth.repository';
@@ -17,6 +18,13 @@ export class AppleService {
     private readonly config: ConfigService,
     private readonly authRepository: AuthRepository,
   ) {}
+
+  generateState(): string {
+    return this.jwtService.sign(
+      { nonce: randomUUID() },
+      { secret: this.config.getOrThrow<string>('JWT_SECRET'), expiresIn: '10m' },
+    );
+  }
 
   async login(dto: AppleCallbackDto): Promise<AppleLoginResult> {
     if (dto.state) {
