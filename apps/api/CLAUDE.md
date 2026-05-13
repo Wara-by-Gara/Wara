@@ -21,6 +21,7 @@
 - Controller → Service → Repository 레이어 순서 준수
 - Controller에서 비즈니스 로직 금지 → Service로 위임
 - DB 접근은 Repository에서만 → Service에서 직접 DB 접근 금지
+- Controller에서 비즈니스 로직 금지 → Service로 위임
 - DTO에 class-validator 필수
 - 권한 검증은 Guard로
 - 응답 구조 통일: 성공 `{ success, data, meta }` / 실패 `{ success, error, meta }`
