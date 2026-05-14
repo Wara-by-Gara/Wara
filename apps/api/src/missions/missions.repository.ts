@@ -12,18 +12,25 @@ import {
 } from '../../drizzle/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { MemberRole } from '../common/enums/member-role.enum';
-import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import { DRIZZLE, DrizzleDB, DrizzleTx } from '../database/database.module';
 
 export type MissionRow = typeof missions.$inferSelect;
+type DbExecutor = DrizzleDB | DrizzleTx;
 
 @Injectable()
 export class MissionsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
+  withTransaction<T>(fn: (tx: DrizzleTx) => Promise<T>): Promise<T> {
+    return this.db.transaction(fn);
+  }
+
   async findInvitationMissionEnabled(
     invitationId: string,
+    tx?: DrizzleTx,
   ): Promise<boolean | null> {
-    const rows = await this.db
+    const exec: DbExecutor = tx ?? this.db;
+    const rows = await exec
       .select({ isMissionEnabled: invitations.isMissionEnabled })
       .from(invitations)
       .where(eq(invitations.id, invitationId))
@@ -34,8 +41,10 @@ export class MissionsRepository {
   async findHostParticipantId(
     userId: string,
     invitationId: string,
+    tx?: DrizzleTx,
   ): Promise<string | null> {
-    const rows = await this.db
+    const exec: DbExecutor = tx ?? this.db;
+    const rows = await exec
       .select({ id: participants.id })
       .from(participants)
       .innerJoin(users, eq(participants.userId, users.id))
@@ -59,12 +68,16 @@ export class MissionsRepository {
       .orderBy(missions.createdAt);
   }
 
-  async create(values: {
-    invitationId: string;
-    participantId: string;
-    content: string;
-  }): Promise<MissionRow> {
-    const [row] = await this.db.insert(missions).values(values).returning();
+  async create(
+    values: {
+      invitationId: string;
+      participantId: string;
+      content: string;
+    },
+    tx?: DrizzleTx,
+  ): Promise<MissionRow> {
+    const exec: DbExecutor = tx ?? this.db;
+    const [row] = await exec.insert(missions).values(values).returning();
     if (!row) {
       throw new InternalServerErrorException(ErrorCode.DB_TRANSACTION_FAILED);
     }

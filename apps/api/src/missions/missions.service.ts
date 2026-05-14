@@ -55,27 +55,31 @@ export class MissionsService {
     userId: string,
     dto: CreateMissionDto,
   ): Promise<MissionResponse> {
-    const enabled =
-      await this.repository.findInvitationMissionEnabled(invitationId);
-    if (enabled === null) {
-      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
-    }
-    if (!enabled) {
-      throw new BadRequestException(ErrorCode.MISSION_NOT_ENABLED);
-    }
+    const created = await this.repository.withTransaction(async (tx) => {
+      const enabled = await this.repository.findInvitationMissionEnabled(
+        invitationId,
+        tx,
+      );
+      if (enabled === null) {
+        throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+      }
+      if (!enabled) {
+        throw new BadRequestException(ErrorCode.MISSION_NOT_ENABLED);
+      }
 
-    const participantId = await this.repository.findHostParticipantId(
-      userId,
-      invitationId,
-    );
-    if (!participantId) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
+      const participantId = await this.repository.findHostParticipantId(
+        userId,
+        invitationId,
+        tx,
+      );
+      if (!participantId) {
+        throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+      }
 
-    const created = await this.repository.create({
-      invitationId,
-      participantId,
-      content: dto.content,
+      return this.repository.create(
+        { invitationId, participantId, content: dto.content },
+        tx,
+      );
     });
     return toResponse(created);
   }
