@@ -81,6 +81,12 @@ export class AuthRepository {
     });
   }
 
+  async findRefreshTokenByHash(tokenHash: string) {
+    return await this.db.query.refreshTokens.findFirst({
+      where: (t, { eq }) => eq(t.tokenHash, tokenHash),
+    });
+  }
+
   async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
     await this.db
       .update(refreshTokens)
