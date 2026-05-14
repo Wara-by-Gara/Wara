@@ -33,14 +33,29 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+      if (!this.isValidPayload(payload)) {
+        throw new UnauthorizedException('TOKEN_INVALID');
+      }
       request.user = payload;
       return true;
     } catch (err) {
       if (err instanceof TokenExpiredError) {
         throw new UnauthorizedException('TOKEN_EXPIRED');
       }
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('TOKEN_INVALID');
     }
+  }
+
+  private isValidPayload(payload: unknown): payload is JwtPayload {
+    if (typeof payload !== 'object' || payload === null) return false;
+    const p = payload as Partial<JwtPayload>;
+    return (
+      typeof p.id === 'string' &&
+      p.id.length > 0 &&
+      typeof p.role === 'string' &&
+      Array.isArray(p.scope)
+    );
   }
 
   private extractToken(request: Request): string | null {
