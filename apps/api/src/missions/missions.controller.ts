@@ -32,7 +32,7 @@ export class MissionsController {
   constructor(private readonly missionsService: MissionsService) {}
 
   @Get()
-  list(
+  async list(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
   ) {
@@ -42,8 +42,7 @@ export class MissionsController {
   @Post()
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
-  @HttpCode(HttpStatus.CREATED)
-  create(
+  async create(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Body(new ZodValidationPipe(CreateMissionSchema)) dto: CreateMissionDto,
     @CurrentUser() user: JwtPayload,
@@ -54,8 +53,7 @@ export class MissionsController {
   @Patch(':id')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
-  @HttpCode(HttpStatus.OK)
-  update(
+  async update(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) missionId: string,
     @Body(new ZodValidationPipe(UpdateMissionSchema)) dto: UpdateMissionDto,
