@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, GatewayTimeoutException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
@@ -77,12 +77,20 @@ export class AppleService {
   }
 
   private async verifyIdToken(idToken: string) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
     try {
       return await appleSignin.verifyIdToken(idToken, {
         audience: this.config.getOrThrow<string>('APPLE_CLIENT_ID'),
       });
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new GatewayTimeoutException('Apple 인증 서버 응답 시간이 초과되었습니다.');
+      }
       throw new UnauthorizedException('유효하지 않은 Apple id_token입니다.');
+    } finally {
+      clearTimeout(timeout);
     }
   }
 }
