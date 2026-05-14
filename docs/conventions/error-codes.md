@@ -35,6 +35,11 @@
 
 ---
 
+## 규칙
+
+- 새 기능 구현 시 발생하는 에러는 반드시 `error-codes.ts`에 추가 후 사용
+- 에러 메시지 문자열 직접 사용 금지
+
 ## 새 에러 코드 추가 방법
 
 1. `apps/api/src/common/constants/error-codes.ts`에 상수 추가
