@@ -10,16 +10,12 @@ import { CreateMissionDto } from './dto/create-mission.dto';
 import { UpdateMissionDto } from './dto/update-mission.dto';
 import { MissionRow, MissionsRepository } from './missions.repository';
 
-/**
- * 응답 전용 미션 representation.
- * 내부 식별자(`participantId`)는 외부 노출하지 않는다.
- */
 export type MissionResponse = {
   id: string;
   invitationId: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 function toResponse(row: MissionRow): MissionResponse {
@@ -27,17 +23,11 @@ function toResponse(row: MissionRow): MissionResponse {
     id: row.id,
     invitationId: row.invitationId,
     content: row.content,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
-/**
- * 미션 도메인 비즈니스 로직.
- *
- * - POST/PATCH/DELETE의 HOST 자격 검증은 `HostGuard`가 담당.
- * - GET은 가드를 두지 않고 서비스가 직접 참가자 멤버십을 검증(IDOR 방지).
- */
 @Injectable()
 export class MissionsService {
   constructor(
@@ -47,10 +37,10 @@ export class MissionsService {
 
   async list(
     invitationId: string,
-    requesterUserId: string,
+    userId: string,
   ): Promise<MissionResponse[]> {
     const memberRole = await this.participantRepository.findMemberRole(
-      requesterUserId,
+      userId,
       invitationId,
     );
     if (!memberRole) {
@@ -62,7 +52,7 @@ export class MissionsService {
 
   async create(
     invitationId: string,
-    hostUserId: string,
+    userId: string,
     dto: CreateMissionDto,
   ): Promise<MissionResponse> {
     const enabled =
@@ -75,7 +65,7 @@ export class MissionsService {
     }
 
     const participantId = await this.repository.findHostParticipantId(
-      hostUserId,
+      userId,
       invitationId,
     );
     if (!participantId) {
@@ -92,12 +82,12 @@ export class MissionsService {
 
   async update(
     invitationId: string,
-    id: string,
+    missionId: string,
     dto: UpdateMissionDto,
   ): Promise<MissionResponse> {
     const updated = await this.repository.updateContent(
       invitationId,
-      id,
+      missionId,
       dto.content,
     );
     if (!updated) {
@@ -106,10 +96,10 @@ export class MissionsService {
     return toResponse(updated);
   }
 
-  async delete(invitationId: string, id: string): Promise<void> {
+  async delete(invitationId: string, missionId: string): Promise<void> {
     const deleted = await this.repository.deleteByIdInInvitation(
       invitationId,
-      id,
+      missionId,
     );
     if (!deleted) {
       throw new NotFoundException(ErrorCode.MISSION_NOT_FOUND);

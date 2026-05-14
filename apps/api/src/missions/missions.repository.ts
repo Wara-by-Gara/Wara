@@ -4,25 +4,18 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
-import { ErrorCode } from '../common/constants/error-codes';
-import { MemberRole } from '../common/enums/member-role.enum';
-import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import {
   invitations,
   missions,
   participants,
   users,
 } from '../../drizzle/schema';
+import { ErrorCode } from '../common/constants/error-codes';
+import { MemberRole } from '../common/enums/member-role.enum';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 export type MissionRow = typeof missions.$inferSelect;
 
-/**
- * 미션 도메인 데이터 접근 계층.
- *
- * - 스키마 참조: `apps/api/drizzle/schema/missions.ts`
- *   (id, invitation_id, participant_id, content, created_at, updated_at)
- * - mission 테이블에는 `deleted_at` 컬럼이 없어 hard delete로 동작.
- */
 @Injectable()
 export class MissionsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
@@ -38,10 +31,6 @@ export class MissionsRepository {
     return rows[0]?.isMissionEnabled ?? null;
   }
 
-  /**
-   * 호스트 유저의 participants row id를 조회한다.
-   * soft-deleted 유저는 제외 (users.deletedAt IS NULL).
-   */
   async findHostParticipantId(
     userId: string,
     invitationId: string,
@@ -62,7 +51,7 @@ export class MissionsRepository {
     return rows[0]?.id ?? null;
   }
 
-  findManyByInvitationId(invitationId: string): Promise<MissionRow[]> {
+  async findManyByInvitationId(invitationId: string): Promise<MissionRow[]> {
     return this.db
       .select()
       .from(missions)
