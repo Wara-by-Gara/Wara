@@ -27,14 +27,6 @@ import {
 } from './dto/update-mission.dto';
 import { MissionsService } from './missions.service';
 
-/**
- * 미션 엔드포인트.
- *
- * Path: `/invitations/:invitationId/missions[...]`
- * - 글로벌 `JwtAuthGuard`로 모든 라우트 인증 필요 (`@Public()` 미사용).
- * - GET: 멤버십 검증은 service에서 직접 수행.
- * - POST/PATCH/DELETE: HOST만 (`HostGuard` + `@RequireMemberRole(HOST)`).
- */
 @Controller('invitations/:invitationId/missions')
 export class MissionsController {
   constructor(private readonly missionsService: MissionsService) {}
@@ -65,10 +57,10 @@ export class MissionsController {
   @HttpCode(HttpStatus.OK)
   update(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @Param('id', ParseUlidPipe) id: string,
+    @Param('id', ParseUlidPipe) missionId: string,
     @Body(new ZodValidationPipe(UpdateMissionSchema)) dto: UpdateMissionDto,
   ) {
-    return this.missionsService.update(invitationId, id, dto);
+    return this.missionsService.update(invitationId, missionId, dto);
   }
 
   @Delete(':id')
@@ -77,8 +69,8 @@ export class MissionsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @Param('id', ParseUlidPipe) id: string,
+    @Param('id', ParseUlidPipe) missionId: string,
   ): Promise<void> {
-    await this.missionsService.delete(invitationId, id);
+    await this.missionsService.delete(invitationId, missionId);
   }
 }
