@@ -1,4 +1,4 @@
-import { Roles, ROLES_KEY } from './roles.decorator';
+import { Roles } from './roles.decorator';
 import { UserRole } from '../enums/role.enum';
 
 /**
@@ -9,5 +9,3 @@ import { UserRole } from '../enums/role.enum';
  * scope 기반 세분화 권한이 필요해지면 별도 Guard로 확장.
  */
 export const AdminOnly = () => Roles(UserRole.ADMIN);
-
-export { ROLES_KEY };
