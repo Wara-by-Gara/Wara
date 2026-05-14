@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
+import { UserRole } from '../common/enums/role.enum';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -76,7 +77,7 @@ export class AuthService {
 
     const payload: JwtPayload = {
       id: user.id,
-      role: user.role,
+      role: user.role as UserRole,
       scope: user.role === 'admin' ? ['admin'] : [],
     };
 

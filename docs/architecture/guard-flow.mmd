@@ -1,0 +1,27 @@
+flowchart TD
+    Req[HTTP Request] --> Public{"@Public?"}
+    Public -- yes --> Handler[Controller Handler]
+    Public -- no --> Jwt["JwtAuthGuard ★글로벌★<br/>토큰 검증 + req.user 주입"]
+    Jwt -- "401 TOKEN_EXPIRED / TOKEN_INVALID" --> Reject1[Reject]
+    Jwt -- ok --> Roles["RolesGuard ★글로벌★<br/>@Roles · @AdminOnly"]
+    Roles -- "403 INSUFFICIENT_ROLE" --> Reject2[Reject]
+    Roles -- ok --> Has{"endpoint별<br/>@UseGuards 있음?"}
+    Has -- no --> Handler
+    Has -- yes --> EpChain["등록 순서대로 Guard chain 실행"]
+    EpChain --> Handler
+
+    subgraph EndpointCatalog ["endpoint별 Guard 카탈로그 (선택 적용)"]
+        direction TB
+        BG["BlocklistGuard<br/>차단 사용자 검증 (invitation_blocklists)<br/>· 400 INVITATION_ID_REQUIRED<br/>· 403 ACCESS_REVOKED (admin 제외)"]
+        HG["HostGuard<br/>@RequireMemberRole — HOST 권한 검증<br/>· 400 INVITATION_ID_REQUIRED<br/>· 403 INSUFFICIENT_ROLE"]
+    end
+
+    EpChain -. "@UseGuards(BlocklistGuard, …)" .-> BG
+    EpChain -. "@UseGuards(HostGuard) + @RequireMemberRole(MemberRole.HOST)" .-> HG
+
+    classDef reject fill:#f8d7da,stroke:#c9302c,color:#721c24
+    classDef global fill:#cfe2ff,stroke:#084298,color:#084298
+    classDef catalog fill:#fff3cd,stroke:#856404,color:#856404
+    class Reject1,Reject2 reject
+    class Jwt,Roles global
+    class BG,HG catalog

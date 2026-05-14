@@ -8,6 +8,7 @@ import { AuthRepository } from '../auth.repository';
 import { AuthService } from '../auth.service';
 import type { JwtPayload } from '../../common/types/jwt-payload.type';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { UserRole } from '../../common/enums/role.enum';
 
 export interface AppleLoginResult {
   accessToken: string;
@@ -58,8 +59,8 @@ export class AppleService {
 
     const jwtPayload: JwtPayload = {
       id: user.id,
-      role: user.role,
-      scope: user.role === 'admin' ? ['admin'] : [],
+      role: user.role as UserRole,
+      scope: user.role === UserRole.ADMIN ? ['admin'] : [],
     };
 
     const [accessToken, refreshToken] = await Promise.all([
