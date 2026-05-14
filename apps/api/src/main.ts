@@ -28,9 +28,11 @@ async function bootstrap() {
   // 모든 응답을 { success: true, data: ... } 형식으로 자동 래핑
   app.useGlobalInterceptors(new ResponseFormatInterceptor());
 
-  // 에러 응답을 { success: false, statusCode, message } 형식으로 통일
-  // AllExceptionsFilter가 먼저 실행되어 모든 예외 처리
-  // HttpExceptionFilter는 HttpException만 처리 (더 상세한 로직)
+  // 에러 응답을 { success: false, error, meta } 형식으로 통일
+  // Nest 내부에서 useGlobalFilters 배열을 reverse 후 first-match로 선택하므로,
+  // 더 구체적인 필터(HttpExceptionFilter)를 "마지막"에 등록해야 우선 매칭됨.
+  // - HttpException → HttpExceptionFilter (구체 매칭)
+  // - 그 외 모든 예외 → AllExceptionsFilter (@Catch() catch-all)
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
