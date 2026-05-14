@@ -1,8 +1,9 @@
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
 
 const CODE_PATTERN = /^[A-Z][A-Z0-9_]+$/;
+const logger = new Logger('ErrorResponse');
 
 type ErrorType =
   | 'invalid_request'
@@ -81,27 +82,44 @@ function pickMessage(raw: unknown, status: number): string {
   return statusToDefaultCode(status);
 }
 
+/**
+ * `x-request-id` 헤더가 있으면 echo, 없으면 새 UUID 발급.
+ * 성공/실패 응답의 `meta.requestId`에 공통 사용.
+ */
+export function resolveRequestId(request: Request): string {
+  const header = request.headers['x-request-id'];
+  return typeof header === 'string' && header.length > 0 ? header : randomUUID();
+}
+
 export function sendErrorResponse(
   host: ArgumentsHost,
   status: number,
   raw: unknown,
+  stack?: string,
 ): void {
   const ctx = host.switchToHttp();
   const request = ctx.getRequest<Request>();
   const response = ctx.getResponse<Response>();
-  const headerRequestId = request.headers['x-request-id'];
-  const requestId =
-    typeof headerRequestId === 'string' && headerRequestId.length > 0
-      ? headerRequestId
-      : randomUUID();
+  const requestId = resolveRequestId(request);
+
+  const code = pickCode(raw, status);
+  const type = statusToType(status);
+  const message = pickMessage(raw, status);
+
+  if (status >= 500) {
+    logger.error(
+      `[${requestId}] ${request.method} ${request.originalUrl} → ${status} ${code}: ${message}`,
+      stack,
+    );
+  } else if (status >= 400) {
+    logger.warn(
+      `[${requestId}] ${request.method} ${request.originalUrl} → ${status} ${code}`,
+    );
+  }
 
   response.status(status).json({
     success: false,
-    error: {
-      code: pickCode(raw, status),
-      type: statusToType(status),
-      message: pickMessage(raw, status),
-    },
+    error: { code, type, message },
     meta: {
       requestId,
       timestamp: new Date().toISOString(),
