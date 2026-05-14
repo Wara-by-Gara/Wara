@@ -7,9 +7,3 @@ export type JwtPayload = {
   iat?: number;
   exp?: number;
 };
-
-declare module 'express' {
-  interface Request {
-    user?: JwtPayload;
-  }
-}
