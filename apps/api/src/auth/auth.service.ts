@@ -50,6 +50,10 @@ export class AuthService {
     const stored = await this.repository.findValidRefreshToken(tokenHash);
 
     if (!stored) {
+      const expired = await this.repository.findRefreshTokenByHash(tokenHash);
+      if (expired) {
+        throw new UnauthorizedException('TOKEN_EXPIRED');
+      }
       throw new UnauthorizedException('TOKEN_INVALID');
     }
 

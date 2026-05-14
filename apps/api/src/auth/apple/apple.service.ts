@@ -77,20 +77,22 @@ export class AppleService {
   }
 
   private async verifyIdToken(idToken: string) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new GatewayTimeoutException('Apple 인증 서버 응답 시간이 초과되었습니다.')), 5000),
+    );
 
     try {
-      return await appleSignin.verifyIdToken(idToken, {
-        audience: this.config.getOrThrow<string>('APPLE_CLIENT_ID'),
-      });
+      return await Promise.race([
+        appleSignin.verifyIdToken(idToken, {
+          audience: this.config.getOrThrow<string>('APPLE_CLIENT_ID'),
+        }),
+        timeoutPromise,
+      ]);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        throw new GatewayTimeoutException('Apple 인증 서버 응답 시간이 초과되었습니다.');
+      if (err instanceof GatewayTimeoutException) {
+        throw err;
       }
       throw new UnauthorizedException('유효하지 않은 Apple id_token입니다.');
-    } finally {
-      clearTimeout(timeout);
     }
   }
 }
