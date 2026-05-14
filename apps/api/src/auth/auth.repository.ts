@@ -2,6 +2,7 @@ import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common
 import { eq, and } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { users, socialAccounts, refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
+import { ErrorCode } from '../common/constants/error-codes';
 
 export interface UpsertSocialAccountParams {
   provider: 'kakao' | 'naver' | 'apple';
@@ -60,7 +61,10 @@ export class AuthRepository {
         return { userId: newUserId, isNew: true };
       });
     } catch {
-      throw new InternalServerErrorException('소셜 계정 처리 중 오류가 발생했습니다.');
+      throw new InternalServerErrorException({
+        code: ErrorCode.DB_TRANSACTION_FAILED,
+        message: '소셜 계정 처리 중 오류가 발생했습니다.',
+      });
     }
   }
 
