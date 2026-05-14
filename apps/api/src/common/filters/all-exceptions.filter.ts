@@ -16,6 +16,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? exception.message
           : 'Internal server error';
 
-    sendErrorResponse(host, status, raw);
+    const stack = exception instanceof Error ? exception.stack : undefined;
+
+    sendErrorResponse(host, status, raw, stack);
   }
 }
