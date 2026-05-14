@@ -32,6 +32,15 @@
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
 | `DB_TRANSACTION_FAILED` | 500 | DB 트랜잭션 실패 |
+| `INVITATION_NOT_FOUND` | 404 | 초대장 없음 또는 접근 권한 없음 |
+| `PARTICIPANT_NOT_FOUND` | 403 | 해당 초대장의 참가자가 아님 |
+
+## Missions
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `MISSION_NOT_FOUND` | 404 | 미션 없음 또는 해당 초대장에 속하지 않음 |
+| `MISSION_NOT_ENABLED` | 400 | 초대장의 미션 기능이 비활성화 상태 |
 
 ---
 
