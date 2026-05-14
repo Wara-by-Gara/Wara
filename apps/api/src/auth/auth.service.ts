@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '../common/constants/error-codes';
 
 @Injectable()
 export class AuthService {
@@ -52,16 +53,25 @@ export class AuthService {
     if (!stored) {
       const expired = await this.repository.findRefreshTokenByHash(tokenHash);
       if (expired) {
-        throw new UnauthorizedException('TOKEN_EXPIRED');
+        throw new UnauthorizedException({
+          code: ErrorCode.TOKEN_EXPIRED,
+          message: 'refresh token이 만료되었습니다.',
+        });
       }
-      throw new UnauthorizedException('TOKEN_INVALID');
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: '유효하지 않은 refresh token입니다.',
+      });
     }
 
     await this.repository.revokeRefreshToken(stored.userId, tokenHash);
 
     const user = await this.repository.findUserById(stored.userId);
     if (!user) {
-      throw new UnauthorizedException('TOKEN_INVALID');
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: '유효하지 않은 refresh token입니다.',
+      });
     }
 
     const payload: JwtPayload = {
