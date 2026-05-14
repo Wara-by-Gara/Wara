@@ -25,7 +25,7 @@ export class AppleService {
   generateState(): string {
     return this.jwtService.sign(
       { nonce: randomUUID() },
-      { secret: this.config.getOrThrow<string>('JWT_SECRET'), expiresIn: '10m' },
+      { secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'), expiresIn: '10m' },
     );
   }
 
@@ -69,7 +69,7 @@ export class AppleService {
   private verifyState(state: string): void {
     try {
       this.jwtService.verify(state, {
-        secret: this.config.getOrThrow<string>('JWT_SECRET'),
+        secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
       });
     } catch {
       throw new UnauthorizedException('유효하지 않은 state입니다.');
