@@ -9,6 +9,8 @@ export interface UpsertSocialAccountParams {
   providerAccountId: string;
   email?: string;
   name?: string;
+  profileImageUrl?: string;
+  rawProfile?: unknown;
 }
 
 export interface UpsertSocialAccountResult {
@@ -21,7 +23,7 @@ export class AuthRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
   async upsertSocialAccount(params: UpsertSocialAccountParams): Promise<UpsertSocialAccountResult> {
-    const { provider, providerAccountId, email, name } = params;
+    const { provider, providerAccountId, email, name, profileImageUrl } = params;
 
     try {
       return await this.db.transaction(async (tx) => {
@@ -47,7 +49,7 @@ export class AuthRepository {
 
         const inserted = await tx
           .insert(users)
-          .values({ email, name })
+          .values({ email, name, profileImageUrl })
           .returning({ id: users.id });
 
         const newUserId = inserted[0]!.id;

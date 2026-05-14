@@ -13,6 +13,8 @@ import { AppleController } from './apple/apple.controller';
 import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
 import { AppleService } from './apple/apple.service';
+import { KakaoController } from './kakao/kakao.controller';
+import { KakaoService } from './kakao/kakao.service';
 
 @Module({
   imports: [
@@ -31,11 +33,12 @@ import { AppleService } from './apple/apple.service';
       }),
     }),
   ],
-  controllers: [AuthController, AppleController],
+  controllers: [AuthController, AppleController, KakaoController],
   providers: [
     AuthService,
     AuthRepository,
     AppleService,
+    KakaoService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     ParticipantRepository,
