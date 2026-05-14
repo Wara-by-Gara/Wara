@@ -93,6 +93,7 @@
 | `SERVICE_UNAVAILABLE` | 503 | service_unavailable | 외부 의존성 일시 장애 |
 | `RATE_LIMIT_EXCEEDED` | 429 | rate_limit | 호출 빈도 초과 |
 | `CONFLICT` | 409 | conflict | 상태 충돌 (중복 생성, 동시 수정) |
+| `NOT_FOUND` | 404 | not_found | 도메인별 NotFoundException이 UPPER_SNAKE_CASE message 없이 throw됐을 때 fallback |
 | `FORBIDDEN` | 403 | authorization | 일반 권한 거부 fallback (구체적 코드가 없을 때) |
 | `UNAUTHENTICATED` | 401 | authentication | 인증 누락 fallback |
 
