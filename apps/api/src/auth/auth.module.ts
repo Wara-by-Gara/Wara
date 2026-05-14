@@ -23,6 +23,10 @@ import { AuthService } from './auth.service';
         secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
         signOptions: {
           expiresIn: config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800),
+          algorithm: 'HS256',
+        },
+        verifyOptions: {
+          algorithms: ['HS256'],
         },
       }),
     }),
@@ -44,7 +48,6 @@ import { AuthService } from './auth.service';
     HostGuard,
     BlocklistGuard,
     PrivateInvitationGuard,
-    JwtModule,
     ParticipantRepository,
     BlocklistRepository,
     InvitationRepository,
