@@ -53,7 +53,6 @@
 |---|---|---|---|
 | `TOKEN_EXPIRED` | 401 | authentication | `JwtService.verifyAsync()`가 `TokenExpiredError` |
 | `TOKEN_INVALID` | 401 | authentication | JWT 서명 검증 실패 또는 토큰 누락 (헤더 + 쿠키 모두 없음) |
-| `PASSWORD_REQUIRED` | 401 | authentication | private invitation 접근 토큰이 없거나 무효 |
 
 ### Authorization — Guard 인가 (담당: 수훈)
 
