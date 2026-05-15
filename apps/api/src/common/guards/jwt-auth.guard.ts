@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { TokenExpiredError } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { JwtStrategy } from 'src/auth/strategies/jwt.strategy';
+import { JwtStrategy } from '../../auth/strategies/jwt.strategy';
 import type { JwtPayload } from '../types/jwt-payload.type';
 
 @Injectable()

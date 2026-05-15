@@ -1,7 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
-import { DRIZZLE } from '../database/database.module';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import * as schema from '../../drizzle/schema';
+import type { rsvpStatusEnum } from '../../drizzle/schema';
+
+type RsvpStatus = (typeof rsvpStatusEnum.enumValues)[number];
 
 /**
  * 참가자 레포지토리 — DB 쿼리만 담당
@@ -12,7 +15,7 @@ import * as schema from '../../drizzle/schema';
  */
 @Injectable()
 export class ParticipantsExampleRepository {
-  constructor(@Inject(DRIZZLE) private db: any) {}
+  constructor(@Inject(DRIZZLE) private db: DrizzleDB) {}
 
   async findAllByInvitation(invitationId: string) {
     return this.db
@@ -59,7 +62,7 @@ export class ParticipantsExampleRepository {
     return result[0];
   }
 
-  async updateRsvpStatus(id: string, rsvpStatus: string) {
+  async updateRsvpStatus(id: string, rsvpStatus: RsvpStatus) {
     const result = await this.db
       .update(schema.participants)
       .set({ rsvpStatus, updatedAt: new Date() })
