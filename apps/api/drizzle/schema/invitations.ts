@@ -1,4 +1,5 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitationStatusEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum, sendStatusEnum } from './enums';
 import { users } from './users';
@@ -51,8 +52,24 @@ export const invitationSendLogs = pgTable('invitation_send_logs', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const invitationBlocklists = pgTable('invitation_blocklists', {
+  id: text('id').primaryKey().$defaultFn(() => ulid()),
+  invitationId: text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
+  blockedUserId: text('blocked_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  blockedByUserId: text('blocked_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  uniqueIndex('uq_blocklist_active')
+    .on(t.invitationId, t.blockedUserId)
+    .where(sql`${t.deletedAt} IS NULL`),
+  index('idx_blocklist_invitation').on(t.invitationId),
+]);
+
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type Participant = typeof participants.$inferSelect;
 export type NewParticipant = typeof participants.$inferInsert;
 export type InvitationTemplate = typeof invitationTemplates.$inferSelect;
+export type InvitationBlocklist = typeof invitationBlocklists.$inferSelect;
+export type NewInvitationBlocklist = typeof invitationBlocklists.$inferInsert;

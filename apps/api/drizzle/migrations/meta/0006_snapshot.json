@@ -1,5 +1,5 @@
 {
-  "id": "cf207e4e-348b-4d8c-b89e-af1d321f34b7",
+  "id": "97e1e283-06b4-47fb-96bb-e9e09d1d6465",
   "prevId": "dee5449b-fba4-439f-9793-3bac448b2444",
   "version": "7",
   "dialect": "postgresql",
@@ -193,6 +193,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -383,134 +389,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.invitation_blocklists": {
-      "name": "invitation_blocklists",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "invitation_id": {
-          "name": "invitation_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "blocked_user_id": {
-          "name": "blocked_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "blocked_by_user_id": {
-          "name": "blocked_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "uq_blocklist_active": {
-          "name": "uq_blocklist_active",
-          "columns": [
-            {
-              "expression": "invitation_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "blocked_user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"invitation_blocklists\".\"deleted_at\" IS NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "idx_blocklist_invitation": {
-          "name": "idx_blocklist_invitation",
-          "columns": [
-            {
-              "expression": "invitation_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "invitation_blocklists_invitation_id_invitations_id_fk": {
-          "name": "invitation_blocklists_invitation_id_invitations_id_fk",
-          "tableFrom": "invitation_blocklists",
-          "tableTo": "invitations",
-          "columnsFrom": [
-            "invitation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "invitation_blocklists_blocked_user_id_users_id_fk": {
-          "name": "invitation_blocklists_blocked_user_id_users_id_fk",
-          "tableFrom": "invitation_blocklists",
-          "tableTo": "users",
-          "columnsFrom": [
-            "blocked_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "invitation_blocklists_blocked_by_user_id_users_id_fk": {
-          "name": "invitation_blocklists_blocked_by_user_id_users_id_fk",
-          "tableFrom": "invitation_blocklists",
-          "tableTo": "users",
-          "columnsFrom": [
-            "blocked_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1055,7 +933,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_participant_locations_participant_invitation": {
+          "name": "uq_participant_locations_participant_invitation",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "participant_locations_invitation_id_invitations_id_fk": {
           "name": "participant_locations_invitation_id_invitations_id_fk",
@@ -1912,6 +1812,7 @@
       "name": "social_provider",
       "schema": "public",
       "values": [
+        "google",
         "kakao",
         "naver",
         "apple"
