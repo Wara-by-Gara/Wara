@@ -1,0 +1,5 @@
+branch=$(git symbolic-ref HEAD | sed 's|refs/heads/||')
+if [ "$branch" = "main" ] || [ "$branch" = "develop" ]; then
+  echo "직접 push는 금지입니다. PR을 통해 머지해주세요."
+  exit 1
+fi
