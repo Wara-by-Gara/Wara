@@ -1,9 +1,11 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
+import { UserRole } from '../common/enums/role.enum';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { ConfigService } from '@nestjs/config';
 import { AuthRepository } from './auth.repository';
+import { ErrorCode } from '../common/constants/error-codes';
 
 @Injectable()
 export class AuthService {
@@ -54,19 +56,32 @@ export class AuthService {
     const stored = await this.repository.revokeValidRefreshToken(tokenHash);
     if (!stored) {
       this.logger.warn('Refresh token not found or invalid');
-      throw new UnauthorizedException('TOKEN_INVALID');
+      const expired = await this.repository.findRefreshTokenByHash(tokenHash);
+      if (expired) {
+        throw new UnauthorizedException({
+          code: ErrorCode.TOKEN_EXPIRED,
+          message: 'refresh token이 만료되었습니다.',
+        });
+      }
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: '유효하지 않은 refresh token입니다.',
+      });
     }
 
     const user = await this.repository.findUserById(stored.userId);
     if (!user) {
       this.logger.warn(`User not found: ${stored.userId}`);
-      throw new UnauthorizedException('USER_NOT_FOUND');
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: '유효하지 않은 refresh token입니다.',
+      });
     }
 
     this.logger.debug(`Token refreshed for user: ${user.id}`);
     const payload: JwtPayload = {
       id: user.id,
-      role: user.role,
+      role: user.role as UserRole,
       scope: user.role === 'admin' ? ['admin'] : [],
     };
 
