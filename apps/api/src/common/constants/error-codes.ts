@@ -11,6 +11,8 @@ export const ErrorCode = {
   PHOTO_FORBIDDEN: 'PHOTO_FORBIDDEN',
   PHOTO_LIKE_ALREADY_EXISTS: 'PHOTO_LIKE_ALREADY_EXISTS',
   PHOTO_LIKE_NOT_FOUND: 'PHOTO_LIKE_NOT_FOUND',
+  //참여자 에러
+  PARTICIPANT_NOT_FOUND: 'PARTICIPANT_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
