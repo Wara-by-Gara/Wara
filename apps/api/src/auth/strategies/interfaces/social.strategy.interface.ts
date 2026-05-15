@@ -8,7 +8,7 @@ export interface SocialAuthParams {
 }
 
 export interface SocialStrategy {
-  getAuthorizationUrl(platform: Platform): string;
+  getAuthorizationUrl(platform: Platform, state: string): string;
 
   authenticate(params: SocialAuthParams): Promise<SocialUser>;
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Platform } from '../enums/platform.enum';
 import { Provider } from '../enums/provider.enum';
@@ -14,14 +15,17 @@ export class NaverStrategy implements SocialStrategy {
   readonly provider = Provider.NAVER;
   readonly supportedPlatforms = [Platform.WEB, Platform.MOBILE];
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  getAuthorizationUrl(_platform: Platform): string {
+  getAuthorizationUrl(_platform: Platform, state: string): string {
     const params = new URLSearchParams({
-      client_id: process.env.NAVER_CLIENT_ID!,
-      redirect_uri: process.env.NAVER_REDIRECT_URI!,
+      client_id: this.configService.getOrThrow<string>('NAVER_CLIENT_ID'),
+      redirect_uri: this.configService.getOrThrow<string>('NAVER_CALLBACK_URL'),
       response_type: 'code',
-      state: 'wara',
+      state,
     });
 
     return `https://nid.naver.com/oauth2.0/authorize?${params.toString()}`;
@@ -37,10 +41,10 @@ export class NaverStrategy implements SocialStrategy {
         {
           params: {
             grant_type: 'authorization_code',
-            client_id: process.env.NAVER_CLIENT_ID!,
-            client_secret: process.env.NAVER_CLIENT_SECRET!,
+            client_id: this.configService.getOrThrow<string>('NAVER_CLIENT_ID'),
+            client_secret: this.configService.getOrThrow<string>('NAVER_CLIENT_SECRET'),
             code: params.code,
-            state: params.state ?? 'wara',
+            state: params.state,
           },
         },
       ),

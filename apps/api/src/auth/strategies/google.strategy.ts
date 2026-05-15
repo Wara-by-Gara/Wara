@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Platform } from '../enums/platform.enum';
 import { Provider } from '../enums/provider.enum';
 import { SocialUser } from '../types/social-user.type';
-
 import {
   SocialAuthParams,
   SocialStrategy,
@@ -15,14 +15,18 @@ export class GoogleStrategy implements SocialStrategy {
   readonly provider = Provider.GOOGLE;
   readonly supportedPlatforms = [Platform.WEB];
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  getAuthorizationUrl(_platform: Platform): string {
+  getAuthorizationUrl(_platform: Platform, state: string): string {
     const params = new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+      client_id: this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      redirect_uri: this.configService.getOrThrow<string>('GOOGLE_REDIRECT_URI'),
       response_type: 'code',
       scope: 'openid email profile',
+      state,
     });
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -35,9 +39,9 @@ export class GoogleStrategy implements SocialStrategy {
 
         new URLSearchParams({
           code: params.code,
-          client_id: process.env.GOOGLE_CLIENT_ID!,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-          redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+          client_id: this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+          client_secret: this.configService.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
+          redirect_uri: this.configService.getOrThrow<string>('GOOGLE_REDIRECT_URI'),
           grant_type: 'authorization_code',
         }),
 

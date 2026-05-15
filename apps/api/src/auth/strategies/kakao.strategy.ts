@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Platform } from '../enums/platform.enum';
 import { Provider } from '../enums/provider.enum';
@@ -14,13 +15,17 @@ export class KakaoStrategy implements SocialStrategy {
   readonly provider = Provider.KAKAO;
   readonly supportedPlatforms = [Platform.WEB, Platform.MOBILE];
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  getAuthorizationUrl(_platform: Platform): string {
+  getAuthorizationUrl(_platform: Platform, state: string): string {
     const params = new URLSearchParams({
-      client_id: process.env.KAKAO_CLIENT_ID!,
-      redirect_uri: process.env.KAKAO_REDIRECT_URI!,
+      client_id: this.configService.getOrThrow<string>('KAKAO_CLIENT_ID'),
+      redirect_uri: this.configService.getOrThrow<string>('KAKAO_REDIRECT_URI'),
       response_type: 'code',
+      state,
     });
 
     return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
@@ -33,8 +38,8 @@ export class KakaoStrategy implements SocialStrategy {
 
         new URLSearchParams({
           grant_type: 'authorization_code',
-          client_id: process.env.KAKAO_CLIENT_ID!,
-          redirect_uri: process.env.KAKAO_REDIRECT_URI!,
+          client_id: this.configService.getOrThrow<string>('KAKAO_CLIENT_ID'),
+          redirect_uri: this.configService.getOrThrow<string>('KAKAO_REDIRECT_URI'),
           code: params.code,
         }),
 

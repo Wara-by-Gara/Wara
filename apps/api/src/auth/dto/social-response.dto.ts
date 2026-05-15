@@ -11,7 +11,7 @@ export const SocialResponseSchema = z.object({
     providerId: z.string(),
     name: z.string().nullable(),
     gender: z.string().nullable(),
-    birthYear: z.number().nullable(),
+    birthYear: z.string().nullable(),
     email: z.string().email().nullable(),
     profileImage: z.string().nullable(),
   }),
