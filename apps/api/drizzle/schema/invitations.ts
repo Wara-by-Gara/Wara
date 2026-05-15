@@ -27,6 +27,7 @@ export const invitations = pgTable('invitations', {
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 export const participants = pgTable('participants', {
