@@ -32,6 +32,22 @@
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
 | `DB_TRANSACTION_FAILED` | 500 | DB 트랜잭션 실패 |
+| `INSUFFICIENT_ROLE` | 403 | 초대장 내 역할 권한 부족 (HOST 필요) |
+| `ACCESS_REVOKED` | 403 | 초대장 접근 차단된 유저 |
+| `INVITATION_ID_REQUIRED` | 400 | invitationId 파라미터 누락 |
+
+## Invitation
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `INVITATION_NOT_FOUND` | 404 | 초대장 조회 실패 |
+| `INVITATION_HAS_PARTICIPANTS` | 403 | 참석자가 있는 초대장 삭제 시도 |
+
+## Template
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `TEMPLATE_NOT_FOUND` | 404 | 템플릿 조회 실패 |
 
 ---
 

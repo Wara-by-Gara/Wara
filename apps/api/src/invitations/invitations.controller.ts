@@ -5,6 +5,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { HostGuard } from '../common/guards/host.guard';
 import { MemberRole } from '../common/enums/member-role.enum';
+import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CreateInvitationDto, CreateInvitationSchema } from './dto/create-invitation.dto';
 import { UpdateInvitationDto, UpdateInvitationSchema } from './dto/update-invitation.dto';
@@ -21,7 +22,7 @@ export class InvitationsController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUlidPipe) id: string) {
     return this.invitationsService.findOne(id);
   }
 
@@ -37,7 +38,7 @@ export class InvitationsController {
   @UseGuards(HostGuard)
   @Patch(':invitationId')
   update(
-    @Param('invitationId') id: string,
+    @Param('invitationId', ParseUlidPipe) id: string,
     @Body(new ZodValidationPipe(UpdateInvitationSchema)) dto: UpdateInvitationDto,
   ) {
     return this.invitationsService.update(id, dto);
@@ -47,7 +48,7 @@ export class InvitationsController {
   @UseGuards(HostGuard)
   @Delete(':invitationId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('invitationId') id: string) {
+  remove(@Param('invitationId', ParseUlidPipe) id: string) {
     return this.invitationsService.remove(id);
   }
 }
