@@ -106,6 +106,7 @@ export class AuthRepository {
       )
       .returning();
     return revoked ?? null;
+  }
     
   async findRefreshTokenByHash(tokenHash: string) {
     return await this.db.query.refreshTokens.findFirst({
