@@ -9,8 +9,12 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantRepository } from '../common/repositories/participant.repository';
 import { AuthController } from './auth.controller';
+import { AppleController } from './apple/apple.controller';
 import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
+import { AppleService } from './apple/apple.service';
+import { KakaoController } from './kakao/kakao.controller';
+import { KakaoService } from './kakao/kakao.service';
 
 @Module({
   imports: [
@@ -29,10 +33,12 @@ import { AuthService } from './auth.service';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AppleController, KakaoController],
   providers: [
     AuthService,
     AuthRepository,
+    AppleService,
+    KakaoService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     ParticipantRepository,
