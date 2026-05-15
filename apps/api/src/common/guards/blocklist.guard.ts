@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ErrorCode } from '../constants/error-codes';
 import { UserRole } from '../enums/role.enum';
 import { BlocklistRepository } from '../repositories/blocklist.repository';
 
@@ -28,7 +29,7 @@ export class BlocklistGuard implements CanActivate {
 
     const invitationId = request.params?.invitationId;
     if (typeof invitationId !== 'string' || invitationId.length === 0) {
-      throw new BadRequestException('INVITATION_ID_REQUIRED');
+      throw new BadRequestException(ErrorCode.INVITATION_ID_REQUIRED);
     }
 
     const blocked = await this.blocklistRepository.isBlocked(
@@ -37,7 +38,7 @@ export class BlocklistGuard implements CanActivate {
     );
 
     if (blocked) {
-      throw new ForbiddenException('ACCESS_REVOKED');
+      throw new ForbiddenException(ErrorCode.ACCESS_REVOKED);
     }
 
     return true;

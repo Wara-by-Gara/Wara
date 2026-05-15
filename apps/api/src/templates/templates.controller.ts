@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post
 import { TemplatesService } from './templates.service';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CreateTemplateDto, CreateTemplateSchema } from './dto/create-template.dto';
 import { UpdateTemplateDto, UpdateTemplateSchema } from './dto/update-template.dto';
@@ -18,7 +19,7 @@ export class TemplatesController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUlidPipe) id: string) {
     return this.templatesService.findOne(id);
   }
 
@@ -31,7 +32,7 @@ export class TemplatesController {
   @AdminOnly()
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUlidPipe) id: string,
     @Body(new ZodValidationPipe(UpdateTemplateSchema)) dto: UpdateTemplateDto,
   ) {
     return this.templatesService.update(id, dto);
@@ -40,7 +41,7 @@ export class TemplatesController {
   @AdminOnly()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUlidPipe) id: string) {
     return this.templatesService.remove(id);
   }
 }
