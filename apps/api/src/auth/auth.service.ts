@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { AuthRepository } from './auth.repository';
 import { SocialAuthFactory } from './social-auth.factory';
 import { OauthPolicyService } from './oauth-policy.service';
@@ -22,6 +22,36 @@ export class AuthService {
     private readonly socialAuthFactory: SocialAuthFactory,
     private readonly oauthPolicyService: OauthPolicyService,
   ) {}
+
+  generateState(): string {
+    return this.jwtService.sign(
+      { nonce: randomUUID() },
+      { secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'), expiresIn: '10m' },
+    );
+  }
+
+  verifyState(state: string): void {
+    try {
+      this.jwtService.verify(state, {
+        secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_INVALID_STATE,
+        message: '유효하지 않은 state입니다.',
+      });
+    }
+  }
+
+  getAuthorizationUrl(
+    provider: Provider,
+    platform: Platform,
+  ): { url: string; state: string } {
+    const strategy = this.socialAuthFactory.getStrategy(provider);
+    const state = this.generateState();
+    const url = strategy.getAuthorizationUrl(platform, state);
+    return { url, state };
+  }
 
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
@@ -112,6 +142,10 @@ export class AuthService {
     code: string;
     state?: string;
   }) {
+    if (params.state) {
+      this.verifyState(params.state);
+    }
+
     this.oauthPolicyService.validatePlatform(params.provider, params.platform);
 
     const strategy = this.socialAuthFactory.getStrategy(params.provider);
