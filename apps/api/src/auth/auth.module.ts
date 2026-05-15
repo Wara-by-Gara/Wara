@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { AuthRepository } from './auth.repository';
-import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
+import { BlocklistGuard } from '../common/guards/blocklist.guard';
+import { HostGuard } from '../common/guards/host.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { BlocklistRepository } from '../common/repositories/blocklist.repository';
+import { ParticipantRepository } from '../common/repositories/participant.repository';
+import { AuthController } from './auth.controller';
+import { AppleController } from './apple/apple.controller';
+import { AuthRepository } from './auth.repository';
+import { AuthService } from './auth.service';
+import { AppleService } from './apple/apple.service';
+import { KakaoController } from './kakao/kakao.controller';
+import { KakaoService } from './kakao/kakao.service';
 
 @Module({
   imports: [
@@ -13,12 +24,33 @@ import { ConfigService } from '@nestjs/config';
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
         signOptions: {
-          expiresIn:config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800)
-        }
-      })
-    })
+          expiresIn: config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800),
+          algorithm: 'HS256',
+        },
+        verifyOptions: {
+          algorithms: ['HS256'],
+        },
+      }),
+    }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, AuthRepository],
+  controllers: [AuthController, AppleController, KakaoController],
+  providers: [
+    AuthService,
+    AuthRepository,
+    AppleService,
+    KakaoService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    ParticipantRepository,
+    BlocklistRepository,
+    HostGuard,
+    BlocklistGuard,
+  ],
+  exports: [
+    HostGuard,
+    BlocklistGuard,
+    ParticipantRepository,
+    BlocklistRepository,
+  ],
 })
 export class AuthModule {}
