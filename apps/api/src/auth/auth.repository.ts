@@ -1,84 +1,129 @@
-import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
-import { and, eq, isNull } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { ulid } from 'ulid';
-import { DRIZZLE } from '../database/database.module';
-import * as schema from '../../drizzle/schema';
-import { users, socialAccounts } from '../../drizzle/schema/users';
+import {
+  Injectable,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { eq, and } from 'drizzle-orm';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import {
+  users,
+  socialAccounts,
+  refreshTokens,
+  type NewRefreshToken,
+} from '../../drizzle/schema';
+import { ErrorCode } from '../common/constants/error-codes';
 
-interface SocialUpsertParams {
+export interface UpsertSocialAccountParams {
   provider: 'kakao' | 'naver' | 'apple';
   providerAccountId: string;
   email?: string;
   name?: string;
   profileImageUrl?: string;
-  rawProfile: unknown;
+  rawProfile?: unknown;
+}
+
+export interface UpsertSocialAccountResult {
+  userId: string;
+  isNew: boolean;
 }
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof schema>) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  async upsertUserBySocial(params: SocialUpsertParams): Promise<{ id: string; role: string }> {
-    const { provider, providerAccountId, email, name, profileImageUrl, rawProfile } = params;
+  async upsertSocialAccount(
+    params: UpsertSocialAccountParams,
+  ): Promise<UpsertSocialAccountResult> {
+    const { provider, providerAccountId, email, name, profileImageUrl } =
+      params;
 
-    const [existing] = await this.db
-      .select({ userId: socialAccounts.userId })
-      .from(socialAccounts)
-      .where(
-        and(
-          eq(socialAccounts.provider, provider),
-          eq(socialAccounts.providerAccountId, providerAccountId),
-        ),
-      )
-      .limit(1);
+    try {
+      return await this.db.transaction(async (tx) => {
+        const existingAccount = await tx
+          .select({ userId: socialAccounts.userId })
+          .from(socialAccounts)
+          .where(
+            and(
+              eq(socialAccounts.provider, provider),
+              eq(socialAccounts.providerAccountId, providerAccountId),
+            ),
+          )
+          .limit(1);
 
-    if (existing) {
-      const rows = await this.db
-        .update(users)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, existing.userId))
-        .returning({ id: users.id, role: users.role });
+        if (existingAccount.length > 0 && existingAccount[0]) {
+          const userId = existingAccount[0].userId;
+          await tx
+            .update(users)
+            .set({ lastLoginAt: new Date() })
+            .where(eq(users.id, userId));
+          return { userId, isNew: false };
+        }
 
-      const user = rows[0];
-      if (!user) throw new InternalServerErrorException();
-      return user;
-    }
+        const inserted = await tx
+          .insert(users)
+          .values({ email, name, profileImageUrl })
+          .returning({ id: users.id });
 
-    return this.db.transaction(async (tx) => {
-      const inserted = await tx
-        .insert(users)
-        .values({ id: ulid(), email, name, profileImageUrl, lastLoginAt: new Date() })
-        .returning({ id: users.id, role: users.role });
+        const newUserId = inserted[0]!.id;
 
-      const newUser = inserted[0];
-      if (!newUser) throw new InternalServerErrorException();
+        await tx.insert(socialAccounts).values({
+          userId: newUserId,
+          provider,
+          providerAccountId,
+        });
 
-      await tx.insert(socialAccounts).values({
-        id: ulid(),
-        userId: newUser.id,
-        provider,
-        providerAccountId,
-        rawProfile,
+        return { userId: newUserId, isNew: true };
       });
+    } catch {
+      throw new InternalServerErrorException({
+        code: ErrorCode.DB_TRANSACTION_FAILED,
+        message: '소셜 계정 처리 중 오류가 발생했습니다.',
+      });
+    }
+  }
 
-      return newUser;
+  async saveRefreshToken(
+    data: Pick<
+      NewRefreshToken,
+      'userId' | 'tokenHash' | 'expiresAt' | 'deviceInfo' | 'ipAddress'
+    >,
+  ): Promise<void> {
+    await this.db.insert(refreshTokens).values(data);
+  }
+
+  async findValidRefreshToken(tokenHash: string) {
+    return await this.db.query.refreshTokens.findFirst({
+      where: (t, { and, eq, isNull, gt }) =>
+        and(
+          eq(t.tokenHash, tokenHash),
+          isNull(t.revokedAt),
+          gt(t.expiresAt, new Date()),
+        ),
     });
   }
 
-  async saveRefreshToken(userId: string, hashedToken: string): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ refreshToken: hashedToken })
-      .where(eq(users.id, userId));
+  async findRefreshTokenByHash(tokenHash: string) {
+    return await this.db.query.refreshTokens.findFirst({
+      where: (t, { eq }) => eq(t.tokenHash, tokenHash),
+    });
   }
 
-  async findUserById(userId: string): Promise<typeof users.$inferSelect | null> {
-    const [user] = await this.db
-      .select()
-      .from(users)
-      .where(and(eq(users.id, userId), isNull(users.deletedAt)))
-      .limit(1);
-    return user ?? null;
+  async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          eq(refreshTokens.tokenHash, tokenHash),
+        ),
+      );
+  }
+
+  async findUserById(userId: string) {
+    return await this.db.query.users.findFirst({
+      where: (t, { eq, isNull, and }) =>
+        and(eq(t.id, userId), isNull(t.deletedAt)),
+    });
   }
 }

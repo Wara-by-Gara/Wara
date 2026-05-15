@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, timestamp, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
 import { genderEnum, userRoleEnum, socialProviderEnum } from './enums';
 
@@ -24,6 +24,8 @@ export const socialAccounts = pgTable('social_accounts', {
   provider: socialProviderEnum('provider').notNull(),
   providerAccountId: text('provider_account_id').notNull(),
   rawProfile: jsonb('raw_profile'),
+  appleRefreshToken: text('apple_refresh_token'),
+  isPrivateEmail: boolean('is_private_email').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
