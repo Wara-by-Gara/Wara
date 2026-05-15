@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { HttpModule } from '@nestjs/axios';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -11,36 +12,71 @@ import { ParticipantRepository } from '../common/repositories/participant.reposi
 import { AuthController } from './auth.controller';
 import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
+import { SocialAuthFactory } from './social-auth.factory';
+import { OauthPolicyService } from './oauth-policy.service';
+import { AppleController } from './apple/apple.controller';
+import { AppleService } from './apple/apple.service';
+import { AppleStrategy } from './apple/apple.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { KakaoStrategy } from './strategies/kakao.strategy';
+import { NaverStrategy } from './strategies/naver.strategy';
 
 @Module({
   imports: [
+    HttpModule,
+
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
+
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+
         signOptions: {
           expiresIn: config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800),
           algorithm: 'HS256',
         },
+
         verifyOptions: {
           algorithms: ['HS256'],
         },
       }),
     }),
   ],
-  controllers: [AuthController],
+
+  controllers: [AuthController, AppleController],
+
   providers: [
     AuthService,
     AuthRepository,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
+    SocialAuthFactory,
+    OauthPolicyService,
+    AppleService,
+    AppleStrategy,
+    GoogleStrategy,
+    JwtStrategy,
+    KakaoStrategy,
+    NaverStrategy,
+
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+
     ParticipantRepository,
     BlocklistRepository,
     HostGuard,
     BlocklistGuard,
   ],
+
   exports: [
+    AuthService,
     HostGuard,
     BlocklistGuard,
     ParticipantRepository,
