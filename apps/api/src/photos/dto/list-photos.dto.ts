@@ -3,7 +3,7 @@ import z from 'zod';
 export const ListPhotosSchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  sort: z.enum(['createdAt', 'likeCount','takenAt']).default('takenAt'),
+  sort: z.enum(['createdAt','takenAt']).default('takenAt'),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
 
