@@ -6,6 +6,7 @@ import {
   invitationTemplates,
   participants,
   invitationSendLogs,
+  invitationBlocklists,
 } from './invitations';
 import { eventLocations, participantLocations } from './locations';
 import { photos, photoLikes } from './photos';
@@ -43,6 +44,13 @@ export const invitationsRelations = relations(invitations, ({ one, many }) => ({
   missions: many(missions),
   sendLogs: many(invitationSendLogs),
   participantLocations: many(participantLocations),
+  blocklists: many(invitationBlocklists),
+}));
+
+export const invitationBlocklistsRelations = relations(invitationBlocklists, ({ one }) => ({
+  invitation: one(invitations, { fields: [invitationBlocklists.invitationId], references: [invitations.id] }),
+  blockedUser: one(users, { fields: [invitationBlocklists.blockedUserId], references: [users.id], relationName: 'blockedUser' }),
+  blockedBy: one(users, { fields: [invitationBlocklists.blockedByUserId], references: [users.id], relationName: 'blockedBy' }),
 }));
 
 export const participantsRelations = relations(participants, ({ one, many }) => ({
