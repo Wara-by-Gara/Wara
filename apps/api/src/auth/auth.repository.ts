@@ -12,9 +12,10 @@ import {
   type NewRefreshToken,
 } from '../../drizzle/schema';
 import { ErrorCode } from '../common/constants/error-codes';
+import { Provider } from './enums/provider.enum';
 
 export interface UpsertSocialAccountParams {
-  provider: 'kakao' | 'naver' | 'apple';
+  provider: Provider;
   providerAccountId: string;
   email?: string;
   name?: string;
@@ -29,7 +30,10 @@ export interface UpsertSocialAccountResult {
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DRIZZLE)
+    private readonly db: DrizzleDB,
+  ) {}
 
   async upsertSocialAccount(
     params: UpsertSocialAccountParams,
@@ -40,7 +44,9 @@ export class AuthRepository {
     try {
       return await this.db.transaction(async (tx) => {
         const existingAccount = await tx
-          .select({ userId: socialAccounts.userId })
+          .select({
+            userId: socialAccounts.userId,
+          })
           .from(socialAccounts)
           .where(
             and(
@@ -52,17 +58,30 @@ export class AuthRepository {
 
         if (existingAccount.length > 0 && existingAccount[0]) {
           const userId = existingAccount[0].userId;
+
           await tx
             .update(users)
-            .set({ lastLoginAt: new Date() })
+            .set({
+              lastLoginAt: new Date(),
+            })
             .where(eq(users.id, userId));
-          return { userId, isNew: false };
+
+          return {
+            userId,
+            isNew: false,
+          };
         }
 
         const inserted = await tx
           .insert(users)
-          .values({ email, name, profileImageUrl })
-          .returning({ id: users.id });
+          .values({
+            email,
+            name,
+            profileImageUrl,
+          })
+          .returning({
+            id: users.id,
+          });
 
         const newUserId = inserted[0]!.id;
 
@@ -72,7 +91,10 @@ export class AuthRepository {
           providerAccountId,
         });
 
-        return { userId: newUserId, isNew: true };
+        return {
+          userId: newUserId,
+          isNew: true,
+        };
       });
     } catch {
       throw new InternalServerErrorException({
@@ -108,10 +130,16 @@ export class AuthRepository {
     });
   }
 
-  async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
+  async revokeRefreshToken(
+    userId: string,
+
+    tokenHash: string,
+  ): Promise<void> {
     await this.db
       .update(refreshTokens)
-      .set({ revokedAt: new Date() })
+      .set({
+        revokedAt: new Date(),
+      })
       .where(
         and(
           eq(refreshTokens.userId, userId),
