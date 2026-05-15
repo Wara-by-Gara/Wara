@@ -1,16 +1,7 @@
-import {
-  Injectable,
-  Inject,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { eq, and } from 'drizzle-orm';
+import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import {
-  users,
-  socialAccounts,
-  refreshTokens,
-  type NewRefreshToken,
-} from '../../drizzle/schema';
+import { and, eq, gt, isNull } from 'drizzle-orm';
+import { users, socialAccounts, refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { Provider } from './enums/provider.enum';
 
@@ -124,6 +115,25 @@ export class AuthRepository {
     });
   }
 
+  /**
+   * 유효한 토큰을 원자적으로 무효화 (find + revoke를 단일 쿼리로 처리)
+   * race condition 방지: 동시 요청이 와도 한 번만 성공
+   */
+  async revokeValidRefreshToken(tokenHash: string) {
+    const [revoked] = await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.tokenHash, tokenHash),
+          isNull(refreshTokens.revokedAt),
+          gt(refreshTokens.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+    return revoked ?? null;
+  }
+    
   async findRefreshTokenByHash(tokenHash: string) {
     return await this.db.query.refreshTokens.findFirst({
       where: (t, { eq }) => eq(t.tokenHash, tokenHash),
@@ -144,6 +154,22 @@ export class AuthRepository {
         and(
           eq(refreshTokens.userId, userId),
           eq(refreshTokens.tokenHash, tokenHash),
+        ),
+      );
+  }
+
+  /**
+   * 사용자의 모든 Refresh Token 무효화 (전체 기기 로그아웃)
+   * 해당 userId의 모든 유효한 토큰을 revoke
+   */
+  async revokeAllByUserId(userId: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
         ),
       );
   }
