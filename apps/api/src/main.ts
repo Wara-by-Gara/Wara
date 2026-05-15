@@ -12,8 +12,17 @@ async function bootstrap() {
   if (!process.env.JWT_ACCESS_SECRET) {
     throw new Error('[보안] JWT_ACCESS_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
+  if (!process.env.FRONTEND_URL) {
+    throw new Error('[보안] FRONTEND_URL 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  }
 
   const app = await NestFactory.create(AppModule);
+
+  // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  });
 
   // DTO 검증: class-validator 데코레이터(@IsString 등) 실행
   // whitelist: DTO에 없는 필드 제거
