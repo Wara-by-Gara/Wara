@@ -20,7 +20,7 @@ export class BlocklistGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new UnauthorizedException('TOKEN_INVALID');
+      throw new UnauthorizedException(ErrorCode.TOKEN_INVALID);
     }
 
     if (user.role === UserRole.ADMIN) {
@@ -38,7 +38,7 @@ export class BlocklistGuard implements CanActivate {
     );
 
     if (blocked) {
-      throw new ForbiddenException(ErrorCode.ACCESS_REVOKED);
+      throw new ForbiddenException(ErrorCode.INVITATION_ACCESS_REVOKED);
     }
 
     return true;
