@@ -26,7 +26,7 @@ export class AuthService {
   async issueRefreshToken(
     userId: string,
     options?: { deviceInfo?: string; ipAddress?: string },
-  ): Promise<{ rawToken: string; expiresIn: number }> {
+  ): Promise<string> {
     const rawToken = randomBytes(40).toString('hex');
     const tokenHash = this.hashToken(rawToken);
 
@@ -41,7 +41,7 @@ export class AuthService {
       ipAddress: options?.ipAddress,
     });
 
-    return { rawToken, expiresIn };
+    return rawToken;
   }
 
   async refresh(
@@ -70,7 +70,8 @@ export class AuthService {
       scope: user.role === 'admin' ? ['admin'] : [],
     };
 
-    const [accessToken, { rawToken: refreshToken, expiresIn: refreshExpiresIn }] = await Promise.all([
+    const refreshExpiresIn = this.config.get<number>('JWT_REFRESH_EXPIRES_IN', 1209600);
+    const [accessToken, refreshToken] = await Promise.all([
       this.issueAccessToken(payload),
       this.issueRefreshToken(user.id, options),
     ]);
