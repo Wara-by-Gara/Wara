@@ -1,5 +1,5 @@
 import { Public } from './../common/decorators/public.decorator';
-import { Controller, HttpCode, HttpStatus, Logger, Post, Req, Res } from '@nestjs/common';
+import { Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 
@@ -17,7 +17,6 @@ export class AuthController {
    */
   @Public()
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -34,14 +33,15 @@ export class AuthController {
       throw new Error('Invalid token response from auth service');
     }
 
-    // 새 Refresh Token을 httpOnly 서명 쿠키로 설정
+    // 프론트/백이 다른 도메인이므로 sameSite: 'none' (production에서만 작동)
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       signed: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
-      maxAge: 1209600 * 1000, // 14일 (JWT_REFRESH_EXPIRES_IN과 일치)
+      maxAge: result.refreshExpiresIn * 1000, // JWT_REFRESH_EXPIRES_IN과 동기화
     });
 
     // 응답에는 accessToken만 포함 (refreshToken은 쿠키로 관리)
@@ -56,11 +56,7 @@ export class AuthController {
    */
   @Public()
   @Post('logout')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res() res: Response) {
     const rawRefreshToken = req.signedCookies['refreshToken'] || '';
 
     // 쿠키가 있으면 토큰 무효화 (실패 시에도 계속 진행해서 쿠키는 삭제)
@@ -74,14 +70,16 @@ export class AuthController {
     }
 
     // 쿠키 삭제 (있든 없든 실행 → idempotent)
+    const isProduction = process.env.NODE_ENV === 'production';
     res.clearCookie('refreshToken', {
       httpOnly: true,
       signed: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
     });
 
-    // 204: 빈 응답 (ResponseFormatInterceptor는 실행되지 않음)
+    // @Res() 직접 사용 → interceptor 우회 → 빈 body 204 보장
+    res.status(204).end();
   }
 }

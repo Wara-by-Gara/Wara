@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class AuthRepository {
@@ -25,6 +25,25 @@ export class AuthRepository {
           gt(t.expiresAt, new Date()),
         ),
     });
+  }
+
+  /**
+   * 유효한 토큰을 원자적으로 무효화 (find + revoke를 단일 쿼리로 처리)
+   * race condition 방지: 동시 요청이 와도 한 번만 성공
+   */
+  async revokeValidRefreshToken(tokenHash: string) {
+    const [revoked] = await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.tokenHash, tokenHash),
+          isNull(refreshTokens.revokedAt),
+          gt(refreshTokens.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+    return revoked ?? null;
   }
 
   async revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {

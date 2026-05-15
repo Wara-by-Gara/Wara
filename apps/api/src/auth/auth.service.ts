@@ -26,15 +26,12 @@ export class AuthService {
   async issueRefreshToken(
     userId: string,
     options?: { deviceInfo?: string; ipAddress?: string },
-  ): Promise<string> {
+  ): Promise<{ rawToken: string; expiresIn: number }> {
     const rawToken = randomBytes(40).toString('hex');
     const tokenHash = this.hashToken(rawToken);
 
-    const refreshExpiresIn = this.config.get<number>(
-      'JWT_REFRESH_EXPIRES_IN',
-      1209600,
-    );
-    const expiresAt = new Date(Date.now() + refreshExpiresIn * 1000);
+    const expiresIn = this.config.get<number>('JWT_REFRESH_EXPIRES_IN', 1209600);
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     await this.repository.saveRefreshToken({
       userId,
@@ -44,7 +41,7 @@ export class AuthService {
       ipAddress: options?.ipAddress,
     });
 
-    return rawToken;
+    return { rawToken, expiresIn };
   }
 
   async refresh(
@@ -52,14 +49,13 @@ export class AuthService {
     options?: { deviceInfo?: string; ipAddress?: string },
   ) {
     const tokenHash = this.hashToken(rawRefreshToken);
-    const stored = await this.repository.findValidRefreshToken(tokenHash);
 
+    // find + revoke를 단일 쿼리로 처리 → race condition 방지
+    const stored = await this.repository.revokeValidRefreshToken(tokenHash);
     if (!stored) {
       this.logger.warn('Refresh token not found or invalid');
       throw new UnauthorizedException('TOKEN_INVALID');
     }
-
-    await this.repository.revokeRefreshToken(stored.userId, tokenHash);
 
     const user = await this.repository.findUserById(stored.userId);
     if (!user) {
@@ -74,24 +70,23 @@ export class AuthService {
       scope: user.role === 'admin' ? ['admin'] : [],
     };
 
-    const [accessToken, refreshToken] = await Promise.all([
+    const [accessToken, { rawToken: refreshToken, expiresIn: refreshExpiresIn }] = await Promise.all([
       this.issueAccessToken(payload),
       this.issueRefreshToken(user.id, options),
     ]);
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, refreshExpiresIn };
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
     const tokenHash = this.hashToken(rawRefreshToken);
-    const stored = await this.repository.findValidRefreshToken(tokenHash);
 
     // 이미 만료/무효화된 토큰 → idempotent: 로그아웃된 상태로 간주하고 성공 처리
-    if (!stored) {
+    const revoked = await this.repository.revokeValidRefreshToken(tokenHash);
+    if (!revoked) {
       this.logger.debug('Logout called with invalid or expired token (idempotent)');
       return;
     }
 
-    await this.repository.revokeRefreshToken(stored.userId, tokenHash);
-    this.logger.debug(`User logged out: ${stored.userId}`);
+    this.logger.debug(`User logged out: ${revoked.userId}`);
   }
 }
