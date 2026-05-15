@@ -3,7 +3,8 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 export const genderEnum = pgEnum('gender', ['female', 'male']);
 export const userRoleEnum = pgEnum('user_role', ['member', 'admin']);
 
-export const socialProviderEnum = pgEnum('social_provider', ['kakao', 'naver', 'apple']);
+export const SOCIAL_PROVIDERS = ['kakao', 'naver', 'apple'] as const;
+export const socialProviderEnum = pgEnum('social_provider', [...SOCIAL_PROVIDERS]);
 
 export const invitationStatusEnum = pgEnum('invitation_status', ['active', 'closed']);
 
