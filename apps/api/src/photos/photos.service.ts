@@ -6,36 +6,46 @@ import {
 } from '@aws-sdk/client-s3';
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PhotosRepository } from './photos.repository';
-
 import { ConfigService } from '@nestjs/config';
 import { PresignedUrlDto } from './dto/presigned-url.dto';
 import { ulid } from 'ulid';
-
 import { ListPhotosDto } from './dto/list-photos.dto';
-
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { ErrorCode } from '../common/constants/error-codes';
+import { S3_CLIENT } from '../s3/s3.module';
 
 @Injectable()
 export class PhotosService {
-  private readonly s3: S3Client;
   private readonly bucket: string;
 
   constructor(
     private readonly repository: PhotosRepository,
+    @Inject(S3_CLIENT) private readonly s3: S3Client,
     private readonly config: ConfigService,
   ) {
-    this.s3 = new S3Client({ region: this.config.getOrThrow('AWS_REGION') });
     this.bucket = this.config.getOrThrow('AWS_S3_BUCKET');
   }
 
   //업로드용 presigned URL 을 발급 (업로드, 만료시간 15분)
   //초대장 비 참여자 검증은 컨트롤러에서 Guard에서 처리예정
-  async generatePresignedUrl(dto: PresignedUrlDto) {
+  async generatePresignedUrl(
+    invitationId: string,
+    userId: string,
+    dto: PresignedUrlDto,
+  ) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
     const key = `photos/${ulid()}/${dto.fileName}`;
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -65,7 +75,14 @@ export class PhotosService {
   }
 
   //전체 사진 db 조회
-  async listPhotos(invitationId: string, dto: ListPhotosDto) {
+  async listPhotos(invitationId: string, userId: string, dto: ListPhotosDto) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const { rows, nextCursor } = await this.repository.findAllByInvitationId(
       invitationId,
       dto,
@@ -80,7 +97,14 @@ export class PhotosService {
   }
 
   //사진 db 단건 조회
-  async getPhoto(id: string) {
+  async getPhoto(invitationId: string, id: string, userId: string) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const photo = await this.repository.findPhotoById(id);
 
     if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -113,7 +137,14 @@ export class PhotosService {
   }
 
   //다운로드용 URL 발급 (낱개, 선택)
-  async getDownloadUrls(ids: string[]) {
+  async getDownloadUrls(invitationId: string, userId: string, ids: string[]) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const photos = await this.repository.findPhotosByIds(ids);
 
     const data = await Promise.all(
@@ -128,14 +159,21 @@ export class PhotosService {
   }
 
   //전체 다운로드
-  async getAllDownloadUrls(invitationId: string) {
+  async getAllDownloadUrls(invitationId: string, userId: string) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const { rows } = await this.repository.findAllByInvitationId(invitationId, {
       limit: 9999,
       sort: 'createdAt',
       order: 'asc',
     });
     const ids = rows.map((p) => p.id);
-    return this.getDownloadUrls(ids);
+    return this.getDownloadUrls(invitationId, userId, ids);
   }
 
   //사진 삭제 (소프트 딜리트)
@@ -185,7 +223,14 @@ export class PhotosService {
   }
 
   //리마인드
-  async getBest9(invitationId: string) {
+  async getBest9(invitationId: string, userId: string) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const rows = await this.repository.findBest9(invitationId);
     const data = await Promise.all(
       rows.map(async (photo) => ({
