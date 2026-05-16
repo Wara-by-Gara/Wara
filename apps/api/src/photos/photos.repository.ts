@@ -2,7 +2,12 @@ import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { ListPhotosDto } from './dto/list-photos.dto';
-import { NewPhoto, participants, photoLikes, photos } from '../../drizzle/schema';
+import {
+  NewPhoto,
+  participants,
+  photoLikes,
+  photos,
+} from '../../drizzle/schema';
 
 @Injectable()
 export class PhotosRepository {
@@ -42,9 +47,13 @@ export class PhotosRepository {
       const [cursorRow] = await this.db
         .select({ sortValue: sortCol })
         .from(photos)
-        .where(eq(photos.id, cursor));
-      if (cursorRow?.sortValue) {
-        conditions.push(cursorOp(sortCol, cursorRow.sortValue));
+        .where(and(eq(photos.id, cursor), isNull(photos.deletedAt)));
+      if (cursorRow) {
+        if (cursorRow.sortValue !== null) {
+          conditions.push(cursorOp(sortCol, cursorRow.sortValue));
+        } else {
+          conditions.push(cursorOp(photos.id, cursor));
+        }
       }
     }
 
@@ -152,7 +161,7 @@ export class PhotosRepository {
       await tx
         .update(photos)
         //likeCount가 -1된 값을 주거나, 0을 반환 (count가 0보다 이하는 되지 않게)
-        .set({ likeCount: sql`GREATEST${photos.likeCount} -1,0` })
+        .set({ likeCount: sql`GREATEST(${photos.likeCount} - 1, 0)` })
         .where(eq(photos.id, photoId));
     });
   }

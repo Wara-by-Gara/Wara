@@ -40,6 +40,19 @@
 |------|:--------:|------|
 | `DB_TRANSACTION_FAILED` | 500 | DB 트랜잭션 실패 |
 
+
+## Photo
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `PHOTO_NOT_FOUND` | 404 | 사진 조회 실패 |
+| `PHOTO_FORBIDDEN` | 403 | 본인 사진이 아님 |
+| `PHOTO_LIKE_ALREADY_EXISTS` | 409 | 이미 좋아요한 사진 |
+| `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
+| `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
+
+
+
 ---
 
 ## 규칙
