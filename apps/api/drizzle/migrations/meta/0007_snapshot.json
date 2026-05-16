@@ -1,6 +1,6 @@
 {
-  "id": "97e1e283-06b4-47fb-96bb-e9e09d1d6465",
-  "prevId": "cf207e4e-348b-4d8c-b89e-af1d321f34b7",
+  "id": "1d4e7a5c-a701-49e6-8cc1-78d61c87e542",
+  "prevId": "97e1e283-06b4-47fb-96bb-e9e09d1d6465",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -193,6 +193,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -210,12 +216,6 @@
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "refresh_token": {
-          "name": "refresh_token",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -824,6 +824,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'undecided'"
+        },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1911,8 +1918,7 @@
       "values": [
         "attending",
         "undecided",
-        "absent",
-        "cancelled"
+        "absent"
       ]
     },
     "public.send_channel": {

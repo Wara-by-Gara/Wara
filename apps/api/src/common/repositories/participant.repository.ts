@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
-import { participants, users } from '../../../drizzle/schema';
+import { participants, users, type Participant } from '../../../drizzle/schema';
 import { DRIZZLE, DrizzleDB } from '../../database/database.module';
 import { MemberRole } from '../enums/member-role.enum';
 
@@ -38,5 +38,24 @@ export class ParticipantRepository {
       )
       .limit(1);
     return (rows[0]?.memberRole as MemberRole | undefined) ?? null;
+  }
+
+  async findByUserAndInvitation(
+    userId: string,
+    invitationId: string,
+  ): Promise<Participant | null> {
+    const rows = await this.db
+      .select()
+      .from(participants)
+      .innerJoin(users, eq(participants.userId, users.id))
+      .where(
+        and(
+          eq(participants.userId, userId),
+          eq(participants.invitationId, invitationId),
+          isNull(users.deletedAt),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.participants ?? null;
   }
 }
