@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { NewPhoto, participants, photoLikes, photos } from 'drizzle/schema';
 import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { ListPhotosDto } from './dto/list-photos.dto';
+import { NewPhoto, participants, photoLikes, photos } from '../../drizzle/schema';
 
 @Injectable()
 export class PhotosRepository {
