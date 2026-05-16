@@ -19,6 +19,7 @@ import { AppleService } from './apple/apple.service';
 import { AppleStrategy } from './apple/apple.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
 
 @Module({
@@ -54,6 +55,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
     AppleService,
     AppleStrategy,
     GoogleStrategy,
+    JwtStrategy,
     KakaoStrategy,
     NaverStrategy,
 
