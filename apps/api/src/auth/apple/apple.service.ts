@@ -1,14 +1,14 @@
-import { Injectable, UnauthorizedException, GatewayTimeoutException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'crypto';
-import appleSignin from 'apple-signin-auth';
 import { AppleCallbackDto } from './apple-callback.dto';
 import { AuthRepository } from '../auth.repository';
 import { AuthService } from '../auth.service';
+import { AppleStrategy } from './apple.strategy';
 import type { JwtPayload } from '../../common/types/jwt-payload.type';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { UserRole } from '../../common/enums/role.enum';
+import { Provider } from '../enums/provider.enum';
+import { randomUUID } from 'crypto';
 
 export interface AppleLoginResult {
   accessToken: string;
@@ -19,37 +19,46 @@ export interface AppleLoginResult {
 export class AppleService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly config: ConfigService,
     private readonly authRepository: AuthRepository,
     private readonly authService: AuthService,
+    private readonly appleStrategy: AppleStrategy,
   ) {}
 
   generateState(): string {
     return this.jwtService.sign(
-      { nonce: randomUUID() },
-      { secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'), expiresIn: '10m' },
+      {
+        nonce: randomUUID(),
+      },
+
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: '10m',
+      },
     );
   }
 
   async login(dto: AppleCallbackDto): Promise<AppleLoginResult> {
     if (dto.state) {
-      this.verifyState(dto.state);
+      this.appleStrategy.verifyState(dto.state);
     }
 
-    const payload = await this.verifyIdToken(dto.id_token);
+    const payload = await this.appleStrategy.verifyIdToken(dto.id_token);
 
     const name = dto.user?.name
-      ? [dto.user.name.firstName, dto.user.name.lastName].filter(Boolean).join(' ')
+      ? [dto.user.name.firstName, dto.user.name.lastName]
+          .filter(Boolean)
+          .join(' ')
       : undefined;
 
     const { userId } = await this.authRepository.upsertSocialAccount({
-      provider: 'apple',
+      provider: Provider.APPLE,
       providerAccountId: payload.sub,
       email: payload.email ?? dto.user?.email,
       name,
     });
 
     const user = await this.authRepository.findUserById(userId);
+
     if (!user) {
       throw new UnauthorizedException({
         code: ErrorCode.AUTH_USER_NOT_FOUND,
@@ -68,45 +77,9 @@ export class AppleService {
       this.authService.issueRefreshToken(userId),
     ]);
 
-    return { accessToken, refreshToken };
-  }
-
-  private verifyState(state: string): void {
-    try {
-      this.jwtService.verify(state, {
-        secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
-      });
-    } catch {
-      throw new UnauthorizedException({
-        code: ErrorCode.AUTH_INVALID_STATE,
-        message: '유효하지 않은 state입니다.',
-      });
-    }
-  }
-
-  private async verifyIdToken(idToken: string) {
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new GatewayTimeoutException({
-        code: ErrorCode.APPLE_SERVER_TIMEOUT,
-        message: 'Apple 인증 서버 응답 시간이 초과되었습니다.',
-      })), 5000),
-    );
-
-    try {
-      return await Promise.race([
-        appleSignin.verifyIdToken(idToken, {
-          audience: this.config.getOrThrow<string>('APPLE_CLIENT_ID'),
-        }),
-        timeoutPromise,
-      ]);
-    } catch (err) {
-      if (err instanceof GatewayTimeoutException) {
-        throw err;
-      }
-      throw new UnauthorizedException({
-        code: ErrorCode.AUTH_INVALID_TOKEN,
-        message: '유효하지 않은 Apple id_token입니다.',
-      });
-    }
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 }

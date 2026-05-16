@@ -1,5 +1,3 @@
-@AGENTS.md
-
 # WARA Web — CLAUDE.md
 > 루트 CLAUDE.md와 함께 읽힘 (행동 원칙은 루트 참고)
 
