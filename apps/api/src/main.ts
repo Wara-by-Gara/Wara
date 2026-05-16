@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -11,8 +12,17 @@ async function bootstrap() {
   if (!process.env.JWT_ACCESS_SECRET) {
     throw new Error('[보안] JWT_ACCESS_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
+  if (!process.env.FRONTEND_URL) {
+    throw new Error('[보안] FRONTEND_URL 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  }
 
   const app = await NestFactory.create(AppModule);
+
+  // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  });
 
   // DTO 검증: class-validator 데코레이터(@IsString 등) 실행
   // whitelist: DTO에 없는 필드 제거
@@ -34,6 +44,13 @@ async function bootstrap() {
   // - HttpException → HttpExceptionFilter (구체 매칭)
   // - 그 외 모든 예외 → AllExceptionsFilter (@Catch() catch-all)
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
+
+  // Cookie 파싱: Refresh Token 쿠키 읽기
+  const cookieSecret = process.env.COOKIE_SECRET;
+  if (!cookieSecret) {
+    throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  }
+  app.use(cookieParser(cookieSecret));
 
   await app.listen(process.env.PORT ?? 3000);
 }
