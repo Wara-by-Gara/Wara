@@ -25,12 +25,12 @@ import { JwtPayload } from '../common/types/jwt-payload.type';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller()
+@Controller('invitations')
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   //url 발급용
-  @Post('invitations/:invitationId/photos/presigned-url')
+  @Post(':invitationId/photos/presigned-url')
   generatePresignedUrl(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -40,7 +40,7 @@ export class PhotosController {
   }
 
   //사진 목록 조회
-  @Get('invitations/:invitationId/photos')
+  @Get(':invitationId/photos')
   listPhotos(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -50,7 +50,7 @@ export class PhotosController {
   }
 
   //사진 다운로드(선택,단일)
-  @Get('invitations/:invitationId/photos/download')
+  @Get(':invitationId/photos/download')
   getDownloadUrls(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -67,7 +67,7 @@ export class PhotosController {
   }
 
   //사진 다운로드 (전체)
-  @Get('invitations/:invitationId/photos/download/all')
+  @Get(':invitationId/photos/download/all')
   getAllDownloadUrls(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -76,7 +76,7 @@ export class PhotosController {
   }
 
   //리마인드
-  @Get('invitations/:invitationId/photos/best9')
+  @Get(':invitationId/photos/best9')
   getBest9(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -85,7 +85,7 @@ export class PhotosController {
   }
 
   //사진 상세
-  @Get('invitations/:invitationId/photos/:id')
+  @Get(':invitationId/photos/:id')
   getPhoto(
     @Param('invitationId', ParseUlidPipe) invitationId:string,
     @Param('id', ParseUlidPipe) id: string,
@@ -95,7 +95,7 @@ export class PhotosController {
   }
 
   //사진 업로드
-  @Post('invitations/:invitationId/photos')
+  @Post(':invitationId/photos')
   uploadPhoto(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -105,7 +105,7 @@ export class PhotosController {
   }
 
   //사진 삭제(소프트딜리트)
-  @Delete('invitations/:invitationId/photos/:id')
+  @Delete(':invitationId/photos/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deletePhoto(
     @Param('id', ParseUlidPipe) id: string,
@@ -115,7 +115,7 @@ export class PhotosController {
   }
 
   //사진 좋아요 토글
-  @Post('invitations/:invitationId/photos/:photoId/likes')
+  @Post(':invitationId/photos/:photoId/likes')
   @HttpCode(HttpStatus.OK)
   toggleLike(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
