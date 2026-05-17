@@ -1,7 +1,164 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { FeedbacksRepository } from './feedbacks.repository';
+import { ErrorCode } from '../common/constants/error-codes';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { UpdateFeedbackDto } from './dto/update-feedback.dto';
+
+const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
 @Injectable()
 export class FeedbacksService {
   constructor(private readonly repository: FeedbacksRepository) {}
+
+  //삭제된 댓글 내용 placeholder로 바꾸는 private 헬퍼 메소드
+  private applyDeletedPlaceholder<
+    T extends { deletedAt: Date | null; content: string },
+  >(feedbacks: T[]) {
+    return feedbacks.map((f) =>
+      f.deletedAt ? { ...f, content: DELETED_PLACEHOLDER } : f,
+    );
+  }
+
+  //초대장 댓글 리스트
+  async listByInvitation(
+    invitationId: string,
+    userId: string,
+    parentId?: string,
+  ) {
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    const feedbacks = await this.repository.findManyByInvitation(
+      invitationId,
+      parentId,
+    );
+    return this.applyDeletedPlaceholder(feedbacks);
+  }
+
+  //사진 댓글 리스트
+  async listByPhoto(photoId: string, userId: string, parentId?: string) {
+    const photo = await this.repository.findPhotoById(photoId);
+    if (!photo) {
+      //photo 머지 시 수정
+      throw new NotFoundException('PHOTO_NOT_FOUND');
+    }
+
+    const participant = await this.repository.findParticipant(
+      userId,
+      photo.invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    const feedbacks = await this.repository.findManyByPhoto(photoId, parentId);
+    return this.applyDeletedPlaceholder(feedbacks);
+  }
+
+  //초대장 댓글 생성
+  async createForInvitation(
+    invitationId: string,
+    userId: string,
+    dto: CreateFeedbackDto,
+  ) {
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    return this.repository.create({
+      participantId: participant.id,
+      invitationId,
+      content: dto.content,
+      parentId: dto.parentId,
+    });
+  }
+
+  //사진 댓글 생성
+  async createForPhoto(
+    photoId: string,
+    userId: string,
+    dto: CreateFeedbackDto,
+  ) {
+    const photo = await this.repository.findPhotoById(photoId);
+    if (!photo) {
+      //photo 머지 시 수정
+      throw new NotFoundException('PHOTO_NOT_FOUND');
+    }
+
+    const participant = await this.repository.findParticipant(
+      userId,
+      photo.invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    return this.repository.create({
+      participantId: participant.id,
+      invitationId: photo.invitationId,
+      photoId,
+      content: dto.content,
+      parentId: dto.parentId,
+    });
+  }
+
+  //본인 댓글인지 검증하는 헬퍼 메서드
+  private async checkOwner(feedbackId: string, userId: string) {
+    const feedback = await this.repository.findById(feedbackId);
+    if (!feedback) {
+      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+    }
+    if (feedback.participant.userId !== userId) {
+      throw new ForbiddenException(ErrorCode.FEEDBACK_FORBIDDEN);
+    }
+    return feedback;
+  }
+
+  //댓글 수정
+  async update(feedbackId: string, userId: string, dto: UpdateFeedbackDto) {
+    await this.checkOwner(feedbackId, userId);
+    return this.repository.update(feedbackId, dto.content);
+  }
+
+  //댓글 삭제
+  async remove(feedbackId: string, userId: string) {
+    await this.checkOwner(feedbackId, userId);
+    await this.repository.softDelete(feedbackId);
+  }
+
+  //좋아요 토글
+  async toggleLike(feedbackId: string, invitationId: string, userId: string) {
+    const feedback = await this.repository.findById(feedbackId);
+    if (!feedback) {
+      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+    }
+
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    const existing = await this.repository.findLike(feedbackId, participant.id);
+
+    if (existing) {
+      await this.repository.deleteLike(feedbackId, participant.id);
+      return { success: true, data: { liked: false } };
+    } else {
+      await this.repository.createLike(feedbackId, participant.id);
+      return { success: true, data: { liked: true } };
+    }
+  }
 }
