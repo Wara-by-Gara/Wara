@@ -15,7 +15,6 @@ import { MissionsModule } from './missions/missions.module';
 import { PhotosModule } from './photos/photos.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { ParticipantsExampleModule } from './participants_example/participants-example.module';
 import { S3Module } from './s3/s3.module';
 
 @Module({
@@ -36,7 +35,6 @@ import { S3Module } from './s3/s3.module';
     PhotosModule,
     FeedbacksModule,
     NotificationsModule,
-    ParticipantsExampleModule,
     S3Module,
   ],
   controllers: [AppController],
