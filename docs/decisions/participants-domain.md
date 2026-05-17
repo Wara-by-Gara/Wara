@@ -9,7 +9,7 @@
 
 | 메서드 | 경로 | 인증 | 설명 |
 |--------|------|:----:|------|
-| GET | `/invitations/:invitationId/participants` | ✅ | 목록 + summary. attending/undecided만 열람 |
+| GET | `/invitations/:invitationId/participants` | ✅ | 목록 + summary. 기본: attending/undecided만. `?rsvpStatus=absent` 필터로 absent 조회 가능 |
 | GET | `/invitations/:invitationId/participants/:participantId/profile` | ✅ | 참여자 프로필 상세 |
 | GET | `/invitations/:invitationId/participants/:participantId/mutual` | ✅ | 함께 아는 사람 |
 | GET | `/invitations/:invitationId/participants/:participantId/shared-invitations` | ✅ | 함께 참여한 모임 |
@@ -220,7 +220,7 @@ Controller → Service → 복합 비즈니스 로직
 
 | 작업 | 규칙 |
 |------|------|
-| POST join | `memberRole: 'GUEST'` 고정. 중복 409. closed 422. rsvpStatus optional (default: undecided) |
+| POST join | `memberRole: 'GUEST'` 고정. 중복 409. closed 422. rsvpStatus 필수 (attending/undecided/absent 중 택 1) |
 | PATCH rsvp | 본인만. HOST 불가 (항상 attending 고정). closed 422. attending/undecided/absent만 허용 (Zod에서 차단) |
 | PATCH me/hidden | 본인만. closed 여부와 무관하게 토글 가능 |
 | DELETE | 본인 OR HOST. HOST 본인 탈퇴 400. hard delete |
@@ -358,6 +358,38 @@ InvitationsService
 - `InvitationsRepository.createWithHost()` 또는 `create()` 내부에서 트랜잭션으로 participants row 함께 생성
 - HOST participant: `memberRole: 'HOST'`, `rsvpStatus: 'attending'` 고정
 - `ParticipantsRepository`는 GUEST 참가(`POST /participants`) 전용으로 유지
+
+---
+
+## 12. 팀 논의 필요 — RSVP 변경 시간 제한
+
+### 배경
+
+현재 RSVP 변경 제한 조건은 `INVITATION_CLOSED` (HOST가 수동으로 마감한 상태)뿐.
+시간 기반 제한이 없어 이벤트 시작 후에도 자유롭게 변경 가능.
+
+### 현재 스키마
+- `invitations.status`: `active` | `closed` (HOST 수동 마감)
+- `invitations.eventStartAt`: timestamp, nullable
+- `eventEndAt` 필드 없음
+
+### 논의 포인트
+
+| 옵션 | 설명 | 스키마 변경 | 장점 | 단점 |
+|------|------|:-----------:|------|------|
+| A. 제한 없음 (현재) | closed 상태에만 차단 | 없음 | 최대 유연성 | 시작 후 취소 혼란 가능 |
+| B. 시작 15분 전까지 | `eventStartAt - 15min` 초과 시 차단 | 없음 | 호스트 인원 확정 도움 | 지각 참석자 RSVP 불가 |
+| C. 모임 당일 자정까지 | `eventStartAt` 당일 자정(23:59:59)까지 허용 | 없음 (`eventStartAt`에서 계산) | 중간 합류 허용, 자연스러운 마감 | `eventStartAt` 없는 모임은 제한 불가 |
+| D. 비대칭 (복합) | `attending→absent`는 시작 전, `absent→attending`은 당일 자정까지 | 없음 | 양방향 합리적 | 구현 복잡, 사용자 혼란 가능 |
+
+### 현재 결정
+
+**Option A 유지 (시간 제한 없음)** — V1.0에서는 closed 상태만 체크.
+
+친구 모임 특성상 중간 합류가 자연스럽고, `eventEndAt` 필드 추가 없이 가능한 범위에서 시작.
+이벤트 관리 고도화 시 옵션 C 또는 D 재검토 권장.
+
+---
 
 ### 관련 개념 정리 (참고)
 
