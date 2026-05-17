@@ -19,6 +19,10 @@ import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { S3_CLIENT } from '../s3/s3.module';
 
+const MAX_DOWNLOAD_LIMIT = 9999;    // 전체 다운로드 최대 사진 수
+const UPLOAD_URL_EXPIRES_IN = 900;  // 업로드용 Presigned URL 만료 시간 (15분)
+const GET_URL_EXPIRES_IN = 86400;   // 조회/다운로드용 Presigned URL 만료 시간 (24시간)
+
 @Injectable()
 export class PhotosService {
   private readonly bucket: string;
@@ -53,7 +57,7 @@ export class PhotosService {
       ContentType: dto.contentType,
     });
     const presignedUrl = await getSignedUrl(this.s3, command, {
-      expiresIn: 900,
+      expiresIn: UPLOAD_URL_EXPIRES_IN,
     });
     return { success: true, data: { presignedUrl, key } };
   }
@@ -61,7 +65,7 @@ export class PhotosService {
   //사진조회용 presigned URL 발급 (만료시간 24시간)
   private async getViewUrl(key: string) {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.s3, command, { expiresIn: 86400 });
+    return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
   }
 
   //다운로드용 presigned URL 발급 (만료시간 24시간)
@@ -71,7 +75,7 @@ export class PhotosService {
       Key: key,
       ResponseContentDisposition: `attachment; filename="${fileName}"`,
     });
-    return getSignedUrl(this.s3, command, { expiresIn: 86400 });
+    return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
   }
 
   //전체 사진 db 조회
@@ -167,8 +171,9 @@ export class PhotosService {
     if (!participantId) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
+
     const { rows } = await this.repository.findAllByInvitationId(invitationId, {
-      limit: 9999,
+      limit: MAX_DOWNLOAD_LIMIT,
       sort: 'createdAt',
       order: 'asc',
     });
