@@ -79,10 +79,11 @@ export class PhotosRepository {
 
   //다운로드용(낱개, 지정, 전체)
   async findPhotosByIds(ids: string[]) {
-    return this.db
+    const rows = await this.db
       .select()
       .from(photos)
       .where(and(inArray(photos.id, ids), isNull(photos.deletedAt)));
+    return rows;
   }
 
   //특정 id의 사진 단건 조회 (삭제된 사진은 제외)
@@ -109,17 +110,14 @@ export class PhotosRepository {
   }
 
   //사진 삭제 (소프트 딜리트))
-  async softDelete(id: string) {
+  async softDelete(id: string): Promise<boolean> {
     const result = await this.db
       .update(photos)
       .set({ deletedAt: new Date() })
       .where(and(eq(photos.id, id), isNull(photos.deletedAt)))
       .returning({ id: photos.id });
 
-    if (result.length === 0) {
-      throw new Error('사진을 찾을 수 없거나 이미 삭제된 항목입니다.');
-    }
-    return result[0];
+    return result.length > 0;
   }
 
   //좋아요 존재 여부 조회 (내가 눌렀는지 안눌렀는지)

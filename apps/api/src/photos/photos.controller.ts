@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -53,8 +54,11 @@ export class PhotosController {
   getDownloadUrls(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
-    @Query('ids') ids: string,
+    @Query('ids') ids?: string,
   ) {
+    if (!ids) {
+      throw new BadRequestException('ids 쿼리 파라미터가 필요합니다.')
+    }
     return this.photosService.getDownloadUrls(
       invitationId,
       user.id,
