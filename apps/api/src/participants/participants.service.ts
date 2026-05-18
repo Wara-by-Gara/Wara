@@ -8,13 +8,17 @@ import {
 } from '@nestjs/common';
 import { type Participant } from '../../drizzle/schema';
 import { ErrorCode } from '../common/constants/error-codes';
+import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
 
 @Injectable()
 export class ParticipantsService {
-  constructor(private readonly repository: ParticipantsRepository) {}
+  constructor(
+    private readonly repository: ParticipantsRepository,
+    private readonly blocklistRepository: BlocklistRepository,
+  ) {}
 
   async findAll(invitationId: string, filter?: string) {
     const all = await this.repository.findAllByInvitation(invitationId);
@@ -114,6 +118,13 @@ export class ParticipantsService {
     if (viewer.id !== participantId && viewer.memberRole !== 'HOST') {
       throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
     }
+
+    const isHostKick = viewer.memberRole === 'HOST' && viewer.id !== participantId;
+
     await this.repository.hardDelete(participantId);
+
+    if (isHostKick) {
+      await this.blocklistRepository.add(viewer.invitationId, target.userId, viewer.userId);
+    }
   }
 }

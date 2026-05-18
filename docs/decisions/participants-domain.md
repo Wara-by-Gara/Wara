@@ -315,53 +315,14 @@ Controller → Service → 복합 비즈니스 로직
 
 ### 현재 결정
 
-**일단 Option A 유지 (blocklist API 구현 후 재논의)**
+**Option B 채택** — kick 시 자동 blocklist 추가.
 
-친구 모임 앱 특성상 Option B가 더 자연스럽다는 의견 있음.
-blocklist 도메인 구현 시 연동 여부 팀 확정 필요.
-
----
-
-## 11. 팀 논의 필요 — HOST 참가자 생성 방식
-
-### 배경
-
-HOST `rsvpStatus`는 항상 `attending` 고정 (PATCH rsvp 불가).
-따라서 초대장 생성 시 HOST 참가자 row를 `rsvpStatus: 'attending'`으로 생성해야 함.
-
-### 논의 포인트
-
-**방법 A: `ParticipantsRepository.createHost()`를 InvitationsService에서 호출**
-```
-InvitationsService
-  → InvitationsRepository.create()        // invitations 테이블
-  → ParticipantsRepository.createHost()   // participants 테이블
-```
-- 장점: participants 테이블 쓰기가 ParticipantsRepository 한 곳에 집중
-- 단점: InvitationsModule이 ParticipantsModule을 import해야 함 (모듈 간 의존성)
-
-**방법 B: `InvitationsRepository`에서 participants 테이블 직접 insert (결정)**
-```
-InvitationsService
-  → InvitationsRepository.createWithHost()
-      // invitations + participants를 하나의 트랜잭션으로 처리
-```
-- 장점: 한 트랜잭션으로 원자적 처리, 모듈 간 의존성 없음
-- 단점: InvitationsRepository가 participants 테이블을 직접 건드림
-
-### 현재 결정
-
-**방법 B 채택** — 초대장 생성과 HOST 참가자 등록은 항상 함께 일어나야 하는 원자적 작업이므로 트랜잭션으로 묶는 것이 데이터 일관성 측면에서 안전.
-
-### InvitationsModule 구현 시 주의사항
-
-- `InvitationsRepository.createWithHost()` 또는 `create()` 내부에서 트랜잭션으로 participants row 함께 생성
-- HOST participant: `memberRole: 'HOST'`, `rsvpStatus: 'attending'` 고정
-- `ParticipantsRepository`는 GUEST 참가(`POST /participants`) 전용으로 유지
+- `ParticipantsService.leave()`에서 HOST kick 조건(`viewer.memberRole === 'HOST' && viewer.id !== participantId`) 시 `BlocklistRepository.add()` 호출
+- 별도 blocklist 관리 API: `GET /invitations/:id/blocklist`, `DELETE /invitations/:id/blocklist/:userId` (HOST 전용)
 
 ---
 
-## 12. 팀 논의 필요 — RSVP 변경 시간 제한
+## 11. 팀 논의 필요 — RSVP 변경 시간 제한
 
 ### 배경
 
@@ -398,5 +359,5 @@ InvitationsService
 | absent (PATCH rsvp) | 본인 | 불참 표시, row 유지 | PATCH로 attending 전환 |
 | isHidden (PATCH me/hidden) | 본인 | 내 갤러리에서만 숨김 | PATCH로 해제 |
 | leave/본인 탈퇴 (DELETE) | 본인 | row 삭제, 흔적 없음 | POST로 재참가 |
-| kick/강제 퇴장 (DELETE) | HOST → GUEST | row 삭제 | 현재는 재참가 가능 (blocklist 미연동) |
-| blocklist (미구현) | HOST → 특정 유저 | 링크로 재참가 차단 | HOST 해제 시 |
+| kick/강제 퇴장 (DELETE) | HOST → GUEST | row 삭제 + blocklist 자동 추가 | `DELETE /blocklist/:userId`로 차단 해제 후 재참가 가능 |
+| blocklist | HOST → 특정 유저 | 링크로 재참가 차단 | `DELETE /invitations/:id/blocklist/:userId`로 HOST 해제 |
