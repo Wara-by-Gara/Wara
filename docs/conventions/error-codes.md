@@ -68,6 +68,19 @@
 | `MISSION_NOT_FOUND` | 404 | 미션 없음 또는 해당 초대장에 속하지 않음 |
 | `MISSION_NOT_ENABLED` | 400 | 초대장의 미션 기능이 비활성화 상태 |
 
+
+## Photo
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `PHOTO_NOT_FOUND` | 404 | 사진 조회 실패 |
+| `PHOTO_FORBIDDEN` | 403 | 본인 사진이 아님 |
+| `PHOTO_LIKE_ALREADY_EXISTS` | 409 | 이미 좋아요한 사진 |
+| `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
+| `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
+
+
+
 ---
 
 ## 규칙
