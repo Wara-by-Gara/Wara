@@ -14,7 +14,11 @@ export const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/;
  */
 @Injectable()
 export class ParseUlidPipe implements PipeTransform {
-  transform(value: string): string {
+  constructor(private readonly options?: { optional?: boolean }) {}
+
+  transform(value: string): string | undefined {
+    if (this.options?.optional && !value) return undefined;
+
     if (!ULID_PATTERN.test(value)) {
       throw new BadRequestException({
         message: ErrorCode.INVALID_ULID,
