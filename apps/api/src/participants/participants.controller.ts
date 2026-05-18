@@ -16,7 +16,6 @@ import { JoinInvitationSchema, JoinInvitationDto } from './dto/join-invitation.d
 import { UpdateRsvpSchema, UpdateRsvpDto } from './dto/update-rsvp.dto';
 import { UpdateHiddenSchema, UpdateHiddenDto } from './dto/update-hidden.dto';
 import { ListParticipantsQuerySchema, ListParticipantsQuery } from './dto/list-participants.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ParticipantGuard } from '../common/guards/participant.guard';
 import { RsvpStatusGuard } from '../common/guards/rsvp-status.guard';
 import { RequireRsvpStatus } from '../common/decorators/require-rsvp-status.decorator';
@@ -33,7 +32,7 @@ export class ParticipantsController {
   constructor(private readonly participantsService: ParticipantsService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard, ParticipantGuard, RsvpStatusGuard)
+  @UseGuards(ParticipantGuard, RsvpStatusGuard)
   @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
   findAll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
@@ -43,7 +42,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/profile')
-  @UseGuards(JwtAuthGuard, ParticipantGuard, RsvpStatusGuard)
+  @UseGuards(ParticipantGuard, RsvpStatusGuard)
   @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
   getProfile(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
@@ -53,7 +52,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/mutual')
-  @UseGuards(JwtAuthGuard, ParticipantGuard, RsvpStatusGuard)
+  @UseGuards(ParticipantGuard, RsvpStatusGuard)
   @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
   getMutual(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
@@ -64,7 +63,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/shared-invitations')
-  @UseGuards(JwtAuthGuard, ParticipantGuard, RsvpStatusGuard)
+  @UseGuards(ParticipantGuard, RsvpStatusGuard)
   @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
   getSharedInvitations(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
@@ -75,7 +74,6 @@ export class ParticipantsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   join(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -85,7 +83,7 @@ export class ParticipantsController {
   }
 
   @Patch('me/hidden')
-  @UseGuards(JwtAuthGuard, ParticipantGuard)
+  @UseGuards(ParticipantGuard)
   updateHidden(
     @CurrentParticipant() viewer: Participant,
     @Body(new ZodValidationPipe(UpdateHiddenSchema)) dto: UpdateHiddenDto,
@@ -94,7 +92,7 @@ export class ParticipantsController {
   }
 
   @Patch(':participantId/rsvp')
-  @UseGuards(JwtAuthGuard, ParticipantGuard)
+  @UseGuards(ParticipantGuard)
   updateRsvp(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('participantId', ParseUlidPipe) participantId: string,
@@ -105,7 +103,7 @@ export class ParticipantsController {
   }
 
   @Delete(':participantId')
-  @UseGuards(JwtAuthGuard, ParticipantGuard)
+  @UseGuards(ParticipantGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   leave(
     @Param('participantId', ParseUlidPipe) participantId: string,
