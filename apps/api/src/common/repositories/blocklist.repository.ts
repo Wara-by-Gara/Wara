@@ -13,7 +13,8 @@ import { Injectable } from '@nestjs/common';
  */
 @Injectable()
 export class BlocklistRepository {
+  // TODO: invitation_blocklists 테이블 구현 후 실제 조회로 교체
   async isBlocked(_userId: string, _invitationId: string): Promise<boolean> {
-    throw new Error('BlocklistRepository.isBlocked: NotImplemented');
+    return false;
   }
 }
