@@ -50,6 +50,13 @@
       "when": 1778840041861,
       "tag": "0006_tense_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778812624143,
+      "tag": "0007_goofy_spiral",
+      "breakpoints": true
     }
   ]
 }
