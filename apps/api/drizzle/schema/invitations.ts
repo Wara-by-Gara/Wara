@@ -1,7 +1,7 @@
 import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { invitationStatusEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum, sendStatusEnum } from './enums';
+import { invitationStatusEnum, linkEventTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
 import { users } from './users';
 
 export const invitationTemplates = pgTable('invitation_templates', {
@@ -48,8 +48,7 @@ export const invitationSendLogs = pgTable('invitation_send_logs', {
   invitationId: text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
   senderId: text('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   channel: sendChannelEnum('channel').notNull(),
-  inviteUrl: text('invite_url'),
-  status: sendStatusEnum('status').notNull().default('sent'),
+  inviteUrl: text('invite_url').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -67,6 +66,22 @@ export const invitationBlocklists = pgTable('invitation_blocklists', {
   index('idx_blocklist_invitation').on(t.invitationId),
 ]);
 
+export const invitationLinkEvents = pgTable('invitation_link_events', {
+  id: text('id').primaryKey().$defaultFn(() => ulid()),
+  logId: text('log_id')
+    .notNull()
+    .references(() => invitationSendLogs.id, { onDelete: 'cascade' }),
+  eventType: linkEventTypeEnum('event_type').notNull(),
+  userId: text('user_id')
+    .references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+}, (t) => [
+  index('idx_link_events_log_id').on(t.logId),
+  index('idx_link_events_type').on(t.eventType),
+]);
+
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type Participant = typeof participants.$inferSelect;
@@ -74,3 +89,5 @@ export type NewParticipant = typeof participants.$inferInsert;
 export type InvitationTemplate = typeof invitationTemplates.$inferSelect;
 export type InvitationBlocklist = typeof invitationBlocklists.$inferSelect;
 export type NewInvitationBlocklist = typeof invitationBlocklists.$inferInsert;
+export type InvitationSendLog = typeof invitationSendLogs.$inferSelect;
+export type InvitationLinkEvent = typeof invitationLinkEvents.$inferSelect;

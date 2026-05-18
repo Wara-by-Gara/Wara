@@ -28,11 +28,10 @@ export const sendChannelEnum = pgEnum('send_channel', [
   'email',
   'dm',
 ]);
-export const sendStatusEnum = pgEnum('send_status', [
-  'sent',
+
+export const linkEventTypeEnum = pgEnum('link_event_type', [
   'opened',
-  'responded',
-  'failed',
+  'joined',
 ]);
 
 export const notificationTypeEnum = pgEnum('notification_type', [
