@@ -62,7 +62,7 @@ export class AuthController {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     if (error || !code) {
-      return res.redirect(`${frontendUrl}/create?auth_error=1`);
+      return res.redirect(`${frontendUrl}/invitations/create?auth_error=1`);
     }
 
     try {
@@ -73,10 +73,10 @@ export class AuthController {
         state,
       });
       const params = new URLSearchParams({ access_token: accessToken, refresh_token: refreshToken });
-      return res.redirect(`${frontendUrl}/create?${params.toString()}`);
+      return res.redirect(`${frontendUrl}/invitations/create?${params.toString()}`);
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
-      return res.redirect(`${frontendUrl}/create?auth_error=1`);
+      return res.redirect(`${frontendUrl}/invitations/create?auth_error=1`);
     }
   }
 
