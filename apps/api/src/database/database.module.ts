@@ -22,3 +22,4 @@ export const DRIZZLE = Symbol('DRIZZLE');
 })
 export class DatabaseModule {}
 export type DrizzleDB = ReturnType<typeof drizzle<typeof schema>>;
+export type DrizzleTx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
