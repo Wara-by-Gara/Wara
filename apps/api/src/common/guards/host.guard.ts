@@ -8,8 +8,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { ErrorCode } from '../constants/error-codes';
 import { MEMBER_ROLE_KEY } from '../decorators/member-role.decorator';
 import { MemberRole } from '../enums/member-role.enum';
+import { ULID_PATTERN } from '../pipes/parse-ulid.pipe';
 import { ParticipantRepository } from '../repositories/participant.repository';
 
 @Injectable()
@@ -33,12 +35,18 @@ export class HostGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new UnauthorizedException('TOKEN_INVALID');
+      throw new UnauthorizedException(ErrorCode.TOKEN_INVALID);
     }
 
     const invitationId = request.params?.invitationId;
     if (typeof invitationId !== 'string' || invitationId.length === 0) {
-      throw new BadRequestException('INVITATION_ID_REQUIRED');
+      throw new BadRequestException(ErrorCode.INVITATION_ID_REQUIRED);
+    }
+    if (!ULID_PATTERN.test(invitationId)) {
+      throw new BadRequestException({
+        message: ErrorCode.INVALID_ULID,
+        details: { value: invitationId, param: 'invitationId' },
+      });
     }
 
     const memberRole = await this.participantRepository.findMemberRole(
@@ -47,7 +55,7 @@ export class HostGuard implements CanActivate {
     );
 
     if (!memberRole || !requiredRoles.includes(memberRole)) {
-      throw new ForbiddenException('INSUFFICIENT_ROLE');
+      throw new ForbiddenException(ErrorCode.INSUFFICIENT_ROLE);
     }
 
     return true;
