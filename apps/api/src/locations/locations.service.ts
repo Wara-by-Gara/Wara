@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { LocationsRepository } from './locations.repository';
 import { KakaoLocalService } from './kakao-local.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -41,10 +45,17 @@ export class LocationsService {
     userId: string,
     dto: UpdateParticipantLocationDto,
   ) {
-    const participant = await this.repository.findParticipant(userId, invitationId);
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
     if (!participant) {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
-    return this.repository.upsertParticipantLocation(invitationId, participant.id, dto);
+    return this.repository.upsertParticipantLocation(
+      invitationId,
+      participant.id,
+      dto,
+    );
   }
 }
