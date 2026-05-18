@@ -35,6 +35,13 @@
 | `TOKEN_INVALID` | 401 | refresh token 위조 또는 없음 |
 | `APPLE_SERVER_TIMEOUT` | 504 | Apple 인증 서버 응답 시간 초과 |
 
+## Invitation
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
+| `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
+
 ## Common
 
 | 코드 | 상태코드 | 상황 |
