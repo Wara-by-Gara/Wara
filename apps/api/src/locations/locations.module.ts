@@ -11,6 +11,11 @@ import { KakaoLocalService } from './kakao-local.service';
 @Module({
   imports: [AuthModule, HttpModule],
   controllers: [LocationsController, LocationsSearchController],
-  providers: [LocationsService, LocationsRepository, LocationsGateway, KakaoLocalService],
+  providers: [
+    LocationsService,
+    LocationsRepository,
+    LocationsGateway,
+    KakaoLocalService,
+  ],
 })
 export class LocationsModule {}

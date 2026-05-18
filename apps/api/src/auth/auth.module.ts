@@ -18,6 +18,7 @@ import { AppleController } from './apple/apple.controller';
 import { AppleService } from './apple/apple.service';
 import { AppleStrategy } from './apple/apple.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
 
@@ -54,6 +55,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
     AppleService,
     AppleStrategy,
     GoogleStrategy,
+    JwtStrategy,
     KakaoStrategy,
     NaverStrategy,
 
