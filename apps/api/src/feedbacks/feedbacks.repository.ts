@@ -1,4 +1,4 @@
-import { and, eq, sql,  } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { feedbackLikes, feedbacks, NewFeedback } from '../../drizzle/schema';
@@ -17,7 +17,11 @@ export class FeedbacksRepository {
               eq(t.parentId, parentId),
               isNull(t.deletedAt),
             )
-          : and(eq(t.invitationId, invitationId), isNull(t.deletedAt)),
+          : and(
+              eq(t.invitationId, invitationId),
+              isNull(t.parentId),
+              isNull(t.deletedAt),
+            ),
       with: { participant: true },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
     });
@@ -33,7 +37,11 @@ export class FeedbacksRepository {
               eq(t.parentId, parentId),
               isNull(t.deletedAt),
             )
-          : and(eq(t.photoId, photoId), isNull(t.deletedAt)),
+          : and(
+              eq(t.photoId, photoId),
+              isNull(t.parentId),
+              isNull(t.deletedAt),
+            ),
       with: { participant: true },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
     });
