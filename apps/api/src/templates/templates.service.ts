@@ -8,7 +8,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 export class TemplatesService {
   constructor(private readonly repository: TemplatesRepository) {}
 
-  findAll() {
+  async findAll() {
     return this.repository.findAll();
   }
 

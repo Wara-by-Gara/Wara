@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { TemplatesModule } from '../templates/templates.module';
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
 import { InvitationsRepository } from './invitations.repository';
-import { TemplatesRepository } from '../templates/templates.repository';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, TemplatesModule],
   controllers: [InvitationsController],
-  providers: [InvitationsService, InvitationsRepository, TemplatesRepository],
+  providers: [InvitationsService, InvitationsRepository],
 })
 export class InvitationsModule {}
