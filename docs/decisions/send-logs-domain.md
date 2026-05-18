@@ -12,8 +12,8 @@ SendLog         = InvitationSendLog row. 초대장 공유 1회 기록
 channel         = 공유 채널 (link | kakao | sms | email | dm)
                   dm = 인스타그램·트위터 등 외부 메신저 DM 통합. WARA 앱 내 DM 아님 (V1.1+)
 inviteUrl       = 서버 자동 생성. DB엔 ref 없이 저장, 응답 시 ?ref={logId} 추가
-                  예) DB: "https://wara.com/invite/{invitationId}"
-                      응답: "https://wara.com/invite/{invitationId}?ref={logId}"
+                  예) DB: "https://wara.com/rsvp/{invitationId}"
+                      응답: "https://wara.com/rsvp/{invitationId}?ref={logId}"
                   ref={logId} → 방문자가 어떤 공유 링크를 통해 들어왔는지 추적용
 sender          = JWT에서 추출한 공유 요청자. HOST 또는 초대장 참여 GUEST
 LinkEvent       = 링크 상호작용 이벤트 row. 클릭/참가 등 1건 = 1row
@@ -46,12 +46,12 @@ eventType       = opened | login_converted | joined
 ### Controller → Service
 
 ```typescript
-findAll(invitationId: string): Promise<SendLog[]>
+// V1.0 제외: findAll (GET /logs 팀 논의 후 추가)
 
 create(
   userId: string,
   invitationId: string,
-  dto: CreateSendLogDto,          // { channel }
+  dto: CreateSendLogDto,          // { channel, kakaoMeta? }
 ): Promise<SendLogWithMeta>
 
 recordOpen(logId: string): Promise<void>
@@ -61,7 +61,7 @@ recordOpen(logId: string): Promise<void>
 
 ```typescript
 // SendLogsRepository
-findAllByInvitation(invitationId: string): Promise<SendLog[]>
+// V1.0 제외: findAllByInvitation
 
 create(data: {
   invitationId: string
@@ -70,16 +70,13 @@ create(data: {
   inviteUrl: string               // ?ref 없이 저장
 }): Promise<SendLog>
 
-findInvitationMeta(invitationId: string): Promise<{
-  title: string
-  description: string
-  mainImageKey: string
-} | null>
+// findInvitationMeta 제거 — 프론트 전송 방식(Option B) 채택. §16 참고
 
 // LinkEventsRepository
 createEvent(data: {
   logId: string
-  eventType: LinkEventType        // V1.0: 'opened'만 사용. 'login_converted'는 V1.1+
+  eventType: LinkEventType        // V1.0: 'opened'만 사용. 'joined'는 participants 연동 시
+  userId?: string | null
 }): Promise<void>
 ```
 
@@ -151,8 +148,8 @@ Drizzle 스키마에서도 `status` 컬럼 및 `sendStatusEnum` 사용 제거.
 ```typescript
 export const linkEventTypeEnum = pgEnum('link_event_type', [
   'opened',           // 링크 클릭 (비로그인 포함)
-  'login_converted',  // 링크 통해 로그인까지 진행
   'joined',           // 링크 통해 RSVP까지 완료
+  // 'login_converted' — V1.1+. 추가 시 enum migration 필요
 ]);
 
 export const invitationLinkEvents = pgTable('invitation_link_events', {
@@ -266,10 +263,10 @@ PATCH /open
 
 | 작업 | 규칙 |
 |------|------|
-| POST | `channel`만 body로 받음. `inviteUrl`은 서버 자동 생성 |
-| POST | DB 저장: `https://wara.com/invite/{invitationId}` (ref 없이) |
+| POST | `channel` + `kakaoMeta?` body로 받음. `inviteUrl`은 서버 자동 생성 |
+| POST | DB 저장: `https://wara.com/rsvp/{invitationId}` (ref 없이) |
 | POST | 응답: `inviteUrl`에 `?ref={logId}` 추가해서 반환 |
-| POST | kakao 채널: `findInvitationMeta()` 조회 후 `kakaoMeta` 구성 |
+| POST | kakao 채널: `dto.kakaoMeta` 그대로 응답에 포함 (DB 조회 없음. §16 참고) |
 | POST | sms 채널: `smsUri = sms:?body={encodeURIComponent(message)}` |
 | GET | `createdAt DESC` 정렬 |
 | PATCH /open | `invitation_link_events`에 `eventType: 'opened'`, `userId: null` INSERT |
@@ -353,7 +350,15 @@ PATCH /open
 
 ---
 
-## 15. 팀 논의 포인트
+## 15. 향후 수정 필요 항목
+
+| 항목 | 파일 | 내용 |
+|------|------|------|
+| `ParticipantGuard` 추가 시 | `send-logs.controller.ts` | `@UseGuards(HostGuard) + @RequireMemberRole(HOST, GUEST)` → `@UseGuards(ParticipantGuard)`로 교체. `@RequireMemberRole` 제거 |
+
+---
+
+## 16. 팀 논의 포인트
 
 ### `login_converted` 이벤트 도입 여부 (V1.1+)
 
@@ -366,6 +371,31 @@ WARA에서 RSVP(참석·미정·불참)는 모두 로그인이 선행된다.
 - 프론트에서 로그인 완료 후에도 `?ref={logId}` 파라미터 유지
 - `PATCH /logs/:logId/login-converted` 엔드포인트 추가 (JwtAuthGuard)
 - DB enum에는 이미 `login_converted` 값이 존재하므로 migration 불필요
+
+---
+
+### RSVP 선택 후 로그인 → 상세 페이지 복귀 흐름
+
+`/rsvp/{id}`에서 참석/미정 선택 → 로그인 게이트 → 로그인 완료 → `/invite/{id}` 이동은 **프론트 처리**.
+
+프론트가 로그인 전 state(`returnUrl`, `pendingRsvp`)를 저장하고, 로그인 완료 후 `/invite/{id}`로 이동해 `POST /participants`를 자동 호출하면 됨. 백엔드 추가 작업 없음.
+
+**확인 필요:** 현재 OAuth 콜백 리다이렉트 URL이 하드코딩인지 state 기반인지 — 프론트팀과 auth 흐름 설계 시 함께 체크.
+
+---
+
+### kakao 메타데이터 전송 방식
+
+초대장 상세 화면에서 공유하므로 프론트가 `title / description / imageUrl` 값을 이미 보유.
+백엔드가 DB를 추가 조회하는 대신 프론트가 POST body에 포함해서 전송.
+
+**현재 결정: 프론트 전송 방식** — `CreateSendLogDto.kakaoMeta` (optional)
+
+백엔드 조회 방식으로 전환 시 필요 작업:
+1. `dto/create-send-log.dto.ts` — `kakaoMeta` 필드 제거
+2. `send-logs.repository.ts` — `findInvitationMeta(invitationId)` 메서드 추가
+3. `send-logs.service.ts` — kakao 분기에서 `findInvitationMeta()` 호출, `CDN_BASE_URL`로 imageUrl 조합
+4. 프론트와 API 계약 변경 협의 필요
 
 ---
 
@@ -386,7 +416,7 @@ smsUri: "sms:?body=WARA%20초대장%0A..."
 
 ---
 
-## 16. 플랫폼 관리자 Analytics 엔드포인트 (V1.1+ 예시)
+## 17. 플랫폼 관리자 Analytics 엔드포인트 (V1.1+ 예시)
 
 > **구현 대상 아님.** admin 대시보드 UI 개발 시점에 별도 `admin` 도메인으로 구현.
 > V1.0부터 데이터가 쌓이므로 소급 분석 가능.
