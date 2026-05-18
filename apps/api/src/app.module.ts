@@ -17,6 +17,7 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ParticipantsExampleModule } from './participants_example/participants-example.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SendLogsModule } from './send-logs/send-logs.module';
     NotificationsModule,
     ParticipantsExampleModule,
     SendLogsModule,
+    S3Module,
   ],
   controllers: [AppController],
   providers: [
