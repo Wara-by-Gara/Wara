@@ -2,19 +2,23 @@
 
 import { useEffect } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
 interface LoginModalProps {
   onClose: () => void;
 }
 
+function redirectToOAuth(provider: "kakao" | "naver") {
+  window.location.href = `${API_URL}/auth/${provider}/redirect`;
+}
+
 export default function LoginModal({ onClose }: LoginModalProps) {
-  // ESC 키로 닫기
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // 스크롤 잠금
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -29,7 +33,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] mx-4 p-10 flex flex-col gap-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 타이틀 */}
         <div className="flex flex-col items-center gap-2 text-center">
           <h2 className="font-serif text-[#1b1c1c] text-3xl font-bold">Welcome to WARA</h2>
           <p className="text-[#58423d] text-sm leading-relaxed">
@@ -37,12 +40,12 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </p>
         </div>
 
-        {/* 소셜 로그인 버튼 */}
         <div className="flex flex-col gap-3">
-          {/* Apple */}
+          {/* Apple — credentials 미설정으로 비활성화 */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-[#e4e2e2] rounded-xl py-3.5 text-[#1b1c1c] font-semibold text-sm hover:bg-[#f5f3f3] transition-colors cursor-pointer"
+            disabled
+            className="w-full flex items-center justify-center gap-3 border border-[#e4e2e2] rounded-xl py-3.5 text-[#1b1c1c] font-semibold text-sm opacity-40 cursor-not-allowed"
           >
             <AppleIcon />
             Continue with Apple
@@ -51,6 +54,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           {/* Naver */}
           <button
             type="button"
+            onClick={() => redirectToOAuth("naver")}
             className="w-full flex items-center justify-center gap-3 bg-[#03c75a] rounded-xl py-3.5 text-white font-semibold text-sm hover:bg-[#02b350] transition-colors cursor-pointer"
           >
             <NaverIcon />
@@ -60,6 +64,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           {/* Kakao */}
           <button
             type="button"
+            onClick={() => redirectToOAuth("kakao")}
             className="w-full flex items-center justify-center gap-3 bg-[#fee500] rounded-xl py-3.5 text-[#191919] font-semibold text-sm hover:bg-[#f0d900] transition-colors cursor-pointer"
           >
             <KakaoIcon />
@@ -67,7 +72,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </button>
         </div>
 
-        {/* 약관 */}
         <p className="text-center text-[#58423d] text-xs leading-relaxed">
           By continuing, you agree to WARA&apos;s{" "}
           <a href="#" className="underline hover:text-[#a73921]">Terms of Service</a>
