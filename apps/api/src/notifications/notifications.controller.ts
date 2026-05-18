@@ -19,8 +19,8 @@ import {
 } from './dto/update-notification-settings.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
-const PaginationSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
+const CursorPaginationSchema = z.object({
+  cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
@@ -30,8 +30,8 @@ export class NotificationsController {
 
   @Get()
   findAll(@CurrentUser() user: JwtPayload, @Query() query: unknown) {
-    const { page, limit } = PaginationSchema.parse(query);
-    return this.notificationsService.findAll(user.id, page, limit);
+    const { cursor, limit } = CursorPaginationSchema.parse(query);
+    return this.notificationsService.findAll(user.id, cursor, limit);
   }
 
   @Get('unread')
