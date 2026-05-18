@@ -13,8 +13,8 @@ export class FeedbacksRepository {
       where: (t, { eq, and, isNull }) =>
         and(
           eq(t.invitationId, invitationId),
+          isNull(t.photoId),
           isNull(t.parentId),
-          isNull(t.deletedAt),
         ),
       with: {
         participant: true,
@@ -36,13 +36,11 @@ export class FeedbacksRepository {
           eq(t.invitationId, invitationId),
           isNotNull(t.photoId),
           isNull(t.parentId),
-          isNull(t.deletedAt),
         ),
       with: {
         participant: true,
         photo: true,
         replies: {
-          where: (t, { isNull }) => isNull(t.deletedAt),
           with: { participant: true },
           orderBy: (t, { asc }) => [asc(t.createdAt)],
         },
@@ -55,11 +53,10 @@ export class FeedbacksRepository {
   async findManyByPhoto(photoId: string) {
     return this.db.query.feedbacks.findMany({
       where: (t, { eq, and, isNull }) =>
-        and(eq(t.photoId, photoId), isNull(t.parentId), isNull(t.deletedAt)),
+        and(eq(t.photoId, photoId), isNull(t.parentId)),
       with: {
         participant: true,
         replies: {
-          where: (t, { isNull }) => isNull(t.deletedAt),
           with: { participant: true },
           orderBy: (t, { asc }) => [asc(t.createdAt)],
         },
