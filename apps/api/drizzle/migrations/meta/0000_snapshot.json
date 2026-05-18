@@ -1,5 +1,5 @@
 {
-  "id": "8eb8d6da-d2e7-4140-8c73-dbd8b539a42b",
+  "id": "4182613a-3072-46ef-9622-c8a5481cf119",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -39,6 +39,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "apple_refresh_token": {
+          "name": "apple_refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_private_email": {
+          "name": "is_private_email",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -54,7 +67,50 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_social_accounts_user_provider": {
+          "name": "uq_social_accounts_user_provider",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uq_social_accounts_provider_account": {
+          "name": "uq_social_accounts_provider_account",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider_account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "social_accounts_user_id_users_id_fk": {
           "name": "social_accounts_user_id_users_id_fk",
@@ -137,6 +193,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -166,8 +228,173 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.event_locations": {
-      "name": "event_locations",
+    "public.oauth_states": {
+      "name": "oauth_states",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "social_provider",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "redirect_uri": {
+          "name": "redirect_uri",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "oauth_states_state_unique": {
+          "name": "oauth_states_state_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "state"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.refresh_tokens": {
+      "name": "refresh_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "device_info": {
+          "name": "device_info",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_refresh_tokens_user": {
+          "name": "idx_refresh_tokens_user",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "refresh_tokens_user_id_users_id_fk": {
+          "name": "refresh_tokens_user_id_users_id_fk",
+          "tableFrom": "refresh_tokens",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "refresh_tokens_token_hash_unique": {
+          "name": "refresh_tokens_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invitation_blocklists": {
+      "name": "invitation_blocklists",
       "schema": "",
       "columns": {
         "id": {
@@ -182,38 +409,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "address": {
-          "name": "address",
+        "blocked_user_id": {
+          "name": "blocked_user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "place_name": {
-          "name": "place_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "detail_address": {
-          "name": "detail_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lat": {
-          "name": "lat",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lng": {
-          "name": "lng",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "place_id": {
-          "name": "place_id",
+        "blocked_by_user_id": {
+          "name": "blocked_by_user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -225,22 +428,85 @@
           "notNull": true,
           "default": "now()"
         },
-        "updated_at": {
-          "name": "updated_at",
+        "deleted_at": {
+          "name": "deleted_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_blocklist_active": {
+          "name": "uq_blocklist_active",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "blocked_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"invitation_blocklists\".\"deleted_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_blocklist_invitation": {
+          "name": "idx_blocklist_invitation",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "event_locations_invitation_id_invitations_id_fk": {
-          "name": "event_locations_invitation_id_invitations_id_fk",
-          "tableFrom": "event_locations",
+        "invitation_blocklists_invitation_id_invitations_id_fk": {
+          "name": "invitation_blocklists_invitation_id_invitations_id_fk",
+          "tableFrom": "invitation_blocklists",
           "tableTo": "invitations",
           "columnsFrom": [
             "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitation_blocklists_blocked_user_id_users_id_fk": {
+          "name": "invitation_blocklists_blocked_user_id_users_id_fk",
+          "tableFrom": "invitation_blocklists",
+          "tableTo": "users",
+          "columnsFrom": [
+            "blocked_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitation_blocklists_blocked_by_user_id_users_id_fk": {
+          "name": "invitation_blocklists_blocked_by_user_id_users_id_fk",
+          "tableFrom": "invitation_blocklists",
+          "tableTo": "users",
+          "columnsFrom": [
+            "blocked_by_user_id"
           ],
           "columnsTo": [
             "id"
@@ -485,6 +751,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -574,7 +846,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_participants_user_invitation": {
+          "name": "uq_participants_user_invitation",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "participants_user_id_users_id_fk": {
           "name": "participants_user_id_users_id_fk",
@@ -609,6 +903,568 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.event_locations": {
+      "name": "event_locations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_name": {
+          "name": "place_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detail_address": {
+          "name": "detail_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lat": {
+          "name": "lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lng": {
+          "name": "lng",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_locations_invitation_id_invitations_id_fk": {
+          "name": "event_locations_invitation_id_invitations_id_fk",
+          "tableFrom": "event_locations",
+          "tableTo": "invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "event_locations_invitation_id_unique": {
+          "name": "event_locations_invitation_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "invitation_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "check_event_location_coords": {
+          "name": "check_event_location_coords",
+          "value": "\"event_locations\".\"lat\" >= -90 AND \"event_locations\".\"lat\" <= 90 AND \"event_locations\".\"lng\" >= -180 AND \"event_locations\".\"lng\" <= 180"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.participant_locations": {
+      "name": "participant_locations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accuracy": {
+          "name": "accuracy",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lat": {
+          "name": "lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lng": {
+          "name": "lng",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_arrived": {
+          "name": "is_arrived",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "uq_participant_locations_participant_invitation": {
+          "name": "uq_participant_locations_participant_invitation",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "participant_locations_invitation_id_invitations_id_fk": {
+          "name": "participant_locations_invitation_id_invitations_id_fk",
+          "tableFrom": "participant_locations",
+          "tableTo": "invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "participant_locations_participant_id_participants_id_fk": {
+          "name": "participant_locations_participant_id_participants_id_fk",
+          "tableFrom": "participant_locations",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "check_participant_location_coords": {
+          "name": "check_participant_location_coords",
+          "value": "\"participant_locations\".\"lat\" >= -90 AND \"participant_locations\".\"lat\" <= 90 AND \"participant_locations\".\"lng\" >= -180 AND \"participant_locations\".\"lng\" <= 180"
+        },
+        "check_participant_location_accuracy": {
+          "name": "check_participant_location_accuracy",
+          "value": "\"participant_locations\".\"accuracy\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.missions": {
+      "name": "missions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "missions_invitation_id_invitations_id_fk": {
+          "name": "missions_invitation_id_invitations_id_fk",
+          "tableFrom": "missions",
+          "tableTo": "invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "missions_participant_id_participants_id_fk": {
+          "name": "missions_participant_id_participants_id_fk",
+          "tableFrom": "missions",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.photo_likes": {
+      "name": "photo_likes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "photo_id": {
+          "name": "photo_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "uq_photo_likes_photo_participant": {
+          "name": "uq_photo_likes_photo_participant",
+          "columns": [
+            {
+              "expression": "photo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "photo_likes_photo_id_photos_id_fk": {
+          "name": "photo_likes_photo_id_photos_id_fk",
+          "tableFrom": "photo_likes",
+          "tableTo": "photos",
+          "columnsFrom": [
+            "photo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "photo_likes_participant_id_participants_id_fk": {
+          "name": "photo_likes_participant_id_participants_id_fk",
+          "tableFrom": "photo_likes",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.photos": {
+      "name": "photos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invitation_id": {
+          "name": "invitation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "taken_at": {
+          "name": "taken_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exif_metadata": {
+          "name": "exif_metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "view_count": {
+          "name": "view_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "like_count": {
+          "name": "like_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "feedback_count": {
+          "name": "feedback_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_photos_invitation_taken_at": {
+          "name": "idx_photos_invitation_taken_at",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "taken_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_photos_deleted_at": {
+          "name": "idx_photos_deleted_at",
+          "columns": [
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "photos_participant_id_participants_id_fk": {
+          "name": "photos_participant_id_participants_id_fk",
+          "tableFrom": "photos",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "photos_invitation_id_invitations_id_fk": {
+          "name": "photos_invitation_id_invitations_id_fk",
+          "tableFrom": "photos",
+          "tableTo": "invitations",
+          "columnsFrom": [
+            "invitation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "check_photo_view_count": {
+          "name": "check_photo_view_count",
+          "value": "\"photos\".\"view_count\" >= 0"
+        },
+        "check_photo_like_count": {
+          "name": "check_photo_like_count",
+          "value": "\"photos\".\"like_count\" >= 0"
+        },
+        "check_photo_feedback_count": {
+          "name": "check_photo_feedback_count",
+          "value": "\"photos\".\"feedback_count\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.feedback_likes": {
       "name": "feedback_likes",
       "schema": "",
@@ -639,7 +1495,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_feedback_likes_feedback_participant": {
+          "name": "uq_feedback_likes_feedback_participant",
+          "columns": [
+            {
+              "expression": "feedback_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "participant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "feedback_likes_feedback_id_feedbacks_id_fk": {
           "name": "feedback_likes_feedback_id_feedbacks_id_fk",
@@ -807,266 +1685,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.missions": {
-      "name": "missions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
+      "checkConstraints": {
+        "check_feedback_ref": {
+          "name": "check_feedback_ref",
+          "value": "\"feedbacks\".\"invitation_id\" IS NOT NULL OR \"feedbacks\".\"photo_id\" IS NOT NULL"
         },
-        "invitation_id": {
-          "name": "invitation_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "participant_id": {
-          "name": "participant_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+        "check_feedback_like_count": {
+          "name": "check_feedback_like_count",
+          "value": "\"feedbacks\".\"like_count\" >= 0"
         }
       },
-      "indexes": {},
-      "foreignKeys": {
-        "missions_invitation_id_invitations_id_fk": {
-          "name": "missions_invitation_id_invitations_id_fk",
-          "tableFrom": "missions",
-          "tableTo": "invitations",
-          "columnsFrom": [
-            "invitation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "missions_participant_id_participants_id_fk": {
-          "name": "missions_participant_id_participants_id_fk",
-          "tableFrom": "missions",
-          "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.photo_likes": {
-      "name": "photo_likes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "photo_id": {
-          "name": "photo_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "participant_id": {
-          "name": "participant_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "photo_likes_photo_id_photos_id_fk": {
-          "name": "photo_likes_photo_id_photos_id_fk",
-          "tableFrom": "photo_likes",
-          "tableTo": "photos",
-          "columnsFrom": [
-            "photo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "photo_likes_participant_id_participants_id_fk": {
-          "name": "photo_likes_participant_id_participants_id_fk",
-          "tableFrom": "photo_likes",
-          "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.photos": {
-      "name": "photos",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "participant_id": {
-          "name": "participant_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "invitation_id": {
-          "name": "invitation_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "mission_id": {
-          "name": "mission_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "image_key": {
-          "name": "image_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "exif_metadata": {
-          "name": "exif_metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "view_count": {
-          "name": "view_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "like_count": {
-          "name": "like_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "photos_participant_id_participants_id_fk": {
-          "name": "photos_participant_id_participants_id_fk",
-          "tableFrom": "photos",
-          "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "photos_invitation_id_invitations_id_fk": {
-          "name": "photos_invitation_id_invitations_id_fk",
-          "tableFrom": "photos",
-          "tableTo": "invitations",
-          "columnsFrom": [
-            "invitation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "photos_mission_id_missions_id_fk": {
-          "name": "photos_mission_id_missions_id_fk",
-          "tableFrom": "photos",
-          "tableTo": "missions",
-          "columnsFrom": [
-            "mission_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.notification_settings": {
@@ -1166,7 +1794,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "notification_settings_user_id_unique": {
+          "name": "notification_settings_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1272,104 +1908,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.participant_locations": {
-      "name": "participant_locations",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "invitation_id": {
-          "name": "invitation_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "participant_id": {
-          "name": "participant_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "accuracy": {
-          "name": "accuracy",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lat": {
-          "name": "lat",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lng": {
-          "name": "lng",
-          "type": "double precision",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_arrived": {
-          "name": "is_arrived",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+      "checkConstraints": {
+        "check_notification_target": {
+          "name": "check_notification_target",
+          "value": "(\"notifications\".\"target_type\" IS NOT NULL AND \"notifications\".\"target_id\" IS NOT NULL) OR (\"notifications\".\"target_type\" IS NULL AND \"notifications\".\"target_id\" IS NULL)"
         }
       },
-      "indexes": {},
-      "foreignKeys": {
-        "participant_locations_invitation_id_invitations_id_fk": {
-          "name": "participant_locations_invitation_id_invitations_id_fk",
-          "tableFrom": "participant_locations",
-          "tableTo": "invitations",
-          "columnsFrom": [
-            "invitation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "participant_locations_participant_id_participants_id_fk": {
-          "name": "participant_locations_participant_id_participants_id_fk",
-          "tableFrom": "participant_locations",
-          "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },
@@ -1456,6 +2000,7 @@
       "name": "social_provider",
       "schema": "public",
       "values": [
+        "google",
         "kakao",
         "naver",
         "apple"
