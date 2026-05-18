@@ -23,11 +23,8 @@ export class FeedbacksService {
     );
   }
 
-  //초대장 댓글 리스트
-  async listByInvitation(
-    invitationId: string,
-    userId: string,
-  ) {
+  // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
+  async listAll(invitationId: string, userId: string) {
     const participant = await this.repository.findParticipant(
       userId,
       invitationId,
@@ -35,18 +32,35 @@ export class FeedbacksService {
     if (!participant) {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
-    const feedbacks = await this.repository.findManyByInvitation(
+
+    const [invitationFeedbacks, photoFeedbacks] = await Promise.all([
+      this.repository.findManyByInvitation(invitationId),
+      this.repository.findPhotoFeedbacksByInvitation(invitationId),
+    ]);
+
+    const all = [...invitationFeedbacks, ...photoFeedbacks].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    return this.applyDeletedPlaceholder(all);
+  }
+
+  //초대장 댓글 리스트
+  async listByInvitation(invitationId: string, userId: string) {
+    const participant = await this.repository.findParticipant(
+      userId,
       invitationId,
     );
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    const feedbacks = await this.repository.findManyByInvitation(invitationId);
     return this.applyDeletedPlaceholder(feedbacks);
   }
 
   //사진 댓글 리스트
-  async listByPhoto(
-    invitationId: string,
-    photoId: string,
-    userId: string,
-  ) {
+  async listByPhoto(invitationId: string, photoId: string, userId: string) {
     const participant = await this.repository.findParticipant(
       userId,
       invitationId,

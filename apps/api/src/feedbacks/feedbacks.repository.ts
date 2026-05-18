@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { feedbackLikes, feedbacks, NewFeedback } from '../../drizzle/schema';
@@ -18,6 +18,29 @@ export class FeedbacksRepository {
         ),
       with: {
         participant: true,
+        replies: {
+          where: (t, { isNull }) => isNull(t.deletedAt),
+          with: { participant: true },
+          orderBy: (t, { asc }) => [asc(t.createdAt)],
+        },
+      },
+      orderBy: (t, { desc }) => [desc(t.createdAt)],
+    });
+  }
+
+  //초대장의 모든 사진 댓글 목록 조회(초대장댓글 +사진댓글 일체화용)
+  async findPhotoFeedbacksByInvitation(invitationId: string) {
+    return this.db.query.feedbacks.findMany({
+      where: (t, { eq, and, isNull }) =>
+        and(
+          eq(t.invitationId, invitationId),
+          isNotNull(t.photoId),
+          isNull(t.parentId),
+          isNull(t.deletedAt),
+        ),
+      with: {
+        participant: true,
+        photo: true,
         replies: {
           where: (t, { isNull }) => isNull(t.deletedAt),
           with: { participant: true },
