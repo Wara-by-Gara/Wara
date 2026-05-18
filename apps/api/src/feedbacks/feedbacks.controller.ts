@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -101,13 +103,13 @@ export class FeedbacksController {
     @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(UpdateFeedbackSchema)) dto: UpdateFeedbackDto,
   ) {
-    return this.feedbacksService.update( id, user.id, dto);
+    return this.feedbacksService.update(id, user.id, dto);
   }
 
   //댓글 삭제
   @Delete(':invitationId/feedbacks/:id')
   @UseGuards(JwtAuthGuard)
-  // @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,

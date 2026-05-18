@@ -21,7 +21,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
+
 
 @Module({
   imports: [
