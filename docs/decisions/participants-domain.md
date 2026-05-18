@@ -317,8 +317,30 @@ Controller → Service → 복합 비즈니스 로직
 
 **Option B 채택** — kick 시 자동 blocklist 추가.
 
-- `ParticipantsService.leave()`에서 HOST kick 조건(`viewer.memberRole === 'HOST' && viewer.id !== participantId`) 시 `BlocklistRepository.add()` 호출
-- 별도 blocklist 관리 API: `GET /invitations/:id/blocklist`, `DELETE /invitations/:id/blocklist/:userId` (HOST 전용)
+### 구현 내용
+
+**엔드포인트 (HOST 전용)**
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| `GET` | `/invitations/:invitationId/blocklist` | 차단 목록 조회 |
+| `DELETE` | `/invitations/:invitationId/blocklist/:userId` | 차단 해제 (soft delete) |
+
+**파일 구조**
+
+| 파일 | 역할 |
+|------|------|
+| `common/repositories/blocklist.repository.ts` | `isBlocked()` (BlocklistGuard용), `add()` (cross-domain) |
+| `blocklist/blocklists.repository.ts` | `findByInvitation()`, `remove()` (도메인 전용) |
+| `blocklist/blocklist.service.ts` | `list()`, `unblock()` |
+| `blocklist/blocklist.controller.ts` | GET / DELETE 엔드포인트 |
+| `blocklist/blocklist.module.ts` | AuthModule import |
+
+**동작 규칙**
+- HOST가 `DELETE /participants/:participantId`로 kick → `invitation_blocklists`에 자동 추가 → 해당 유저 재참가 차단
+- 본인 탈퇴(`viewer.id === participantId`)는 blocklist 추가 없음
+- 이미 차단된 유저를 kick해도 `onConflictDoNothing`으로 무시
+- 차단 해제는 `deleted_at` 설정 (soft delete)
 
 ---
 
