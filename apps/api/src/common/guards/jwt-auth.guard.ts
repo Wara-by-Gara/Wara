@@ -5,18 +5,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { TokenExpiredError } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { JwtStrategy } from '../../auth/strategies/jwt.strategy';
 import type { JwtPayload } from '../types/jwt-payload.type';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-
-    private readonly jwtStrategy: JwtStrategy,
+    private readonly jwtService: JwtService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,7 +36,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtStrategy.validate(token);
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
 
       if (!this.isValidPayload(payload)) {
         throw new UnauthorizedException('TOKEN_INVALID');
