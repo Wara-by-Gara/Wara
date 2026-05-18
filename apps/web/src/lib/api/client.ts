@@ -1,43 +1,100 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-export async function apiGet<T>(path: string, token?: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
 }
 
-export async function apiPost<T>(path: string, body: unknown, token?: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
+interface ApiError {
+  error?: { code?: string };
 }
 
-export async function apiPatch<T>(path: string, body: unknown, token?: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  });
+async function tryRefresh(): Promise<string | null> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) {
+      // SUSPICIOUS_REFRESH 등 갱신 실패 → 강제 로그아웃
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      return null;
+    }
+    const json: ApiResponse<{ accessToken: string; refreshToken: string }> = await res.json();
+    localStorage.setItem("access_token", json.data.accessToken);
+    localStorage.setItem("refresh_token", json.data.refreshToken);
+    return json.data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+async function request<T>(fetchFn: (token?: string) => Promise<Response>, token?: string): Promise<T> {
+  let res = await fetchFn(token);
+
+  if (res.status === 401) {
+    const err: ApiError = await res.clone().json();
+    if (err.error?.code === "TOKEN_EXPIRED") {
+      const newToken = await tryRefresh();
+      if (newToken) {
+        res = await fetchFn(newToken);
+      }
+    }
+  }
+
   if (!res.ok) throw await res.json();
-  return res.json();
+  const json: ApiResponse<T> = await res.json();
+  return json.data;
+}
+
+export function apiGet<T>(path: string, token?: string): Promise<T> {
+  return request<T>(
+    (t) => fetch(`${API_URL}${path}`, {
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+    }),
+    token,
+  );
+}
+
+export function apiPost<T>(path: string, body: unknown, token?: string): Promise<T> {
+  return request<T>(
+    (t) => fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      },
+      body: JSON.stringify(body),
+    }),
+    token,
+  );
+}
+
+export function apiPatch<T>(path: string, body: unknown, token?: string): Promise<T> {
+  return request<T>(
+    (t) => fetch(`${API_URL}${path}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      },
+      body: JSON.stringify(body),
+    }),
+    token,
+  );
 }
 
 export async function apiDelete(path: string, token?: string): Promise<void> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "DELETE",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  if (!res.ok) throw await res.json();
+  await request<null>(
+    (t) => fetch(`${API_URL}${path}`, {
+      method: "DELETE",
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+    }),
+    token,
+  );
 }
