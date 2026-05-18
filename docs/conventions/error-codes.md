@@ -67,6 +67,10 @@
 |------|:--------:|------|
 | `MISSION_NOT_FOUND` | 404 | 미션 없음 또는 해당 초대장에 속하지 않음 |
 | `MISSION_NOT_ENABLED` | 400 | 초대장의 미션 기능이 비활성화 상태 |
+| `MISSION_TEMPLATE_NOT_FOUND` | 404 | 미션 템플릿 없음 또는 비활성화 |
+| `MISSION_NO_MISSIONS_TO_ASSIGN` | 400 | 배정할 미션이 0개 (호스트가 미션 등록 후 배정 가능) |
+| `MISSION_NO_PARTICIPANTS_TO_ASSIGN` | 400 | 배정 대상 참가자 없음 (참석 확정 게스트 0명) |
+| `MISSION_NOT_ASSIGNED` | 404 | 본인에게 배정된 미션이 없음 (GET /missions/me) |
 
 ---
 

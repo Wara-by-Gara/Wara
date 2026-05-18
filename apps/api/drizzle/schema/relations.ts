@@ -10,7 +10,7 @@ import {
 } from './invitations';
 import { eventLocations, participantLocations } from './locations';
 import { photos, photoLikes } from './photos';
-import { missions } from './missions';
+import { missions, missionAssignments } from './missions';
 import { feedbacks, feedbackLikes } from './feedbacks';
 import { notifications, notificationSettings } from './notifications';
 
@@ -84,4 +84,10 @@ export const missionsRelations = relations(missions, ({ one, many }) => ({
   invitation: one(invitations, { fields: [missions.invitationId], references: [invitations.id] }),
   participant: one(participants, { fields: [missions.participantId], references: [participants.id] }),
   photos: many(photos),
+  assignments: many(missionAssignments),
+}));
+
+export const missionAssignmentsRelations = relations(missionAssignments, ({ one }) => ({
+  mission: one(missions, { fields: [missionAssignments.missionId], references: [missions.id] }),
+  participant: one(participants, { fields: [missionAssignments.participantId], references: [participants.id] }),
 }));
