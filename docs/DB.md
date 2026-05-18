@@ -187,16 +187,55 @@
 
 - 하나의 초대장에 1개 이상의 미션을 만들 수 있다. [1:N]
 
-| key                | type     | description         |
-| ------------------ | -------- | ------------------- |
-| **id**             | String   | **PK**              |
-| **invitation_id**  | String   | 초대장 고유 id      |
-| **content**        | String   | 미션 내용           |
-| **created_at**     | DateTime | 생성일              |
-| **participant_id** | string   | 참여자 고유 Id (FK) |
+| key                | type     | description                       |
+| ------------------ | -------- | --------------------------------- |
+| **id**             | String   | **PK (ulid)**                     |
+| **invitation_id**  | String   | 초대장 고유 id (FK, cascade)      |
+| **participant_id** | String   | 미션 작성자(=HOST의 participant)  |
+| **content**        | String   | 미션 내용 (1~200자, Trojan 차단)  |
+| **created_at**     | DateTime | 생성일                            |
+| **updated_at**     | DateTime | 수정일                            |
 
-- 유저당 미션을 1개 이상 보낼 수 있다.
-- 모두에게 랜덤한 미션 발송
+- 호스트가 미션을 1개 이상 등록할 수 있다.
+- `participant_id`는 작성자 (photos/feedbacks 패턴과 동일).
+- 발송 시 `attending` GUEST에게 Fisher-Yates 셔플로 랜덤 균등 배정.
+- soft delete 없음 — V1.0은 hard delete.
+
+---
+
+# (10-A) mission_templates (미션 공용 카탈로그)
+
+- 호스트가 모임에 추가할 수 있는 시스템 제공 미션 풀 (admin/seed).
+
+| key            | type     | description                          |
+| -------------- | -------- | ------------------------------------ |
+| **id**         | String   | **PK (ulid)**                        |
+| **content**    | String   | 미션 내용                            |
+| **is_active**  | Boolean  | 노출 여부 (default: true)            |
+| **created_at** | DateTime | 생성일                               |
+| **updated_at** | DateTime | 수정일                               |
+
+- 시드 10개 기본 제공.
+- 호스트가 `POST /missions {templateId}` 호출 시 해당 모임의 missions row로 복사 (content 복사, FK 참조 X).
+
+---
+
+# (10-B) mission_assignments (미션 ↔ 참가자 배정)
+
+- 발송 시 호스트가 등록한 미션을 참가자에게 N:M으로 배정하는 매핑 테이블.
+
+| key                | type      | description                                  |
+| ------------------ | --------- | -------------------------------------------- |
+| **id**             | String    | **PK (ulid)**                                |
+| **mission_id**     | String    | 배정된 미션 (FK → missions, cascade)         |
+| **participant_id** | String    | 미션을 받은 참가자 (FK → participants, cascade) |
+| **assigned_at**    | DateTime  | 배정 시각                                    |
+| **completed_at**   | DateTime? | 완료 시각 (V1.1+에서 사용)                   |
+
+- Unique: `(mission_id, participant_id)` — 같은 미션을 같은 참가자에게 중복 배정 금지.
+- 재배정: 기존 배정 모두 삭제 후 다시 INSERT.
+- 호스트는 배정 대상에서 제외 (GUEST만).
+- `completed_at` 컬럼은 V1.0에서 미사용, API 응답에 노출하지 않음.
 
 ---
 
