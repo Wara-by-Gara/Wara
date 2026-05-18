@@ -106,8 +106,22 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/logs` | 전송 이력 조회 | ✅ | HOST만 |
-| POST | `/invitations/:invitationId/logs` | 전송 이력 기록 | ✅ | channel: link \| kakao \| sms \| email \| dm |
+| ~~GET~~ | ~~`/invitations/:invitationId/logs`~~ | ~~전송 이력 조회~~ | — | V1.0 제외. 팀 논의 후 추가 |
+| POST | `/invitations/:invitationId/logs` | 공유 로그 기록 | ✅ | HOST·GUEST 가능. channel: link \| kakao \| sms \| email \| dm. kakao는 body에 kakaoMeta 포함 |
+| PATCH | `/invitations/:invitationId/logs/:logId/open` | 링크 방문 이벤트 기록 | ❌ | 비로그인 가능. 204 No Content |
+
+### POST `/invitations/:invitationId/logs` 응답
+
+```json
+// 공통
+{ "inviteUrl": "https://wara.com/rsvp/{id}?ref={logId}" }
+
+// kakao 추가
+{ "inviteUrl": "...", "kakaoMeta": { "title": "", "description": "", "imageUrl": "" } }
+
+// sms 추가
+{ "inviteUrl": "...", "smsUri": "sms:?body=..." }
+```
 
 ---
 
