@@ -17,7 +17,7 @@ export class TemplatesRepository {
 
   findById(id: string) {
     return this.db.query.invitationTemplates.findFirst({
-      where: (t, { eq }) => eq(t.id, id),
+      where: (t, { eq, and }) => and(eq(t.id, id), eq(t.isActive, true)),
     });
   }
 
