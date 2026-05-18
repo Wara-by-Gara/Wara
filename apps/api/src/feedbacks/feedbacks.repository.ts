@@ -1,42 +1,52 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, lt, SQL, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { feedbackLikes, feedbacks, NewFeedback } from '../../drizzle/schema';
+import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 
 @Injectable()
 export class FeedbacksRepository {
   constructor(@Inject(DRIZZLE) private db: DrizzleDB) {}
 
-  //초대장 피드백 목록 조회
-  async findManyByInvitation(invitationId: string) {
-    return this.db.query.feedbacks.findMany({
-      where: (t, { eq, and, isNull }) =>
-        and(
-          eq(t.invitationId, invitationId),
-          isNull(t.photoId),
-          isNull(t.parentId),
-        ),
-      with: {
-        participant: true,
-        replies: {
-          where: (t, { isNull }) => isNull(t.deletedAt),
-          with: { participant: true },
-          orderBy: (t, { asc }) => [asc(t.createdAt)],
-        },
-      },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
-    });
+  //페이지네이션 헬퍼
+  private paginate<T extends { id: string }>(rows: T[], limit: number) {
+    const hasNext = rows.length > limit;
+    return {
+      rows: rows.slice(0, limit),
+      nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+    };
   }
 
-  //초대장의 모든 사진 댓글 목록 조회(초대장댓글 +사진댓글 일체화용)
-  async findPhotoFeedbacksByInvitation(invitationId: string) {
-    return this.db.query.feedbacks.findMany({
-      where: (t, { eq, and, isNull }) =>
-        and(
-          eq(t.invitationId, invitationId),
-          isNotNull(t.photoId),
-          isNull(t.parentId),
-        ),
+  //cursor 조건 + LIMIT 계산 헬퍼
+  private async getCursorCondition(dto: ListFeedbacksDto) {
+    const { cursor, limit } = dto;
+    const LIMIT = limit ?? 10;
+    const cursorConditions: SQL[] = [];
+
+    if (cursor) {
+      const [cursorRow] = await this.db
+        .select({ createdAt: feedbacks.createdAt })
+        .from(feedbacks)
+        .where(eq(feedbacks.id, cursor));
+      if (cursorRow?.createdAt) {
+        cursorConditions.push(lt(feedbacks.createdAt, cursorRow.createdAt));
+      }
+    }
+    return { LIMIT, cursorConditions };
+  }
+
+  //초대장댓글 + 사진 댓글 통합 목록
+  async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
+    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+
+    const conditions = [
+      eq(feedbacks.invitationId, invitationId),
+      isNull(feedbacks.parentId),
+      ...cursorConditions,
+    ];
+
+    const rows = await this.db.query.feedbacks.findMany({
+      where: and(...conditions),
       with: {
         participant: true,
         photo: true,
@@ -46,14 +56,23 @@ export class FeedbacksRepository {
         },
       },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
+      limit: LIMIT + 1,
     });
+    return this.paginate(rows,LIMIT);
   }
 
   //사진 댓글 목록 조회
-  async findManyByPhoto(photoId: string) {
-    return this.db.query.feedbacks.findMany({
-      where: (t, { eq, and, isNull }) =>
-        and(eq(t.photoId, photoId), isNull(t.parentId)),
+  async findManyByPhoto(photoId: string, dto: ListFeedbacksDto) {
+    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+
+    const conditions = [
+      eq(feedbacks.photoId, photoId),
+      isNull(feedbacks.parentId),
+      ...cursorConditions,
+    ];
+
+    const rows = await this.db.query.feedbacks.findMany({
+      where: and(...conditions),
       with: {
         participant: true,
         replies: {
@@ -62,7 +81,9 @@ export class FeedbacksRepository {
         },
       },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
+      limit: LIMIT + 1,
     });
+    return this.paginate(rows, LIMIT);
   }
 
   //댓글 단건 조회
