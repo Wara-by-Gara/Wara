@@ -33,7 +33,9 @@ export class NotificationsGateway implements OnGatewayConnection {
   }
 
   sendReadToUser(userId: string, notificationId: string) {
-    this.server.to(`user:${userId}`).emit('notification:read', { id: notificationId });
+    this.server
+      .to(`user:${userId}`)
+      .emit('notification:read', { id: notificationId });
   }
 
   sendReadAllToUser(userId: string) {
@@ -52,7 +54,8 @@ export class NotificationsGateway implements OnGatewayConnection {
     const cookieHeader = client.handshake.headers.cookie;
     if (typeof cookieHeader === 'string') {
       const accessToken = this.parseCookieHeader(cookieHeader)['accessToken'];
-      if (typeof accessToken === 'string' && accessToken.length > 0) return accessToken;
+      if (typeof accessToken === 'string' && accessToken.length > 0)
+        return accessToken;
     }
 
     throw new Error('NO_TOKEN');

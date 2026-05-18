@@ -1,14 +1,22 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { eq, and, count } from 'drizzle-orm';
-import { notifications, notificationSettings, type NewNotification } from '../../drizzle/schema';
+import {
+  notifications,
+  notificationSettings,
+  type NewNotification,
+} from '../../drizzle/schema';
 import type { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Injectable()
 export class NotificationsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  async findAllByUser(userId: string, cursor: string | undefined, limit: number) {
+  async findAllByUser(
+    userId: string,
+    cursor: string | undefined,
+    limit: number,
+  ) {
     return this.db.query.notifications.findMany({
       where: (t, { eq, and, lt }) =>
         cursor
@@ -23,7 +31,9 @@ export class NotificationsRepository {
     const [result] = await this.db
       .select({ total: count() })
       .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      .where(
+        and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
+      );
     return result?.total ?? 0;
   }
 
@@ -46,7 +56,9 @@ export class NotificationsRepository {
     await this.db
       .update(notifications)
       .set({ isRead: true, readAt: new Date() })
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      .where(
+        and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
+      );
   }
 
   async findSettings(userId: string) {
@@ -55,7 +67,9 @@ export class NotificationsRepository {
     });
   }
 
-  async create(data: Omit<NewNotification, 'id' | 'isRead' | 'readAt' | 'createdAt'>) {
+  async create(
+    data: Omit<NewNotification, 'id' | 'isRead' | 'readAt' | 'createdAt'>,
+  ) {
     const [result] = await this.db
       .insert(notifications)
       .values(data)
