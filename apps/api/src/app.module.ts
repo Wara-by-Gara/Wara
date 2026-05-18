@@ -16,6 +16,7 @@ import { PhotosModule } from './photos/photos.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ParticipantsExampleModule } from './participants_example/participants-example.module';
+import { SendLogsModule } from './send-logs/send-logs.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ParticipantsExampleModule } from './participants_example/participants-e
     FeedbacksModule,
     NotificationsModule,
     ParticipantsExampleModule,
+    SendLogsModule,
   ],
   controllers: [AppController],
   providers: [

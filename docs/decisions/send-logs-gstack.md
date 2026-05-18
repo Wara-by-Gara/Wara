@@ -111,12 +111,19 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 ## 3. DTO
 
 ### `src/send-logs/dto/create-send-log.dto.ts` (신규)
-- [ ] `channel` 필드만 포함
+- [ ] `channel` + 선택적 `kakaoMeta` 포함
   ```typescript
   import { z } from 'zod';
 
   export const CreateSendLogSchema = z.object({
     channel: z.enum(['link', 'kakao', 'sms', 'email', 'dm']),
+    kakaoMeta: z
+      .object({
+        title: z.string(),
+        description: z.string(),
+        imageUrl: z.string(),
+      })
+      .optional(),
   });
   export type CreateSendLogDto = z.infer<typeof CreateSendLogSchema>;
   ```
@@ -129,13 +136,10 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 | 메서드 | 설명 |
 |--------|------|
-| `findAllByInvitation(invitationId)` | `createdAt DESC` 정렬. id, channel, inviteUrl, createdAt 반환 |
 | `create(data)` | invitationId, senderId, channel, inviteUrl (ref 없이) INSERT |
-| `findInvitationMeta(invitationId)` | title, description, mainImageKey 조회 (kakao 메타용) |
 
-> `inviteUrl` 컬럼은 DB 스키마상 nullable (`text('invite_url')`)이므로 Drizzle 반환 타입이 `string | null`.
-> Repository에서 `findAllByInvitation` 결과를 Service로 넘길 때 `inviteUrl`이 null인 row에 `?ref=` 추가 시 런타임 오류 발생 가능.
-> Service에서 null 체크 후 안전하게 처리: `const url = log.inviteUrl ?? baseUrl; return url + '?ref=' + log.id;`
+> `findAllByInvitation` — V1.0 제외. GET /logs는 팀 논의 후 추가.
+> `findInvitationMeta` — 프론트 전송 방식 채택으로 불필요. 전환 시 send-logs-domain.md §15 참고.
 
 ### `src/send-logs/link-events.repository.ts` (신규)
 
@@ -151,13 +155,14 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 | 메서드 | 핵심 로직 |
 |--------|-----------|
-| `findAll(invitationId)` | sendLogsRepository.findAllByInvitation |
-| `create(userId, invitationId, dto)` | ① inviteUrl 생성 (`https://wara.com/invite/{invitationId}`) / ② sendLogsRepository.create / ③ channel별 메타 분기 / ④ 응답 inviteUrl에 `?ref={logId}` 추가 |
+| `create(userId, invitationId, dto)` | ① inviteUrl 생성 (`https://wara.com/rsvp/{invitationId}`) / ② sendLogsRepository.create / ③ channel별 메타 분기 / ④ 응답 inviteUrl에 `?ref={logId}` 추가 |
 | `recordOpen(logId)` | linkEventsRepository.createEvent({ logId, eventType: 'opened' }) — userId 항상 null |
 
+> `findAll` — V1.0 제외. GET /logs는 팀 논의 후 추가.
+
 > `create` 채널별 메타 분기:
-> - `kakao` → `findInvitationMeta()` 조회, null이면 503. `kakaoMeta: { title, description, imageUrl }` 추가 (`imageUrl`은 `mainImageKey`에 CDN baseUrl 조합 — 팀 CDN URL 형식 확인 후 구현)
-> - `sms` → `smsUri: "sms:?body=${encodeURIComponent(message)}"` 생성
+> - `kakao` → `dto.kakaoMeta` 그대로 응답에 포함 (프론트에서 전송, 백엔드 DB 조회 없음. send-logs-domain.md §15 참고)
+> - `sms` → `smsUri: "sms:?body=${encodeURIComponent(inviteUrlWithRef)}"` 생성
 > - `link | email | dm` → 공통 필드만
 
 ---
@@ -168,7 +173,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 | 엔드포인트 | Guards | 비고 |
 |-----------|--------|------|
-| `GET /invitations/:invitationId/logs` | `@UseGuards(HostGuard)` + `@RequireMemberRole(MemberRole.HOST)` | JwtAuthGuard는 전역 APP_GUARD — 명시 불필요. 200 |
+| ~~`GET /invitations/:invitationId/logs`~~ | — | V1.0 제외. 팀 논의 후 추가 |
 | `POST /invitations/:invitationId/logs` | `@UseGuards(HostGuard)` + `@RequireMemberRole(MemberRole.HOST, MemberRole.GUEST)` | ZodValidationPipe(CreateSendLogSchema). 201 |
 | `PATCH /invitations/:invitationId/logs/:logId/open` | `@Public()` | `@HttpCode(204)`. userId 항상 null |
 
@@ -221,7 +226,8 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 ---
 
 > **`login_converted` 추가 시 (V1.1+)**
-> - enum에 이미 존재하므로 migration 불필요
+> - V1.0에서 enum에서 제거됨 → `link_event_type` enum에 값 추가 migration 필요
 > - `PATCH /logs/:logId/login-converted` (JwtAuthGuard) 엔드포인트 추가
 > - Service에 `recordLoginConverted(logId, userId)` 추가
 > - 프론트 로그인 완료 후 `?ref={logId}` 유지 필요 (프론트 협의 선행)
+
