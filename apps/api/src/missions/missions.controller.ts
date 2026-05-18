@@ -18,6 +18,10 @@ import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import {
+  AssignMissionsDto,
+  AssignMissionsSchema,
+} from './dto/assign-missions.dto';
+import {
   CreateMissionDto,
   CreateMissionSchema,
 } from './dto/create-mission.dto';
@@ -39,6 +43,14 @@ export class MissionsController {
     return this.missionsService.list(invitationId, user.id);
   }
 
+  @Get('me')
+  async getMine(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.missionsService.getMyMission(invitationId, user.id);
+  }
+
   @Post()
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
@@ -48,6 +60,18 @@ export class MissionsController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.missionsService.create(invitationId, user.id, dto);
+  }
+
+  @Post('assign')
+  @UseGuards(HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  @HttpCode(HttpStatus.OK)
+  async assign(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Body(new ZodValidationPipe(AssignMissionsSchema))
+    dto: AssignMissionsDto,
+  ) {
+    return this.missionsService.assignMissions(invitationId, dto);
   }
 
   @Patch(':id')
