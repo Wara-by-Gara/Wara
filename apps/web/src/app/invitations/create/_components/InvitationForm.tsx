@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { z } from "zod";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 import LocationSearch from "./LocationSearch";
+import type { Template } from "@/lib/api/templates";
 
 const invitationSchema = z.object({
   eventTitle: z.string().min(1, "이벤트 제목을 입력해주세요"),
@@ -28,6 +29,10 @@ interface InvitationFormProps {
   initialValues?: Partial<InvitationFormData>;
   onChange: (data: Partial<InvitationFormData> & { coverImageUrl?: string | null }) => void;
   onSubmit: () => void;
+  templates: Template[];
+  selectedTemplateId: string;
+  onTemplateChange: (id: string) => void;
+  isSubmitting?: boolean;
 }
 
 const UploadIcon = () => (
@@ -42,7 +47,7 @@ const labelClass = "block text-[11px] font-bold tracking-widest text-[#58423d] m
 const inputClass =
   "w-full bg-[#f5f3f3] text-[#1b1c1c] text-base px-4 py-3 rounded-lg outline-none placeholder:text-[#6b7280] focus:ring-2 focus:ring-[#a73921]/30";
 
-export default function InvitationForm({ isLoggedIn, initialValues, onChange, onSubmit }: InvitationFormProps) {
+export default function InvitationForm({ isLoggedIn, initialValues, onChange, onSubmit, templates, selectedTemplateId, onTemplateChange, isSubmitting = false }: InvitationFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [fields, setFields] = useState<InvitationFormData>({
@@ -53,6 +58,17 @@ export default function InvitationForm({ isLoggedIn, initialValues, onChange, on
     hostNote: initialValues?.hostNote ?? "",
   });
   const [errors, setErrors] = useState<InvitationFormErrors>({});
+
+  useEffect(() => {
+    if (!initialValues) return;
+    setFields({
+      eventTitle: initialValues.eventTitle ?? "",
+      date: initialValues.date ?? "",
+      time: initialValues.time ?? "",
+      location: initialValues.location ?? "",
+      hostNote: initialValues.hostNote ?? "",
+    });
+  }, [initialValues]);
 
   const update = (patch: Partial<InvitationFormData>) => {
     const next = { ...fields, ...patch };
@@ -174,12 +190,36 @@ export default function InvitationForm({ isLoggedIn, initialValues, onChange, on
         />
       </div>
 
+      {/* TEMPLATE */}
+      {templates.length > 0 && (
+        <div>
+          <label className={labelClass}>TEMPLATE</label>
+          <div className="flex gap-2 flex-wrap">
+            {templates.filter((t) => t.isActive).map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onTemplateChange(t.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer ${
+                  selectedTemplateId === t.id
+                    ? "bg-[#a73921] text-white border-[#a73921]"
+                    : "bg-[#f5f3f3] text-[#1b1c1c] border-transparent hover:border-[#a73921]/30"
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 제출 버튼 */}
       <button
         type="submit"
-        className="w-full bg-[#a73921] text-white text-xs font-bold tracking-widest py-4 rounded-xl hover:bg-[#8f2e17] transition-colors cursor-pointer"
+        disabled={isSubmitting}
+        className="w-full bg-[#a73921] text-white text-xs font-bold tracking-widest py-4 rounded-xl hover:bg-[#8f2e17] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isLoggedIn ? "SEND" : "CREATE"}
+        {isSubmitting ? "SENDING..." : isLoggedIn ? "SEND" : "CREATE"}
       </button>
     </form>
   );

@@ -4,9 +4,19 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/constants/routes";
+import { getTemplates, type Template } from "@/lib/api/templates";
+import { createInvitation } from "@/lib/api/invitations";
 import InvitationPreview from "./_components/InvitationPreview";
 import InvitationForm from "./_components/InvitationForm";
 import LoginModal from "./_components/LoginModal";
+
+const DEFAULT_COVER_IMAGE_KEY = "defaults/cover.jpg";
+
+function toEventStartAt(date: string, time: string): string | undefined {
+  if (!date) return undefined;
+  const iso = date.replace(/\./g, "-");
+  return time ? new Date(`${iso}T${time}:00`).toISOString() : new Date(iso).toISOString();
+}
 
 const DRAFT_KEY = "wara_invitation_draft";
 
@@ -98,10 +108,14 @@ function OAuthCallbackHandler({
 
 export default function CreatePage() {
   const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
+  const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [draft, setDraft] = useState<DraftFields | null>(null);
   const [showImageNotice, setShowImageNotice] = useState(false);
   const [authError, setAuthError] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState<PreviewState>({
     coverImageUrl: null,
     eventTitle: "",
@@ -125,6 +139,10 @@ export default function CreatePage() {
     }
   }, [hydrated, isLoggedIn]);
 
+  useEffect(() => {
+    getTemplates().then(setTemplates).catch(() => {});
+  }, []);
+
   if (!hydrated) return null;
 
   const handleChange = (data: Partial<DraftFields> & { coverImageUrl?: string | null }) => {
@@ -139,13 +157,28 @@ export default function CreatePage() {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
-    clearDraft();
-    // TODO: API 연동
+    const token = localStorage.getItem("access_token") ?? "";
+    setIsSubmitting(true);
+    try {
+      const invitation = await createInvitation({
+        title: draft?.eventTitle ?? "",
+        description: draft?.hostNote || " ",
+        mainImageKey: DEFAULT_COVER_IMAGE_KEY,
+        templateId: selectedTemplateId || undefined,
+        eventStartAt: toEventStartAt(draft?.date ?? "", draft?.time ?? ""),
+      }, token);
+      clearDraft();
+      router.push(ROUTES.INVITATIONS.DETAIL(invitation.id));
+    } catch {
+      setAuthError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -235,6 +268,10 @@ export default function CreatePage() {
               initialValues={draft ?? undefined}
               onChange={handleChange}
               onSubmit={handleSubmit}
+              templates={templates}
+              selectedTemplateId={selectedTemplateId}
+              onTemplateChange={setSelectedTemplateId}
+              isSubmitting={isSubmitting}
             />
           </div>
         </div>
