@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('member'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  refreshToken: text('refresh_token'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

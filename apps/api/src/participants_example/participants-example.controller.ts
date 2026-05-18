@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 /**
  * 참가자 관리 컨트롤러 레퍼런스
@@ -50,7 +51,7 @@ export class ParticipantsExampleController {
   @UseGuards(JwtAuthGuard)
   join(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(JoinInvitationSchema)) _dto: JoinInvitationDto,
   ) {
     return this.service.join(user.id, invitationId);
@@ -65,7 +66,7 @@ export class ParticipantsExampleController {
   updateRsvp(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(UpdateRsvpSchema)) dto: UpdateRsvpDto,
   ) {
     return this.service.updateRsvp(user.id, id, dto);
@@ -82,7 +83,7 @@ export class ParticipantsExampleController {
   leave(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     return this.service.leave(user.id, id);
   }

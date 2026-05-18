@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, timestamp, doublePrecision, boolean, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp, doublePrecision, boolean, check, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitations, participants } from './invitations';
@@ -30,6 +30,7 @@ export const participantLocations = pgTable('participant_locations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
+  uniqueIndex('uq_participant_locations_participant_invitation').on(t.invitationId, t.participantId),
   check('check_participant_location_coords', sql`${t.lat} >= -90 AND ${t.lat} <= 90 AND ${t.lng} >= -180 AND ${t.lng} <= 180`),
   check('check_participant_location_accuracy', sql`${t.accuracy} >= 0`),
 ]);
