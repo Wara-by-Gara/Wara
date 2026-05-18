@@ -13,6 +13,7 @@ import { randomUUID } from 'crypto';
 export interface AppleLoginResult {
   accessToken: string;
   refreshToken: string;
+  isNew: boolean;
 }
 
 @Injectable()
@@ -50,7 +51,7 @@ export class AppleService {
           .join(' ')
       : undefined;
 
-    const { userId } = await this.authRepository.upsertSocialAccount({
+    const { userId, isNew } = await this.authRepository.upsertSocialAccount({
       provider: Provider.APPLE,
       providerAccountId: payload.sub,
       email: payload.email ?? dto.user?.email,
@@ -80,6 +81,7 @@ export class AppleService {
     return {
       accessToken,
       refreshToken,
+      isNew,
     };
   }
 }
