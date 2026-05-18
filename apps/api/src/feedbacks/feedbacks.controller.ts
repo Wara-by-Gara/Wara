@@ -29,6 +29,16 @@ import {
 export class FeedbacksController {
   constructor(private readonly feedbacksService: FeedbacksService) {}
 
+  //모든 종류의 댓글 가져오기 (초대장댓글 + 사진댓글)
+  @Get(':invitationId/feedbacks/all')
+  @UseGuards(JwtAuthGuard)
+  listAll(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.feedbacksService.listAll(invitationId, user.id);
+  }
+
   //초대장 댓글 목록
   @Get(':invitationId/feedbacks')
   @UseGuards(JwtAuthGuard)
