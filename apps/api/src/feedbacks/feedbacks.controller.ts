@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { FeedbacksService } from './feedbacks.service';
@@ -36,13 +35,8 @@ export class FeedbacksController {
   listByInvitation(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
-    @Query('parentId', new ParseUlidPipe({ optional: true })) parentId?: string,
   ) {
-    return this.feedbacksService.listByInvitation(
-      invitationId,
-      user.id,
-      parentId,
-    );
+    return this.feedbacksService.listByInvitation(invitationId, user.id);
   }
 
   //초대장 댓글 생성
@@ -67,14 +61,8 @@ export class FeedbacksController {
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('photoId', ParseUlidPipe) photoId: string,
     @CurrentUser() user: JwtPayload,
-    @Query('parentId', new ParseUlidPipe({ optional: true })) parentId?: string,
   ) {
-    return this.feedbacksService.listByPhoto(
-      invitationId,
-      photoId,
-      user.id,
-      parentId,
-    );
+    return this.feedbacksService.listByPhoto(invitationId, photoId, user.id);
   }
 
   //사진 댓글 생성

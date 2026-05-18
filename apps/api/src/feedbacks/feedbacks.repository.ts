@@ -8,41 +8,39 @@ export class FeedbacksRepository {
   constructor(@Inject(DRIZZLE) private db: DrizzleDB) {}
 
   //초대장 피드백 목록 조회
-  async findManyByInvitation(invitationId: string, parentId?: string) {
+  async findManyByInvitation(invitationId: string) {
     return this.db.query.feedbacks.findMany({
       where: (t, { eq, and, isNull }) =>
-        parentId
-          ? and(
-              eq(t.invitationId, invitationId),
-              eq(t.parentId, parentId),
-              isNull(t.deletedAt),
-            )
-          : and(
-              eq(t.invitationId, invitationId),
-              isNull(t.parentId),
-              isNull(t.deletedAt),
-            ),
-      with: { participant: true },
+        and(
+          eq(t.invitationId, invitationId),
+          isNull(t.parentId),
+          isNull(t.deletedAt),
+        ),
+      with: {
+        participant: true,
+        replies: {
+          where: (t, { isNull }) => isNull(t.deletedAt),
+          with: { participant: true },
+          orderBy: (t, { asc }) => [asc(t.createdAt)],
+        },
+      },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
     });
   }
 
   //사진 댓글 목록 조회
-  async findManyByPhoto(photoId: string, parentId?: string) {
+  async findManyByPhoto(photoId: string) {
     return this.db.query.feedbacks.findMany({
       where: (t, { eq, and, isNull }) =>
-        parentId
-          ? and(
-              eq(t.photoId, photoId),
-              eq(t.parentId, parentId),
-              isNull(t.deletedAt),
-            )
-          : and(
-              eq(t.photoId, photoId),
-              isNull(t.parentId),
-              isNull(t.deletedAt),
-            ),
-      with: { participant: true },
+        and(eq(t.photoId, photoId), isNull(t.parentId), isNull(t.deletedAt)),
+      with: {
+        participant: true,
+        replies: {
+          where: (t, { isNull }) => isNull(t.deletedAt),
+          with: { participant: true },
+          orderBy: (t, { asc }) => [asc(t.createdAt)],
+        },
+      },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
     });
   }

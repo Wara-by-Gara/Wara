@@ -27,7 +27,6 @@ export class FeedbacksService {
   async listByInvitation(
     invitationId: string,
     userId: string,
-    parentId?: string,
   ) {
     const participant = await this.repository.findParticipant(
       userId,
@@ -38,7 +37,6 @@ export class FeedbacksService {
     }
     const feedbacks = await this.repository.findManyByInvitation(
       invitationId,
-      parentId,
     );
     return this.applyDeletedPlaceholder(feedbacks);
   }
@@ -48,7 +46,6 @@ export class FeedbacksService {
     invitationId: string,
     photoId: string,
     userId: string,
-    parentId?: string,
   ) {
     const participant = await this.repository.findParticipant(
       userId,
@@ -67,7 +64,7 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    const feedbacks = await this.repository.findManyByPhoto(photoId, parentId);
+    const feedbacks = await this.repository.findManyByPhoto(photoId);
     return this.applyDeletedPlaceholder(feedbacks);
   }
 
