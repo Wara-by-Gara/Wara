@@ -16,6 +16,7 @@ import { PhotosModule } from './photos/photos.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { S3Module } from './s3/s3.module';
+import { BlocklistModule } from './blocklist/blocklist.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { S3Module } from './s3/s3.module';
     FeedbacksModule,
     NotificationsModule,
     S3Module,
+    BlocklistModule,
   ],
   controllers: [AppController],
   providers: [
