@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { ROUTES } from "@/constants/routes";
 import InvitationPreview from "./_components/InvitationPreview";
 import InvitationForm from "./_components/InvitationForm";
 import LoginModal from "./_components/LoginModal";
@@ -67,11 +69,39 @@ const SettingsIcon = () => (
   </svg>
 );
 
+function OAuthCallbackHandler({
+  onLogin,
+  onError,
+}: {
+  onLogin: (at: string, rt: string) => void;
+  onError: () => void;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const accessToken = searchParams.get("access_token");
+    const refreshToken = searchParams.get("refresh_token");
+    const error = searchParams.get("auth_error");
+
+    if (accessToken && refreshToken) {
+      onLogin(accessToken, refreshToken);
+      router.replace(ROUTES.INVITATIONS.CREATE);
+    } else if (error) {
+      onError();
+      router.replace(ROUTES.INVITATIONS.CREATE);
+    }
+  }, [searchParams, onLogin, onError, router]);
+
+  return null;
+}
+
 export default function CreatePage() {
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [draft, setDraft] = useState<DraftFields | null>(null);
   const [showImageNotice, setShowImageNotice] = useState(false);
+  const [authError, setAuthError] = useState(false);
   const [preview, setPreview] = useState<PreviewState>({
     coverImageUrl: null,
     eventTitle: "",
@@ -91,7 +121,6 @@ export default function CreatePage() {
     if (saved) {
       setDraft(saved);
       setPreview((prev) => ({ ...prev, ...saved }));
-      // 로그인 상태로 돌아온 경우 이미지 재선택 안내
       if (isLoggedIn) setShowImageNotice(true);
     }
   }, [hydrated, isLoggedIn]);
@@ -121,6 +150,13 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf9f8]">
+      <Suspense fallback={null}>
+        <OAuthCallbackHandler
+          onLogin={(at, rt) => login(at, rt)}
+          onError={() => setAuthError(true)}
+        />
+      </Suspense>
+
       {/* 헤더 */}
       <header className="sticky top-0 z-10 bg-[#fbf9f8]/80 backdrop-blur-sm border-b border-[#e4e2e2]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -143,6 +179,22 @@ export default function CreatePage() {
           </div>
         </div>
       </header>
+
+      {/* 로그인 실패 배너 */}
+      {authError && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-red-600">로그인 중 오류가 발생했습니다. 다시 시도해주세요.</p>
+            <button
+              type="button"
+              onClick={() => setAuthError(false)}
+              className="text-red-600 hover:opacity-70 cursor-pointer flex-shrink-0 text-lg leading-none"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 이미지 재선택 안내 배너 */}
       {showImageNotice && (
