@@ -8,6 +8,23 @@ import type { notificationTypeEnum, notificationTargetTypeEnum } from '../../dri
 type NotificationType = (typeof notificationTypeEnum.enumValues)[number];
 type NotificationTargetType = (typeof notificationTargetTypeEnum.enumValues)[number];
 
+type NotificationSettingKey =
+  | 'isRemind'
+  | 'isFeedback'
+  | 'isInvitationDate'
+  | 'isPhoto'
+  | 'isParticipantLocations'
+  | 'isEventLocations';
+
+const TYPE_TO_SETTING: Partial<Record<NotificationType, NotificationSettingKey>> = {
+  remind: 'isRemind',
+  feedback: 'isFeedback',
+  invitation_date: 'isInvitationDate',
+  photo: 'isPhoto',
+  participantLocations: 'isParticipantLocations',
+  eventLocations: 'isEventLocations',
+};
+
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -15,18 +32,12 @@ export class NotificationsService {
     private readonly gateway: NotificationsGateway,
   ) {}
 
-  async findAll(userId: string, page: number, limit: number) {
-    const [items, total] = await Promise.all([
-      this.repository.findAllByUser(userId, page, limit),
-      this.repository.countByUser(userId),
-    ]);
-    return {
-      items,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+  async findAll(userId: string, cursor: string | undefined, limit: number) {
+    const rows = await this.repository.findAllByUser(userId, cursor, limit);
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+    const nextCursor = hasNext ? (items.at(-1)?.id ?? null) : null;
+    return { items, nextCursor, hasNext };
   }
 
   async getUnreadCount(userId: string) {
@@ -42,11 +53,14 @@ export class NotificationsService {
     if (notification.userId !== userId) {
       throw new ForbiddenException(ErrorCode.NOTIFICATION_FORBIDDEN);
     }
-    return this.repository.markAsRead(id);
+    const result = await this.repository.markAsRead(id);
+    this.gateway.sendReadToUser(userId, id);
+    return result;
   }
 
   async markAllAsRead(userId: string) {
     await this.repository.markAllAsRead(userId);
+    this.gateway.sendReadAllToUser(userId);
   }
 
   async getSettings(userId: string) {
@@ -65,6 +79,11 @@ export class NotificationsService {
     targetType?: NotificationTargetType;
     targetId?: string;
   }) {
+    const settingKey = TYPE_TO_SETTING[data.type];
+    if (settingKey) {
+      const settings = await this.repository.findSettings(data.userId);
+      if (settings && settings[settingKey] === false) return null;
+    }
     const notification = await this.repository.create(data);
     this.gateway.sendToUser(data.userId, notification);
     return notification;

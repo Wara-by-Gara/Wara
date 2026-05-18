@@ -8,22 +8,15 @@ import type { UpdateNotificationSettingsDto } from './dto/update-notification-se
 export class NotificationsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  async findAllByUser(userId: string, page: number, limit: number) {
-    const offset = (page - 1) * limit;
+  async findAllByUser(userId: string, cursor: string | undefined, limit: number) {
     return this.db.query.notifications.findMany({
-      where: (t, { eq }) => eq(t.userId, userId),
-      orderBy: (t, { desc }) => desc(t.createdAt),
-      limit,
-      offset,
+      where: (t, { eq, and, lt }) =>
+        cursor
+          ? and(eq(t.userId, userId), lt(t.id, cursor))
+          : eq(t.userId, userId),
+      orderBy: (t, { desc }) => desc(t.id),
+      limit: limit + 1,
     });
-  }
-
-  async countByUser(userId: string) {
-    const [result] = await this.db
-      .select({ total: count() })
-      .from(notifications)
-      .where(eq(notifications.userId, userId));
-    return result?.total ?? 0;
   }
 
   async countUnreadByUser(userId: string) {
