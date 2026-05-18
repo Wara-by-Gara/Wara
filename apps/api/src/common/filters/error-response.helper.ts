@@ -67,6 +67,13 @@ function extractRawMessage(raw: unknown): unknown {
   return raw;
 }
 
+function extractRawDetails(raw: unknown): unknown {
+  if (raw && typeof raw === 'object' && 'details' in raw) {
+    return (raw as { details: unknown }).details;
+  }
+  return undefined;
+}
+
 function pickCode(raw: unknown, status: number): string {
   const message = extractRawMessage(raw);
   if (typeof message === 'string' && CODE_PATTERN.test(message)) {
@@ -105,6 +112,7 @@ export function sendErrorResponse(
   const code = pickCode(raw, status);
   const type = statusToType(status);
   const message = pickMessage(raw, status);
+  const details = extractRawDetails(raw);
 
   if (status >= 500) {
     logger.error(
@@ -119,7 +127,12 @@ export function sendErrorResponse(
 
   response.status(status).json({
     success: false,
-    error: { code, type, message },
+    error: {
+      code,
+      type,
+      message,
+      ...(details !== undefined && { details }),
+    },
     meta: {
       requestId,
       timestamp: new Date().toISOString(),
