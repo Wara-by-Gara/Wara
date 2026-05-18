@@ -16,13 +16,13 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload) {
+  async findAll(@CurrentUser() user: JwtPayload) {
     return this.invitationsService.findAll(user.id);
   }
 
   @Public()
-  @Get(':id')
-  findOne(@Param('id', ParseUlidPipe) id: string) {
+  @Get(':invitationId')
+  findOne(@Param('invitationId', ParseUlidPipe) id: string) {
     return this.invitationsService.findOne(id);
   }
 

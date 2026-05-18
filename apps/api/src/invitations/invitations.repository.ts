@@ -1,9 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { invitations, participants } from '../../drizzle/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
+import { MemberRole } from '../common/enums/member-role.enum';
+import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 
 @Injectable()
 export class InvitationsRepository {
@@ -26,7 +28,13 @@ export class InvitationsRepository {
     const rows = await this.db
       .select({ id: participants.id })
       .from(participants)
-      .where(and(eq(participants.invitationId, invitationId), eq(participants.memberRole, 'GUEST')));
+      .where(
+        and(
+          eq(participants.invitationId, invitationId),
+          eq(participants.memberRole, MemberRole.GUEST),
+          ne(participants.rsvpStatus, RsvpStatus.ABSENT),
+        ),
+      );
     return rows.length;
   }
 
@@ -42,8 +50,8 @@ export class InvitationsRepository {
       await tx.insert(participants).values({
         userId,
         invitationId: invitation.id,
-        memberRole: 'HOST',
-        rsvpStatus: 'attending',
+        memberRole: MemberRole.HOST,
+        rsvpStatus: RsvpStatus.ATTENDING,
       });
 
       return invitation;
@@ -54,7 +62,7 @@ export class InvitationsRepository {
     const [updated] = await this.db
       .update(invitations)
       .set({ ...dto, updatedAt: new Date() })
-      .where(eq(invitations.id, id))
+      .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)))
       .returning();
     return updated;
   }
