@@ -7,6 +7,7 @@ import { FeedbacksRepository } from './feedbacks.repository';
 import { ErrorCode } from '../common/constants/error-codes';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
+import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
@@ -31,7 +32,7 @@ export class FeedbacksService {
   }
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
-  async listAll(invitationId: string, userId: string) {
+  async listAll(invitationId: string, userId: string, dto: ListFeedbacksDto) {
     const participant = await this.repository.findParticipant(
       userId,
       invitationId,
@@ -40,34 +41,23 @@ export class FeedbacksService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
 
-    const [invitationFeedbacks, photoFeedbacks] = await Promise.all([
-      this.repository.findManyByInvitation(invitationId),
-      this.repository.findPhotoFeedbacksByInvitation(invitationId),
-    ]);
-
-    const all = [...invitationFeedbacks, ...photoFeedbacks].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-
-    return this.applyDeletedPlaceholder(all);
-  }
-
-  //초대장 댓글 리스트
-  async listByInvitation(invitationId: string, userId: string) {
-    const participant = await this.repository.findParticipant(
-      userId,
+    const { rows, nextCursor } = await this.repository.findAllByInvitation(
       invitationId,
+      dto,
     );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    const feedbacks = await this.repository.findManyByInvitation(invitationId);
-    return this.applyDeletedPlaceholder(feedbacks);
+    return {
+      rows: this.applyDeletedPlaceholder(rows),
+      nextCursor,
+    };
   }
 
   //사진 댓글 리스트
-  async listByPhoto(invitationId: string, photoId: string, userId: string) {
+  async listByPhoto(
+    invitationId: string,
+    photoId: string,
+    userId: string,
+    dto: ListFeedbacksDto,
+  ) {
     const participant = await this.repository.findParticipant(
       userId,
       invitationId,
@@ -85,8 +75,11 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    const feedbacks = await this.repository.findManyByPhoto(photoId);
-    return this.applyDeletedPlaceholder(feedbacks);
+    const feedbacks = await this.repository.findManyByPhoto(photoId, dto);
+    return {
+      rows: this.applyDeletedPlaceholder(feedbacks.rows),
+      nextCursor: feedbacks.nextCursor,
+    };
   }
 
   //초대장 댓글 생성

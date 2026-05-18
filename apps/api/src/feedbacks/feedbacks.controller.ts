@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { FeedbacksService } from './feedbacks.service';
@@ -24,6 +25,10 @@ import {
   UpdateFeedbackDto,
   UpdateFeedbackSchema,
 } from './dto/update-feedback.dto';
+import {
+  ListFeedbacksSchema,
+  ListFeedbacksDto,
+} from './dto/list-feedbacks.dto';
 
 @Controller('invitations')
 export class FeedbacksController {
@@ -35,18 +40,9 @@ export class FeedbacksController {
   listAll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
+    @Query(new ZodValidationPipe(ListFeedbacksSchema)) dto: ListFeedbacksDto,
   ) {
-    return this.feedbacksService.listAll(invitationId, user.id);
-  }
-
-  //초대장 댓글 목록
-  @Get(':invitationId/feedbacks')
-  @UseGuards(JwtAuthGuard)
-  listByInvitation(
-    @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @CurrentUser() user: JwtPayload,
-  ) {
-    return this.feedbacksService.listByInvitation(invitationId, user.id);
+    return this.feedbacksService.listAll(invitationId, user.id, dto);
   }
 
   //초대장 댓글 생성
@@ -71,8 +67,14 @@ export class FeedbacksController {
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('photoId', ParseUlidPipe) photoId: string,
     @CurrentUser() user: JwtPayload,
+    @Query(new ZodValidationPipe(ListFeedbacksSchema)) dto: ListFeedbacksDto,
   ) {
-    return this.feedbacksService.listByPhoto(invitationId, photoId, user.id);
+    return this.feedbacksService.listByPhoto(
+      invitationId,
+      photoId,
+      user.id,
+      dto,
+    );
   }
 
   //사진 댓글 생성
