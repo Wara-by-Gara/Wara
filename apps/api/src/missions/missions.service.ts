@@ -35,7 +35,6 @@ export type MissionAssignmentResponse = {
   participantId: string;
   content: string;
   assignedAt: string;
-  completedAt: string | null;
 };
 
 function toMissionResponse(row: MissionRow): MissionResponse {
@@ -62,9 +61,6 @@ function toAssignmentResponse(
     participantId: assignment.participantId,
     content: mission.content,
     assignedAt: assignment.assignedAt.toISOString(),
-    completedAt: assignment.completedAt
-      ? assignment.completedAt.toISOString()
-      : null,
   };
 }
 
@@ -173,11 +169,22 @@ export class MissionsService {
     missionId: string,
     dto: UpdateMissionDto,
   ): Promise<MissionResponse> {
-    const updated = await this.repository.updateContent(
-      invitationId,
-      missionId,
-      dto.content,
-    );
+    // invitation lock: 동시 assign 진행 중 mission row가 사라져 FK 위반되는 race 방어
+    const updated = await this.repository.withTransaction(async (tx) => {
+      const enabled = await this.repository.lockInvitationMissionEnabled(
+        invitationId,
+        tx,
+      );
+      if (enabled === null) {
+        throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+      }
+      return this.repository.updateContent(
+        invitationId,
+        missionId,
+        dto.content,
+        tx,
+      );
+    });
     if (!updated) {
       throw new NotFoundException(ErrorCode.MISSION_NOT_FOUND);
     }
@@ -185,10 +192,20 @@ export class MissionsService {
   }
 
   async delete(invitationId: string, missionId: string): Promise<void> {
-    const deleted = await this.repository.deleteByIdInInvitation(
-      invitationId,
-      missionId,
-    );
+    const deleted = await this.repository.withTransaction(async (tx) => {
+      const enabled = await this.repository.lockInvitationMissionEnabled(
+        invitationId,
+        tx,
+      );
+      if (enabled === null) {
+        throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+      }
+      return this.repository.deleteByIdInInvitation(
+        invitationId,
+        missionId,
+        tx,
+      );
+    });
     if (!deleted) {
       throw new NotFoundException(ErrorCode.MISSION_NOT_FOUND);
     }

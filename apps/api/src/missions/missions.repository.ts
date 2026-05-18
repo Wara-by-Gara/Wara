@@ -115,8 +115,10 @@ export class MissionsRepository {
     invitationId: string,
     id: string,
     content: string,
+    tx?: DrizzleTx,
   ): Promise<MissionRow | null> {
-    const [row] = await this.db
+    const exec: DbExecutor = tx ?? this.db;
+    const [row] = await exec
       .update(missions)
       .set({ content, updatedAt: new Date() })
       .where(and(eq(missions.id, id), eq(missions.invitationId, invitationId)))
@@ -127,8 +129,10 @@ export class MissionsRepository {
   async deleteByIdInInvitation(
     invitationId: string,
     id: string,
+    tx?: DrizzleTx,
   ): Promise<boolean> {
-    const rows = await this.db
+    const exec: DbExecutor = tx ?? this.db;
+    const rows = await exec
       .delete(missions)
       .where(and(eq(missions.id, id), eq(missions.invitationId, invitationId)))
       .returning({ id: missions.id });
@@ -165,12 +169,13 @@ export class MissionsRepository {
 
   // ── Assignment ─────────────────────────────────────────────────────────────
 
+  // 게스트(GUEST)만 배정 대상. HOST는 미션 작성자라 본인 배정 제외.
+  // FOR SHARE로 참가자 row 잠금 — assign 트랜잭션 중간에 CASCADE로 사라지는 race 방어.
   async findAttendingParticipantIds(
     invitationId: string,
-    tx?: DrizzleTx,
+    tx: DrizzleTx,
   ): Promise<string[]> {
-    const exec: DbExecutor = tx ?? this.db;
-    const rows = await exec
+    const rows = await tx
       .select({ id: participants.id })
       .from(participants)
       .innerJoin(users, eq(participants.userId, users.id))
@@ -178,9 +183,11 @@ export class MissionsRepository {
         and(
           eq(participants.invitationId, invitationId),
           eq(participants.rsvpStatus, 'attending'),
+          eq(participants.memberRole, MemberRole.GUEST),
           isNull(users.deletedAt),
         ),
-      );
+      )
+      .for('share');
     return rows.map((r) => r.id);
   }
 

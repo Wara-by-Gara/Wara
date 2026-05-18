@@ -111,8 +111,11 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/missions` | 미션 목록 | ✅ | |
-| POST | `/invitations/:invitationId/missions` | 미션 생성 | ✅ | HOST만 |
+| GET | `/missions/templates` | 공용 미션 카탈로그 조회 | ✅ | 인증된 모든 유저. 호스트가 모임에 추가할 샘플 |
+| GET | `/invitations/:invitationId/missions` | 미션 목록 | ✅ | 모임 참가자만 (멤버십 검증) |
+| GET | `/invitations/:invitationId/missions/me` | 본인에게 배정된 미션 조회 | ✅ | 참석 확정(GUEST) 본인. 미배정 시 404 |
+| POST | `/invitations/:invitationId/missions` | 미션 생성 | ✅ | HOST만. body `{content}` 또는 `{templateId}` 중 하나 필수 |
+| POST | `/invitations/:invitationId/missions/assign` | 미션 랜덤 배정 트리거 | ✅ | HOST만. 참석 확정 GUEST에게 Fisher-Yates 셔플로 랜덤 균등 배정. 재호출 시 재배정 |
 | PATCH | `/invitations/:invitationId/missions/:id` | 미션 수정 | ✅ | HOST만. content 수정 |
 | DELETE | `/invitations/:invitationId/missions/:id` | 미션 삭제 | ✅ | HOST만 |
 
