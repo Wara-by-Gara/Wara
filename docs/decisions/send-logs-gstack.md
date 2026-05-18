@@ -10,7 +10,7 @@
 스키마 수정 → `pnpm db:generate` → SQL 검토 → `pnpm db:migrate` 순서로 진행.
 두 마이그레이션은 별도 파일로 분리.
 
-### [0-A] `status` 컬럼 제거 + `send_status` 타입 삭제
+### [0-A] `status` 컬럼 제거 + `send_status` 타입 삭제 + `invite_url` NOT NULL 변경
 
 Drizzle이 enum DROP TYPE을 누락할 수 있으므로 생성된 SQL에 아래 구문 포함 여부 확인 후 없으면 수동 추가.
 
@@ -19,9 +19,22 @@ ALTER TABLE invitation_send_logs DROP COLUMN status;
 DROP TYPE send_status;
 ```
 
+`invite_url` 컬럼은 현재 nullable이지만 서비스에서 항상 생성하므로 이 시점에 함께 NOT NULL로 변경 권장.
+기존 null 행이 없으면 아래 구문 추가. null 행 여부는 `SELECT COUNT(*) FROM invitation_send_logs WHERE invite_url IS NULL;`로 확인.
+
+```sql
+ALTER TABLE invitation_send_logs ALTER COLUMN invite_url SET NOT NULL;
+```
+
+> 이 경우 `drizzle/schema/invitations.ts`의 `inviteUrl: text('invite_url')` → `inviteUrl: text('invite_url').notNull()`으로 함께 수정.
+
 ### [0-B] `link_event_type` enum + `invitation_link_events` 테이블 생성
 
 Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
+
+> 사전 확인: `drizzle/migrations/` 에 `0003_unusual_ultron.sql` 파일이 `_journal.json`에 등록되지 않은 채 존재함.
+> `db:generate`는 스냅샷(`meta/0006_snapshot.json`) 기준으로 diff를 생성하므로 직접적인 영향은 없으나,
+> `db:migrate` 실행 전 journal 기준으로만 실행됨을 확인. (고아 파일은 자동 실행되지 않음 ✓)
 
 ---
 
@@ -39,7 +52,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
   ```
 
 ### `drizzle/schema/invitations.ts`
-- [ ] import에서 `sendStatusEnum` 제거, `linkEventTypeEnum` 추가
+- [ ] import에서 `sendStatusEnum` 제거, `linkEventTypeEnum` 추가 (`sendStatusEnum`을 import 목록에서 제거하지 않으면 TypeScript 컴파일 에러)
 - [ ] `invitationSendLogs`에서 `status` 컬럼 제거
 - [ ] `invitationLinkEvents` 테이블 추가
   ```typescript
@@ -59,6 +72,8 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
     index('idx_link_events_type').on(t.eventType),
   ]);
   ```
+  > `updated_at` 없음 — `drizzle/CLAUDE.md` "모든 테이블에 created_at, updated_at" 규칙의 의도적 예외.
+  > 이벤트 로그는 INSERT-only 불변 레코드이므로 `updated_at`이 무의미. `invitationSendLogs`도 동일 패턴.
 - [ ] `InvitationLinkEvent` 타입 export 추가
   ```typescript
   export type InvitationLinkEvent = typeof invitationLinkEvents.$inferSelect;
@@ -66,6 +81,23 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 ### `drizzle/schema/index.ts`
 - [ ] `invitations.ts`가 `export *`로 포함되어 있으므로 자동 export 확인만
+
+### `drizzle/schema/relations.ts`
+- [ ] `invitationLinkEvents` import 추가
+- [ ] `invitationSendLogsRelations` 새로 추가
+- [ ] `invitationLinkEventsRelations` 새로 추가
+  ```typescript
+  export const invitationSendLogsRelations = relations(invitationSendLogs, ({ one, many }) => ({
+    invitation: one(invitations, { fields: [invitationSendLogs.invitationId], references: [invitations.id] }),
+    sender: one(users, { fields: [invitationSendLogs.senderId], references: [users.id] }),
+    linkEvents: many(invitationLinkEvents),
+  }));
+
+  export const invitationLinkEventsRelations = relations(invitationLinkEvents, ({ one }) => ({
+    log: one(invitationSendLogs, { fields: [invitationLinkEvents.logId], references: [invitationSendLogs.id] }),
+    user: one(users, { fields: [invitationLinkEvents.userId], references: [users.id] }),
+  }));
+  ```
 
 ---
 
@@ -101,6 +133,10 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 | `create(data)` | invitationId, senderId, channel, inviteUrl (ref 없이) INSERT |
 | `findInvitationMeta(invitationId)` | title, description, mainImageKey 조회 (kakao 메타용) |
 
+> `inviteUrl` 컬럼은 DB 스키마상 nullable (`text('invite_url')`)이므로 Drizzle 반환 타입이 `string | null`.
+> Repository에서 `findAllByInvitation` 결과를 Service로 넘길 때 `inviteUrl`이 null인 row에 `?ref=` 추가 시 런타임 오류 발생 가능.
+> Service에서 null 체크 후 안전하게 처리: `const url = log.inviteUrl ?? baseUrl; return url + '?ref=' + log.id;`
+
 ### `src/send-logs/link-events.repository.ts` (신규)
 
 | 메서드 | 설명 |
@@ -120,7 +156,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 | `recordOpen(logId)` | linkEventsRepository.createEvent({ logId, eventType: 'opened' }) — userId 항상 null |
 
 > `create` 채널별 메타 분기:
-> - `kakao` → `findInvitationMeta()` 조회, null이면 503. `kakaoMeta: { title, description, imageUrl }` 추가
+> - `kakao` → `findInvitationMeta()` 조회, null이면 503. `kakaoMeta: { title, description, imageUrl }` 추가 (`imageUrl`은 `mainImageKey`에 CDN baseUrl 조합 — 팀 CDN URL 형식 확인 후 구현)
 > - `sms` → `smsUri: "sms:?body=${encodeURIComponent(message)}"` 생성
 > - `link | email | dm` → 공통 필드만
 
@@ -132,12 +168,13 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 | 엔드포인트 | Guards | 비고 |
 |-----------|--------|------|
-| `GET /invitations/:invitationId/logs` | JwtAuthGuard, HostGuard + `@MemberRole(HOST)` | 200 |
-| `POST /invitations/:invitationId/logs` | JwtAuthGuard, HostGuard + `@MemberRole(HOST, GUEST)` | ZodValidationPipe(CreateSendLogSchema). 201 |
+| `GET /invitations/:invitationId/logs` | `@UseGuards(HostGuard)` + `@RequireMemberRole(MemberRole.HOST)` | JwtAuthGuard는 전역 APP_GUARD — 명시 불필요. 200 |
+| `POST /invitations/:invitationId/logs` | `@UseGuards(HostGuard)` + `@RequireMemberRole(MemberRole.HOST, MemberRole.GUEST)` | ZodValidationPipe(CreateSendLogSchema). 201 |
 | `PATCH /invitations/:invitationId/logs/:logId/open` | `@Public()` | `@HttpCode(204)`. userId 항상 null |
 
-> POST /logs에 `HostGuard + @MemberRole(HOST, GUEST)` 사용.
+> POST /logs에 `HostGuard + @RequireMemberRole(MemberRole.HOST, MemberRole.GUEST)` 사용.
 > HostGuard의 `requiredRoles.includes(memberRole)` 로직이 HOST·GUEST 모두 처리하므로 별도 ParticipantGuard 불필요.
+> JwtAuthGuard는 AuthModule에서 `APP_GUARD`로 전역 등록되어 있으므로 Controller에서 `@UseGuards(JwtAuthGuard)` 명시 불필요 (locations.controller.ts 패턴 참고).
 
 ---
 
@@ -145,7 +182,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 ### `src/send-logs/send-logs.module.ts` (신규)
 - [ ] providers: `SendLogsService`, `SendLogsRepository`, `LinkEventsRepository`
-- [ ] imports: `DatabaseModule`, `AuthModule` (JwtStrategy DI 해결)
+- [ ] imports: `AuthModule` (HostGuard, ParticipantRepository DI 해결. DatabaseModule은 @Global()이므로 불필요)
 - [ ] controllers: `SendLogsController`
 
 ### `src/app.module.ts` (수정)
@@ -159,7 +196,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 - [ ] 신규 에러 코드 없음 — 수정 불필요
 
 ### `docs/api/api.md`
-- [ ] 4개 엔드포인트 명세 추가
+- [ ] 3개 엔드포인트 명세 추가
   - `GET /invitations/:invitationId/logs`
   - `POST /invitations/:invitationId/logs`
   - `PATCH /invitations/:invitationId/logs/:logId/open`
@@ -169,7 +206,7 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 ## 구현 순서 요약
 
 ```
-0-A. 스키마에서 status 컬럼·sendStatusEnum 제거 → db:generate → SQL 검토(DROP TYPE 포함 확인) → db:migrate
+0-A. 스키마에서 status 컬럼·sendStatusEnum 제거, inviteUrl .notNull() 변경 → db:generate → SQL 검토(DROP TYPE + ALTER COLUMN NOT NULL 포함 확인) → db:migrate
 0-B. linkEventTypeEnum·invitationLinkEvents 스키마 추가 → db:generate → SQL 검토 → db:migrate
 1.   InvitationLinkEvent 타입 export 확인
 2.   DTO 작성
