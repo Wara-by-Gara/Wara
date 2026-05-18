@@ -1,7 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { PlaceSearchQuerySchema, type PlaceSearchQueryDto } from './dto/place-search-query.dto';
+import {
+  PlaceSearchQuerySchema,
+  type PlaceSearchQueryDto,
+} from './dto/place-search-query.dto';
 
 @Controller('locations')
 export class LocationsSearchController {
@@ -9,8 +12,13 @@ export class LocationsSearchController {
 
   @Get('search')
   searchPlaces(
-    @Query(new ZodValidationPipe(PlaceSearchQuerySchema)) query: PlaceSearchQueryDto,
+    @Query(new ZodValidationPipe(PlaceSearchQuerySchema))
+    query: PlaceSearchQueryDto,
   ) {
-    return this.locationsService.searchPlaces(query.query, query.page, query.size);
+    return this.locationsService.searchPlaces(
+      query.query,
+      query.page,
+      query.size,
+    );
   }
 }
