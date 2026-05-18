@@ -1,6 +1,6 @@
 {
-  "id": "1d4e7a5c-a701-49e6-8cc1-78d61c87e542",
-  "prevId": "97e1e283-06b4-47fb-96bb-e9e09d1d6465",
+  "id": "66a7ee2e-1e1a-42a4-99e0-18728adf7af0",
+  "prevId": "4182613a-3072-46ef-9622-c8a5481cf119",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -751,6 +751,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1327,6 +1333,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "taken_at": {
+          "name": "taken_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "exif_metadata": {
           "name": "exif_metadata",
           "type": "jsonb",
@@ -1342,6 +1354,13 @@
         },
         "like_count": {
           "name": "like_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "feedback_count": {
+          "name": "feedback_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1368,7 +1387,44 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_photos_invitation_taken_at": {
+          "name": "idx_photos_invitation_taken_at",
+          "columns": [
+            {
+              "expression": "invitation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "taken_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_photos_deleted_at": {
+          "name": "idx_photos_deleted_at",
+          "columns": [
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "photos_participant_id_participants_id_fk": {
           "name": "photos_participant_id_participants_id_fk",
@@ -1408,6 +1464,10 @@
         "check_photo_like_count": {
           "name": "check_photo_like_count",
           "value": "\"photos\".\"like_count\" >= 0"
+        },
+        "check_photo_feedback_count": {
+          "name": "check_photo_feedback_count",
+          "value": "\"photos\".\"feedback_count\" >= 0"
         }
       },
       "isRLSEnabled": false
