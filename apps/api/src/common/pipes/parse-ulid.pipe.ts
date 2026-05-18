@@ -1,19 +1,25 @@
-import { Injectable, BadRequestException, PipeTransform } from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import { ErrorCode } from '../constants/error-codes';
+
+// NestJS pipeline은 Guard → Pipe 순이므로 Guard에서도 path param ULID 검증을 위해 export
+export const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
 /**
- * ULID 형식 검증 파이프
- * SKILL Rule: Path param ID는 반드시 ParseUlidPipe를 붙여서
- * 형식 틀리면 자동 400 Bad Request 반환
+ * Path param ID의 ULID 형식 검증 파이프.
  *
- * 사용: @Param('id', ParseUlidPipe) id: string
- * 유효하지 않은 ULID 형식이면 파이프에서 BadRequestException 던짐
+ * 사용: `@Param('id', ParseUlidPipe) id: string`
+ *
+ * 실패 시 400 + envelope:
+ *   { error: { code: 'INVALID_ULID', details: { value } } }
  */
 @Injectable()
 export class ParseUlidPipe implements PipeTransform {
-  transform(value: string) {
-    // ULID: 26자리 Crockford Base32 (0-9, A-Z 제외 I L O U)
-    if (!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(value)) {
-      throw new BadRequestException(`"${value}"는 유효한 ULID 형식이 아닙니다`);
+  transform(value: string): string {
+    if (!ULID_PATTERN.test(value)) {
+      throw new BadRequestException({
+        message: ErrorCode.INVALID_ULID,
+        details: { value },
+      });
     }
     return value;
   }
