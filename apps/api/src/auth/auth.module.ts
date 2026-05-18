@@ -22,7 +22,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
 
-
 @Module({
   imports: [
     HttpModule,
@@ -59,7 +58,6 @@ import { NaverStrategy } from './strategies/naver.strategy';
     JwtStrategy,
     KakaoStrategy,
     NaverStrategy,
-    JwtStrategy,
 
     {
       provide: APP_GUARD,
