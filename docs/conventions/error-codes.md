@@ -79,7 +79,11 @@
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 
+## Inquiries
 
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `INQUIRY_NOT_FOUND` | 404 | 문의 없음 또는 접근 권한 없음 |
 
 ---
 

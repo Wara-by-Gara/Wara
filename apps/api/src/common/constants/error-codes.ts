@@ -27,6 +27,7 @@ export const ErrorCode = {
   LOCATION_FORBIDDEN: 'LOCATION_FORBIDDEN',
   NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
   NOTIFICATION_FORBIDDEN: 'NOTIFICATION_FORBIDDEN',
+  INQUIRY_NOT_FOUND: 'INQUIRY_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
