@@ -21,7 +21,6 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -59,7 +58,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtStrategy,
     KakaoStrategy,
     NaverStrategy,
-    JwtStrategy,
 
     {
       provide: APP_GUARD,

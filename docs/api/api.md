@@ -23,6 +23,7 @@
   - [Photos](#photos)
   - [Feedbacks](#feedbacks)
   - [Notifications](#notifications)
+  - [Inquiries](#inquiries)
 
 ---
 
@@ -172,4 +173,30 @@
 
 ---
 
-> **총 57개 엔드포인트**
+## Inquiries
+
+> 사용자가 서비스 이용 중 문제를 보고하는 기능. 답변 받기 전(pending)에만 수정/삭제 가능.
+
+| Method | Path | 설명 | 인증 | 비고 |
+|--------|------|------|:----:|------|
+| POST | `/inquiries` | 문의 생성 | ✅ | inquiryType: invitation \| photo \| notification \| mission \| account \| general |
+| GET | `/inquiries/me` | 내 문의 목록 | ✅ | 최신순 정렬, soft delete 제외 |
+| GET | `/inquiries/:id` | 문의 상세 | ✅ | 본인만 조회 가능 |
+| PATCH | `/inquiries/:id` | 문의 수정 | ✅ | pending 상태일 때만. title, content 수정 가능 |
+| DELETE | `/inquiries/:id` | 문의 삭제 | ✅ | soft delete, 본인만 |
+
+---
+
+## Admin Inquiries
+
+> 관리자 전용. 사용자의 모든 문의를 조회하고 답변을 등록/수정.
+
+| Method | Path | 설명 | 인증 | 비고 |
+|--------|------|------|:----:|------|
+| GET | `/admin/inquiries` | 전체 문의 목록 | ✅ admin | 최신순 정렬 |
+| GET | `/admin/inquiries/:id` | 문의 상세 | ✅ admin | |
+| PATCH | `/admin/inquiries/:id/answer` | 답변 등록/수정 | ✅ admin | body: { answer, status: 'in_progress' \| 'resolved' } |
+
+---
+
+> **총 65개 엔드포인트**
