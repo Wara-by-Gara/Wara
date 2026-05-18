@@ -44,19 +44,29 @@ export class FeedbacksService {
   }
 
   //사진 댓글 리스트
-  async listByPhoto(photoId: string, userId: string, parentId?: string) {
+  async listByPhoto(
+    invitationId: string,
+    photoId: string,
+    userId: string,
+    parentId?: string,
+  ) {
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
       //photo 머지 시 수정
       throw new NotFoundException('PHOTO_NOT_FOUND');
     }
 
-    const participant = await this.repository.findParticipant(
-      userId,
-      photo.invitationId,
-    );
-    if (!participant) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    if (photo.invitationId !== invitationId) {
+      //photo 머지 시 수정
+      throw new NotFoundException('PHOTO_NOT_FOUND');
     }
 
     const feedbacks = await this.repository.findManyByPhoto(photoId, parentId);
@@ -86,26 +96,32 @@ export class FeedbacksService {
 
   //사진 댓글 생성
   async createForPhoto(
+    invitationId: string,
     photoId: string,
     userId: string,
     dto: CreateFeedbackDto,
   ) {
+    const participant = await this.repository.findParticipant(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
       //photo 머지 시 수정
       throw new NotFoundException('PHOTO_NOT_FOUND');
     }
 
-    const participant = await this.repository.findParticipant(
-      userId,
-      photo.invitationId,
-    );
-    if (!participant) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    if (photo.invitationId !== invitationId) {
+      //photo 머지 시 수정
+      throw new NotFoundException('PHOTO_NOT_FOUND');
     }
+
     return this.repository.create({
       participantId: participant.id,
-      invitationId: photo.invitationId,
+      invitationId,
       photoId,
       content: dto.content,
       parentId: dto.parentId,
@@ -138,17 +154,16 @@ export class FeedbacksService {
 
   //좋아요 토글
   async toggleLike(feedbackId: string, invitationId: string, userId: string) {
-    const feedback = await this.repository.findById(feedbackId);
-    if (!feedback) {
-      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
-    }
-
     const participant = await this.repository.findParticipant(
       userId,
       invitationId,
     );
     if (!participant) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    const feedback = await this.repository.findById(feedbackId);
+    if (!feedback) {
+      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
     }
 
     const existing = await this.repository.findLike(feedbackId, participant.id);
