@@ -1,12 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { NotificationsRepository } from './notifications.repository';
 import { NotificationsGateway } from './notifications.gateway';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
-import type { notificationTypeEnum, notificationTargetTypeEnum } from '../../drizzle/schema';
+import type {
+  notificationTypeEnum,
+  notificationTargetTypeEnum,
+} from '../../drizzle/schema';
 
 type NotificationType = (typeof notificationTypeEnum.enumValues)[number];
-type NotificationTargetType = (typeof notificationTargetTypeEnum.enumValues)[number];
+type NotificationTargetType =
+  (typeof notificationTargetTypeEnum.enumValues)[number];
 
 type NotificationSettingKey =
   | 'isRemind'
@@ -16,7 +24,9 @@ type NotificationSettingKey =
   | 'isParticipantLocations'
   | 'isEventLocations';
 
-const TYPE_TO_SETTING: Partial<Record<NotificationType, NotificationSettingKey>> = {
+const TYPE_TO_SETTING: Partial<
+  Record<NotificationType, NotificationSettingKey>
+> = {
   remind: 'isRemind',
   feedback: 'isFeedback',
   invitation_date: 'isInvitationDate',

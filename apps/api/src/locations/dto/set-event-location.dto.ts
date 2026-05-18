@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-/**
- * 행사 위치 설정
- * POST/PUT /invitations/:invitationId/event-location
- */
 export const SetEventLocationSchema = z.object({
   address: z.string().min(1),
   placeName: z.string().min(1).max(100),

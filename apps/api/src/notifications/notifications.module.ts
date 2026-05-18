@@ -8,7 +8,11 @@ import { NotificationsGateway } from './notifications.gateway';
 @Module({
   imports: [AuthModule],
   controllers: [NotificationsController],
-  providers: [NotificationsService, NotificationsRepository, NotificationsGateway],
+  providers: [
+    NotificationsService,
+    NotificationsRepository,
+    NotificationsGateway,
+  ],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}
