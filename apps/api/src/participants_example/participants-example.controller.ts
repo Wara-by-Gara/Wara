@@ -6,14 +6,12 @@ import {
   Delete,
   Param,
   Body,
-  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { ParticipantsExampleService } from './participants-example.service';
 import { JoinInvitationSchema, JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpSchema, UpdateRsvpDto } from './dto/update-rsvp.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -48,7 +46,6 @@ export class ParticipantsExampleController {
    * ZodValidationPipe: Zod 스키마로 body 검증
    */
   @Post()
-  @UseGuards(JwtAuthGuard)
   join(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -62,7 +59,6 @@ export class ParticipantsExampleController {
    * 소유권 체크는 Service에서 수행 (Controller 책임 아님)
    */
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
   updateRsvp(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
@@ -78,7 +74,6 @@ export class ParticipantsExampleController {
    * SKILL Rule: 삭제 엔드포인트는 반드시 204
    */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   leave(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
