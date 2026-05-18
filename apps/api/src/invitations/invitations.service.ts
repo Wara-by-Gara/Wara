@@ -12,7 +12,7 @@ export class InvitationsService {
     private readonly templatesRepository: TemplatesRepository,
   ) {}
 
-  findAll(userId: string) {
+  async findAll(userId: string) {
     return this.repository.findAllByUserId(userId);
   }
 
@@ -39,8 +39,8 @@ export class InvitationsService {
   }
 
   async update(id: string, dto: UpdateInvitationDto) {
-    await this.findOne(id);
-    if (dto.templateId) {
+    const current = await this.findOne(id);
+    if (dto.templateId && dto.templateId !== current.templateId) {
       await this.validateTemplateId(dto.templateId);
     }
     return this.repository.update(id, dto);
