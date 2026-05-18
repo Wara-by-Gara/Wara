@@ -16,11 +16,18 @@ export class FeedbacksService {
 
   //삭제된 댓글 내용 placeholder로 바꾸는 private 헬퍼 메소드
   private applyDeletedPlaceholder<
-    T extends { deletedAt: Date | null; content: string },
+    T extends {
+      deletedAt: Date | null;
+      content: string;
+      replies?: Array<{ deletedAt: Date | null; content: string }>;
+    },
   >(feedbacks: T[]) {
-    return feedbacks.map((f) =>
-      f.deletedAt ? { ...f, content: DELETED_PLACEHOLDER } : f,
-    );
+    return feedbacks.map((f) => ({
+      ...(f.deletedAt ? { ...f, content: DELETED_PLACEHOLDER } : f),
+      replies: f.replies?.map((r) =>
+        r.deletedAt ? { ...r, content: DELETED_PLACEHOLDER } : r,
+      ),
+    }));
   }
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
@@ -95,6 +102,10 @@ export class FeedbacksService {
     if (!participant) {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
+    if (dto.parentId) {
+      const parent = await this.repository.findById(dto.parentId);
+      if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+    }
     return this.repository.create({
       participantId: participant.id,
       invitationId,
@@ -117,6 +128,10 @@ export class FeedbacksService {
     if (!participant) {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
+    if (dto.parentId) {
+      const parent = await this.repository.findById(dto.parentId);
+      if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+    }
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -136,9 +151,16 @@ export class FeedbacksService {
   }
 
   //본인 댓글인지 검증하는 헬퍼 메서드
-  private async checkOwner(feedbackId: string, userId: string) {
+  private async checkOwner(
+    invitationId: string,
+    feedbackId: string,
+    userId: string,
+  ) {
     const feedback = await this.repository.findById(feedbackId);
     if (!feedback) {
+      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+    }
+    if (feedback.invitationId !== invitationId) {
       throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
     }
     if (feedback.participant.userId !== userId) {
@@ -148,14 +170,19 @@ export class FeedbacksService {
   }
 
   //댓글 수정
-  async update(feedbackId: string, userId: string, dto: UpdateFeedbackDto) {
-    await this.checkOwner(feedbackId, userId);
+  async update(
+    invitationId: string,
+    feedbackId: string,
+    userId: string,
+    dto: UpdateFeedbackDto,
+  ) {
+    await this.checkOwner(invitationId, feedbackId, userId);
     return this.repository.update(feedbackId, dto.content);
   }
 
   //댓글 삭제
-  async remove(feedbackId: string, userId: string) {
-    await this.checkOwner(feedbackId, userId);
+  async remove(invitationId: string, feedbackId: string, userId: string) {
+    await this.checkOwner(invitationId, feedbackId, userId);
     await this.repository.softDelete(feedbackId);
   }
 
@@ -166,21 +193,21 @@ export class FeedbacksService {
       invitationId,
     );
     if (!participant) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
     const feedback = await this.repository.findById(feedbackId);
     if (!feedback) {
-      throw new ForbiddenException(ErrorCode.FEEDBACK_NOT_FOUND);
+      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
     }
 
     const existing = await this.repository.findLike(feedbackId, participant.id);
 
     if (existing) {
       await this.repository.deleteLike(feedbackId, participant.id);
-      return { success: true, data: { liked: false } };
+      return { liked: false };
     } else {
       await this.repository.createLike(feedbackId, participant.id);
-      return { success: true, data: { liked: true } };
+      return { liked: true };
     }
   }
 }

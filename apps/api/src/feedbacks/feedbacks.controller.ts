@@ -101,7 +101,7 @@ export class FeedbacksController {
     @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(UpdateFeedbackSchema)) dto: UpdateFeedbackDto,
   ) {
-    return this.feedbacksService.update(id, user.id, dto);
+    return this.feedbacksService.update(invitationId, id, user.id, dto);
   }
 
   //댓글 삭제
@@ -113,7 +113,7 @@ export class FeedbacksController {
     @Param('id', ParseUlidPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.feedbacksService.remove(id, user.id);
+    return this.feedbacksService.remove(invitationId, id, user.id);
   }
 
   //좋아요 토글
