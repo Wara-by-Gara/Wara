@@ -26,6 +26,9 @@ type RequestOptions = {
  * 와라 API fetcher.
  *
  * - 응답 envelope({ success, data, error, meta })를 풀어서 `data`만 반환
+ *   참고: 페이지네이션 응답(total/page/limit/totalPages)이 필요한 호출은
+ *   별도 helper(apiFetchWithMeta — V1.0 페이지네이션 화면 PR에서 추가) 사용.
+ *   현재 `apiFetch`는 meta 정보 손실됨.
  * - 4xx/5xx envelope는 `WaraApiError`로 throw — UI는 `error.code`로 분기
  * - 네트워크 실패는 `WaraNetworkError`로 throw — 재시도/오프라인 표시 대상
  * - 인증 헤더(`Authorization: Bearer ...`) SecureStore 토큰으로 자동
@@ -104,6 +107,9 @@ export async function apiFetch<T>(
   }
 
   // 실패 envelope → 도메인 에러
+  // TODO(auth-kakao PR): code === 'TOKEN_EXPIRED' && status === 401일 때
+  //   refresh token으로 access token 자동 갱신 후 원 요청 재시도.
+  //   현재는 UI 레이어에서 catch 후 로그인 화면으로 리다이렉트하는 것이 fallback.
   throw new WaraApiError({
     code: json.error.code,
     type: json.error.type,
