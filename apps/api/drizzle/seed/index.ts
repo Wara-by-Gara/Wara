@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import * as schema from '../schema';
+import * as schema from '../../src/database/schema';
 import { seedTier0 } from './tier0-users';
 import { seedTier1 } from './tier1-user-deps';
 import { seedTier2 } from './tier2-invitations';

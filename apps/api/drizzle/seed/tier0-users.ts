@@ -1,4 +1,4 @@
-import { invitationTemplates, missionTemplates, users } from '../schema';
+import { invitationTemplates, missionTemplates, users } from '../../src/database/schema';
 import type { DrizzleDB } from '../../src/database/database.module';
 import { SEEDS } from './fixtures';
 

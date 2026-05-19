@@ -1,4 +1,4 @@
-import { photoLikes, feedbacks, feedbackLikes } from '../schema';
+import { photoLikes, feedbacks, feedbackLikes } from '../../src/database/schema';
 import type { DrizzleDB } from '../../src/database/database.module';
 import { SEEDS } from './fixtures';
 

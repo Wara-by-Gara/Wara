@@ -5,7 +5,7 @@ import {
   invitationLinkEvents,
   invitationBlocklists,
   notifications,
-} from '../schema';
+} from '../../src/database/schema';
 import type { DrizzleDB } from '../../src/database/database.module';
 import { SEEDS } from './fixtures';
 

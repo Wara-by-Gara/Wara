@@ -1,4 +1,4 @@
-import { socialAccounts, notificationSettings, inquiries } from '../schema';
+import { socialAccounts, notificationSettings, inquiries } from '../../src/database/schema';
 import type { DrizzleDB } from '../../src/database/database.module';
 import { SEEDS } from './fixtures';
 

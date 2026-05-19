@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../../database/database.module';
-import { invitationBlocklists } from '../../../drizzle/schema';
+import { invitationBlocklists } from '../../database/schema';
 
 @Injectable()
 export class BlocklistRepository {

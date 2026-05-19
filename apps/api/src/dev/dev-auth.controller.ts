@@ -16,7 +16,7 @@ import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { AuthService } from '../auth/auth.service';
 import { Public } from '../common/decorators/public.decorator';
 import { UserRole } from '../common/enums/role.enum';
-import { users } from '../../drizzle/schema';
+import { users } from '../database/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { z } from 'zod';
 
