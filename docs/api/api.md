@@ -91,10 +91,14 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/participants` | 참가자 목록 | ✅ | |
-| POST | `/invitations/:invitationId/participants` | 참가 등록 (RSVP) | ✅ | |
-| PATCH | `/invitations/:invitationId/participants/:id/rsvp` | RSVP 상태 변경 | ✅ | 본인만. rsvpStatus: attending \| undecided \| absent \| cancelled |
-| DELETE | `/invitations/:invitationId/participants/:id` | 참가 취소 | ✅ | 본인 또는 HOST |
+| GET | `/invitations/:invitationId/participants` | 참가자 목록 + summary | ✅ | `?rsvpStatus` 필터 가능. 기본: attending/undecided만. absent는 필터 지정 시 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/profile` | 참가자 프로필 상세 | ✅ | attending/undecided만 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/mutual` | 함께 아는 사람 | ✅ | attending/undecided만 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/shared-invitations` | 함께 참여한 다른 모임 | ✅ | attending/undecided만 조회 가능 |
+| POST | `/invitations/:invitationId/participants` | 참가 등록 | ✅ | rsvpStatus 필수. attending/undecided/absent 중 택 1. closed 초대장 불가 |
+| PATCH | `/invitations/:invitationId/participants/:participantId/rsvp` | RSVP 상태 변경 | ✅ | 본인만. HOST 불가. rsvpStatus: attending \| undecided \| absent. closed 초대장 불가 |
+| PATCH | `/invitations/:invitationId/participants/me/hidden` | 내 초대장 목록 숨김 토글 | ✅ | 본인만 |
+| DELETE | `/invitations/:invitationId/participants/:participantId` | 탈퇴 / 강제 퇴장 | ✅ | 본인 또는 HOST. HOST 본인 탈퇴 불가 |
 
 ---
 
