@@ -67,6 +67,7 @@ export default function InvitationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
@@ -135,8 +136,10 @@ export default function InvitationDetailPage() {
         setMyParticipant(updated);
         setParticipants((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
       }
-    } catch {
-      // RSVP 엔드포인트 미구현 시 조용히 무시
+    } catch (err) {
+      console.error("[RSVP] error:", err);
+      const code = (err as { error?: { code?: string } })?.error?.code;
+      setRsvpError(code ?? "RSVP 처리 중 오류가 발생했습니다.");
     } finally {
       setRsvpLoading(false);
     }
@@ -260,7 +263,7 @@ export default function InvitationDetailPage() {
                       key={value}
                       type="button"
                       disabled={rsvpLoading}
-                      onClick={() => handleRsvp(value)}
+                      onClick={() => { setRsvpError(null); handleRsvp(value); }}
                       className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                         myParticipant?.rsvpStatus === value
                           ? "bg-[#a73921] text-white border-[#a73921]"
@@ -271,6 +274,9 @@ export default function InvitationDetailPage() {
                     </button>
                   ))}
                 </div>
+                {rsvpError && (
+                  <p className="mt-2 text-xs text-[#a73921]">{rsvpError}</p>
+                )}
               </section>
             )}
 
