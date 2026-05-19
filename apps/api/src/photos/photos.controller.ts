@@ -34,9 +34,10 @@ export class PhotosController {
   //url 발급용
   @Post(':invitationId/photos/presigned-url')
   generatePresignedUrl(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Body(new ZodValidationPipe(PresignedUrlSchema)) dto: PresignedUrlDto,
   ) {
-    return this.photosService.generatePresignedUrl(dto);
+    return this.photosService.generatePresignedUrl(invitationId, dto);
   }
 
   //사진 목록 조회
@@ -50,11 +51,9 @@ export class PhotosController {
 
   //사진 다운로드(선택,단일)
   @Get(':invitationId/photos/download')
-  getDownloadUrls(
-    @Query('ids') ids?: string,
-  ) {
+  getDownloadUrls(@Query('ids') ids?: string) {
     if (!ids) {
-      throw new BadRequestException('ids 쿼리 파라미터가 필요합니다.')
+      throw new BadRequestException('ids 쿼리 파라미터가 필요합니다.');
     }
     return this.photosService.getDownloadUrls(ids.split(','));
   }
@@ -69,17 +68,13 @@ export class PhotosController {
 
   //리마인드
   @Get(':invitationId/photos/best9')
-  getBest9(
-    @Param('invitationId', ParseUlidPipe) invitationId: string,
-  ) {
+  getBest9(@Param('invitationId', ParseUlidPipe) invitationId: string) {
     return this.photosService.getBest9(invitationId);
   }
 
   //사진 상세
   @Get(':invitationId/photos/:id')
-  getPhoto(
-    @Param('id', ParseUlidPipe) id: string,
-  ) {
+  getPhoto(@Param('id', ParseUlidPipe) id: string) {
     return this.photosService.getPhoto(id);
   }
 
