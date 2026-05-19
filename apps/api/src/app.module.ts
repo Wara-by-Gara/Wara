@@ -18,6 +18,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ParticipantsExampleModule } from './participants_example/participants-example.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
+import { BlocklistModule } from './blocklist/blocklist.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { S3Module } from './s3/s3.module';
     ParticipantsExampleModule,
     SendLogsModule,
     S3Module,
+    BlocklistModule,
   ],
   controllers: [AppController],
   providers: [
