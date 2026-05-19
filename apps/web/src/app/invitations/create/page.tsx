@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/constants/routes";
@@ -88,6 +88,10 @@ function OAuthCallbackHandler({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const onLoginRef = useRef(onLogin);
+  const onErrorRef = useRef(onError);
+  onLoginRef.current = onLogin;
+  onErrorRef.current = onError;
 
   useEffect(() => {
     const accessToken = searchParams.get("access_token");
@@ -95,15 +99,15 @@ function OAuthCallbackHandler({
     const error = searchParams.get("auth_error");
 
     if (accessToken && refreshToken) {
-      onLogin(accessToken, refreshToken);
+      onLoginRef.current(accessToken, refreshToken);
       const returnUrl = localStorage.getItem("wara_return_url");
       localStorage.removeItem("wara_return_url");
       router.replace(returnUrl ?? ROUTES.INVITATIONS.CREATE);
     } else if (error) {
-      onError();
+      onErrorRef.current();
       router.replace(ROUTES.INVITATIONS.CREATE);
     }
-  }, [searchParams, onLogin, onError, router]);
+  }, [searchParams, router]);
 
   return null;
 }
