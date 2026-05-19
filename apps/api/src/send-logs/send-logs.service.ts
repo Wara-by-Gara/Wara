@@ -43,6 +43,9 @@ export class SendLogsService {
   }
 
   async recordOpen(logId: string) {
+    const log = await this.sendLogsRepository.findById(logId);
+    if (!log) return;
+
     await this.linkEventsRepository.createEvent({
       logId,
       eventType: 'opened',

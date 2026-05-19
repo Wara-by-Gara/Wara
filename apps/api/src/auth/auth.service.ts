@@ -156,7 +156,7 @@ export class AuthService {
       platform: params.platform,
     });
 
-    const { userId } = await this.repository.upsertSocialAccount({
+    const { userId, isNew } = await this.repository.upsertSocialAccount({
       provider: params.provider,
       providerAccountId: socialUser.providerAccountId,
       email: socialUser.email,
@@ -184,7 +184,7 @@ export class AuthService {
       this.issueRefreshToken(user.id),
     ]);
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, isNew };
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
