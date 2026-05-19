@@ -8,7 +8,7 @@ import { getTemplates, type Template } from "@/lib/api/templates";
 import { createInvitation } from "@/lib/api/invitations";
 import InvitationPreview from "./_components/InvitationPreview";
 import InvitationForm from "./_components/InvitationForm";
-import LoginModal from "./_components/LoginModal";
+import LoginModal from "../_components/LoginModal";
 
 const DEFAULT_COVER_IMAGE_KEY = "defaults/cover.jpg";
 
