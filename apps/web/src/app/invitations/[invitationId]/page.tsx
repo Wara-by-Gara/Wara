@@ -13,6 +13,7 @@ import {
   type RsvpStatus,
 } from "@/lib/api/participants";
 import { ROUTES } from "@/constants/routes";
+import LoginModal from "../_components/LoginModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -66,6 +67,7 @@ export default function InvitationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     hydrate();
@@ -278,32 +280,15 @@ export default function InvitationDetailPage() {
                 <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
                   RSVP
                 </p>
-                <div className="bg-[#f5f3f3] rounded-xl px-5 py-5 flex flex-col items-center gap-4">
+                <div className="bg-[#f5f3f3] rounded-xl px-5 py-5 flex flex-col items-center gap-3">
                   <p className="text-[#505f78] text-sm">참석 여부를 알리려면 로그인이 필요합니다.</p>
-                  <div className="flex flex-col gap-2 w-full max-w-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.setItem("wara_return_url", window.location.pathname);
-                        window.location.href = `${API_URL}/auth/naver/redirect`;
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-[#03c75a] rounded-xl py-3 text-white font-semibold text-sm hover:bg-[#02b350] transition-colors cursor-pointer"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" /></svg>
-                      Continue with Naver
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.setItem("wara_return_url", window.location.pathname);
-                        window.location.href = `${API_URL}/auth/kakao/redirect`;
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-[#fee500] rounded-xl py-3 text-[#191919] font-semibold text-sm hover:bg-[#f0d900] transition-colors cursor-pointer"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.548 1.516 4.787 3.812 6.134l-.97 3.625 4.2-2.764A11.5 11.5 0 0012 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z" /></svg>
-                      Continue with Kakao
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginModal(true)}
+                    className="px-6 py-2.5 bg-[#a73921] text-white text-sm font-semibold rounded-xl hover:bg-[#8f2e17] transition-colors cursor-pointer"
+                  >
+                    로그인하기
+                  </button>
                 </div>
               </section>
             )}
@@ -336,6 +321,13 @@ export default function InvitationDetailPage() {
           <span className="text-[#505f78] text-xs">© 2026 WARA. 요즘 모이는 방식.</span>
         </div>
       </footer>
+
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          returnUrl={window.location.pathname}
+        />
+      )}
     </div>
   );
 }

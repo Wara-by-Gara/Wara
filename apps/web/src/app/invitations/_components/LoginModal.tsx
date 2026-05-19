@@ -6,13 +6,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 interface LoginModalProps {
   onClose: () => void;
+  returnUrl?: string;
 }
 
-function redirectToOAuth(provider: "kakao" | "naver") {
+function redirectToOAuth(provider: "kakao" | "naver", returnUrl?: string) {
+  if (returnUrl) localStorage.setItem("wara_return_url", returnUrl);
   window.location.href = `${API_URL}/auth/${provider}/redirect`;
 }
 
-export default function LoginModal({ onClose }: LoginModalProps) {
+export default function LoginModal({ onClose, returnUrl }: LoginModalProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
@@ -41,7 +43,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         </div>
 
         <div className="flex flex-col gap-3">
-          {/* Apple — credentials 미설정으로 비활성화 */}
           <button
             type="button"
             disabled
@@ -50,21 +51,17 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             <AppleIcon />
             Continue with Apple
           </button>
-
-          {/* Naver */}
           <button
             type="button"
-            onClick={() => redirectToOAuth("naver")}
+            onClick={() => redirectToOAuth("naver", returnUrl)}
             className="w-full flex items-center justify-center gap-3 bg-[#03c75a] rounded-xl py-3.5 text-white font-semibold text-sm hover:bg-[#02b350] transition-colors cursor-pointer"
           >
             <NaverIcon />
             Continue with Naver
           </button>
-
-          {/* Kakao */}
           <button
             type="button"
-            onClick={() => redirectToOAuth("kakao")}
+            onClick={() => redirectToOAuth("kakao", returnUrl)}
             className="w-full flex items-center justify-center gap-3 bg-[#fee500] rounded-xl py-3.5 text-[#191919] font-semibold text-sm hover:bg-[#f0d900] transition-colors cursor-pointer"
           >
             <KakaoIcon />
