@@ -48,3 +48,18 @@ export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'mission',
   'participantLocations',
 ]);
+
+export const inquiryTypeEnum = pgEnum('inquiry_type', [
+  'invitation',
+  'photo',
+  'notification',
+  'mission',
+  'bug',
+  'feature',
+  'general',
+]);
+export const inquiryStatusEnum = pgEnum('inquiry_status', [
+  'pending',
+  'in_progress',
+  'resolved',
+]);
