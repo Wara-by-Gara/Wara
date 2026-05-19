@@ -19,6 +19,7 @@ import { ParticipantsExampleModule } from './participants_example/participants-e
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { BlocklistModule } from './blocklist/blocklist.module';
     SendLogsModule,
     S3Module,
     BlocklistModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

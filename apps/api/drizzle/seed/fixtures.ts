@@ -283,15 +283,81 @@ function buildSeeds() {
     placeId: loc.placeId,
   }));
 
-  // 9. Send logs (2 per invitation)
-  const sendLogs = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
+  // 9. Send logs
+  // - 호스트 발송 2건 (kakao, link)
+  // - 일부 invitation은 GUEST 발송 1건 추가 (바이럴 분석용)
+  const sendLogs = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys], invIdx) => {
     const hostUserId = userIdByKey[userKeys[0]!]!;
     const invId = invIdByKey[invKey]!;
     const baseUrl = `https://wara.dev/invite/${invId}`;
-    return [
-      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao' as const, inviteUrl: baseUrl, status: 'responded' as const },
-      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link'  as const, inviteUrl: baseUrl, status: 'opened'   as const },
+    const logs: Array<{
+      id: string;
+      invitationId: string;
+      senderId: string;
+      channel: 'kakao' | 'link' | 'sms' | 'email' | 'dm';
+      inviteUrl: string;
+      status: 'responded' | 'opened' | 'sent';
+    }> = [
+      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao', inviteUrl: baseUrl, status: 'responded' },
+      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link',  inviteUrl: baseUrl, status: 'opened'   },
     ];
+    // 짝수 invitation 인덱스에 GUEST 발송 1건 (바이럴 시연용)
+    if (invIdx % 2 === 0 && userKeys.length >= 2) {
+      const guestUserId = userIdByKey[userKeys[1]!]!;
+      logs.push({
+        id: id(`sendlog:${invKey}:guest`),
+        invitationId: invId,
+        senderId: guestUserId,
+        channel: 'sms',
+        inviteUrl: baseUrl,
+        status: 'sent',
+      });
+    }
+    return logs;
+  });
+
+  // 9-1. Link events (분석용)
+  // 각 sendLog마다:
+  // - anonymous opened (user_id NULL) 1건 — 시간대 분산용
+  // - logged-in opened (user_id 있음) 1건 — 로그인 conversion
+  // - 일부에 joined 1건 — 참가 conversion
+  const linkEvents: Array<{
+    id: string;
+    logId: string;
+    eventType: 'opened' | 'joined';
+    userId: string | null;
+    createdAt: Date;
+  }> = [];
+  sendLogs.forEach((log, logIdx) => {
+    const baseTime = new Date('2026-05-01T00:00:00Z').getTime();
+    const hour = logIdx % 24;          // 0~23시 골고루
+    const day = Math.floor(logIdx / 24) % 14; // 14일 분산
+    const t = (extra: number) =>
+      new Date(baseTime + day * 86400_000 + hour * 3600_000 + extra * 60_000);
+
+    linkEvents.push({
+      id: id(`linkevent:${log.id}:anon`),
+      logId: log.id,
+      eventType: 'opened',
+      userId: null,
+      createdAt: t(0),
+    });
+    linkEvents.push({
+      id: id(`linkevent:${log.id}:login`),
+      logId: log.id,
+      eventType: 'opened',
+      userId: userIdByKey['guest01']!,
+      createdAt: t(15),
+    });
+    if (logIdx % 2 === 0) {
+      linkEvents.push({
+        id: id(`linkevent:${log.id}:join`),
+        logId: log.id,
+        eventType: 'joined',
+        userId: userIdByKey['guest01']!,
+        createdAt: t(60),
+      });
+    }
   });
 
   // 10. Blocklists (inv01: active 1건 + soft-deleted 1건)
@@ -519,6 +585,7 @@ function buildSeeds() {
     participants,
     eventLocations,
     sendLogs,
+    linkEvents,
     blocklists,
     participantLocations,
     missions,

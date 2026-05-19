@@ -89,7 +89,11 @@
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 
+## Admin
 
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `ANALYTICS_PERIOD_TOO_LONG` | 400 | 분석 기간이 366일 초과 (admin/analytics/shares/*) |
 
 ---
 
