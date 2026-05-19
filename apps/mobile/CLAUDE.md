@@ -28,12 +28,15 @@
 ---
 
 ## Always
-- API 호출은 `@wara/api` 명세 기준 — `docs/api/api.md` 확인 후 fetcher 작성
-- 응답 envelope `{ success, data?, error?, meta }` 그대로 받아 처리
-- 에러 코드는 `docs/conventions/error-codes.md` 기준 — 사용자 메시지 매핑 별도 관리
+- API 호출은 **`src/api`의 `apiFetch` + TanStack Query 훅**을 사용 (직접 `fetch()` 금지)
+  - `useQuery({ queryKey, queryFn: ({ signal }) => apiFetch<T>(path, { signal }) })`
+  - mutation은 `useMutation` + `queryClient.invalidateQueries` 패턴
+- 응답 envelope는 `apiFetch`가 풀어서 `data`만 반환, 실패는 `WaraApiError`로 throw
+- 에러 처리는 `error.code`(docs/conventions/error-codes.md 기준)로 분기 — message 그대로 노출 금지
+- JWT 토큰은 `src/api/auth-storage`의 `getAccessToken/setTokens/clearTokens` 사용 (SecureStore)
+- 환경 변수: `EXPO_PUBLIC_API_URL` → `app.config.ts` extra로 노출 → `Constants.expoConfig.extra.apiUrl`
 - 화면 라우팅은 Expo Router (file-based, `app/` 디렉터리)
 - 컴포넌트 styling은 RN `StyleSheet.create` 또는 Themed 컴포넌트
-- 환경 변수는 `expo-constants` + `app.json` extra 또는 EAS Secret
 - 모든 외부 입력은 Zod 등으로 검증 (서버에서 이미 검증해도 클라 안전망)
 
 ## Never

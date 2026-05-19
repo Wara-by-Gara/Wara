@@ -12,6 +12,13 @@
 pnpm install
 ```
 
+환경변수 (최초 1회):
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env
+# .env에서 EXPO_PUBLIC_API_URL을 본인 환경에 맞게 수정 (기본: http://localhost:3000/api/v1)
+```
+
 mobile dev 서버:
 
 ```bash
@@ -35,8 +42,36 @@ pnpm --filter @wara/mobile web       # Web 미리보기
 | `lint` | `expo lint` |
 | `typecheck` | `tsc --noEmit` |
 
+## API 클라이언트 사용
+
+```tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/src/api';
+
+// 조회
+const { data, isPending, error } = useQuery({
+  queryKey: ['invitations', 'me'],
+  queryFn: ({ signal }) => apiFetch<InvitationDto[]>('/invitations', { signal }),
+});
+
+// 변경
+const queryClient = useQueryClient();
+const rsvp = useMutation({
+  mutationFn: (status: string) =>
+    apiFetch(`/invitations/${id}/participants/me/rsvp`, {
+      method: 'PATCH',
+      body: { rsvpStatus: status },
+    }),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invitations'] }),
+});
+```
+
+에러는 `WaraApiError`(`error.code`로 분기) 또는 `WaraNetworkError`로 throw됩니다.
+JWT 토큰은 `getAccessToken / setTokens / clearTokens`로 SecureStore 관리.
+
 ## Refs
 
 - Expo SDK 54: https://docs.expo.dev/versions/v54.0.0/
 - Expo Router: https://docs.expo.dev/router/introduction
 - pnpm monorepo + Expo: https://docs.expo.dev/guides/monorepos/
+- TanStack Query: https://tanstack.com/query/v5/docs/framework/react/overview
