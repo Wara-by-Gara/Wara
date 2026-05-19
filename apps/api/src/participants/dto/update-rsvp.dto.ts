@@ -5,7 +5,7 @@ import { z } from 'zod';
  * PATCH /invitations/:invitationId/participants/:id
  */
 export const UpdateRsvpSchema = z.object({
-  rsvpStatus: z.enum(['attending', 'undecided', 'absent', 'cancelled']),
+  rsvpStatus: z.enum(['attending', 'undecided', 'absent']),
 });
 
 export type UpdateRsvpDto = z.infer<typeof UpdateRsvpSchema>;

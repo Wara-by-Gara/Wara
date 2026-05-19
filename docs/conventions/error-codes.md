@@ -42,6 +42,16 @@
 | `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
 | `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
 
+## Participants
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `PARTICIPANT_NOT_FOUND` | 404 | 참가자 조회 실패 |
+| `PARTICIPANT_ALREADY_EXISTS` | 409 | 이미 참가한 초대장에 재참가 시도 |
+| `HOST_CANNOT_LEAVE` | 400 | HOST 본인 탈퇴 시도 |
+| `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/RSVP 변경 시도 |
+| `RSVP_PERMISSION_DENIED` | 403 | absent 상태 열람 시도 또는 HOST RSVP 변경 시도 |
+
 ## Notification
 
 | 코드 | 상태코드 | 상황 |
