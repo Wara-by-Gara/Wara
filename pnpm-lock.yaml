@@ -256,6 +256,9 @@ importers:
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.17
+      '@wara/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       eslint:
         specifier: ^9.25.0
         version: 9.39.4(jiti@2.7.0)
