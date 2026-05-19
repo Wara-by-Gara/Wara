@@ -116,23 +116,30 @@ export class FeedbacksService {
 
   //본인 댓글인지 검증하는 헬퍼 메서드
   private async checkOwner(
-    invitationId: string,
-    feedbackId: string,
-    userId: string,
-  ) {
-    const feedback = await this.repository.findById(feedbackId);
-    if (!feedback) {
-      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
-    }
-    if (feedback.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
-    }
-    if (feedback.participant.userId !== userId) {
-      throw new ForbiddenException(ErrorCode.FEEDBACK_FORBIDDEN);
-    }
-    return feedback;
+  invitationId: string,
+  feedbackId: string,
+  userId: string,
+) {
+  const feedback = await this.repository.findById(feedbackId);
+  if (!feedback) {
+    throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
   }
 
+  // 초대장 댓글: invitationId 직접 비교
+  // 사진 댓글: photo의 invitationId로 비교
+  const feedbackInvitationId =
+    feedback.invitationId ?? feedback.participant.invitationId;
+
+  if (feedbackInvitationId !== invitationId) {
+    throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+  }
+
+  if (feedback.participant.userId !== userId) {
+    throw new ForbiddenException(ErrorCode.FEEDBACK_FORBIDDEN);
+  }
+
+  return feedback;
+}
   //댓글 수정
   async update(
     invitationId: string,
@@ -146,7 +153,7 @@ export class FeedbacksService {
 
   //댓글 삭제
   async remove(invitationId: string, feedbackId: string, participant: Participant,) {
-    await this.checkOwner(invitationId, feedbackId, participant.id);
+    await this.checkOwner(invitationId, feedbackId, participant.userId);
     await this.repository.softDelete(feedbackId);
   }
 

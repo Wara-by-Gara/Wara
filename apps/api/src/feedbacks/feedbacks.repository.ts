@@ -1,7 +1,12 @@
-import { and, eq, isNull, lt, SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lt, or, SQL, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { feedbackLikes, feedbacks, NewFeedback } from '../../drizzle/schema';
+import {
+  feedbackLikes,
+  feedbacks,
+  NewFeedback,
+  photos,
+} from '../../drizzle/schema';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 
 @Injectable()
@@ -39,8 +44,17 @@ export class FeedbacksRepository {
   async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
+    const photoIds = await this.db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(eq(photos.invitationId, invitationId))
+      .then((rows) => rows.map((r) => r.id));
+
     const conditions = [
-      eq(feedbacks.invitationId, invitationId),
+      or(
+        eq(feedbacks.invitationId, invitationId),
+        photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
+      ),
       isNull(feedbacks.parentId),
       ...cursorConditions,
     ];
@@ -58,7 +72,7 @@ export class FeedbacksRepository {
       orderBy: (t, { desc }) => [desc(t.createdAt)],
       limit: LIMIT + 1,
     });
-    return this.paginate(rows,LIMIT);
+    return this.paginate(rows, LIMIT);
   }
 
   //사진 댓글 목록 조회
@@ -117,8 +131,18 @@ export class FeedbacksRepository {
       'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId'
     >,
   ) {
-    const [result] = await this.db.insert(feedbacks).values(data).returning();
-    return result;
+    return await this.db.transaction(async (tx) => {
+      const [result] = await tx.insert(feedbacks).values(data).returning();
+
+      if (data.photoId ) {
+        await tx
+          .update(photos)
+          .set({ feedbackCount: sql`feedback_count + 1` })
+          .where(eq(photos.id, data.photoId));
+      }
+
+      return result;
+    });
   }
 
   //댓글 수정
@@ -133,10 +157,20 @@ export class FeedbacksRepository {
 
   //댓글 삭제 (소프트 딜리트)
   async softDelete(id: string) {
-    await this.db
-      .update(feedbacks)
-      .set({ deletedAt: new Date() })
-      .where(eq(feedbacks.id, id));
+    await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .update(feedbacks)
+        .set({ deletedAt: new Date() })
+        .where(eq(feedbacks.id, id))
+        .returning();
+
+      if (deleted?.photoId && !deleted?.parentId) {
+        await tx
+          .update(photos)
+          .set({ feedbackCount: sql`GREATEST(feedback_count - 1, 0)` })
+          .where(eq(photos.id, deleted.photoId));
+      }
+    });
   }
 
   //댓글 좋아요 조회
