@@ -6,6 +6,8 @@ import { HttpModule } from '@nestjs/axios';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ParticipantGuard } from '../common/guards/participant.guard';
+import { RsvpStatusGuard } from '../common/guards/rsvp-status.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantRepository } from '../common/repositories/participant.repository';
@@ -73,12 +75,16 @@ import { NaverStrategy } from './strategies/naver.strategy';
     BlocklistRepository,
     HostGuard,
     BlocklistGuard,
+    ParticipantGuard,
+    RsvpStatusGuard,
   ],
 
   exports: [
     AuthService,
     HostGuard,
     BlocklistGuard,
+    ParticipantGuard,
+    RsvpStatusGuard,
     ParticipantRepository,
     BlocklistRepository,
     JwtStrategy
