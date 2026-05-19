@@ -7,4 +7,5 @@ export * from './missions';
 export * from './photos';
 export * from './feedbacks';
 export * from './notifications';
+export * from './inquiries';
 export * from './relations';
