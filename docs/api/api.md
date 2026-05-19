@@ -91,10 +91,14 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/participants` | 참가자 목록 | ✅ | |
-| POST | `/invitations/:invitationId/participants` | 참가 등록 (RSVP) | ✅ | |
-| PATCH | `/invitations/:invitationId/participants/:id/rsvp` | RSVP 상태 변경 | ✅ | 본인만. rsvpStatus: attending \| undecided \| absent \| cancelled |
-| DELETE | `/invitations/:invitationId/participants/:id` | 참가 취소 | ✅ | 본인 또는 HOST |
+| GET | `/invitations/:invitationId/participants` | 참가자 목록 + summary | ✅ | `?rsvpStatus` 필터 가능. 기본: attending/undecided만. absent는 필터 지정 시 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/profile` | 참가자 프로필 상세 | ✅ | attending/undecided만 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/mutual` | 함께 아는 사람 | ✅ | attending/undecided만 조회 가능 |
+| GET | `/invitations/:invitationId/participants/:participantId/shared-invitations` | 함께 참여한 다른 모임 | ✅ | attending/undecided만 조회 가능 |
+| POST | `/invitations/:invitationId/participants` | 참가 등록 | ✅ | rsvpStatus 필수. attending/undecided/absent 중 택 1. closed 초대장 불가 |
+| PATCH | `/invitations/:invitationId/participants/:participantId/rsvp` | RSVP 상태 변경 | ✅ | 본인만. HOST 불가. rsvpStatus: attending \| undecided \| absent. closed 초대장 불가 |
+| PATCH | `/invitations/:invitationId/participants/me/hidden` | 내 초대장 목록 숨김 토글 | ✅ | 본인만 |
+| DELETE | `/invitations/:invitationId/participants/:participantId` | 탈퇴 / 강제 퇴장 | ✅ | 본인 또는 HOST. HOST 본인 탈퇴 불가 |
 
 ---
 
@@ -102,8 +106,22 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/logs` | 전송 이력 조회 | ✅ | HOST만 |
-| POST | `/invitations/:invitationId/logs` | 전송 이력 기록 | ✅ | channel: link \| kakao \| sms \| email \| dm |
+| ~~GET~~ | ~~`/invitations/:invitationId/logs`~~ | ~~전송 이력 조회~~ | — | V1.0 제외. 팀 논의 후 추가 |
+| POST | `/invitations/:invitationId/logs` | 공유 로그 기록 | ✅ | HOST·GUEST 가능. channel: link \| kakao \| sms \| email \| dm. kakao는 body에 kakaoMeta 포함 |
+| PATCH | `/invitations/:invitationId/logs/:logId/open` | 링크 방문 이벤트 기록 | ❌ | 비로그인 가능. 204 No Content |
+
+### POST `/invitations/:invitationId/logs` 응답
+
+```json
+// 공통
+{ "inviteUrl": "https://wara.com/rsvp/{id}?ref={logId}" }
+
+// kakao 추가
+{ "inviteUrl": "...", "kakaoMeta": { "title": "", "description": "", "imageUrl": "" } }
+
+// sms 추가
+{ "inviteUrl": "...", "smsUri": "sms:?body=..." }
+```
 
 ---
 
@@ -111,8 +129,11 @@
 
 | Method | Path | 설명 | 인증 | 비고 |
 |--------|------|------|:----:|------|
-| GET | `/invitations/:invitationId/missions` | 미션 목록 | ✅ | |
-| POST | `/invitations/:invitationId/missions` | 미션 생성 | ✅ | HOST만 |
+| GET | `/missions/templates` | 공용 미션 카탈로그 조회 | ✅ | 인증된 모든 유저. 호스트가 모임에 추가할 샘플 |
+| GET | `/invitations/:invitationId/missions` | 미션 목록 | ✅ | 모임 참가자만 (멤버십 검증) |
+| GET | `/invitations/:invitationId/missions/me` | 본인에게 배정된 미션 조회 | ✅ | 참석 확정(GUEST) 본인. 미배정 시 404 |
+| POST | `/invitations/:invitationId/missions` | 미션 생성 | ✅ | HOST만. body `{content}` 또는 `{templateId}` 중 하나 필수 |
+| POST | `/invitations/:invitationId/missions/assign` | 미션 랜덤 배정 트리거 | ✅ | HOST만. 참석 확정 GUEST에게 Fisher-Yates 셔플로 랜덤 균등 배정. 재호출 시 재배정 |
 | PATCH | `/invitations/:invitationId/missions/:id` | 미션 수정 | ✅ | HOST만. content 수정 |
 | DELETE | `/invitations/:invitationId/missions/:id` | 미션 삭제 | ✅ | HOST만 |
 
