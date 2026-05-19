@@ -19,7 +19,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   refreshTokens: many(refreshTokens),
   invitations: many(invitations),
   participants: many(participants),
-  notifications: many(notifications),
+  notifications: many(notifications, { relationName: 'receiver' }),
+  sentNotifications: many(notifications, { relationName: 'actor' }),
   notificationSetting: one(notificationSettings, {
     fields: [users.id],
     references: [notificationSettings.userId],
@@ -84,4 +85,9 @@ export const missionsRelations = relations(missions, ({ one, many }) => ({
   invitation: one(invitations, { fields: [missions.invitationId], references: [invitations.id] }),
   participant: one(participants, { fields: [missions.participantId], references: [participants.id] }),
   photos: many(photos),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  receiver: one(users, { fields: [notifications.userId], references: [users.id], relationName: 'receiver' }),
+  actor: one(users, { fields: [notifications.actorUserId], references: [users.id], relationName: 'actor' }),
 }));

@@ -34,7 +34,8 @@ import { NaverStrategy } from './strategies/naver.strategy';
         secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
 
         signOptions: {
-          expiresIn: config.get<number>('JWT_ACCESS_EXPIRES_IN', 1800),
+          // parseInt: ConfigService는 env값을 string으로 반환 → JWT는 string을 ms로 해석해 1.8초로 만료됨
+          expiresIn: parseInt(config.get('JWT_ACCESS_EXPIRES_IN', '1800'), 10),
           algorithm: 'HS256',
         },
 
