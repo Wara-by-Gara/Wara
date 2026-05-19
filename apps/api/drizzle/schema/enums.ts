@@ -18,7 +18,6 @@ export const rsvpStatusEnum = pgEnum('rsvp_status', [
   'attending',
   'undecided',
   'absent',
-  'cancelled',
 ]);
 
 export const sendChannelEnum = pgEnum('send_channel', [
