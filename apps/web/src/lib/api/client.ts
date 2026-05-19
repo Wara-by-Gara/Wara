@@ -9,29 +9,40 @@ interface ApiError {
   error?: { code?: string };
 }
 
-async function tryRefresh(): Promise<string | null> {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) return null;
+// 동시에 여러 요청이 401을 받아도 refresh는 한 번만 실행
+let refreshPromise: Promise<string | null> | null = null;
 
-  try {
-    const res = await fetch(`${API_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) {
-      // SUSPICIOUS_REFRESH 등 갱신 실패 → 강제 로그아웃
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+async function tryRefresh(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) return null;
+
+    try {
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        // SUSPICIOUS_REFRESH 등 갱신 실패 → 강제 로그아웃
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        return null;
+      }
+      const json: ApiResponse<{ accessToken: string; refreshToken: string }> = await res.json();
+      localStorage.setItem("access_token", json.data.accessToken);
+      localStorage.setItem("refresh_token", json.data.refreshToken);
+      return json.data.accessToken;
+    } catch {
       return null;
+    } finally {
+      refreshPromise = null;
     }
-    const json: ApiResponse<{ accessToken: string; refreshToken: string }> = await res.json();
-    localStorage.setItem("access_token", json.data.accessToken);
-    localStorage.setItem("refresh_token", json.data.refreshToken);
-    return json.data.accessToken;
-  } catch {
-    return null;
-  }
+  })();
+
+  return refreshPromise;
 }
 
 async function request<T>(fetchFn: (token?: string) => Promise<Response>, token?: string): Promise<T> {

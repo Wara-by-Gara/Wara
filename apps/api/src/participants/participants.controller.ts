@@ -41,6 +41,12 @@ export class ParticipantsController {
     return this.participantsService.findAll(invitationId, query.rsvpStatus);
   }
 
+  @Get('me')
+  @UseGuards(ParticipantGuard)
+  getMyParticipant(@CurrentParticipant() participant: Participant) {
+    return { participant };
+  }
+
   @Get(':participantId/profile')
   @UseGuards(ParticipantGuard, RsvpStatusGuard)
   @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
