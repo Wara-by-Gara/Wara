@@ -92,20 +92,25 @@ function OAuthCallbackHandler({
   const searchParams = useSearchParams();
   const onLoginRef = useRef(onLogin);
   const onErrorRef = useRef(onError);
+  const processedRef = useRef(false);
   onLoginRef.current = onLogin;
   onErrorRef.current = onError;
 
   useEffect(() => {
+    if (processedRef.current) return;
+
     const accessToken = searchParams.get("access_token");
     const refreshToken = searchParams.get("refresh_token");
     const error = searchParams.get("auth_error");
 
     if (accessToken && refreshToken) {
+      processedRef.current = true;
       onLoginRef.current(accessToken, refreshToken);
       const returnUrl = localStorage.getItem("wara_return_url");
       localStorage.removeItem("wara_return_url");
       router.replace(returnUrl ?? ROUTES.INVITATIONS.CREATE);
     } else if (error) {
+      processedRef.current = true;
       onErrorRef.current();
       router.replace(ROUTES.INVITATIONS.CREATE);
     }

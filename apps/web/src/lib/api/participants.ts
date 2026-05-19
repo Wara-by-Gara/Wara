@@ -24,11 +24,23 @@ export interface ParticipantsResponse {
     undecidedCount: number;
     absentCount: number;
   };
-  participants: { participant: Participant }[];
+  participants: {
+    participant: Participant;
+    user: { id: string; nickname: string | null; profileImageUrl: string | null };
+  }[];
 }
 
 export function getParticipants(invitationId: string, token: string): Promise<ParticipantsResponse> {
   return apiGet<ParticipantsResponse>(`/invitations/${invitationId}/participants`, token);
+}
+
+export function getMyParticipant(invitationId: string, token: string): Promise<Participant | null> {
+  return apiGet<{ participant: Participant }>(`/invitations/${invitationId}/participants/me`, token)
+    .then((r) => r.participant)
+    .catch((err: { error?: { code?: string } }) => {
+      if (err?.error?.code === "RSVP_PERMISSION_DENIED") return null;
+      throw err;
+    });
 }
 
 export function joinInvitation(invitationId: string, rsvpStatus: RsvpStatus, token: string): Promise<Participant> {

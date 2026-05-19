@@ -7,6 +7,7 @@ import { getInvitation, type Invitation } from "@/lib/api/invitations";
 import { getMe, type Me } from "@/lib/api/users";
 import {
   getParticipants,
+  getMyParticipant,
   joinInvitation,
   updateRsvp,
   type Participant,
@@ -24,26 +25,38 @@ function formatEventDate(iso: string): { date: string; time: string } {
   return { date, time };
 }
 
-function Avatar({ user }: { user: { nickname: string | null; profileImageUrl: string | null } }) {
+function Avatar({
+  user,
+  isHost = false,
+}: {
+  user: { nickname: string | null; profileImageUrl: string | null };
+  isHost?: boolean;
+}) {
   const initial = (user.nickname ?? "?")[0]!.toUpperCase();
-  if (user.profileImageUrl) {
-    return (
-      <div className="flex flex-col items-center gap-1">
-        <img
-          src={user.profileImageUrl}
-          alt={user.nickname ?? ""}
-          className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
-        />
-        <span className="text-xs text-[#505f78] truncate max-w-[52px]">{user.nickname ?? "익명"}</span>
-      </div>
-    );
-  }
+  const ringClass = isHost ? "border-[#a73921]" : "border-white";
+  const img = user.profileImageUrl ? (
+    <img
+      src={user.profileImageUrl}
+      alt={user.nickname ?? ""}
+      className="w-12 h-12 rounded-full object-cover"
+    />
+  ) : (
+    <div className="w-12 h-12 rounded-full bg-[#a73921]/10 flex items-center justify-center text-[#a73921] font-semibold text-base">
+      {initial}
+    </div>
+  );
+
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className="w-12 h-12 rounded-full bg-[#a73921]/10 border-2 border-white shadow flex items-center justify-center text-[#a73921] font-semibold text-base">
-        {initial}
+      <div className={`relative rounded-full border-2 shadow ${ringClass}`}>
+        {img}
+        {isHost && (
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#a73921] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none whitespace-nowrap">
+            HOST
+          </span>
+        )}
       </div>
-      <span className="text-xs text-[#505f78] truncate max-w-[52px]">{user.nickname ?? "익명"}</span>
+      <span className="text-xs text-[#505f78] truncate max-w-[52px] mt-1">{user.nickname ?? "익명"}</span>
     </div>
   );
 }
@@ -87,20 +100,20 @@ export default function InvitationDetailPage() {
         setInvitation(inv);
 
         if (isLoggedIn && token) {
-          const [currentUser, participantList] = await Promise.allSettled([
+          const [currentUser, myP] = await Promise.allSettled([
             getMe(token),
-            getParticipants(invitationId, token),
+            getMyParticipant(invitationId, token),
           ]);
+
           const resolvedMe = currentUser.status === "fulfilled" ? currentUser.value : null;
           if (resolvedMe) setMe(resolvedMe);
 
-          if (participantList.status === "fulfilled") {
-            const list = participantList.value.participants.map((r) => r.participant);
-            setParticipants(list);
-            if (resolvedMe) {
-              const mine = list.find((p) => p.userId === resolvedMe.id);
-              setMyParticipant(mine ?? null);
-            }
+          const resolvedMyP = myP.status === "fulfilled" ? myP.value : null;
+          setMyParticipant(resolvedMyP);
+
+          if (resolvedMyP?.rsvpStatus === "attending") {
+            const list = await getParticipants(invitationId, token).catch(() => null);
+            if (list) setParticipants(list.participants.map((r) => ({ ...r.participant, user: r.user })));
           }
         }
       } catch {
@@ -113,33 +126,55 @@ export default function InvitationDetailPage() {
     load();
   }, [hydrated, isLoggedIn, invitationId]);
 
-  useEffect(() => {
-    if (!me || participants.length === 0) return;
-    const mine = participants.find((p) => p.userId === me.id);
-    setMyParticipant(mine ?? null);
-  }, [me, participants]);
-
   const isHost = invitation && me ? invitation.userId === me.id : false;
 
   const handleRsvp = async (status: RsvpStatus) => {
     const token = localStorage.getItem("access_token") ?? "";
     if (!token || !invitation) return;
+    if (myParticipant?.rsvpStatus === status) return;
     setRsvpLoading(true);
     try {
+      let updated: Participant;
       if (!myParticipant) {
-        const joined = await joinInvitation(invitationId, status, token);
-        setMyParticipant(joined);
-        setParticipants((prev) => [...prev, joined]);
+        updated = await joinInvitation(invitationId, status, token);
       } else {
-        if (myParticipant.rsvpStatus === status) return;
-        const updated = await updateRsvp(invitationId, myParticipant.id, status, token);
-        setMyParticipant(updated);
-        setParticipants((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        updated = await updateRsvp(invitationId, myParticipant.id, status, token);
+      }
+      setMyParticipant(updated);
+
+      if (status === "attending") {
+        const list = await getParticipants(invitationId, token).catch(() => null);
+        setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : [updated]);
+      } else {
+        setParticipants([]);
       }
     } catch (err) {
-      console.error("[RSVP] error:", err);
-      const code = (err as { error?: { code?: string } })?.error?.code;
-      setRsvpError(code ?? "RSVP 처리 중 오류가 발생했습니다.");
+      const apiErr = err as { error?: { code?: string; message?: string } };
+      const code = apiErr?.error?.code;
+
+      // myParticipant 상태가 stale해서 JOIN을 시도했지만 이미 참가자인 경우 → 자동 복구
+      if (code === "PARTICIPANT_ALREADY_EXISTS") {
+        const t = localStorage.getItem("access_token") ?? "";
+        const fresh = await getMyParticipant(invitationId, t).catch(() => null);
+        if (fresh) {
+          setMyParticipant(fresh);
+          if (fresh.rsvpStatus === "attending") {
+            const list = await getParticipants(invitationId, t).catch(() => null);
+            setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : []);
+          } else {
+            setParticipants([]);
+          }
+          return;
+        }
+      }
+
+      const MSG: Record<string, string> = {
+        INVITATION_CLOSED: "마감된 초대장입니다.",
+        RSVP_PERMISSION_DENIED: "권한이 없습니다.",
+        TOKEN_EXPIRED: "로그인이 만료되었습니다. 다시 로그인해주세요.",
+        TOKEN_INVALID: "인증 정보가 올바르지 않습니다. 다시 로그인해주세요.",
+      };
+      setRsvpError(MSG[code ?? ""] ?? code ?? "RSVP 처리 중 오류가 발생했습니다.");
     } finally {
       setRsvpLoading(false);
     }
@@ -174,9 +209,10 @@ export default function InvitationDetailPage() {
 
   const coverSrc = `${API_URL}/files/${invitation.mainImageKey}`;
 
-  const attendingGuests = participants.filter(
-    (p) => p.memberRole === "GUEST" && p.rsvpStatus === "attending"
-  );
+  const attendingParticipants = [
+    ...participants.filter((p) => p.memberRole === "HOST" && p.rsvpStatus === "attending"),
+    ...participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "attending"),
+  ];
 
   return (
     <div className="min-h-screen bg-[#fbf9f8] flex flex-col">
@@ -299,17 +335,18 @@ export default function InvitationDetailPage() {
               </section>
             )}
 
-            {/* 참석자 목록 */}
-            {attendingGuests.length > 0 && (
+            {/* 참석자 목록 — 본인이 참석 상태이거나 호스트일 때만 표시 */}
+            {(isHost || myParticipant?.rsvpStatus === "attending") && attendingParticipants.length > 0 && (
               <section>
                 <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
-                  ATTENDING · {attendingGuests.length}
+                  ATTENDING · {attendingParticipants.length}
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  {attendingGuests.map((p) => (
+                  {attendingParticipants.map((p) => (
                     <Avatar
                       key={p.id}
                       user={p.user ?? { nickname: null, profileImageUrl: null }}
+                      isHost={p.memberRole === "HOST"}
                     />
                   ))}
                 </div>
