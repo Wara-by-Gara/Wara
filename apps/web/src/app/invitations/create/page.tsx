@@ -96,7 +96,9 @@ function OAuthCallbackHandler({
 
     if (accessToken && refreshToken) {
       onLogin(accessToken, refreshToken);
-      router.replace(ROUTES.INVITATIONS.CREATE);
+      const returnUrl = localStorage.getItem("wara_return_url");
+      localStorage.removeItem("wara_return_url");
+      router.replace(returnUrl ?? ROUTES.INVITATIONS.CREATE);
     } else if (error) {
       onError();
       router.replace(ROUTES.INVITATIONS.CREATE);

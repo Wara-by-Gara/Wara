@@ -272,16 +272,38 @@ export default function InvitationDetailPage() {
               </section>
             )}
 
-            {/* 비로그인 게스트 안내 */}
+            {/* 비로그인: 로그인 버튼 */}
             {!isLoggedIn && (
               <section>
                 <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
                   RSVP
                 </p>
-                <div className="bg-[#f5f3f3] rounded-xl px-5 py-4 text-center">
-                  <p className="text-[#505f78] text-sm">
-                    참석 여부를 알리려면 로그인이 필요합니다.
-                  </p>
+                <div className="bg-[#f5f3f3] rounded-xl px-5 py-5 flex flex-col items-center gap-4">
+                  <p className="text-[#505f78] text-sm">참석 여부를 알리려면 로그인이 필요합니다.</p>
+                  <div className="flex flex-col gap-2 w-full max-w-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.setItem("wara_return_url", window.location.pathname);
+                        window.location.href = `${API_URL}/auth/naver/redirect`;
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-[#03c75a] rounded-xl py-3 text-white font-semibold text-sm hover:bg-[#02b350] transition-colors cursor-pointer"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" /></svg>
+                      Continue with Naver
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.setItem("wara_return_url", window.location.pathname);
+                        window.location.href = `${API_URL}/auth/kakao/redirect`;
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-[#fee500] rounded-xl py-3 text-[#191919] font-semibold text-sm hover:bg-[#f0d900] transition-colors cursor-pointer"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.548 1.516 4.787 3.812 6.134l-.97 3.625 4.2-2.764A11.5 11.5 0 0012 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z" /></svg>
+                      Continue with Kakao
+                    </button>
+                  </div>
                 </div>
               </section>
             )}
