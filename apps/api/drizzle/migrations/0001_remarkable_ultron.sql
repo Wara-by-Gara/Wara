@@ -1,0 +1,2 @@
+CREATE INDEX "idx_link_events_created_at" ON "invitation_link_events" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "idx_send_logs_created_at" ON "invitation_send_logs" USING btree ("created_at");
