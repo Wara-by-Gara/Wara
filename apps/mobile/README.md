@@ -46,7 +46,7 @@ pnpm --filter @wara/mobile web       # Web 미리보기
 
 ```tsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/src/api';
+import { apiFetch } from '@/api';
 
 // 조회
 const { data, isPending, error } = useQuery({

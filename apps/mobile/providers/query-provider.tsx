@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 
-import { createQueryClient } from '@/src/api/query-client';
+import { createQueryClient } from '@/api/query-client';
 
 /**
  * 앱 최상위에 두는 TanStack Query Provider.
