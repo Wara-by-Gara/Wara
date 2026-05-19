@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import { BadRequestException, Injectable, Optional, PipeTransform } from '@nestjs/common';
 import { ErrorCode } from '../constants/error-codes';
 
 // NestJS pipeline은 Guard → Pipe 순이므로 Guard에서도 path param ULID 검증을 위해 export
@@ -14,7 +14,15 @@ export const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/;
  */
 @Injectable()
 export class ParseUlidPipe implements PipeTransform {
-  transform(value: string): string {
+  private readonly isOptional: boolean;
+
+  constructor(@Optional() options?: { optional?: boolean }) {
+    this.isOptional = options?.optional ?? false;
+  }
+
+  transform(value: string): string | undefined {
+    if (this.isOptional && !value) return undefined;
+
     if (!ULID_PATTERN.test(value)) {
       throw new BadRequestException({
         message: ErrorCode.INVALID_ULID,

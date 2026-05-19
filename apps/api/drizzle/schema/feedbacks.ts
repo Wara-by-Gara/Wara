@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, boolean, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
@@ -13,7 +13,6 @@ export const feedbacks = pgTable('feedbacks', {
   parentId: text('parent_id').references((): AnyPgColumn => feedbacks.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   likeCount: integer('like_count').notNull().default(0),
-  isDeleted: boolean('is_deleted').notNull().default(false),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
