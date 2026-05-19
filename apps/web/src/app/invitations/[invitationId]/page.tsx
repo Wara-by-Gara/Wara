@@ -92,9 +92,10 @@ export default function InvitationDetailPage() {
           if (resolvedMe) setMe(resolvedMe);
 
           if (participantList.status === "fulfilled") {
-            setParticipants(participantList.value);
+            const list = participantList.value.participants.map((r) => r.participant);
+            setParticipants(list);
             if (resolvedMe) {
-              const mine = participantList.value.find((p) => p.userId === resolvedMe.id);
+              const mine = list.find((p) => p.userId === resolvedMe.id);
               setMyParticipant(mine ?? null);
             }
           }
@@ -109,7 +110,6 @@ export default function InvitationDetailPage() {
     load();
   }, [hydrated, isLoggedIn, invitationId]);
 
-  // me가 바뀌면 myParticipant 재계산
   useEffect(() => {
     if (!me || participants.length === 0) return;
     const mine = participants.find((p) => p.userId === me.id);
@@ -124,15 +124,9 @@ export default function InvitationDetailPage() {
     setRsvpLoading(true);
     try {
       if (!myParticipant) {
-        const joined = await joinInvitation(invitationId, token);
-        if (joined.rsvpStatus !== status) {
-          const updated = await updateRsvp(invitationId, joined.id, status, token);
-          setMyParticipant(updated);
-          setParticipants((prev) => [...prev.filter((p) => p.id !== updated.id), updated]);
-        } else {
-          setMyParticipant(joined);
-          setParticipants((prev) => [...prev, joined]);
-        }
+        const joined = await joinInvitation(invitationId, status, token);
+        setMyParticipant(joined);
+        setParticipants((prev) => [...prev, joined]);
       } else {
         if (myParticipant.rsvpStatus === status) return;
         const updated = await updateRsvp(invitationId, myParticipant.id, status, token);
