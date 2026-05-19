@@ -25,17 +25,17 @@ async function main() {
   log('✓ Tier 0 — users, invitation_templates');
 
   await seedTier1(db);
-  log('✓ Tier 1 — social_accounts, notification_settings');
+  log(`✓ Tier 1 — social_accounts, notification_settings, inquiries: ${SEEDS.inquiries.length}건`);
 
   await seedTier2(db);
   log(`✓ Tier 2 — invitations: ${SEEDS.invitations.length}건`);
 
   await seedTier3(db);
   log(`✓ Tier 3 — participants: ${SEEDS.participants.length}건, event_locations: ${SEEDS.eventLocations.length}건`);
-  log(`           send_logs: ${SEEDS.sendLogs.length}건, blocklists: ${SEEDS.blocklists.length}건, notifications: ${SEEDS.notifications.length}건`);
+  log(`           send_logs: ${SEEDS.sendLogs.length}건, link_events: ${SEEDS.invitationLinkEvents.length}건, blocklists: ${SEEDS.blocklists.length}건, notifications: ${SEEDS.notifications.length}건`);
 
   await seedTier4(db);
-  log(`✓ Tier 4 — participant_locations: ${SEEDS.participantLocations.length}건, missions: ${SEEDS.missions.length}건, photos: ${SEEDS.photos.length}건`);
+  log(`✓ Tier 4 — participant_locations: ${SEEDS.participantLocations.length}건, missions: ${SEEDS.missions.length}건, mission_assignments: ${SEEDS.missionAssignments.length}건, photos: ${SEEDS.photos.length}건`);
 
   await seedTier5(db);
   log(`✓ Tier 5 — photo_likes: ${SEEDS.photoLikes.length}건, feedbacks: ${SEEDS.feedbacks.length}건, feedback_likes: ${SEEDS.feedbackLikes.length}건`);
