@@ -15,8 +15,6 @@ import {
 import { FeedbacksService } from './feedbacks.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { JwtPayload } from '../common/types/jwt-payload.type';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateFeedbackDto,
@@ -115,9 +113,9 @@ export class FeedbacksController {
   remove(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
-    @CurrentUser() user: JwtPayload,
+    @CurrentParticipant() participant: Participant,
   ) {
-    return this.feedbacksService.remove(invitationId, id, user.id);
+    return this.feedbacksService.remove(invitationId, id, participant);
   }
 
   //좋아요 토글

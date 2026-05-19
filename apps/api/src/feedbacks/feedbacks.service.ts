@@ -145,8 +145,8 @@ export class FeedbacksService {
   }
 
   //댓글 삭제
-  async remove(invitationId: string, feedbackId: string, userId: string) {
-    await this.checkOwner(invitationId, feedbackId, userId);
+  async remove(invitationId: string, feedbackId: string, participant: Participant,) {
+    await this.checkOwner(invitationId, feedbackId, participant.id);
     await this.repository.softDelete(feedbackId);
   }
 
