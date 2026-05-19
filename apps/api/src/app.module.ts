@@ -17,6 +17,7 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { S3Module } from './s3/s3.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
+import { DevAuthModule } from './dev/dev-auth.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { InquiriesModule } from './inquiries/inquiries.module';
     NotificationsModule,
     InquiriesModule,
     S3Module,
+    DevAuthModule,
   ],
   controllers: [AppController],
   providers: [
