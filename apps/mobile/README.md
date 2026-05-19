@@ -1,50 +1,42 @@
-# Welcome to your Expo app 👋
+# @wara/mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+와라 모바일 앱 (Expo SDK 54 · Expo Router · TypeScript).
+
+> 작업 규칙은 [`CLAUDE.md`](./CLAUDE.md) 참고.
 
 ## Get started
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+루트에서 의존성 설치:
 
 ```bash
-npm run reset-project
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+mobile dev 서버:
 
-## Learn more
+```bash
+pnpm --filter @wara/mobile start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+플랫폼별:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+pnpm --filter @wara/mobile ios       # iOS Simulator
+pnpm --filter @wara/mobile android   # Android Emulator
+pnpm --filter @wara/mobile web       # Web 미리보기
+```
 
-## Join the community
+## Scripts
 
-Join our community of developers creating universal apps.
+| Script | 설명 |
+|--------|------|
+| `start` | Expo dev server |
+| `ios` / `android` / `web` | 플랫폼별 dev server |
+| `lint` | `expo lint` |
+| `typecheck` | `tsc --noEmit` |
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Refs
+
+- Expo SDK 54: https://docs.expo.dev/versions/v54.0.0/
+- Expo Router: https://docs.expo.dev/router/introduction
+- pnpm monorepo + Expo: https://docs.expo.dev/guides/monorepos/
