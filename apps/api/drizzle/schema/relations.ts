@@ -6,6 +6,7 @@ import {
   invitationTemplates,
   participants,
   invitationSendLogs,
+  invitationLinkEvents,
   invitationBlocklists,
 } from './invitations';
 import { eventLocations, participantLocations } from './locations';
@@ -90,4 +91,15 @@ export const missionsRelations = relations(missions, ({ one, many }) => ({
 export const missionAssignmentsRelations = relations(missionAssignments, ({ one }) => ({
   mission: one(missions, { fields: [missionAssignments.missionId], references: [missions.id] }),
   participant: one(participants, { fields: [missionAssignments.participantId], references: [participants.id] }),
+}));
+
+export const invitationSendLogsRelations = relations(invitationSendLogs, ({ one, many }) => ({
+  invitation: one(invitations, { fields: [invitationSendLogs.invitationId], references: [invitations.id] }),
+  sender: one(users, { fields: [invitationSendLogs.senderId], references: [users.id] }),
+  linkEvents: many(invitationLinkEvents),
+}));
+
+export const invitationLinkEventsRelations = relations(invitationLinkEvents, ({ one }) => ({
+  log: one(invitationSendLogs, { fields: [invitationLinkEvents.logId], references: [invitationSendLogs.id] }),
+  user: one(users, { fields: [invitationLinkEvents.userId], references: [users.id] }),
 }));
