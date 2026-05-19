@@ -30,8 +30,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# env files (Expo가 모든 .env*를 자동 로드 — 시크릿 유출 방지)
+.env
+.env.*
 
 # typescript
 *.tsbuildinfo
