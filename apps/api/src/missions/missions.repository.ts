@@ -11,7 +11,7 @@ import {
   missions,
   participants,
   users,
-} from '../../drizzle/schema';
+} from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { DRIZZLE, DrizzleDB, DrizzleTx } from '../database/database.module';

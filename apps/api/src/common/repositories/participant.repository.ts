@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
-import { participants, users, type Participant } from '../../../drizzle/schema';
+import { participants, users, type Participant } from '../../database/schema';
 import { DRIZZLE, DrizzleDB } from '../../database/database.module';
 import { MemberRole } from '../enums/member-role.enum';
 
@@ -9,7 +9,7 @@ import { MemberRole } from '../enums/member-role.enum';
  *
  * - DI 등록 위치: `apps/api/src/auth/auth.module.ts`
  * - 사용처: `apps/api/src/common/guards/host.guard.ts` — `@RequireMemberRole` 검증 시 조회
- * - 의존 schema: `apps/api/drizzle/schema/invitations.ts` (participants 테이블,
+ * - 의존 schema: `apps/api/src/database/schema/invitations.ts` (participants 테이블,
  *   unique index `uq_participants_user_invitation`)
  *
  * Soft-deleted user 처리:

@@ -8,7 +8,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
-import { Participant } from '../../drizzle/schema';
+import { Participant } from '../database/schema';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 

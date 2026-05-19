@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import * as schema from '../../drizzle/schema';
-import type { rsvpStatusEnum } from '../../drizzle/schema';
+import * as schema from '../database/schema';
+import type { rsvpStatusEnum } from '../database/schema';
 
 type RsvpStatus = (typeof rsvpStatusEnum.enumValues)[number];
 

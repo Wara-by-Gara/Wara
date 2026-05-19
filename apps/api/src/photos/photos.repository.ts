@@ -7,7 +7,7 @@ import {
   participants,
   photoLikes,
   photos,
-} from '../../drizzle/schema';
+} from '../database/schema';
 
 @Injectable()
 export class PhotosRepository {

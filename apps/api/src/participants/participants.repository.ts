@@ -9,7 +9,7 @@ import {
   type Invitation,
   type Participant,
   type User,
-} from '../../drizzle/schema';
+} from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 type RsvpStatus = (typeof rsvpStatusEnum.enumValues)[number];

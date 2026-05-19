@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { type Participant } from '../../drizzle/schema';
+import { type Participant } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
