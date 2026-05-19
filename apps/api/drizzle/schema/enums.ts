@@ -56,7 +56,8 @@ export const inquiryTypeEnum = pgEnum('inquiry_type', [
   'photo',
   'notification',
   'mission',
-  'account',
+  'bug',
+  'feature',
   'general',
 ]);
 export const inquiryStatusEnum = pgEnum('inquiry_status', [

@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, and, isNull, desc } from 'drizzle-orm';
+import { eq, and, isNull, desc, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import * as schema from '../../drizzle/schema';
 import type { NewInquiry } from '../../drizzle/schema';
@@ -26,11 +26,12 @@ export class InquiriesRepository {
   }
 
   async findByUserId(userId: string) {
-    return this.db
-      .select()
-      .from(schema.inquiries)
-      .where(and(eq(schema.inquiries.userId, userId), isNull(schema.inquiries.deletedAt)))
-      .orderBy(desc(schema.inquiries.createdAt));
+    const condition = and(eq(schema.inquiries.userId, userId), isNull(schema.inquiries.deletedAt));
+    const [items, countResult] = await Promise.all([
+      this.db.select().from(schema.inquiries).where(condition).orderBy(desc(schema.inquiries.createdAt)),
+      this.db.select({ total: count() }).from(schema.inquiries).where(condition),
+    ]);
+    return { items, total: countResult[0]?.total ?? 0 };
   }
 
   async update(id: string, data: { title: string; content: string }) {
@@ -52,16 +53,18 @@ export class InquiriesRepository {
   }
 
   async findAll() {
-    return this.db
-      .select()
-      .from(schema.inquiries)
-      .orderBy(desc(schema.inquiries.createdAt));
+    const condition = isNull(schema.inquiries.deletedAt);
+    const [items, countResult] = await Promise.all([
+      this.db.select().from(schema.inquiries).where(condition).orderBy(desc(schema.inquiries.createdAt)),
+      this.db.select({ total: count() }).from(schema.inquiries).where(condition),
+    ]);
+    return { items, total: countResult[0]?.total ?? 0 };
   }
 
   async answer(id: string, adminId: string, data: { answer: string; status: 'in_progress' | 'resolved' }) {
     const result = await this.db
       .update(schema.inquiries)
-      .set({ answer: data.answer, status: data.status as any, adminId, answeredAt: new Date(), updatedAt: new Date() })
+      .set({ answer: data.answer, status: data.status, adminId, answeredAt: new Date(), updatedAt: new Date() })
       .where(eq(schema.inquiries.id, id))
       .returning();
     return result[0];
