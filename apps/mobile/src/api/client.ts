@@ -1,11 +1,7 @@
 import Constants from 'expo-constants';
 
 import { getAccessToken } from './auth-storage';
-import {
-  ApiResponse,
-  WaraApiError,
-  WaraNetworkError,
-} from './types';
+import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
 
 // API base URL — app.config.ts의 expo.extra.apiUrl에서 옴.
 // dev: 보통 http://localhost:3000/api/v1, prod: EAS Secret 또는 .env로 주입.
