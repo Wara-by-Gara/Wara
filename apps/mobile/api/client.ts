@@ -70,15 +70,34 @@ export async function apiFetch<T>(
     );
   }
 
-  let json: ApiResponse<T>;
+  // 204 No Content: body 없음. envelope 없이도 성공 (예: PATCH /logs/:logId/open).
+  // 호출 측은 제네릭 T를 void로 두는 패턴.
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
+  let raw: unknown;
   try {
-    json = (await res.json()) as ApiResponse<T>;
+    raw = await res.json();
   } catch (err) {
     throw new WaraNetworkError(
       `API 응답 JSON 파싱 실패 (status ${res.status})`,
       err,
     );
   }
+
+  // envelope 형태(`{ success: boolean, ... }`) 가벼운 runtime 검증.
+  // 강한 검증(필드 타입까지)은 호출 측 Zod 스키마로.
+  if (
+    raw === null ||
+    typeof raw !== 'object' ||
+    typeof (raw as { success?: unknown }).success !== 'boolean'
+  ) {
+    throw new WaraNetworkError(
+      `API 응답이 envelope 형식이 아님 (status ${res.status})`,
+    );
+  }
+  const json = raw as ApiResponse<T>;
 
   if (json.success) {
     return json.data;

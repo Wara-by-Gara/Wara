@@ -2,6 +2,8 @@ import * as SecureStore from 'expo-secure-store';
 
 // JWT는 SecureStore에 저장 — iOS Keychain / Android EncryptedSharedPreferences.
 // AsyncStorage는 암호화 안 됨이라 토큰 같은 시크릿엔 부적합.
+// 주의: SecureStore는 web 플랫폼 미지원 — V1.0 mobile 타깃은 iOS/Android.
+// 향후 web 지원 필요 시 .web.ts 확장으로 별도 구현(localStorage 등) 추가.
 const ACCESS_TOKEN_KEY = 'wara.auth.accessToken';
 const REFRESH_TOKEN_KEY = 'wara.auth.refreshToken';
 

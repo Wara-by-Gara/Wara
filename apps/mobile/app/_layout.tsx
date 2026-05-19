@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { QueryProvider } from '@/src/providers/query-provider';
+import { QueryProvider } from '@/providers/query-provider';
 
 export const unstable_settings = {
   anchor: '(tabs)',
