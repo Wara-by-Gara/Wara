@@ -30,7 +30,7 @@ pnpm --filter @wara/mobile web       # Web 미리보기
 
 | Script | 설명 |
 |--------|------|
-| `start` | Expo dev server |
+| `dev` / `start` | Expo dev server (turbo 통합용 `dev`, 단독 사용용 `start`) |
 | `ios` / `android` / `web` | 플랫폼별 dev server |
 | `lint` | `expo lint` |
 | `typecheck` | `tsc --noEmit` |
