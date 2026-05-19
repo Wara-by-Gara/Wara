@@ -11,6 +11,8 @@ export const users = pgTable('users', {
   birthYear: integer('birth_year'),
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('member'),
+  promotedBy: text('promoted_by').references(() => users.id),
+  promotedAt: timestamp('promoted_at', { withTimezone: true }),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   refreshToken: text('refresh_token'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
