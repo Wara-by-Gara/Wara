@@ -24,13 +24,18 @@ const CursorPaginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+type CursorPaginationDto = z.infer<typeof CursorPaginationSchema>;
+
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload, @Query() query: unknown) {
-    const { cursor, limit } = CursorPaginationSchema.parse(query);
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query(new ZodValidationPipe(CursorPaginationSchema))
+    { cursor, limit }: CursorPaginationDto,
+  ) {
     return this.notificationsService.findAll(user.id, cursor, limit);
   }
 
