@@ -13,13 +13,19 @@ function resolveBaseUrl(): string {
   );
 }
 
+// 네트워크 hang 회피용 default timeout. 사진 업로드 같은 대용량 endpoint는
+// 호출 측에서 명시적으로 override (예: timeoutMs: 60_000).
+const DEFAULT_TIMEOUT_MS = 15_000;
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   /** 인증 헤더 자동 첨부 여부 (기본 true). 로그인/콜백 같은 공개 endpoint는 false */
   authenticated?: boolean;
-  /** AbortSignal — TanStack Query가 자동 전달 */
+  /** AbortSignal — TanStack Query가 자동 전달. timeout과 결합됨 */
   signal?: AbortSignal;
+  /** ms 단위 timeout. 기본 15초. 0 또는 음수는 비활성 */
+  timeoutMs?: number;
 };
 
 /**
@@ -44,7 +50,13 @@ export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { method = 'GET', body, authenticated = true, signal } = options;
+  const {
+    method = 'GET',
+    body,
+    authenticated = true,
+    signal,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+  } = options;
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -57,6 +69,14 @@ export async function apiFetch<T>(
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
+  // 호출 측 signal과 timeout signal을 수동 결합. 어느 쪽이든 먼저 abort되면 fetch 취소.
+  // (AbortSignal.any는 Hermes 호환 보장 안 되어 수동 결합 사용)
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  signal?.addEventListener('abort', onAbort);
+  const timeoutId =
+    timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null;
+
   const url = `${resolveBaseUrl()}${path}`;
   let res: Response;
   try {
@@ -64,13 +84,22 @@ export async function apiFetch<T>(
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
+      signal: controller.signal,
     });
   } catch (err) {
+    if (controller.signal.aborted && signal?.aborted !== true) {
+      throw new WaraNetworkError(
+        `API 요청 timeout (${timeoutMs}ms 초과)`,
+        err,
+      );
+    }
     throw new WaraNetworkError(
       'API 요청 실패 (서버 연결 불가 또는 네트워크 오류)',
       err,
     );
+  } finally {
+    if (timeoutId !== null) clearTimeout(timeoutId);
+    signal?.removeEventListener('abort', onAbort);
   }
 
   // 204 No Content: body 없음. envelope 없이도 성공 (예: PATCH /logs/:logId/open).
