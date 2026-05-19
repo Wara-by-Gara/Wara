@@ -6,6 +6,8 @@ import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/constants/routes";
 import { getTemplates, type Template } from "@/lib/api/templates";
 import { createInvitation } from "@/lib/api/invitations";
+import { getMe, type Me } from "@/lib/api/users";
+import { logout as apiLogout } from "@/lib/api/auth";
 import InvitationPreview from "./_components/InvitationPreview";
 import InvitationForm from "./_components/InvitationForm";
 import LoginModal from "../_components/LoginModal";
@@ -113,9 +115,12 @@ function OAuthCallbackHandler({
 }
 
 export default function CreatePage() {
-  const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
+  const { isLoggedIn, hydrated, hydrate, login, logout } = useAuthStore();
   const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [me, setMe] = useState<Me | null>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<DraftFields | null>(null);
   const [showImageNotice, setShowImageNotice] = useState(false);
   const [authError, setAuthError] = useState(false);
@@ -148,6 +153,30 @@ export default function CreatePage() {
   useEffect(() => {
     getTemplates().then(setTemplates).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) { setMe(null); return; }
+    const token = localStorage.getItem("access_token") ?? "";
+    if (token) getMe(token).then(setMe).catch(() => {});
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showProfileMenu]);
+
+  const handleLogout = async () => {
+    setShowProfileMenu(false);
+    const refreshToken = localStorage.getItem("refresh_token") ?? "";
+    if (refreshToken) await apiLogout(refreshToken).catch(() => {});
+    logout();
+  };
 
   if (!hydrated) return null;
 
@@ -202,9 +231,40 @@ export default function CreatePage() {
           <span className="font-serif text-[#a73921] text-2xl font-bold">WARA</span>
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
-              <button type="button" aria-label="알림" className="cursor-pointer">
-                <BellIcon />
-              </button>
+              <>
+                <button type="button" aria-label="알림" className="cursor-pointer">
+                  <BellIcon />
+                </button>
+                <div ref={profileMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileMenu((v) => !v)}
+                    className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#e4e2e2] hover:border-[#a73921] transition-colors cursor-pointer flex items-center justify-center bg-[#f5f3f3]"
+                  >
+                    {me?.profileImageUrl ? (
+                      <img src={me.profileImageUrl} alt={me.nickname ?? ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-semibold text-[#a73921]">
+                        {(me?.nickname ?? me?.name ?? "?")[0]?.toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-11 w-36 bg-white rounded-xl shadow-lg border border-[#e4e2e2] py-1 z-20">
+                      {me?.nickname && (
+                        <p className="px-4 py-2 text-xs text-[#505f78] border-b border-[#f0eeee] truncate">{me.nickname}</p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2.5 text-sm text-[#1b1c1c] hover:bg-[#f5f3f3] transition-colors cursor-pointer"
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <>
                 <button type="button" aria-label="검색" className="cursor-pointer">
