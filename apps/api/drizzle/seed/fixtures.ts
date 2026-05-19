@@ -128,6 +128,20 @@ const EVENT_LOCATION_DEFS: Record<string, LocationDef> = {
   inv10: { placeName: '잠실 파티룸',       address: '서울 송파구 잠실동',       detailAddress: '잠실 루프탑 파티룸', lat: 37.5148, lng: 127.1000, placeId: 'place-inv10' },
 };
 
+// 호스트가 모임에 추가할 수 있는 공용 미션 카탈로그 (admin 시드)
+const MISSION_TEMPLATE_DEFS: Array<{ key: string; content: string; isActive: boolean }> = [
+  { key: 'mt01', content: '모임 전체 단체 사진 1장 찍기', isActive: true },
+  { key: 'mt02', content: '가장 맛있어 보이는 음식 사진 올리기', isActive: true },
+  { key: 'mt03', content: '옆 사람과 셀카 찍기', isActive: true },
+  { key: 'mt04', content: '오늘의 BEST 순간 인증샷', isActive: true },
+  { key: 'mt05', content: '시그니처 포즈로 사진 한 컷', isActive: true },
+  { key: 'mt06', content: '모임 장소의 풍경/배경 사진', isActive: true },
+  { key: 'mt07', content: '다 함께 점프 사진 도전', isActive: true },
+  { key: 'mt08', content: '손 모양 하트 인증샷', isActive: true },
+  { key: 'mt09', content: '이모지로 표현하는 오늘의 기분 사진', isActive: true },
+  { key: 'mt10', content: '오늘 모임의 추억 한 컷 남기기', isActive: true },
+];
+
 const MISSION_DEFS: Record<string, Array<{ participantKey: string; content: string }>> = {
   inv01: [
     { participantKey: 'guest01', content: '가장 웃긴 표정으로 단체 사진 찍기' },
@@ -230,6 +244,13 @@ function buildSeeds() {
     font: t.font,
     effect: t.effect,
     isActive: t.isActive,
+  }));
+
+  // 5-1. Mission Templates (admin 시드, invitation 무관)
+  const missionTemplates = MISSION_TEMPLATE_DEFS.map((mt) => ({
+    id: id(`missionTemplate:${mt.key}`),
+    content: mt.content,
+    isActive: mt.isActive,
   }));
 
   // 6. Invitations
@@ -515,6 +536,7 @@ function buildSeeds() {
     socialAccounts,
     notificationSettings,
     templates,
+    missionTemplates,
     invitations,
     participants,
     eventLocations,

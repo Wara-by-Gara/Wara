@@ -1,8 +1,0 @@
-ALTER TABLE "event_locations" ADD CONSTRAINT "check_event_location_coords" CHECK ("event_locations"."lat" >= -90 AND "event_locations"."lat" <= 90 AND "event_locations"."lng" >= -180 AND "event_locations"."lng" <= 180);--> statement-breakpoint
-ALTER TABLE "participant_locations" ADD CONSTRAINT "check_participant_location_coords" CHECK ("participant_locations"."lat" >= -90 AND "participant_locations"."lat" <= 90 AND "participant_locations"."lng" >= -180 AND "participant_locations"."lng" <= 180);--> statement-breakpoint
-ALTER TABLE "participant_locations" ADD CONSTRAINT "check_participant_location_accuracy" CHECK ("participant_locations"."accuracy" >= 0);--> statement-breakpoint
-ALTER TABLE "photos" ADD CONSTRAINT "check_photo_view_count" CHECK ("photos"."view_count" >= 0);--> statement-breakpoint
-ALTER TABLE "photos" ADD CONSTRAINT "check_photo_like_count" CHECK ("photos"."like_count" >= 0);--> statement-breakpoint
-ALTER TABLE "feedbacks" ADD CONSTRAINT "check_feedback_ref" CHECK ("feedbacks"."invitation_id" IS NOT NULL OR "feedbacks"."photo_id" IS NOT NULL);--> statement-breakpoint
-ALTER TABLE "feedbacks" ADD CONSTRAINT "check_feedback_like_count" CHECK ("feedbacks"."like_count" >= 0);--> statement-breakpoint
-ALTER TABLE "notifications" ADD CONSTRAINT "check_notification_target" CHECK (("notifications"."target_type" IS NOT NULL AND "notifications"."target_id" IS NOT NULL) OR ("notifications"."target_type" IS NULL AND "notifications"."target_id" IS NULL));

@@ -42,6 +42,23 @@
 | `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
 | `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
 
+## Participants
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `PARTICIPANT_NOT_FOUND` | 404 | 참가자 조회 실패 |
+| `PARTICIPANT_ALREADY_EXISTS` | 409 | 이미 참가한 초대장에 재참가 시도 |
+| `HOST_CANNOT_LEAVE` | 400 | HOST 본인 탈퇴 시도 |
+| `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/RSVP 변경 시도 |
+| `RSVP_PERMISSION_DENIED` | 403 | absent 상태 열람 시도 또는 HOST RSVP 변경 시도 |
+
+## Notification
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `NOTIFICATION_NOT_FOUND` | 404 | 알림 없음 |
+| `NOTIFICATION_FORBIDDEN` | 403 | 타인의 알림에 접근 |
+
 ## Common
 
 | 코드 | 상태코드 | 상황 |
@@ -60,6 +77,10 @@
 |------|:--------:|------|
 | `MISSION_NOT_FOUND` | 404 | 미션 없음 또는 해당 초대장에 속하지 않음 |
 | `MISSION_NOT_ENABLED` | 400 | 초대장의 미션 기능이 비활성화 상태 |
+| `MISSION_TEMPLATE_NOT_FOUND` | 404 | 미션 템플릿 없음 또는 비활성화 |
+| `MISSION_NO_MISSIONS_TO_ASSIGN` | 400 | 배정할 미션이 0개 (호스트가 미션 등록 후 배정 가능) |
+| `MISSION_NO_PARTICIPANTS_TO_ASSIGN` | 400 | 배정 대상 참가자 없음 (참석 확정 게스트 0명) |
+| `MISSION_NOT_ASSIGNED` | 404 | 본인에게 배정된 미션이 없음 (GET /missions/me) |
 
 
 ## Photo

@@ -6,6 +6,8 @@ import { HttpModule } from '@nestjs/axios';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ParticipantGuard } from '../common/guards/participant.guard';
+import { RsvpStatusGuard } from '../common/guards/rsvp-status.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantRepository } from '../common/repositories/participant.repository';
@@ -18,9 +20,9 @@ import { AppleController } from './apple/apple.controller';
 import { AppleService } from './apple/apple.service';
 import { AppleStrategy } from './apple/apple.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -55,9 +57,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AppleService,
     AppleStrategy,
     GoogleStrategy,
+    JwtStrategy,
     KakaoStrategy,
     NaverStrategy,
-    JwtStrategy,
 
     {
       provide: APP_GUARD,
@@ -73,12 +75,16 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     BlocklistRepository,
     HostGuard,
     BlocklistGuard,
+    ParticipantGuard,
+    RsvpStatusGuard,
   ],
 
   exports: [
     AuthService,
     HostGuard,
     BlocklistGuard,
+    ParticipantGuard,
+    RsvpStatusGuard,
     ParticipantRepository,
     BlocklistRepository,
     JwtStrategy

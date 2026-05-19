@@ -15,8 +15,14 @@ import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { SetEventLocationSchema, type SetEventLocationDto } from './dto/set-event-location.dto';
-import { UpdateParticipantLocationSchema, type UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
+import {
+  SetEventLocationSchema,
+  type SetEventLocationDto,
+} from './dto/set-event-location.dto';
+import {
+  UpdateParticipantLocationSchema,
+  type UpdateParticipantLocationDto,
+} from './dto/update-participant-location.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 @Controller('invitations/:invitationId')
@@ -33,7 +39,8 @@ export class LocationsController {
   @RequireMemberRole(MemberRole.HOST)
   setEventLocation(
     @Param('invitationId') invitationId: string,
-    @Body(new ZodValidationPipe(SetEventLocationSchema)) dto: SetEventLocationDto,
+    @Body(new ZodValidationPipe(SetEventLocationSchema))
+    dto: SetEventLocationDto,
   ) {
     return this.locationsService.setEventLocation(invitationId, dto);
   }
@@ -55,7 +62,8 @@ export class LocationsController {
   updateMyLocation(
     @Param('invitationId') invitationId: string,
     @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(UpdateParticipantLocationSchema)) dto: UpdateParticipantLocationDto,
+    @Body(new ZodValidationPipe(UpdateParticipantLocationSchema))
+    dto: UpdateParticipantLocationDto,
   ) {
     return this.locationsService.updateMyLocation(invitationId, user.id, dto);
   }
