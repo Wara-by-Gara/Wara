@@ -8,6 +8,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
+import { Participant } from '../../drizzle/schema';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
@@ -32,15 +33,7 @@ export class FeedbacksService {
   }
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
-  async listAll(invitationId: string, userId: string, dto: ListFeedbacksDto) {
-    const participant = await this.repository.findParticipant(
-      userId,
-      invitationId,
-    );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-
+  async listAll(invitationId: string, dto: ListFeedbacksDto) {
     const { rows, nextCursor } = await this.repository.findAllByInvitation(
       invitationId,
       dto,
@@ -55,17 +48,8 @@ export class FeedbacksService {
   async listByPhoto(
     invitationId: string,
     photoId: string,
-    userId: string,
     dto: ListFeedbacksDto,
   ) {
-    const participant = await this.repository.findParticipant(
-      userId,
-      invitationId,
-    );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -85,16 +69,9 @@ export class FeedbacksService {
   //초대장 댓글 생성
   async createForInvitation(
     invitationId: string,
-    userId: string,
+    participant: Participant,
     dto: CreateFeedbackDto,
   ) {
-    const participant = await this.repository.findParticipant(
-      userId,
-      invitationId,
-    );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
     if (dto.parentId) {
       const parent = await this.repository.findById(dto.parentId);
       if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
@@ -111,16 +88,10 @@ export class FeedbacksService {
   async createForPhoto(
     invitationId: string,
     photoId: string,
-    userId: string,
+    participant: Participant,
     dto: CreateFeedbackDto,
   ) {
-    const participant = await this.repository.findParticipant(
-      userId,
-      invitationId,
-    );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
+
     if (dto.parentId) {
       const parent = await this.repository.findById(dto.parentId);
       if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
@@ -166,10 +137,10 @@ export class FeedbacksService {
   async update(
     invitationId: string,
     feedbackId: string,
-    userId: string,
+    participant: Participant,
     dto: UpdateFeedbackDto,
   ) {
-    await this.checkOwner(invitationId, feedbackId, userId);
+    await this.checkOwner(invitationId, feedbackId, participant.userId);
     return this.repository.update(feedbackId, dto.content);
   }
 
@@ -180,14 +151,11 @@ export class FeedbacksService {
   }
 
   //좋아요 토글
-  async toggleLike(invitationId: string, feedbackId: string, userId: string) {
-    const participant = await this.repository.findParticipant(
-      userId,
-      invitationId,
-    );
-    if (!participant) {
-      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
+  async toggleLike(
+    invitationId: string,
+    feedbackId: string,
+    participant: Participant,
+  ) {
     const feedback = await this.repository.findById(feedbackId);
     if (!feedback) {
       throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
