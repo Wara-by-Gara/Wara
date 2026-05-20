@@ -26,7 +26,7 @@ k6/
 
 | 변수 | 필수 | 설명 | 예시 |
 |------|:----:|------|------|
-| `BASE_URL` | 아니오 | API 서버 주소 (기본값: `http://localhost:3001`) | `http://localhost:3001` |
+| `BASE_URL` | 아니오 | API 서버 주소 (기본값: `http://localhost:3001`) — `api/v1` prefix가 적용된 서버라면 `http://localhost:3001/api/v1` 로 설정 | `http://localhost:3001` |
 | `INVITATION_ID` | 예 | 테스트에 사용할 초대장 ULID | `01JV...` |
 | `ACCESS_TOKEN` | 예 | 단일 사용자 JWT Access Token | `eyJhbGci...` |
 | `TOKENS` | 조건부 | 다중 사용자 시나리오용 JWT 배열 (JSON) | `["tok1","tok2"]` |
