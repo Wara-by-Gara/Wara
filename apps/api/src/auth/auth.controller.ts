@@ -14,6 +14,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { RefreshTokenDto, RefreshTokenSchema } from './dto/refresh-token.dto';
@@ -22,6 +24,7 @@ import { SocialCallbackDto, SocialCallbackSchema } from './dto/social-callback.d
 import { Platform } from './enums/platform.enum';
 import { ErrorCode } from '../common/constants/error-codes';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -33,6 +36,8 @@ export class AuthController {
 
   @Public()
   @Get(':provider/url')
+  @ApiOperation({ summary: '소셜 로그인 URL 발급' })
+  @ApiResponse({ status: 200, description: '소셜 로그인 URL과 state 반환' })
   getAuthUrl(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
     @Query('platform') platform: Platform,
@@ -42,6 +47,8 @@ export class AuthController {
 
   @Public()
   @Get(':provider/redirect')
+  @ApiOperation({ summary: '소셜 로그인 브라우저 리다이렉트 (WEB 전용)' })
+  @ApiResponse({ status: 302, description: '소셜 로그인 페이지로 리다이렉트' })
   oauthRedirect(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
     @Res() res: Response,
@@ -52,6 +59,9 @@ export class AuthController {
 
   @Public()
   @Get(':provider/callback')
+  @ApiOperation({ summary: '소셜 로그인 OAuth 콜백 (WEB 브라우저 리다이렉트)' })
+  @ApiResponse({ status: 302, description: '로그인 성공 시 프론트엔드로 토큰과 함께 리다이렉트' })
+  @ApiResponse({ status: 302, description: '로그인 실패 시 에러 파라미터와 함께 리다이렉트' })
   async oauthCallback(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
     @Query('code') code: string,
@@ -81,8 +91,12 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post(':provider/callback')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '소셜 로그인 콜백 처리' })
+  @ApiResponse({ status: 200, description: 'accessToken, refreshToken 반환' })
+  @ApiResponse({ status: 401, description: 'AUTH_INVALID_STATE | AUTH_INVALID_TOKEN' })
   socialCallback(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
     @Query('platform') platform: Platform,
@@ -100,12 +114,17 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh Token으로 새 토큰 쌍 발급' })
+  @ApiResponse({ status: 200, description: '새 accessToken, refreshToken 반환' })
+  @ApiResponse({ status: 401, description: 'TOKEN_EXPIRED | TOKEN_INVALID' })
   refreshTokens(@Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto) {
     return this.authService.refresh(body.refreshToken);
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: '로그아웃 (Refresh Token 폐기)' })
+  @ApiResponse({ status: 204, description: '성공' })
   logout(@Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto) {
     return this.authService.logout(body.refreshToken);
   }
