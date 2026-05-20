@@ -116,8 +116,15 @@ async getPhoto(id: string) {
   }
 
   //다운로드용 URL 발급 (낱개, 선택)
-  async getDownloadUrls(ids: string[]) {
-    const photos = await this.repository.findPhotosByIds(ids);
+  async getDownloadUrls(invitationId: string, userId: string, ids: string[]) {
+    const participantId = await this.repository.findParticipantId(
+      userId,
+      invitationId,
+    );
+    if (!participantId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    const photos = await this.repository.findPhotosByIds(ids, invitationId);
 
     const data = await Promise.all(
       photos.map(async (photo) => {
