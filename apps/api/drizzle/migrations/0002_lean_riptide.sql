@@ -24,6 +24,7 @@ CREATE INDEX "idx_invitations_user_deleted" ON "invitations" USING btree ("user_
 CREATE INDEX "idx_participants_invitation_id" ON "participants" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_participants_invitation_rsvp_role" ON "participants" USING btree ("invitation_id","rsvp_status","member_role");--> statement-breakpoint
 CREATE INDEX "idx_missions_invitation_id" ON "missions" USING btree ("invitation_id");--> statement-breakpoint
+CREATE INDEX "idx_photos_participant_id" ON "photos" USING btree ("participant_id");--> statement-breakpoint
 CREATE INDEX "idx_photo_likes_participant_id" ON "photo_likes" USING btree ("participant_id");--> statement-breakpoint
 CREATE INDEX "idx_feedbacks_invitation_id" ON "feedbacks" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_feedbacks_photo_id" ON "feedbacks" USING btree ("photo_id");--> statement-breakpoint

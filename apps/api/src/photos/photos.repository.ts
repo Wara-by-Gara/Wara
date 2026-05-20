@@ -172,6 +172,8 @@ const total = countRow?.total ?? 0;
     });
   }
 
+  // TODO(feedbacks): 사진 낱개 피드백 생성/삭제 시 feedbackCount를 SQL-level increment로 원자적 업데이트 필요.
+  // feedbacks 모듈 구현 시 반드시 함께 추가할 것 — 현재 feedbackCount는 항상 0이므로 Best9 점수에 미반영.
   //리마인드 앨범
   //viewCount(1회 : 0.5) + likeCount (1회 : 1.0) + feedbackCount(1댓글 : 1.5) = best9에 들어갈수 있음.
   async findBest9(invitationId: string) {

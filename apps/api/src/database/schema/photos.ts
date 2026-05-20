@@ -23,6 +23,8 @@ export const photos = pgTable('photos', {
   check('check_photo_feedback_count', sql`${t.feedbackCount} >= 0`),
   index('idx_photos_invitation_taken_at').on(t.invitationId, t.takenAt),
   index('idx_photos_deleted_at').on(t.deletedAt),
+  // CASCADE 삭제 시 participant_id FK 스캔 최적화
+  index('idx_photos_participant_id').on(t.participantId),
 ]);
 
 export const photoLikes = pgTable('photo_likes', {
