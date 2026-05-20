@@ -4,7 +4,7 @@ import { ParticipantsService } from './participants.service';
 import { ParticipantsRepository } from './participants.repository';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ErrorCode } from '../common/constants/error-codes';
-import type { Participant } from '../../drizzle/schema';
+import type { Participant } from '../database/schema';
 
 const mockRepo = () => ({
   findAllByInvitation: jest.fn(),
