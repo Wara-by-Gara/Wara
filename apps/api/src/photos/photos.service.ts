@@ -83,8 +83,8 @@ async listPhotos(invitationId: string, dto: ListPhotosDto) {
 }
 
   //사진 db 단건 조회
-async getPhoto(id: string) {
-  const photo = await this.repository.findPhotoById(id);
+  async getPhoto(invitationId: string, id: string) {
+    const photo = await this.repository.findPhotoById(id);
 
     if (!photo || photo.invitationId !== invitationId) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -140,14 +140,14 @@ async getPhoto(id: string) {
   }
 
   //전체 다운로드
-  async getAllDownloadUrls(invitationId: string) {
+  async getAllDownloadUrls(invitationId: string, userId: string) {
     const { rows } = await this.repository.findAllByInvitationId(invitationId, {
       limit: MAX_DOWNLOAD_LIMIT,
       sort: 'createdAt',
       order: 'asc',
     });
     const ids = rows.map((p) => p.id);
-    return this.getDownloadUrls(ids);
+    return this.getDownloadUrls(invitationId, userId, ids);
   }
 
   //사진 삭제 (소프트 딜리트)
@@ -165,7 +165,7 @@ async getPhoto(id: string) {
   }
 
   //좋아요 토글
-  async toggleLike(photoId: string, participantId: string) {
+  async toggleLike(photoId: string, invitationId: string, participantId: string) {
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo || photo.invitationId !== invitationId) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);

@@ -21,10 +21,12 @@ import { UploadPhotoDto, UploadPhotoSchema } from './dto/upload-photo.dto';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { CurrentParticipant } from '../common/decorators/current-participant.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { ParticipantGuard } from '../common/guards/participant.guard';
 import type { Participant } from '../database/schema';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 @UseGuards(JwtAuthGuard, BlocklistGuard, ParticipantGuard)
 @Controller('invitations')
@@ -51,19 +53,24 @@ export class PhotosController {
 
   //사진 다운로드(선택,단일)
   @Get(':invitationId/photos/download')
-  getDownloadUrls(@Query('ids') ids?: string) {
+  getDownloadUrls(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentUser() user: JwtPayload,
+    @Query('ids') ids?: string,
+  ) {
     if (!ids) {
       throw new BadRequestException('ids 쿼리 파라미터가 필요합니다.');
     }
-    return this.photosService.getDownloadUrls(ids.split(','));
+    return this.photosService.getDownloadUrls(invitationId, user.id, ids.split(','));
   }
 
   //사진 다운로드 (전체)
   @Get(':invitationId/photos/download/all')
   getAllDownloadUrls(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.photosService.getAllDownloadUrls(invitationId);
+    return this.photosService.getAllDownloadUrls(invitationId, user.id);
   }
 
   //리마인드
@@ -74,8 +81,11 @@ export class PhotosController {
 
   //사진 상세
   @Get(':invitationId/photos/:id')
-  getPhoto(@Param('id', ParseUlidPipe) id: string) {
-    return this.photosService.getPhoto(id);
+  getPhoto(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.photosService.getPhoto(invitationId, id);
   }
 
   //사진 업로드
@@ -102,9 +112,10 @@ export class PhotosController {
   @Post(':invitationId/photos/:photoId/likes')
   @HttpCode(HttpStatus.OK)
   toggleLike(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('photoId', ParseUlidPipe) photoId: string,
     @CurrentParticipant() participant: Participant,
   ) {
-    return this.photosService.toggleLike(photoId, participant.id);
+    return this.photosService.toggleLike(photoId, invitationId, participant.id);
   }
 }

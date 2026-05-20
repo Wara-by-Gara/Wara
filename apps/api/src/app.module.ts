@@ -17,8 +17,6 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
-import { InquiriesModule } from './inquiries/inquiries.module';
-import { DevAuthModule } from './dev/dev-auth.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 
 @Module({

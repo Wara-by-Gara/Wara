@@ -9,7 +9,6 @@ import {
   Param,
   Post,
   Query,
-  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -25,10 +24,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Get(':provider/url')
