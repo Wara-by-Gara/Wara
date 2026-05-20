@@ -111,7 +111,7 @@ export default function InvitationDetailPage() {
           const resolvedMyP = myP.status === "fulfilled" ? myP.value : null;
           setMyParticipant(resolvedMyP);
 
-          if (resolvedMyP?.rsvpStatus === "attending") {
+          if (resolvedMyP) {
             const list = await getParticipants(invitationId, token).catch(() => null);
             if (list) setParticipants(list.participants.map((r) => ({ ...r.participant, user: r.user })));
           }
@@ -129,6 +129,7 @@ export default function InvitationDetailPage() {
   const isHost = invitation && me ? invitation.userId === me.id : false;
 
   const handleRsvp = async (status: RsvpStatus) => {
+    if (rsvpLoading) return;
     const token = localStorage.getItem("access_token") ?? "";
     if (!token || !invitation) return;
     if (myParticipant?.rsvpStatus === status) return;
@@ -142,12 +143,10 @@ export default function InvitationDetailPage() {
       }
       setMyParticipant(updated);
 
-      if (status === "attending") {
-        const list = await getParticipants(invitationId, token).catch(() => null);
-        setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : [updated]);
-      } else {
-        setParticipants([]);
-      }
+      // updateRsvp/join 과정에서 토큰이 갱신됐을 수 있으므로 fresh token 사용
+      const freshToken = localStorage.getItem("access_token") ?? "";
+      const list = await getParticipants(invitationId, freshToken).catch(() => null);
+      setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : [updated]);
     } catch (err) {
       const apiErr = err as { error?: { code?: string; message?: string } };
       const code = apiErr?.error?.code;
@@ -158,12 +157,8 @@ export default function InvitationDetailPage() {
         const fresh = await getMyParticipant(invitationId, t).catch(() => null);
         if (fresh) {
           setMyParticipant(fresh);
-          if (fresh.rsvpStatus === "attending") {
-            const list = await getParticipants(invitationId, t).catch(() => null);
-            setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : []);
-          } else {
-            setParticipants([]);
-          }
+          const list = await getParticipants(invitationId, t).catch(() => null);
+          setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : []);
           return;
         }
       }
@@ -209,10 +204,11 @@ export default function InvitationDetailPage() {
 
   const coverSrc = `${API_URL}/files/${invitation.mainImageKey}`;
 
-  const attendingParticipants = [
-    ...participants.filter((p) => p.memberRole === "HOST" && p.rsvpStatus === "attending"),
-    ...participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "attending"),
-  ];
+  const hostParticipants = participants.filter((p) => p.memberRole === "HOST");
+  const attendingGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "attending");
+  const undecidedGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "undecided");
+  const absentGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "absent");
+  const showParticipants = isHost || !!myParticipant;
 
   return (
     <div className="min-h-screen bg-[#fbf9f8] flex flex-col">
@@ -336,20 +332,28 @@ export default function InvitationDetailPage() {
             )}
 
             {/* 참석자 목록 — 본인이 참석 상태이거나 호스트일 때만 표시 */}
-            {(isHost || myParticipant?.rsvpStatus === "attending") && attendingParticipants.length > 0 && (
-              <section>
-                <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
-                  ATTENDING · {attendingParticipants.length}
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  {attendingParticipants.map((p) => (
-                    <Avatar
-                      key={p.id}
-                      user={p.user ?? { nickname: null, profileImageUrl: null }}
-                      isHost={p.memberRole === "HOST"}
-                    />
-                  ))}
-                </div>
+            {showParticipants && participants.length > 0 && (
+              <section className="flex flex-col gap-6">
+                {[
+                  { label: "ATTENDING", list: [...hostParticipants.filter(p => p.rsvpStatus === "attending"), ...attendingGuests] },
+                  { label: "UNDECIDED", list: undecidedGuests },
+                  ...(isHost ? [{ label: "ABSENT", list: [...hostParticipants.filter(p => p.rsvpStatus !== "attending"), ...absentGuests] }] : []),
+                ].filter(({ list }) => list.length > 0).map(({ label, list }) => (
+                  <div key={label}>
+                    <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                      {label} · {list.length}
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      {list.map((p) => (
+                        <Avatar
+                          key={p.id}
+                          user={p.user ?? { nickname: null, profileImageUrl: null }}
+                          isHost={p.memberRole === "HOST"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </section>
             )}
 
