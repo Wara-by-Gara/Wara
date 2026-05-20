@@ -1,4 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { LocationsService } from './locations.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
@@ -11,6 +12,7 @@ export class LocationsSearchController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Get('search')
+  @Throttle({ default: { ttl: 60000, limit: 20 } })
   searchPlaces(
     @Query(new ZodValidationPipe(PlaceSearchQuerySchema))
     query: PlaceSearchQueryDto,

@@ -62,6 +62,7 @@ export class LocationsController {
   }
 
   @Put('participant/me/location')
+  @UseGuards(ParticipantGuard)
   updateMyLocation(
     @Param('invitationId') invitationId: string,
     @CurrentUser() user: JwtPayload,

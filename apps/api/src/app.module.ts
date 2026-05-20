@@ -15,7 +15,6 @@ import { MissionsModule } from './missions/missions.module';
 import { PhotosModule } from './photos/photos.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { ParticipantsExampleModule } from './participants_example/participants-example.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
@@ -40,10 +39,6 @@ import { BlocklistModule } from './blocklist/blocklist.module';
     PhotosModule,
     FeedbacksModule,
     NotificationsModule,
-    InquiriesModule,
-    S3Module,
-    DevAuthModule,
-    ParticipantsExampleModule,
     SendLogsModule,
     S3Module,
     BlocklistModule,

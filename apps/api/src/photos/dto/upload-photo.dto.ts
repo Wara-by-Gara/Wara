@@ -7,7 +7,7 @@ import { z } from 'zod';
  * imageKey: S3/스토리지 경로 (클라이언트가 먼저 업로드 후 key를 받아서 전송)
  */
 export const UploadPhotoSchema = z.object({
-  imageKey: z.string().regex(/^photos\/[0-9A-Z]{26}\/[^/\\]+$/, '유효하지 않은 imageKey 형식입니다.'),
+  imageKey: z.string().regex(/^photos\/[0-9A-HJKMNP-TV-Z]{26}\/[^/\\]+$/, '유효하지 않은 imageKey 형식입니다.'),
   takenAt: z.string().optional(),
   exifMetadata: z
     .object({

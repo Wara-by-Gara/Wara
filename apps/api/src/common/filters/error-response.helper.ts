@@ -95,7 +95,11 @@ function pickMessage(raw: unknown, status: number): string {
  */
 export function resolveRequestId(request: Request): string {
   const header = request.headers['x-request-id'];
-  return typeof header === 'string' && header.length > 0 ? header : randomUUID();
+  if (typeof header === 'string' && header.length > 0) {
+    const sanitized = header.replace(/[\r\n\t]/g, '').slice(0, 64);
+    if (sanitized.length > 0) return sanitized;
+  }
+  return randomUUID();
 }
 
 export function sendErrorResponse(

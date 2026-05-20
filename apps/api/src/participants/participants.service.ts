@@ -65,6 +65,11 @@ export class ParticipantsService {
   }
 
   async join(userId: string, invitationId: string, dto: JoinInvitationDto) {
+    const blocked = await this.blocklistRepository.isBlocked(userId, invitationId);
+    if (blocked) {
+      throw new ForbiddenException(ErrorCode.INVITATION_ACCESS_REVOKED);
+    }
+
     const existing = await this.repository.findByUserAndInvitation(userId, invitationId);
     if (existing) {
       throw new ConflictException(ErrorCode.PARTICIPANT_ALREADY_EXISTS);

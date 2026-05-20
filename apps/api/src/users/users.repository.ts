@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { users, socialAccounts } from '../database/schema';
+import { users, socialAccounts, refreshTokens } from '../../drizzle/schema';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 
@@ -50,6 +50,13 @@ export class UsersRepository {
       .update(users)
       .set({ deletedAt: new Date() })
       .where(and(eq(users.id, id), isNull(users.deletedAt)));
+  }
+
+  async revokeAllRefreshTokens(userId: string) {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
   }
 
   async findSocialsByUserId(userId: string) {

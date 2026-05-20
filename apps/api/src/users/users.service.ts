@@ -22,8 +22,11 @@ export class UsersService {
 
   async deleteMe(userId: string) {
     const user = await this.repository.findById(userId);
-    if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    await this.repository.softDeleteUser(userId);
+    if (!user) throw new NotFoundException('USER_NOT_FOUND');
+    await Promise.all([
+      this.repository.softDeleteUser(userId),
+      this.repository.revokeAllRefreshTokens(userId),
+    ]);
   }
 
   async getMySocials(userId: string) {

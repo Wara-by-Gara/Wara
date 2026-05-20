@@ -86,7 +86,9 @@ async listPhotos(invitationId: string, dto: ListPhotosDto) {
 async getPhoto(id: string) {
   const photo = await this.repository.findPhotoById(id);
 
-  if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
+    if (!photo || photo.invitationId !== invitationId) {
+      throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
+    }
 
   await this.repository.incrementViewCount(id);
   const url = await this.getViewUrl(photo.imageKey);
@@ -165,7 +167,7 @@ async getPhoto(id: string) {
   //좋아요 토글
   async toggleLike(photoId: string, participantId: string) {
     const photo = await this.repository.findPhotoById(photoId);
-    if (!photo) {
+    if (!photo || photo.invitationId !== invitationId) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 

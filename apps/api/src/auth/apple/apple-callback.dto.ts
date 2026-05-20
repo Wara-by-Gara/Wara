@@ -15,7 +15,7 @@ const AppleUserSchema = z.object({
 export const AppleCallbackSchema = z.object({
   id_token: z.string().min(1),
   code: z.string().min(1),
-  state: z.string().optional(),
+  state: z.string().min(1),
   user: z
     .union([z.string(), AppleUserSchema])
     .optional()
