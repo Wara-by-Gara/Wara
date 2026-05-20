@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { InvitationsService } from './invitations.service';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -7,9 +18,19 @@ import { HostGuard } from '../common/guards/host.guard';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { CreateInvitationDto, CreateInvitationSchema } from './dto/create-invitation.dto';
-import { UpdateInvitationDto, UpdateInvitationSchema } from './dto/update-invitation.dto';
+import {
+  CreateInvitationDto,
+  CreateInvitationSchema,
+} from './dto/create-invitation.dto';
+import {
+  UpdateInvitationDto,
+  UpdateInvitationSchema,
+} from './dto/update-invitation.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
+import {
+  InvitationPresignedUrlDto,
+  InvitationPresignedUrlSchema,
+} from './dto/invitation-presigned-url.dto';
 
 @Controller('invitations')
 export class InvitationsController {
@@ -18,6 +39,14 @@ export class InvitationsController {
   @Get()
   async findAll(@CurrentUser() user: JwtPayload) {
     return this.invitationsService.findAll(user.id);
+  }
+
+  @Post('presigned-url')
+  generatePresignedUrl(
+    @Body(new ZodValidationPipe(InvitationPresignedUrlSchema))
+    dto: InvitationPresignedUrlDto,
+  ) {
+    return this.invitationsService.generatePresignedUrl(dto);
   }
 
   @Public()
@@ -29,7 +58,8 @@ export class InvitationsController {
   @Post()
   create(
     @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(CreateInvitationSchema)) dto: CreateInvitationDto,
+    @Body(new ZodValidationPipe(CreateInvitationSchema))
+    dto: CreateInvitationDto,
   ) {
     return this.invitationsService.create(user.id, dto);
   }
@@ -39,7 +69,8 @@ export class InvitationsController {
   @Patch(':invitationId')
   update(
     @Param('invitationId', ParseUlidPipe) id: string,
-    @Body(new ZodValidationPipe(UpdateInvitationSchema)) dto: UpdateInvitationDto,
+    @Body(new ZodValidationPipe(UpdateInvitationSchema))
+    dto: UpdateInvitationDto,
   ) {
     return this.invitationsService.update(id, dto);
   }
