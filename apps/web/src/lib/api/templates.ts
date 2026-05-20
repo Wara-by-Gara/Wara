@@ -1,0 +1,15 @@
+import { apiGet } from "./client";
+
+export interface Template {
+  id: string;
+  name: string;
+  previewImageKey: string;
+  theme: string;
+  font: string;
+  effect: string | null;
+  isActive: boolean;
+}
+
+export function getTemplates(): Promise<Template[]> {
+  return apiGet<Template[]>("/invitation/templates");
+}
