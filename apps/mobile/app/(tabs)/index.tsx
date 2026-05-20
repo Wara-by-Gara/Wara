@@ -12,10 +12,12 @@ const AUTH_KEY = ['auth', 'access-token'] as const;
 
 export default function HomeScreen() {
   const queryClient = useQueryClient();
+  // staleTime을 길게 두지 않음 — 401 글로벌 핸들러(clearTokens) 후 화면 재마운트/포커스 시
+  // 토큰 없음을 즉시 감지해서 DevTokenForm으로 전환되도록.
   const authQuery = useQuery({
     queryKey: AUTH_KEY,
     queryFn: getAccessToken,
-    staleTime: Infinity,
+    staleTime: 5_000,
   });
 
   if (authQuery.isPending) {
