@@ -142,9 +142,10 @@ export class AuthService {
     code: string;
     state?: string;
   }) {
-    if (params.state) {
-      this.verifyState(params.state);
+    if (!params.state) {
+      throw new UnauthorizedException(ErrorCode.AUTH_INVALID_STATE);
     }
+    this.verifyState(params.state);
 
     this.oauthPolicyService.validatePlatform(params.provider, params.platform);
 
