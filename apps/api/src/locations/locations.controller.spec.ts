@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LocationsController } from './locations.controller';
 import { LocationsService } from './locations.service';
 import { HostGuard } from '../common/guards/host.guard';
+import { ParticipantGuard } from '../common/guards/participant.guard';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { UserRole } from '../common/enums/role.enum';
 
@@ -24,6 +25,8 @@ describe('LocationsController', () => {
       providers: [{ provide: LocationsService, useValue: mockService }],
     })
       .overrideGuard(HostGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(ParticipantGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
