@@ -29,7 +29,12 @@ export const invitations = pgTable('invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  // 내 초대장 목록 조회 (findAllByUserId)
+  index('idx_invitations_user_id').on(t.userId),
+  // soft delete 필터 조합: user_id + deleted_at IS NULL 커버링 인덱스
+  index('idx_invitations_user_deleted').on(t.userId, t.deletedAt),
+]);
 
 export const participants = pgTable('participants', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
@@ -42,6 +47,10 @@ export const participants = pgTable('participants', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex('uq_participants_user_invitation').on(t.userId, t.invitationId),
+  // 초대장별 참가자 전체 조회 (findAllByInvitation) — 가장 빈번한 JOIN 축
+  index('idx_participants_invitation_id').on(t.invitationId),
+  // 미션 배정 대상 조회: invitation + rsvp + role 복합 필터
+  index('idx_participants_invitation_rsvp_role').on(t.invitationId, t.rsvpStatus, t.memberRole),
 ]);
 
 export const invitationSendLogs = pgTable('invitation_send_logs', {
@@ -51,7 +60,10 @@ export const invitationSendLogs = pgTable('invitation_send_logs', {
   channel: sendChannelEnum('channel').notNull(),
   inviteUrl: text('invite_url').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // 초대장 발송 내역 조회
+  index('idx_send_logs_invitation_id').on(t.invitationId),
+]);
 
 export const invitationBlocklists = pgTable('invitation_blocklists', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),

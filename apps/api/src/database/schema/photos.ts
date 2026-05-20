@@ -32,6 +32,8 @@ export const photoLikes = pgTable('photo_likes', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex('uq_photo_likes_photo_participant').on(t.photoId, t.participantId),
+  // 참가자가 좋아요한 사진 목록 조회 / CASCADE 삭제 시 FK 스캔 최적화
+  index('idx_photo_likes_participant_id').on(t.participantId),
 ]);
 
 export type Photo = typeof photos.$inferSelect;

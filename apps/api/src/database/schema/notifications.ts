@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, check, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { notificationTypeEnum, notificationTargetTypeEnum } from './enums';
@@ -17,6 +17,10 @@ export const notifications = pgTable('notifications', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   check('check_notification_target', sql`(${t.targetType} IS NOT NULL AND ${t.targetId} IS NOT NULL) OR (${t.targetType} IS NULL AND ${t.targetId} IS NULL)`),
+  // 알림 목록 조회: user_id 기준 커서 페이지네이션 (id DESC)
+  index('idx_notifications_user_id').on(t.userId),
+  // 미읽음 카운트 조회 (countUnreadByUser): user_id + is_read = false
+  index('idx_notifications_user_unread').on(t.userId, t.isRead),
 ]);
 
 export const notificationSettings = pgTable('notification_settings', {

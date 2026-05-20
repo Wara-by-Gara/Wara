@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, uniqueIndex, check, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
@@ -19,6 +19,12 @@ export const feedbacks = pgTable('feedbacks', {
 }, (t) => [
   check('check_feedback_ref', sql`${t.invitationId} IS NOT NULL OR ${t.photoId} IS NOT NULL`),
   check('check_feedback_like_count', sql`${t.likeCount} >= 0`),
+  // 초대장 전체 피드백 탭 조회: invitation_id 기준
+  index('idx_feedbacks_invitation_id').on(t.invitationId),
+  // 사진 낱개 피드백 조회: photo_id 기준
+  index('idx_feedbacks_photo_id').on(t.photoId),
+  // 참가자별 피드백 조회 / 권한 확인
+  index('idx_feedbacks_participant_id').on(t.participantId),
 ]);
 
 export const feedbackLikes = pgTable('feedback_likes', {

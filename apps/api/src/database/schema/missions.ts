@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   pgTable,
   text,
   timestamp,
@@ -39,7 +40,10 @@ export const missions = pgTable('missions', {
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  // 초대장별 미션 목록 조회 (findManyByInvitationId)
+  index('idx_missions_invitation_id').on(t.invitationId),
+]);
 
 export const missionAssignments = pgTable(
   'mission_assignments',
@@ -63,6 +67,8 @@ export const missionAssignments = pgTable(
       t.missionId,
       t.participantId,
     ),
+    // 내 배정 미션 조회 (findAssignedMissionForParticipant): participant_id 기준
+    index('idx_mission_assignments_participant_id').on(t.participantId),
   ],
 );
 
