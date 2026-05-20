@@ -1,8 +1,7 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from '../hooks/use-notifications';
-import { markAsRead, markAllAsRead } from '../api';
+import { useMarkAsRead, useMarkAllAsRead } from '../hooks/use-mark-read';
 import { NotificationItem } from './notification-item';
 
 interface Props {
@@ -12,23 +11,8 @@ interface Props {
 export function NotificationDropdown({ onOpenSettings }: Props) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useNotifications();
-  const queryClient = useQueryClient();
-
-  const readMutation = useMutation({
-    mutationFn: markAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    },
-  });
-
-  const readAllMutation = useMutation({
-    mutationFn: markAllAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    },
-  });
+  const { mutate: markAsRead } = useMarkAsRead();
+  const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
 
   const notifications = data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -39,8 +23,8 @@ export function NotificationDropdown({ onOpenSettings }: Props) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => readAllMutation.mutate()}
-            disabled={readAllMutation.isPending}
+            onClick={() => markAllAsRead()}
+            disabled={isMarkingAllRead}
             className="text-xs text-blue-500 hover:text-blue-600 disabled:opacity-50"
           >
             모두 읽음
@@ -70,7 +54,7 @@ export function NotificationDropdown({ onOpenSettings }: Props) {
           <NotificationItem
             key={n.id}
             notification={n}
-            onRead={(id) => readMutation.mutate(id)}
+            onRead={(id) => markAsRead(id)}
           />
         ))}
         {hasNextPage && (
@@ -84,7 +68,6 @@ export function NotificationDropdown({ onOpenSettings }: Props) {
           </button>
         )}
       </div>
-
     </div>
   );
 }
