@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
-import Providers from "./providers";
+import Providers from "@/providers";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
