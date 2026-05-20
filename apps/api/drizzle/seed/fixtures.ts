@@ -329,46 +329,67 @@ function buildSeeds() {
     placeId: loc.placeId,
   }));
 
-  // 9. Send logs (2 per invitation)
-  const sendLogs = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
+  // 9. Send logs
+  // - 호스트 발송 2건 (kakao, link)
+  // - 짝수 인덱스 invitation에 GUEST sms 발송 1건 추가 (admin analytics viral 시연용)
+  const sendLogs = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys], invIdx) => {
     const hostUserId = userIdByKey[userKeys[0]!]!;
     const invId = invIdByKey[invKey]!;
     const baseUrl = `https://wara.dev/invite/${invId}`;
-    return [
+    const base = [
       { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao' as const, inviteUrl: baseUrl },
       { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link'  as const, inviteUrl: baseUrl },
     ];
+    if (invIdx % 2 === 0 && userKeys.length >= 2) {
+      const guestUserId = userIdByKey[userKeys[1]!]!;
+      base.push({
+        id: id(`sendlog:${invKey}:guest`),
+        invitationId: invId,
+        senderId: guestUserId,
+        channel: 'sms' as const,
+        inviteUrl: baseUrl,
+      });
+    }
+    return base;
   });
 
   // 9-1. Invitation link events
-  // kakao sendLog: opened + joined (두 번째 참가자가 트래킹됨)
-  // link  sendLog: opened (익명, userId null)
-  const invitationLinkEvents = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
-    const kakaoLogId = id(`sendlog:${invKey}:0`);
-    const linkLogId  = id(`sendlog:${invKey}:1`);
-    const secondUserKey = (userKeys[1] ?? userKeys[0])!;
-    const secondUserId = userIdByKey[secondUserKey]!;
-    return [
-      {
-        id: id(`linkevent:${invKey}:kakao:opened`),
-        logId: kakaoLogId,
-        eventType: 'opened' as const,
-        userId: secondUserId,
-      },
-      {
-        id: id(`linkevent:${invKey}:kakao:joined`),
-        logId: kakaoLogId,
-        eventType: 'joined' as const,
-        userId: secondUserId,
-      },
-      {
-        id: id(`linkevent:${invKey}:link:opened`),
-        logId: linkLogId,
-        eventType: 'opened' as const,
-        userId: null as string | null,
-      },
-    ];
-  });
+  // 기본: kakao sendLog → opened + joined (authed), link sendLog → opened (anonymous)
+  // analytics: 각 sendLog에 시간대 분산된 추가 open 이벤트 — admin/analytics timeline·conversion 시연
+  const ANALYTICS_BASE_TIME = new Date('2026-05-01T00:00:00Z').getTime();
+  const invitationLinkEvents = [
+    ...INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
+      const kakaoLogId = id(`sendlog:${invKey}:0`);
+      const linkLogId  = id(`sendlog:${invKey}:1`);
+      const secondUserKey = (userKeys[1] ?? userKeys[0])!;
+      const secondUserId = userIdByKey[secondUserKey]!;
+      return [
+        { id: id(`linkevent:${invKey}:kakao:opened`), logId: kakaoLogId, eventType: 'opened' as const, userId: secondUserId },
+        { id: id(`linkevent:${invKey}:kakao:joined`), logId: kakaoLogId, eventType: 'joined' as const, userId: secondUserId },
+        { id: id(`linkevent:${invKey}:link:opened`),  logId: linkLogId,  eventType: 'opened' as const, userId: null as string | null },
+      ];
+    }),
+    ...sendLogs.flatMap((log, logIdx) => {
+      const hour = logIdx % 24;
+      const day = Math.floor(logIdx / 24) % 14;
+      const t = (extraMin: number) =>
+        new Date(ANALYTICS_BASE_TIME + day * 86_400_000 + hour * 3_600_000 + extraMin * 60_000);
+      const events: Array<{
+        id: string;
+        logId: string;
+        eventType: 'opened' | 'joined';
+        userId: string | null;
+        createdAt: Date;
+      }> = [
+        { id: id(`linkevent:${log.id}:anon`),  logId: log.id, eventType: 'opened', userId: null,                    createdAt: t(0) },
+        { id: id(`linkevent:${log.id}:login`), logId: log.id, eventType: 'opened', userId: userIdByKey['guest01']!, createdAt: t(15) },
+      ];
+      if (logIdx % 2 === 0) {
+        events.push({ id: id(`linkevent:${log.id}:join`), logId: log.id, eventType: 'joined', userId: userIdByKey['guest01']!, createdAt: t(60) });
+      }
+      return events;
+    }),
+  ];
 
   // 10. Blocklists (inv01: active 1건 + soft-deleted 1건)
   const blocklists = [
