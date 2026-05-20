@@ -21,6 +21,7 @@ import { S3Module } from './s3/s3.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
 import { DevAuthModule } from './dev/dev-auth.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { BlocklistModule } from './blocklist/blocklist.module';
     SendLogsModule,
     S3Module,
     BlocklistModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
