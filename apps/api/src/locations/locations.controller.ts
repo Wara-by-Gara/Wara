@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
+import { ParticipantGuard } from '../common/guards/participant.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { MemberRole } from '../common/enums/member-role.enum';
@@ -30,6 +31,7 @@ export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Get('location')
+  @UseGuards(ParticipantGuard)
   getEventLocation(@Param('invitationId') invitationId: string) {
     return this.locationsService.getEventLocation(invitationId);
   }
@@ -54,6 +56,7 @@ export class LocationsController {
   }
 
   @Get('participant/locations')
+  @UseGuards(ParticipantGuard)
   getParticipantLocations(@Param('invitationId') invitationId: string) {
     return this.locationsService.getParticipantLocations(invitationId);
   }
