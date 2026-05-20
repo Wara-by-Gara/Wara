@@ -62,7 +62,7 @@ describe('useNotifications', () => {
   it('첫 페이지 알림 목록을 반환한다', async () => {
     const { result } = renderHook(() => useNotifications(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.pages[0].items).toHaveLength(4);
+    expect(result.current.data?.pages[0]?.items).toHaveLength(4);
   });
 
   it('nextCursor가 null이면 hasNextPage가 false다', async () => {
