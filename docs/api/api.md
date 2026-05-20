@@ -24,6 +24,8 @@
   - [Feedbacks](#feedbacks)
   - [Notifications](#notifications)
   - [Inquiries](#inquiries)
+  - [Admin Inquiries](#admin-inquiries)
+  - [Admin — Share Analytics](#admin--share-analytics)
 
 ---
 
@@ -220,4 +222,27 @@
 
 ---
 
-> **총 65개 엔드포인트**
+## Admin — Share Analytics
+
+> 관리자 전용. 공유 로그(`invitation_send_logs`)와 링크 이벤트(`invitation_link_events`)를 집계한 분석 endpoint.
+> 공통 쿼리: `?from=ISO8601&to=ISO8601` — 둘 다 생략 시 최근 30일. **기간은 최대 366일**(초과 시 400 `ANALYTICS_PERIOD_TOO_LONG`).
+> 시간대별 통계는 **KST(Asia/Seoul)** 기준. 모든 비율은 0~1 소수(소수점 4자리).
+
+| Method | Path | 설명 | 인증 | 응답 핵심 |
+|--------|------|------|:----:|----------|
+| GET | `/admin/analytics/shares/channels` | 채널별 공유 효과 | ✅ admin | `byChannel: [{channel, sends, opens, joins, openRate, joinRate}]` + `totalSends` |
+| GET | `/admin/analytics/shares/conversion` | 공유 → 방문 → 로그인 → 참가 전환 깔때기 | ✅ admin | `funnel: {sent, opened, openedAuthed, joined}` + `rates: {openRate, authedOpenRate, joinRate, overallConversion}` |
+| GET | `/admin/analytics/shares/viral` | GUEST 바이럴 기여 비율 | ✅ admin | `hostSends`, `guestSends`, `unattributedSends`, `guestViralRatio` (= guestSends / (hostSends + guestSends)) |
+| GET | `/admin/analytics/shares/timeline` | 시간대(0~23시 KST)별 오픈 분포 | ✅ admin | `byHour: 24개 (빈 시간 0)` + `totalOpens` |
+
+**용어**
+- `sends` = 발송 횟수 (`invitation_send_logs` row)
+- `opens` = 발송된 링크에 대한 distinct opened 이벤트 수
+- `openedAuthed` = opened 중 user_id 있는(로그인 상태) distinct log
+- `joined` = 발송된 링크에 대한 distinct joined 이벤트 수
+- `unattributedSends` = 발송자가 해당 모임의 participants 매핑이 없는 경우 (탈퇴 등, viral 분모에서 제외)
+- conversion의 모든 카운트는 `send_logs.createdAt`이 기간 안에 들어오는 발송에 대해서만 집계 (openRate ≤ 1 보장)
+
+---
+
+> **총 69개 엔드포인트**
