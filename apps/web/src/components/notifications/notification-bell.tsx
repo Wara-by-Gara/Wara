@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useUnreadCount } from '../hooks/use-unread-count';
-import { useNotificationSocket } from '../hooks/use-notification-socket';
+import { useUnreadCount, useNotificationSocket } from '@/hooks/useNotifications';
 import { NotificationDropdown } from './notification-dropdown';
 import { NotificationSettingsSheet } from './notification-settings-sheet';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Notification, NotificationType } from '../types';
+import type { Notification, NotificationType } from '@/lib/api/notifications';
 
 const TYPE_LABELS: Record<NotificationType, string> = {
   remind: '리마인드',
