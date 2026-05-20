@@ -32,13 +32,19 @@ export class ParticipantsController {
   constructor(private readonly participantsService: ParticipantsService) {}
 
   @Get()
-  @UseGuards(ParticipantGuard, RsvpStatusGuard)
-  @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
+  @UseGuards(ParticipantGuard)
   findAll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Query(new ZodValidationPipe(ListParticipantsQuerySchema)) query: ListParticipantsQuery,
+    @CurrentParticipant() viewer: Participant,
   ) {
-    return this.participantsService.findAll(invitationId, query.rsvpStatus);
+    return this.participantsService.findAll(invitationId, query.rsvpStatus, viewer.memberRole);
+  }
+
+  @Get('me')
+  @UseGuards(ParticipantGuard)
+  getMyParticipant(@CurrentParticipant() participant: Participant) {
+    return { participant };
   }
 
   @Get(':participantId/profile')

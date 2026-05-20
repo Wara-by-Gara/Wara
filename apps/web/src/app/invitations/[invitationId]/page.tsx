@@ -1,0 +1,380 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
+import { getInvitation, type Invitation } from "@/lib/api/invitations";
+import { getMe, type Me } from "@/lib/api/users";
+import {
+  getParticipants,
+  getMyParticipant,
+  joinInvitation,
+  updateRsvp,
+  type Participant,
+  type RsvpStatus,
+} from "@/lib/api/participants";
+import { ROUTES } from "@/constants/routes";
+import LoginModal from "../_components/LoginModal";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+function formatEventDate(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+  const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  return { date, time };
+}
+
+function Avatar({
+  user,
+  isHost = false,
+}: {
+  user: { nickname: string | null; profileImageUrl: string | null };
+  isHost?: boolean;
+}) {
+  const initial = (user.nickname ?? "?")[0]!.toUpperCase();
+  const ringClass = isHost ? "border-[#a73921]" : "border-white";
+  const img = user.profileImageUrl ? (
+    <img
+      src={user.profileImageUrl}
+      alt={user.nickname ?? ""}
+      className="w-12 h-12 rounded-full object-cover"
+    />
+  ) : (
+    <div className="w-12 h-12 rounded-full bg-[#a73921]/10 flex items-center justify-center text-[#a73921] font-semibold text-base">
+      {initial}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className={`relative rounded-full border-2 shadow ${ringClass}`}>
+        {img}
+        {isHost && (
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#a73921] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none whitespace-nowrap">
+            HOST
+          </span>
+        )}
+      </div>
+      <span className="text-xs text-[#505f78] truncate max-w-[52px] mt-1">{user.nickname ?? "익명"}</span>
+    </div>
+  );
+}
+
+const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
+  { value: "attending", label: "참석" },
+  { value: "undecided", label: "미정" },
+  { value: "absent", label: "불참" },
+];
+
+export default function InvitationDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const invitationId = params.invitationId as string;
+  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [myParticipant, setMyParticipant] = useState<Participant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") ?? "" : "";
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const inv = await getInvitation(invitationId);
+        setInvitation(inv);
+
+        if (isLoggedIn && token) {
+          const [currentUser, myP] = await Promise.allSettled([
+            getMe(token),
+            getMyParticipant(invitationId, token),
+          ]);
+
+          const resolvedMe = currentUser.status === "fulfilled" ? currentUser.value : null;
+          if (resolvedMe) setMe(resolvedMe);
+
+          const resolvedMyP = myP.status === "fulfilled" ? myP.value : null;
+          setMyParticipant(resolvedMyP);
+
+          if (resolvedMyP) {
+            const list = await getParticipants(invitationId, token).catch(() => null);
+            if (list) setParticipants(list.participants.map((r) => ({ ...r.participant, user: r.user })));
+          }
+        }
+      } catch {
+        setError("초대장을 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, [hydrated, isLoggedIn, invitationId]);
+
+  const isHost = invitation && me ? invitation.userId === me.id : false;
+
+  const handleRsvp = async (status: RsvpStatus) => {
+    if (rsvpLoading) return;
+    const token = localStorage.getItem("access_token") ?? "";
+    if (!token || !invitation) return;
+    if (myParticipant?.rsvpStatus === status) return;
+    setRsvpLoading(true);
+    try {
+      let updated: Participant;
+      if (!myParticipant) {
+        updated = await joinInvitation(invitationId, status, token);
+      } else {
+        updated = await updateRsvp(invitationId, myParticipant.id, status, token);
+      }
+      setMyParticipant(updated);
+
+      // updateRsvp/join 과정에서 토큰이 갱신됐을 수 있으므로 fresh token 사용
+      const freshToken = localStorage.getItem("access_token") ?? "";
+      const list = await getParticipants(invitationId, freshToken).catch(() => null);
+      setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : [updated]);
+    } catch (err) {
+      const apiErr = err as { error?: { code?: string; message?: string } };
+      const code = apiErr?.error?.code;
+
+      // myParticipant 상태가 stale해서 JOIN을 시도했지만 이미 참가자인 경우 → 자동 복구
+      if (code === "PARTICIPANT_ALREADY_EXISTS") {
+        const t = localStorage.getItem("access_token") ?? "";
+        const fresh = await getMyParticipant(invitationId, t).catch(() => null);
+        if (fresh) {
+          setMyParticipant(fresh);
+          const list = await getParticipants(invitationId, t).catch(() => null);
+          setParticipants(list ? list.participants.map((r) => ({ ...r.participant, user: r.user })) : []);
+          return;
+        }
+      }
+
+      const MSG: Record<string, string> = {
+        INVITATION_CLOSED: "마감된 초대장입니다.",
+        RSVP_PERMISSION_DENIED: "권한이 없습니다.",
+        TOKEN_EXPIRED: "로그인이 만료되었습니다. 다시 로그인해주세요.",
+        TOKEN_INVALID: "인증 정보가 올바르지 않습니다. 다시 로그인해주세요.",
+      };
+      setRsvpError(MSG[code ?? ""] ?? code ?? "RSVP 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRsvpLoading(false);
+    }
+  };
+
+  if (!hydrated || loading) {
+    return (
+      <div className="min-h-screen bg-[#fbf9f8] flex items-center justify-center">
+        <div className="text-[#505f78] text-sm">불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (error || !invitation) {
+    return (
+      <div className="min-h-screen bg-[#fbf9f8] flex flex-col items-center justify-center gap-4">
+        <p className="text-[#505f78]">{error ?? "초대장을 찾을 수 없습니다."}</p>
+        <button
+          type="button"
+          onClick={() => router.push(ROUTES.INVITATIONS.CREATE)}
+          className="text-sm text-[#a73921] underline"
+        >
+          새 초대장 만들기
+        </button>
+      </div>
+    );
+  }
+
+  const { date: eventDate, time: eventTime } = invitation.eventStartAt
+    ? formatEventDate(invitation.eventStartAt)
+    : { date: null, time: null };
+
+  const coverSrc = `${API_URL}/files/${invitation.mainImageKey}`;
+
+  const hostParticipants = participants.filter((p) => p.memberRole === "HOST");
+  const attendingGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "attending");
+  const undecidedGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "undecided");
+  const absentGuests = participants.filter((p) => p.memberRole === "GUEST" && p.rsvpStatus === "absent");
+  const showParticipants = isHost || !!myParticipant;
+
+  return (
+    <div className="min-h-screen bg-[#fbf9f8] flex flex-col">
+      {/* 헤더 */}
+      <header className="sticky top-0 z-10 bg-[#fbf9f8]/80 backdrop-blur-sm border-b border-[#e4e2e2]">
+        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-[#505f78] hover:opacity-70 transition-opacity text-sm flex items-center gap-1"
+          >
+            ← 뒤로
+          </button>
+          <span className="font-serif text-[#a73921] text-2xl font-bold">WARA</span>
+          <div className="w-16" />
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-2xl mx-auto w-full px-0 sm:px-6 py-0 sm:py-8">
+        <div className="bg-white sm:rounded-2xl sm:shadow-sm overflow-hidden">
+
+          {/* 커버 이미지 */}
+          <div className="relative aspect-[4/5] w-full bg-[#e4e2e2]">
+            <img
+              src={coverSrc}
+              alt={invitation.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-8">
+              <h1 className="text-white font-serif text-3xl font-bold leading-tight drop-shadow">
+                {invitation.title}
+              </h1>
+              {eventDate && (
+                <p className="text-white/80 text-sm mt-2 drop-shadow">
+                  {eventDate}
+                  {eventTime && ` · ${eventTime}`}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="p-8 flex flex-col gap-8">
+
+            {/* Host's Note */}
+            {invitation.description.trim() && (
+              <section>
+                <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                  A MESSAGE FROM YOUR HOST
+                </p>
+                <p className="text-[#1b1c1c] text-base leading-relaxed whitespace-pre-wrap">
+                  {invitation.description}
+                </p>
+              </section>
+            )}
+
+            {/* 날짜 & 시간 */}
+            {eventDate && (
+              <section>
+                <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                  DATE & TIME
+                </p>
+                <div className="bg-[#f5f3f3] rounded-xl px-5 py-4">
+                  <p className="text-[#1b1c1c] text-base font-medium">{eventDate}</p>
+                  {eventTime && (
+                    <p className="text-[#505f78] text-sm mt-1">{eventTime}</p>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* RSVP — 게스트만 표시 */}
+            {isLoggedIn && !isHost && (
+              <section>
+                <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                  RSVP
+                </p>
+                <div className="flex gap-3">
+                  {RSVP_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={rsvpLoading}
+                      onClick={() => { setRsvpError(null); handleRsvp(value); }}
+                      className={`flex-1 py-3 rounded-xl text-sm font-semibold border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        myParticipant?.rsvpStatus === value
+                          ? "bg-[#a73921] text-white border-[#a73921]"
+                          : "bg-[#f5f3f3] text-[#1b1c1c] border-transparent hover:border-[#a73921]/30"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {rsvpError && (
+                  <p className="mt-2 text-xs text-[#a73921]">{rsvpError}</p>
+                )}
+              </section>
+            )}
+
+            {/* 비로그인: 로그인 버튼 */}
+            {!isLoggedIn && (
+              <section>
+                <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                  RSVP
+                </p>
+                <div className="bg-[#f5f3f3] rounded-xl px-5 py-5 flex flex-col items-center gap-3">
+                  <p className="text-[#505f78] text-sm">참석 여부를 알리려면 로그인이 필요합니다.</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginModal(true)}
+                    className="px-6 py-2.5 bg-[#a73921] text-white text-sm font-semibold rounded-xl hover:bg-[#8f2e17] transition-colors cursor-pointer"
+                  >
+                    로그인하기
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* 참석자 목록 — 본인이 참석 상태이거나 호스트일 때만 표시 */}
+            {showParticipants && participants.length > 0 && (
+              <section className="flex flex-col gap-6">
+                {[
+                  { label: "ATTENDING", list: [...hostParticipants.filter(p => p.rsvpStatus === "attending"), ...attendingGuests] },
+                  { label: "UNDECIDED", list: undecidedGuests },
+                  ...(isHost ? [{ label: "ABSENT", list: [...hostParticipants.filter(p => p.rsvpStatus !== "attending"), ...absentGuests] }] : []),
+                ].filter(({ list }) => list.length > 0).map(({ label, list }) => (
+                  <div key={label}>
+                    <p className="text-[11px] font-bold tracking-widest text-[#58423d] mb-3">
+                      {label} · {list.length}
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      {list.map((p) => (
+                        <Avatar
+                          key={p.id}
+                          user={p.user ?? { nickname: null, profileImageUrl: null }}
+                          isHost={p.memberRole === "HOST"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+          </div>
+        </div>
+      </main>
+
+      {/* 푸터 */}
+      <footer className="bg-[#e4e2e2] mt-auto">
+        <div className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between">
+          <span className="font-serif text-[#a73921] text-xl font-semibold">WARA</span>
+          <span className="text-[#505f78] text-xs">© 2026 WARA. 요즘 모이는 방식.</span>
+        </div>
+      </footer>
+
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          returnUrl={window.location.pathname}
+        />
+      )}
+    </div>
+  );
+}
