@@ -35,15 +35,13 @@ export const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(
     },
     ref,
   ) {
-    const isFullScreen = variant === "full-screen";
     const isModalPage = variant === "modal-page";
 
     return (
       <div
         ref={ref}
         className={cn(
-          "flex w-full max-w-md flex-col bg-background mx-auto",
-          isFullScreen ? "min-h-screen" : "min-h-screen",
+          "flex w-full max-w-md flex-col bg-background mx-auto min-h-screen",
           isModalPage && "rounded-t-3xl shadow-lg",
           className,
         )}
