@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Icon } from "../../components/icons";
+
+<Meta title="Docs/IconGrid" />
+
+# Wara Icon Sizes
+
+ICONS.md §1.1 기준. 한 프로젝트 안에서는 아이콘 스타일을 섞지 않습니다.
+
+| 토큰 | 픽셀 | 사용처 |
+|---|---:|---|
+| `icon-xs` | 12px | 배지 내부 |
+| `icon-sm` | 16px | 작은 버튼, 보조 정보 |
+| `icon-md` | 20px | 입력 필드, 리스트 |
+| `icon-lg` | 24px | 탭바, 앱바, 주요 액션 (기본) |
+| `icon-xl` | 32px | Empty State, 큰 장식 |
+
+---
+
+## 크기 비교
+
+<div style={{ display: "flex", gap: 28, alignItems: "flex-end", padding: 24, background: "#FFF", borderRadius: 16 }}>
+  {["xs", "sm", "md", "lg", "xl"].map((s) => (
+    <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <Icon name="home" size={s} />
+      <span style={{ fontSize: 12, color: "#525252", fontFamily: "Pretendard, system-ui, sans-serif" }}>{s}</span>
+    </div>
+  ))}
+</div>
+
+---
+
+## 색상 토큰
+
+<div style={{ display: "flex", gap: 24, alignItems: "center", padding: 24, background: "#FFF", borderRadius: 16 }}>
+  {["default", "primary", "inactive", "danger"].map((c) => (
+    <div key={c} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <Icon name="heart" size="lg" color={c} />
+      <span style={{ fontSize: 12, color: "#525252", fontFamily: "Pretendard, system-ui, sans-serif" }}>{c}</span>
+    </div>
+  ))}
+</div>
+
+---
+
+## 규칙 (ICONS.md §1.2 / §2.1)
+
+- 기본 아이콘은 **outline** 스타일, stroke 2px 통일
+- 탭바 아이콘은 24px 기본
+- 작은 텍스트 옆 아이콘은 16px
+- Empty State 아이콘은 32~48px
+- 터치 영역 최소 44×44px
+- 장식 아이콘(pixel/sticker)과 기능 아이콘 섞지 않기
+- 소셜 로고는 공식 브랜드 컬러 유지 (color prop 무시)
+
+상세 아이콘 카탈로그는 사이드바의 **Icons** 섹션에서 카테고리별로 확인할 수 있습니다.
