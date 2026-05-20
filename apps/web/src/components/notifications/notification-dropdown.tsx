@@ -1,7 +1,6 @@
 'use client';
 
-import { useNotifications } from '../hooks/use-notifications';
-import { useMarkAsRead, useMarkAllAsRead } from '../hooks/use-mark-read';
+import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/hooks/useNotifications';
 import { NotificationItem } from './notification-item';
 
 interface Props {

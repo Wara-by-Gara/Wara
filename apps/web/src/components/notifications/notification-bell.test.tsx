@@ -4,11 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test-utils';
 import { NotificationBell } from './notification-bell';
 
-vi.mock('../hooks/use-unread-count');
-vi.mock('../hooks/use-notification-socket', () => ({
-  useNotificationSocket: vi.fn(),
-}));
-vi.mock('../hooks/use-notifications');
+vi.mock('@/hooks/useNotifications', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useNotifications')>();
+  return {
+    ...actual,
+    useUnreadCount: vi.fn(),
+    useNotificationSocket: vi.fn(),
+  };
+});
+
 vi.mock('./notification-dropdown', () => ({
   NotificationDropdown: ({ onOpenSettings }: { onOpenSettings: () => void }) => (
     <div data-testid="dropdown">
@@ -17,7 +21,7 @@ vi.mock('./notification-dropdown', () => ({
   ),
 }));
 
-const { useUnreadCount } = await import('../hooks/use-unread-count');
+const { useUnreadCount } = await import('@/hooks/useNotifications');
 
 function mockCount(count: number) {
   vi.mocked(useUnreadCount).mockReturnValue({

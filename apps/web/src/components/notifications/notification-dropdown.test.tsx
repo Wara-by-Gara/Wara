@@ -3,14 +3,18 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test-utils';
 import { NotificationDropdown } from './notification-dropdown';
-import type { Notification } from '../types';
+import type { Notification } from '@/lib/api/notifications';
 
-vi.mock('../hooks/use-notifications');
-vi.mock('../hooks/use-notification-socket', () => ({
-  useNotificationSocket: vi.fn(),
-}));
+vi.mock('@/hooks/useNotifications', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useNotifications')>();
+  return {
+    ...actual,
+    useNotifications: vi.fn(),
+    useNotificationSocket: vi.fn(),
+  };
+});
 
-const { useNotifications } = await import('../hooks/use-notifications');
+const { useNotifications } = await import('@/hooks/useNotifications');
 
 const makeNotification = (id: string, isRead = false): Notification => ({
   id,

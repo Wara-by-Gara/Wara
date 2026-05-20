@@ -1,10 +1,7 @@
 'use client';
 
-import {
-  useNotificationSettings,
-  useUpdateNotificationSettings,
-} from '../hooks/use-notification-settings';
-import type { NotificationSettings } from '../types';
+import { useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/useNotifications';
+import type { NotificationSettings } from '@/lib/api/notifications';
 
 type SettingKey = keyof Pick<
   NotificationSettings,

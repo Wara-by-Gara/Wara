@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { Notification, NotificationSettings } from '@/features/notifications/types';
+import type { Notification, NotificationSettings } from '@/lib/api/notifications';
 
 const BASE = 'http://localhost:3000/api/v1';
 
