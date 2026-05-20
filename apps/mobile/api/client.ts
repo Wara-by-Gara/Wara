@@ -7,10 +7,13 @@ import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
 // dev: 보통 http://localhost:3000/api/v1, prod: EAS Secret 또는 .env로 주입.
 function resolveBaseUrl(): string {
   const fromExtra = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
-  if (fromExtra) return fromExtra;
-  throw new Error(
-    'API_URL이 설정되지 않았습니다. EXPO_PUBLIC_API_URL 환경변수 또는 app.config.ts extra.apiUrl 확인.',
-  );
+  if (!fromExtra) {
+    throw new Error(
+      'API_URL이 설정되지 않았습니다. EXPO_PUBLIC_API_URL 환경변수 또는 app.config.ts extra.apiUrl 확인.',
+    );
+  }
+  // 끝 슬래시 제거 — path는 항상 `/`로 시작하므로 `//` 이중 슬래시 방지
+  return fromExtra.replace(/\/+$/, '');
 }
 
 // 네트워크 hang 회피용 default timeout. 사진 업로드 같은 대용량 endpoint는
@@ -62,7 +65,8 @@ export async function apiFetch<T>(
     Accept: 'application/json',
   };
   if (body !== undefined) {
-    headers['Content-Type'] = 'application/json';
+    // 한국어 body 인코딩 안전망 — fetch 기본도 UTF-8이지만 명시
+    headers['Content-Type'] = 'application/json; charset=utf-8';
   }
   if (authenticated) {
     const token = await getAccessToken();

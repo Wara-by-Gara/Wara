@@ -8,7 +8,8 @@ import { WaraApiError } from './types';
  * - staleTime 30초: 화면 빠른 재진입 시 불필요한 refetch 회피
  * - 4xx(WaraApiError)는 retry 안 함 — 비즈니스 에러를 재시도해봐야 의미 없음
  * - 네트워크 오류(WaraNetworkError)·5xx만 최대 2회 재시도
- * - refetchOnWindowFocus는 RN 환경 무의미하므로 끔 (앱 포그라운드 복귀 시 refetch는 별도 hook으로)
+ * - refetchOnWindowFocus는 켜둠 — RN의 window focus는 providers/query-provider.tsx의
+ *   AppState 'active' 전환과 연동(focusManager) → 앱 포그라운드 복귀 시 stale query 자동 refetch
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
@@ -16,7 +17,6 @@ export function createQueryClient(): QueryClient {
       queries: {
         staleTime: 30_000,
         gcTime: 5 * 60_000,
-        refetchOnWindowFocus: false,
         retry: (failureCount, error) => {
           // 4xx 비즈니스 에러는 재시도 무의미 (validation 실패, 권한 등)
           if (error instanceof WaraApiError && error.status < 500) return false;
