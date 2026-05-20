@@ -7,7 +7,7 @@ import {
   participants,
   photoLikes,
   photos,
-} from '../../drizzle/schema';
+} from '../database/schema';
 
 @Injectable()
 export class PhotosRepository {
@@ -42,6 +42,13 @@ export class PhotosRepository {
       isNull(photos.deletedAt),
     ];
 
+const [countRow] = await this.db
+  .select({ total: sql<number>`count(*)::int` })
+  .from(photos)
+  .where(and(...conditions));
+
+const total = countRow?.total ?? 0;
+
     if (cursor) {
       //마지막으로 받은 photoId 기준
       const [cursorRow] = await this.db
@@ -74,6 +81,7 @@ export class PhotosRepository {
     return {
       rows: rows.slice(0, limit),
       nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+      total,
     };
   }
 

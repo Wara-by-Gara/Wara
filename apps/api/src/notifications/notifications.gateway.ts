@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
-import type { Notification } from '../../drizzle/schema';
+import type { Notification } from '../database/schema';
 
 @WebSocketGateway({
   namespace: '/notifications',

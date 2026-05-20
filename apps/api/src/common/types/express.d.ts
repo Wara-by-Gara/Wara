@@ -1,5 +1,5 @@
 import { JwtPayload } from './jwt-payload.type';
-import type { Participant } from '../../../drizzle/schema';
+import type { Participant } from '../../database/schema';
 
 declare global {
   namespace Express {

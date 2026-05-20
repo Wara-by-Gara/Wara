@@ -1,4 +1,4 @@
-import { Participant } from './../../drizzle/schema/invitations';
+import { Participant } from '../database/schema/invitations';
 import {
   Body,
   Controller,

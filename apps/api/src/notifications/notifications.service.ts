@@ -10,7 +10,7 @@ import type { UpdateNotificationSettingsDto } from './dto/update-notification-se
 import type {
   notificationTypeEnum,
   notificationTargetTypeEnum,
-} from '../../drizzle/schema';
+} from '../database/schema';
 
 type NotificationType = (typeof notificationTypeEnum.enumValues)[number];
 type NotificationTargetType =

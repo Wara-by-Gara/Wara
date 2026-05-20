@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { invitationLinkEvents } from '../../drizzle/schema';
-import type { InvitationLinkEvent } from '../../drizzle/schema';
+import { invitationLinkEvents } from '../database/schema';
+import type { InvitationLinkEvent } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 @Injectable()

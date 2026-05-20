@@ -6,7 +6,7 @@ import {
   feedbacks,
   NewFeedback,
   photos,
-} from '../../drizzle/schema';
+} from '../database/schema';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 
 @Injectable()

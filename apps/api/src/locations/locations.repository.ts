@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { eq } from 'drizzle-orm';
-import { eventLocations, participantLocations } from '../../drizzle/schema';
+import { eventLocations, participantLocations } from '../database/schema';
 import type { SetEventLocationDto } from './dto/set-event-location.dto';
 import type { UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
 
