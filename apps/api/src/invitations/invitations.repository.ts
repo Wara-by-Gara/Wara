@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, isNull, ne } from 'drizzle-orm';
+import { and, count, eq, isNull, ne } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { invitations, participants } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -25,8 +25,8 @@ export class InvitationsRepository {
   }
 
   async countGuests(invitationId: string): Promise<number> {
-    const rows = await this.db
-      .select({ id: participants.id })
+    const [result] = await this.db
+      .select({ total: count() })
       .from(participants)
       .where(
         and(
@@ -35,7 +35,7 @@ export class InvitationsRepository {
           ne(participants.rsvpStatus, RsvpStatus.ABSENT),
         ),
       );
-    return rows.length;
+    return result?.total ?? 0;
   }
 
   async create(userId: string, dto: CreateInvitationDto) {
