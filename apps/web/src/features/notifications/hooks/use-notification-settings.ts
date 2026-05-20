@@ -2,11 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchNotificationSettings, updateNotificationSettings } from '../api';
+import { notificationKeys } from '../query-keys';
 import type { UpdateNotificationSettingsDto } from '../types';
 
 export function useNotificationSettings() {
   return useQuery({
-    queryKey: ['notifications', 'settings'],
+    queryKey: notificationKeys.settings(),
     queryFn: fetchNotificationSettings,
   });
 }
@@ -17,7 +18,7 @@ export function useUpdateNotificationSettings() {
     mutationFn: (dto: UpdateNotificationSettingsDto) =>
       updateNotificationSettings(dto),
     onSuccess: (data) => {
-      queryClient.setQueryData(['notifications', 'settings'], data);
+      queryClient.setQueryData(notificationKeys.settings(), data);
     },
   });
 }
