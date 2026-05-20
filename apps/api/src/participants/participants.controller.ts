@@ -25,7 +25,7 @@ import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
-import type { Participant } from '../../drizzle/schema';
+import type { Participant } from '../database/schema';
 
 @Controller('invitations/:invitationId/participants')
 export class ParticipantsController {

@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { users, socialAccounts } from '../../drizzle/schema';
+import { users, socialAccounts } from '../database/schema';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 

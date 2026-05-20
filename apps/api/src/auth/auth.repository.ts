@@ -1,7 +1,7 @@
 import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { and, eq, gt, isNull } from 'drizzle-orm';
-import { users, socialAccounts, refreshTokens, type NewRefreshToken } from '../../drizzle/schema';
+import { users, socialAccounts, refreshTokens, type NewRefreshToken } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { Provider } from './enums/provider.enum';
 

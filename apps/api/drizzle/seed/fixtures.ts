@@ -29,7 +29,7 @@ type Provider = 'kakao' | 'naver' | 'apple';
 type Gender = 'female' | 'male';
 type Role = 'member' | 'admin';
 type InvStatus = 'active' | 'closed';
-type RsvpStatus = 'attending' | 'undecided' | 'absent' | 'cancelled';
+type RsvpStatus = 'attending' | 'undecided' | 'absent';
 
 const USER_DEFS: Array<{
   key: string;
@@ -109,7 +109,7 @@ const INV_PARTICIPANT_KEYS: [string, string[]][] = [
 // index 0=HOST → always 'attending', index 1..7 → rsvp 패턴
 const RSVP_BY_IDX: RsvpStatus[] = [
   'attending', 'attending', 'attending', 'undecided',
-  'absent',    'attending', 'cancelled', 'attending',
+  'absent',    'attending', 'absent',    'attending',
 ];
 
 type LocationDef = {
@@ -186,6 +186,31 @@ const FEEDBACK_CONTENTS_PHOTO = [
   '최고의 순간이네요',
   '다시 보니까 너무 좋다',
   '이 순간 기억에 남을 것 같아요',
+];
+
+type InquiryType = 'invitation' | 'photo' | 'notification' | 'mission' | 'bug' | 'feature' | 'general';
+type InquiryStatus = 'pending' | 'in_progress' | 'resolved';
+
+const INQUIRY_DEFS: Array<{
+  key: string;
+  userKey: string;
+  inquiryType: InquiryType;
+  status: InquiryStatus;
+  title: string;
+  content: string;
+  answer: string | null;
+  answeredAt: Date | null;
+  adminAnswers: boolean;
+  deletedAt: Date | null;
+}> = [
+  { key: 'inq01', userKey: 'guest01', inquiryType: 'bug',          status: 'pending',     title: '사진 업로드가 안돼요',        content: '여러 장 한 번에 올리면 앱이 멈춥니다.',      answer: null,                                  answeredAt: null,                                 adminAnswers: false, deletedAt: null },
+  { key: 'inq02', userKey: 'guest02', inquiryType: 'feature',      status: 'in_progress', title: '캘린더 연동 기능 추가 요청',  content: '구글 캘린더에 자동 등록되면 좋겠어요.',      answer: '검토 중입니다. 다음 업데이트에 포함될 예정입니다.', answeredAt: new Date('2026-05-05T10:00:00Z'), adminAnswers: true,  deletedAt: null },
+  { key: 'inq03', userKey: 'guest03', inquiryType: 'invitation',   status: 'resolved',    title: '초대장 마감일 변경 가능한가요?', content: '마감된 초대장의 일시를 변경하고 싶습니다.', answer: '마감 해제 후 일시 수정이 가능합니다.',        answeredAt: new Date('2026-05-10T14:30:00Z'), adminAnswers: true,  deletedAt: null },
+  { key: 'inq04', userKey: 'guest04', inquiryType: 'photo',        status: 'resolved',    title: '삭제한 사진을 복구하고 싶어요', content: '실수로 사진을 지웠는데 복구 가능할까요?',   answer: '30일 이내 복구 가능합니다. 고객센터로 연락주세요.', answeredAt: new Date('2026-05-08T09:15:00Z'), adminAnswers: true,  deletedAt: null },
+  { key: 'inq05', userKey: 'guest05', inquiryType: 'general',      status: 'pending',     title: '서비스 이용 문의',              content: '단체 모임 인원 제한이 있나요?',              answer: null,                                  answeredAt: null,                                 adminAnswers: false, deletedAt: null },
+  { key: 'inq06', userKey: 'host1',   inquiryType: 'mission',      status: 'in_progress', title: '미션 배정 오류',                content: '게스트에게 미션이 중복 배정됩니다.',         answer: '확인 중이며 곧 회신 드리겠습니다.',            answeredAt: new Date('2026-05-15T11:00:00Z'), adminAnswers: true,  deletedAt: null },
+  { key: 'inq07', userKey: 'host2',   inquiryType: 'notification', status: 'resolved',    title: '알림이 너무 자주 와요',         content: '리마인드 알림 빈도를 조절하고 싶어요.',      answer: '설정 > 알림에서 개별 토글이 가능합니다.',     answeredAt: new Date('2026-05-12T16:20:00Z'), adminAnswers: true,  deletedAt: null },
+  { key: 'inq08', userKey: 'guest06', inquiryType: 'bug',          status: 'pending',     title: '(삭제된 문의입니다)',            content: '사용자가 직접 삭제한 문의입니다.',           answer: null,                                  answeredAt: null,                                 adminAnswers: false, deletedAt: new Date('2026-05-01T08:00:00Z') },
 ];
 
 // ── Seed builder ─────────────────────────────────────────────────────────────
@@ -310,8 +335,38 @@ function buildSeeds() {
     const invId = invIdByKey[invKey]!;
     const baseUrl = `https://wara.dev/invite/${invId}`;
     return [
-      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao' as const, inviteUrl: baseUrl, status: 'responded' as const },
-      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link'  as const, inviteUrl: baseUrl, status: 'opened'   as const },
+      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao' as const, inviteUrl: baseUrl },
+      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link'  as const, inviteUrl: baseUrl },
+    ];
+  });
+
+  // 9-1. Invitation link events
+  // kakao sendLog: opened + joined (두 번째 참가자가 트래킹됨)
+  // link  sendLog: opened (익명, userId null)
+  const invitationLinkEvents = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
+    const kakaoLogId = id(`sendlog:${invKey}:0`);
+    const linkLogId  = id(`sendlog:${invKey}:1`);
+    const secondUserKey = (userKeys[1] ?? userKeys[0])!;
+    const secondUserId = userIdByKey[secondUserKey]!;
+    return [
+      {
+        id: id(`linkevent:${invKey}:kakao:opened`),
+        logId: kakaoLogId,
+        eventType: 'opened' as const,
+        userId: secondUserId,
+      },
+      {
+        id: id(`linkevent:${invKey}:kakao:joined`),
+        logId: kakaoLogId,
+        eventType: 'joined' as const,
+        userId: secondUserId,
+      },
+      {
+        id: id(`linkevent:${invKey}:link:opened`),
+        logId: linkLogId,
+        eventType: 'opened' as const,
+        userId: null as string | null,
+      },
     ];
   });
 
@@ -358,6 +413,23 @@ function buildSeeds() {
       participantId: partIdByKey[invKey]![def.participantKey]!,
       content: def.content,
     })),
+  );
+
+  // 12-1. Mission assignments (mission 별 1건씩, 일부 completed)
+  const missionAssignments = Object.entries(MISSION_DEFS).flatMap(([invKey, defs]) =>
+    defs.map((def, mi) => {
+      const missionId = id(`mission:${invKey}:${mi}`);
+      const participantId = partIdByKey[invKey]![def.participantKey]!;
+      // 짝수 인덱스 미션은 완료 처리
+      const isCompleted = mi % 2 === 0;
+      return {
+        id: id(`missionassign:${invKey}:${mi}`),
+        missionId,
+        participantId,
+        assignedAt: new Date('2026-04-15T10:00:00Z'),
+        completedAt: isCompleted ? new Date('2026-04-18T15:30:00Z') : null as Date | null,
+      };
+    }),
   );
 
   // 13. Photos (15 per invitation) + photo_likes
@@ -409,7 +481,7 @@ function buildSeeds() {
   const feedbacks: Array<{
     id: string; participantId: string;
     invitationId: string | null; photoId: string | null; parentId: string | null;
-    content: string; likeCount: number; isDeleted: boolean; deletedAt: Date | null;
+    content: string; likeCount: number; deletedAt: Date | null;
   }> = [];
   const feedbackLikes: Array<{ id: string; feedbackId: string; participantId: string }> = [];
 
@@ -430,7 +502,7 @@ function buildSeeds() {
       const likerCount = Math.min(FEEDBACK_LIKE_PATTERN[i]!, others.length);
       const likers = others.slice(0, likerCount);
 
-      feedbacks.push({ id: fbId, participantId: authorId, invitationId: invId, photoId: null, parentId: null, content: FEEDBACK_CONTENTS_INV[i]!, likeCount: likers.length, isDeleted: false, deletedAt: null });
+      feedbacks.push({ id: fbId, participantId: authorId, invitationId: invId, photoId: null, parentId: null, content: FEEDBACK_CONTENTS_INV[i]!, likeCount: likers.length, deletedAt: null });
       likers.forEach((lId, li) => feedbackLikes.push({ id: id(`fblike:${invKey}:inv:${i}:${li}`), feedbackId: fbId, participantId: lId }));
     }
 
@@ -443,7 +515,7 @@ function buildSeeds() {
       const likerCount = Math.min(FEEDBACK_LIKE_PATTERN[i + 4]!, others.length);
       const likers = others.slice(0, likerCount);
 
-      feedbacks.push({ id: fbId, participantId: authorId, invitationId: null, photoId: invPhotos[i]!, parentId: null, content: FEEDBACK_CONTENTS_PHOTO[i]!, likeCount: likers.length, isDeleted: false, deletedAt: null });
+      feedbacks.push({ id: fbId, participantId: authorId, invitationId: null, photoId: invPhotos[i]!, parentId: null, content: FEEDBACK_CONTENTS_PHOTO[i]!, likeCount: likers.length, deletedAt: null });
       likers.forEach((lId, li) => feedbackLikes.push({ id: id(`fblike:${invKey}:photo:${i}:${li}`), feedbackId: fbId, participantId: lId }));
     }
 
@@ -452,7 +524,7 @@ function buildSeeds() {
       id: id(`feedback:${invKey}:reply:0`),
       participantId: pIds[3 % pIds.length]!,
       invitationId: invId, photoId: null, parentId: fbInvIds[0]!,
-      content: '맞아요 완전 동의!', likeCount: 0, isDeleted: false, deletedAt: null,
+      content: '맞아요 완전 동의!', likeCount: 0, deletedAt: null,
     });
 
     // Reply 1 → photo feedback[0]
@@ -465,7 +537,7 @@ function buildSeeds() {
       id: r1Id,
       participantId: r1Author,
       invitationId: null, photoId: invPhotos[0]!, parentId: fbPhotoIds[0]!,
-      content: '저도 그렇게 생각해요', likeCount: r1Likers.length, isDeleted: false, deletedAt: null,
+      content: '저도 그렇게 생각해요', likeCount: r1Likers.length, deletedAt: null,
     });
     r1Likers.forEach((lId, li) => feedbackLikes.push({ id: id(`fblike:${invKey}:reply:1:${li}`), feedbackId: r1Id, participantId: lId }));
 
@@ -474,7 +546,7 @@ function buildSeeds() {
       id: id(`feedback:${invKey}:deleted:0`),
       participantId: pIds[1 % pIds.length]!,
       invitationId: invId, photoId: null, parentId: null,
-      content: '(삭제된 댓글입니다)', likeCount: 0, isDeleted: true, deletedAt: new Date('2026-04-10T12:00:00Z'),
+      content: '(삭제된 댓글입니다)', likeCount: 0, deletedAt: new Date('2026-04-10T12:00:00Z'),
     });
 
     // Extra photo feedback
@@ -482,9 +554,23 @@ function buildSeeds() {
       id: id(`feedback:${invKey}:photo:4`),
       participantId: pIds[0]!,
       invitationId: null, photoId: invPhotos[4]!, parentId: null,
-      content: FEEDBACK_CONTENTS_PHOTO[4]!, likeCount: 0, isDeleted: false, deletedAt: null,
+      content: FEEDBACK_CONTENTS_PHOTO[4]!, likeCount: 0, deletedAt: null,
     });
   }
+
+  // 14-1. Inquiries (8건: type/status 다양 + soft-deleted 1건)
+  const inquiries = INQUIRY_DEFS.map((inq) => ({
+    id: id(`inquiry:${inq.key}`),
+    userId: userIdByKey[inq.userKey]!,
+    inquiryType: inq.inquiryType,
+    status: inq.status,
+    title: inq.title,
+    content: inq.content,
+    answer: inq.answer,
+    answeredAt: inq.answeredAt,
+    adminId: inq.adminAnswers ? userIdByKey['admin']! : null as string | null,
+    deletedAt: inq.deletedAt,
+  }));
 
   // 15. Notifications (3 per invitation)
   const notifications = INV_PARTICIPANT_KEYS.flatMap(([invKey, userKeys]) => {
@@ -541,14 +627,17 @@ function buildSeeds() {
     participants,
     eventLocations,
     sendLogs,
+    invitationLinkEvents,
     blocklists,
     participantLocations,
     missions,
+    missionAssignments,
     photos,
     photoLikes,
     feedbacks,
     feedbackLikes,
     notifications,
+    inquiries,
   };
 }
 

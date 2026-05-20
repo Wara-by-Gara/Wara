@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull, desc, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import * as schema from '../../drizzle/schema';
-import type { NewInquiry } from '../../drizzle/schema';
+import * as schema from '../database/schema';
+import type { NewInquiry } from '../database/schema';
 
 @Injectable()
 export class InquiriesRepository {

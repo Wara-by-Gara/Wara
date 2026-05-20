@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { invitationTemplates } from '../../drizzle/schema';
+import { invitationTemplates } from '../database/schema';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 

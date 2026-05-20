@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { invitationSendLogs } from '../../drizzle/schema';
-import type { InvitationSendLog } from '../../drizzle/schema';
+import { invitationSendLogs } from '../database/schema';
+import type { InvitationSendLog } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 @Injectable()

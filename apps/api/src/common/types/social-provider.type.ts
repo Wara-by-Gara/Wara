@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SOCIAL_PROVIDERS } from '../../../drizzle/schema/enums';
+import { SOCIAL_PROVIDERS } from '../../database/schema/enums';
 
 export const SocialProviderSchema = z.enum(SOCIAL_PROVIDERS);
 export type SocialProvider = z.infer<typeof SocialProviderSchema>;

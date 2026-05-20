@@ -5,7 +5,7 @@ import {
   notifications,
   notificationSettings,
   type NewNotification,
-} from '../../drizzle/schema';
+} from '../database/schema';
 import type { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { invitationBlocklists, users } from '../../drizzle/schema';
+import { invitationBlocklists, users } from '../database/schema';
 
 @Injectable()
 export class BlocklistsRepository {

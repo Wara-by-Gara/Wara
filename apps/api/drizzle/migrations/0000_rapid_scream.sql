@@ -1,14 +1,17 @@
 CREATE TYPE "public"."gender" AS ENUM('female', 'male');--> statement-breakpoint
+CREATE TYPE "public"."inquiry_status" AS ENUM('pending', 'in_progress', 'resolved');--> statement-breakpoint
+CREATE TYPE "public"."inquiry_type" AS ENUM('invitation', 'photo', 'notification', 'mission', 'bug', 'feature', 'general');--> statement-breakpoint
 CREATE TYPE "public"."invitation_status" AS ENUM('active', 'closed');--> statement-breakpoint
+CREATE TYPE "public"."link_event_type" AS ENUM('opened', 'joined');--> statement-breakpoint
 CREATE TYPE "public"."member_role" AS ENUM('HOST', 'GUEST');--> statement-breakpoint
 CREATE TYPE "public"."notification_target_type" AS ENUM('photo', 'feedback', 'invitation', 'mission', 'participantLocations');--> statement-breakpoint
 CREATE TYPE "public"."notification_type" AS ENUM('remind', 'participantLocations', 'eventLocations', 'feedback', 'invitation_date', 'photo');--> statement-breakpoint
-CREATE TYPE "public"."rsvp_status" AS ENUM('attending', 'undecided', 'absent', 'cancelled');--> statement-breakpoint
+CREATE TYPE "public"."rsvp_status" AS ENUM('attending', 'undecided', 'absent');--> statement-breakpoint
 CREATE TYPE "public"."send_channel" AS ENUM('link', 'kakao', 'sms', 'email', 'dm');--> statement-breakpoint
-CREATE TYPE "public"."send_status" AS ENUM('sent', 'opened', 'responded', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."social_provider" AS ENUM('google', 'kakao', 'naver', 'apple');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('member', 'admin');--> statement-breakpoint
 CREATE TABLE "social_accounts" (
+	
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"provider" "social_provider" NOT NULL,
@@ -29,6 +32,8 @@ CREATE TABLE "users" (
 	"birth_year" integer,
 	"gender" "gender",
 	"role" "user_role" DEFAULT 'member' NOT NULL,
+	"promoted_by" text,
+	"promoted_at" timestamp with time zone,
 	"last_login_at" timestamp with time zone,
 	"refresh_token" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -68,13 +73,20 @@ CREATE TABLE "invitation_blocklists" (
 	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "invitation_link_events" (
+	"id" text PRIMARY KEY NOT NULL,
+	"log_id" text NOT NULL,
+	"event_type" "link_event_type" NOT NULL,
+	"user_id" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "invitation_send_logs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"invitation_id" text NOT NULL,
 	"sender_id" text NOT NULL,
 	"channel" "send_channel" NOT NULL,
-	"invite_url" text,
-	"status" "send_status" DEFAULT 'sent' NOT NULL,
+	"invite_url" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -111,6 +123,7 @@ CREATE TABLE "participants" (
 	"invitation_id" text NOT NULL,
 	"member_role" "member_role" NOT NULL,
 	"rsvp_status" "rsvp_status" DEFAULT 'undecided' NOT NULL,
+	"is_hidden" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -142,6 +155,22 @@ CREATE TABLE "participant_locations" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "check_participant_location_coords" CHECK ("participant_locations"."lat" >= -90 AND "participant_locations"."lat" <= 90 AND "participant_locations"."lng" >= -180 AND "participant_locations"."lng" <= 180),
 	CONSTRAINT "check_participant_location_accuracy" CHECK ("participant_locations"."accuracy" >= 0)
+);
+--> statement-breakpoint
+CREATE TABLE "mission_assignments" (
+	"id" text PRIMARY KEY NOT NULL,
+	"mission_id" text NOT NULL,
+	"participant_id" text NOT NULL,
+	"assigned_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"completed_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "mission_templates" (
+	"id" text PRIMARY KEY NOT NULL,
+	"content" text NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "missions" (
@@ -193,7 +222,6 @@ CREATE TABLE "feedbacks" (
 	"parent_id" text,
 	"content" text NOT NULL,
 	"like_count" integer DEFAULT 0 NOT NULL,
-	"is_deleted" boolean DEFAULT false NOT NULL,
 	"deleted_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -230,11 +258,29 @@ CREATE TABLE "notifications" (
 	CONSTRAINT "check_notification_target" CHECK (("notifications"."target_type" IS NOT NULL AND "notifications"."target_id" IS NOT NULL) OR ("notifications"."target_type" IS NULL AND "notifications"."target_id" IS NULL))
 );
 --> statement-breakpoint
+CREATE TABLE "inquiries" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"inquiry_type" "inquiry_type" NOT NULL,
+	"status" "inquiry_status" DEFAULT 'pending' NOT NULL,
+	"title" varchar(200) NOT NULL,
+	"content" text NOT NULL,
+	"answer" text,
+	"answered_at" timestamp with time zone,
+	"admin_id" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
 ALTER TABLE "social_accounts" ADD CONSTRAINT "social_accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_promoted_by_users_id_fk" FOREIGN KEY ("promoted_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_blocked_user_id_users_id_fk" FOREIGN KEY ("blocked_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_blocked_by_user_id_users_id_fk" FOREIGN KEY ("blocked_by_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "invitation_link_events" ADD CONSTRAINT "invitation_link_events_log_id_invitation_send_logs_id_fk" FOREIGN KEY ("log_id") REFERENCES "public"."invitation_send_logs"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "invitation_link_events" ADD CONSTRAINT "invitation_link_events_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_send_logs" ADD CONSTRAINT "invitation_send_logs_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_send_logs" ADD CONSTRAINT "invitation_send_logs_sender_id_users_id_fk" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -244,6 +290,8 @@ ALTER TABLE "participants" ADD CONSTRAINT "participants_invitation_id_invitation
 ALTER TABLE "event_locations" ADD CONSTRAINT "event_locations_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "participant_locations" ADD CONSTRAINT "participant_locations_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "participant_locations" ADD CONSTRAINT "participant_locations_participant_id_participants_id_fk" FOREIGN KEY ("participant_id") REFERENCES "public"."participants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "mission_assignments" ADD CONSTRAINT "mission_assignments_mission_id_missions_id_fk" FOREIGN KEY ("mission_id") REFERENCES "public"."missions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "mission_assignments" ADD CONSTRAINT "mission_assignments_participant_id_participants_id_fk" FOREIGN KEY ("participant_id") REFERENCES "public"."participants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "missions" ADD CONSTRAINT "missions_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "missions" ADD CONSTRAINT "missions_participant_id_participants_id_fk" FOREIGN KEY ("participant_id") REFERENCES "public"."participants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "photo_likes" ADD CONSTRAINT "photo_likes_photo_id_photos_id_fk" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -259,14 +307,21 @@ ALTER TABLE "feedbacks" ADD CONSTRAINT "feedbacks_parent_id_feedbacks_id_fk" FOR
 ALTER TABLE "notification_settings" ADD CONSTRAINT "notification_settings_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_actor_user_id_users_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_admin_id_users_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_social_accounts_user_provider" ON "social_accounts" USING btree ("user_id","provider");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_social_accounts_provider_account" ON "social_accounts" USING btree ("provider","provider_account_id");--> statement-breakpoint
 CREATE INDEX "idx_refresh_tokens_user" ON "refresh_tokens" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_blocklist_active" ON "invitation_blocklists" USING btree ("invitation_id","blocked_user_id") WHERE "invitation_blocklists"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE INDEX "idx_blocklist_invitation" ON "invitation_blocklists" USING btree ("invitation_id");--> statement-breakpoint
+CREATE INDEX "idx_link_events_log_id" ON "invitation_link_events" USING btree ("log_id");--> statement-breakpoint
+CREATE INDEX "idx_link_events_type" ON "invitation_link_events" USING btree ("event_type");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_participants_user_invitation" ON "participants" USING btree ("user_id","invitation_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_participant_locations_participant_invitation" ON "participant_locations" USING btree ("invitation_id","participant_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_mission_assignments_mission_participant" ON "mission_assignments" USING btree ("mission_id","participant_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_photo_likes_photo_participant" ON "photo_likes" USING btree ("photo_id","participant_id");--> statement-breakpoint
 CREATE INDEX "idx_photos_invitation_taken_at" ON "photos" USING btree ("invitation_id","taken_at");--> statement-breakpoint
 CREATE INDEX "idx_photos_deleted_at" ON "photos" USING btree ("deleted_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "uq_feedback_likes_feedback_participant" ON "feedback_likes" USING btree ("feedback_id","participant_id");
+CREATE UNIQUE INDEX "uq_feedback_likes_feedback_participant" ON "feedback_likes" USING btree ("feedback_id","participant_id");--> statement-breakpoint
+CREATE INDEX "idx_inquiries_user_id" ON "inquiries" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "idx_inquiries_deleted_at" ON "inquiries" USING btree ("deleted_at") WHERE "inquiries"."deleted_at" IS NULL;
