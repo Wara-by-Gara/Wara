@@ -86,6 +86,16 @@ describe('PhotosService', () => {
       });
     });
 
+    it('다른 초대장 사진 조회 시도 시 PHOTO_NOT_FOUND(404) — IDOR 방지', async () => {
+      repo.findParticipantId.mockResolvedValue('P001');
+      repo.findPhotoById.mockResolvedValue(makePhoto({ invitationId: 'INV002' }));
+
+      await expect(service.getPhoto('INV001', 'PHOTO001', 'U001')).rejects.toThrow(NotFoundException);
+      await expect(service.getPhoto('INV001', 'PHOTO001', 'U001')).rejects.toMatchObject({
+        message: ErrorCode.PHOTO_NOT_FOUND,
+      });
+    });
+
     it('정상 조회 시 viewCount 증가 및 presigned URL 반환', async () => {
       repo.findParticipantId.mockResolvedValue('P001');
       repo.findPhotoById.mockResolvedValue(makePhoto());
@@ -128,6 +138,15 @@ describe('PhotosService', () => {
   });
 
   describe('toggleLike', () => {
+    it('다른 초대장 사진 좋아요 시도 시 PHOTO_NOT_FOUND(404) — IDOR 방지', async () => {
+      repo.findPhotoById.mockResolvedValue(makePhoto({ invitationId: 'INV002' }));
+
+      await expect(service.toggleLike('PHOTO001', 'INV001', 'U001')).rejects.toThrow(NotFoundException);
+      await expect(service.toggleLike('PHOTO001', 'INV001', 'U001')).rejects.toMatchObject({
+        message: ErrorCode.PHOTO_NOT_FOUND,
+      });
+    });
+
     it('비참가자 좋아요 시도 시 PARTICIPANT_NOT_FOUND(404)', async () => {
       repo.findPhotoById.mockResolvedValue(makePhoto());
       repo.findParticipantId.mockResolvedValue(null);
@@ -167,13 +186,13 @@ describe('PhotosService', () => {
       await expect(service.getDownloadUrls('INV001', 'U999', ['PHOTO001'])).rejects.toThrow(NotFoundException);
     });
 
-    it('정상 다운로드 URL 반환', async () => {
+    it('정상 다운로드 URL 반환 및 invitationId 필터 적용 확인', async () => {
       repo.findParticipantId.mockResolvedValue('P001');
       repo.findPhotosByIds.mockResolvedValue([makePhoto()]);
 
       const result = await service.getDownloadUrls('INV001', 'U001', ['PHOTO001']);
 
-      expect(repo.findPhotosByIds).toHaveBeenCalledWith(['PHOTO001']);
+      expect(repo.findPhotosByIds).toHaveBeenCalledWith(['PHOTO001'], 'INV001');
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toHaveProperty('url');
     });
