@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
@@ -54,6 +55,16 @@ async function bootstrap() {
     throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
   app.use(cookieParser(cookieSecret));
+
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('WARA API')
+      .setVersion('0.7')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api-docs', app, document);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

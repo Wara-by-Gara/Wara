@@ -7,23 +7,34 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate": "pnpm --filter @wara/types generate"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.100.10",
+    "@tanstack/react-query-devtools": "^5.100.10",
+    "@wara/types": "workspace:*",
+    "@wara/ui": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
     "next": "^15.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.1",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@wara/tsconfig": "workspace:*",
-    "@wara/eslint-config": "workspace:*",
-    "typescript": "^5.7.0",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
+    "@wara/eslint-config": "workspace:*",
+    "@wara/tsconfig": "workspace:*",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.3.0"
+    "eslint-config-next": "^15.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
   }
 }

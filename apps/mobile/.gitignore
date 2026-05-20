@@ -33,6 +33,8 @@ yarn-error.*
 # env files (Expo가 모든 .env*를 자동 로드 — 시크릿 유출 방지)
 .env
 .env.*
+# 단 .env.example은 템플릿으로 추적 (실제 값 없음)
+!.env.example
 
 # typescript
 *.tsbuildinfo
