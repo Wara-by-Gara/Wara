@@ -77,6 +77,8 @@ export const invitationBlocklists = pgTable('invitation_blocklists', {
     .on(t.invitationId, t.blockedUserId)
     .where(sql`${t.deletedAt} IS NULL`),
   index('idx_blocklist_invitation').on(t.invitationId),
+  index('idx_blocklist_blocked_user_id').on(t.blockedUserId),
+  index('idx_blocklist_blocked_by_user_id').on(t.blockedByUserId),
 ]);
 
 export const invitationLinkEvents = pgTable('invitation_link_events', {
