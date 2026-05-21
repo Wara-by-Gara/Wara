@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { InvitationDetailHost } from "./InvitationDetailHost";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof InvitationDetailHost> = {
   title: "Pages/09 Invitation Detail - Host/Page",
   component: InvitationDetailHost,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
   args: { onBack: () => {} },
 };
 export default meta;

@@ -15,13 +15,20 @@
     background: #ffffff !important;
   }
 
-  /* Docs 탭: Album/Map 등 긴 MDX 문서가 아래까지 스크롤되도록 */
-  #storybook-docs,
-  #storybook-docs #storybook-docs-wrapper,
+  /* Docs: Canvas iframe 블록이 문서 스크롤을 막지 않도록 */
+  .sb-story,
+  .sb-previewBlock_body,
+  .docs-story,
+  .sbdocs-preview,
   .sbdocs-wrapper,
-  .docs-story {
-    overflow-y: auto !important;
+  #storybook-docs,
+  #storybook-docs #storybook-docs-wrapper {
+    overflow: visible !important;
     height: auto !important;
     max-height: none !important;
+  }
+
+  .sbdocs-preview {
+    margin-bottom: 1.5rem;
   }
 </style>
