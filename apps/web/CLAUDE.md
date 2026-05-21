@@ -16,7 +16,8 @@
 | 타입 | TypeScript | `@wara/tsconfig` 공유 설정, 별칭 `@/*` → `./src/*` |
 | Lint | ESLint | `@wara/eslint-config` + `eslint-config-next` |
 | 전역 UI 상태 | Zustand v5 | `authStore`, `notificationStore` 사용 중 |
-| 스키마 검증 | Zod v4 | 미사용 (HTML5 native validation 사용) |
+| 폼 관리 | react-hook-form | `@hookform/resolvers`와 함께 사용 |
+| 스키마 검증 | Zod v4 | react-hook-form과 함께 폼 유효성 검사에 사용 |
 | 클래스 유틸 | `class-variance-authority`, `clsx`, `tailwind-merge` | `cn()` 유틸로 래핑됨 (`lib/utils.ts`) |
 
 **워크스페이스 패키지:**
@@ -25,7 +26,7 @@
 - `@wara/tsconfig` — TypeScript 설정
 - `@wara/eslint-config` — ESLint 규칙
 
-**미설치 (도입 전 팀 논의 필요):** `react-hook-form`, OpenAPI codegen
+**미설치 (도입 전 팀 논의 필요):** OpenAPI codegen
 
 ---
 
@@ -369,44 +370,34 @@ const { isLoggedIn } = useAuthStore();
 
 **`isFetching` (백그라운드 재요청):** 별도 UI 처리 없이 무시한다. 데이터가 교체될 때 React가 자동으로 리렌더링한다.
 
-### 폼 상태 관리
+### 폼 상태 관리 · 유효성 검사
 
-**단일 객체 `useState`를 사용한다.** 필드별 `useState` 여러 개 선언 금지.
-
-```tsx
-const [form, setForm] = useState({ title: '', content: '' });
-
-// input/textarea/select 공통 핸들러
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-  setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-
-// input에 name 속성 필수
-<input name="title" value={form.title} onChange={handleChange} />
-```
-
-### 폼 유효성 검사
-
-zod 미설치 — 현재 기준: **submit 시점에 `errors` 객체로 검증, 필드별 에러 표시.**
+**`react-hook-form` + `zod`를 사용한다.** 필드별 `useState` 여러 개 선언 금지.
 
 ```tsx
-const [errors, setErrors] = useState<Record<string, string>>({});
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-function validate() {
-  const next: Record<string, string> = {};
-  if (!form.title.trim()) next.title = '제목을 입력해주세요';
-  if (form.content.length < 10) next.content = '내용을 10자 이상 입력해주세요';
-  setErrors(next);
-  return Object.keys(next).length === 0;
+const schema = z.object({
+  title: z.string().min(1, '제목을 입력해주세요'),
+  content: z.string().min(10, '내용을 10자 이상 입력해주세요'),
+});
+type FormValues = z.infer<typeof schema>;
+
+const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  resolver: zodResolver(schema),
+});
+
+function onSubmit(data: FormValues) {
+  mutate(data);
 }
 
-function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  if (!validate()) return;
-  mutate(form);
-}
-
-// 필드 아래에 에러 렌더링
-{errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+// JSX
+<form onSubmit={handleSubmit(onSubmit)}>
+  <input {...register('title')} disabled={isPending} />
+  {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
+</form>
 ```
 
 ### 확인 모달
@@ -540,6 +531,7 @@ router.push('/path')
 
 ## Never
 
+- 새 컴포넌트를 임의로 생성 — `@wara/ui`, `src/components/`, `src/domain/` 안에 이미 존재하는 컴포넌트만 사용할 것
 - raw `fetch` 직접 사용 (`apiClient` 사용)
 - 라우트 문자열 하드코딩 (`ROUTES` 상수 import해서 사용)
 - Query Key 직접 정의 (`QUERY_KEYS` from `constants/queryKeys.ts` 사용)
@@ -555,7 +547,7 @@ router.push('/path')
 - localStorage에 개인정보·인증 관련 데이터 저장 (토큰, 이메일, 사용자 ID 등 — XSS 시 탈취 가능)
 - 서버 컴포넌트에서 `apiClient` 직접 호출 (토큰 없이 요청이 나감)
 - 검증 에러를 한 곳에 뭉쳐서 표시 (필드별로 표시)
-- 폼 필드를 필드별 `useState` 여러 개로 관리 (단일 객체 `useState` 사용)
+- 폼을 `useState`로 직접 관리 (`react-hook-form` + `zod` 사용)
 - `isPending` 중 버튼·폼 필드 `disabled` 누락 (submit 중복 호출 방지)
 - 정적 링크가 아닌 곳에 `<Link>` 사용 (뮤테이션 후 이동은 `router.push()` 사용)
 - React Query 캐시를 zustand/useState에 복사 (캐시 불일치 방지)
@@ -587,7 +579,6 @@ v4는 `tailwind.config.ts` 없이 `src/app/globals.css`의 `@theme inline` 블�
 
 - 이미지는 `next/image`의 `<Image>` 컴포넌트 사용 — `<img>` 태그 직접 사용 금지
 - 외부 이미지 도메인은 `next.config.ts`의 `images.remotePatterns`에 등록 후 사용
-- **SVG 아이콘:** `lucide-react` 사용 (이미 설치됨). 그 외 아이콘 라이브러리 추가 도입 시 팀 논의
 
 **`<Image>` 필수 props:**
 - `alt` 필수 — 순수 장식 이미지는 `alt=""`
