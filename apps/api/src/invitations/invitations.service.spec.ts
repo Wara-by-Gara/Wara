@@ -1,8 +1,10 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { InvitationsService } from './invitations.service';
 import { InvitationsRepository } from './invitations.repository';
 import { TemplatesRepository } from '../templates/templates.repository';
+import { S3_CLIENT } from '../s3/s3.module';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { Invitation } from '../database/schema';
 
@@ -24,9 +26,12 @@ function makeInvitation(overrides: Partial<Invitation> = {}): Invitation {
     id: 'INV001',
     userId: 'U001',
     title: '우리 결혼식',
+    description: '',
+    mainImageKey: 'invitations/main.jpg',
     status: 'active',
     templateId: null,
-    missionEnabled: false,
+    isMissionEnabled: false,
+    eventStartAt: null,
     deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -45,6 +50,8 @@ describe('InvitationsService', () => {
         InvitationsService,
         { provide: InvitationsRepository, useFactory: mockInvitationsRepo },
         { provide: TemplatesRepository, useFactory: mockTemplatesRepo },
+        { provide: S3_CLIENT, useValue: { send: jest.fn() } },
+        { provide: ConfigService, useValue: { getOrThrow: jest.fn().mockReturnValue('test-bucket') } },
       ],
     }).compile();
 
