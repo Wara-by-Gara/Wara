@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Participants } from "./Participants";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof Participants> = {
   title: "Pages/12 Participants/Page",
   component: Participants,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof Participants>;

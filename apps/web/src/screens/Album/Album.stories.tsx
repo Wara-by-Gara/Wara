@@ -1,16 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Album } from "./Album";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof Album> = {
   title: "Pages/14 Album/Page",
   component: Album,
-  parameters: {
-    layout: "fullscreen",
-    viewport: { defaultViewport: "mobile" },
-    docs: {
-      story: { inline: false, iframeHeight: 880 },
-    },
-  },
+  parameters: pageStoryParameters,
   args: { onBack: () => {} },
 };
 export default meta;

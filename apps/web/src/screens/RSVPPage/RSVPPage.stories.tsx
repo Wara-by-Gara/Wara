@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { RSVPPage } from "./RSVPPage";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof RSVPPage> = {
   title: "Pages/11 RSVP/Page",
   component: RSVPPage,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof RSVPPage>;
