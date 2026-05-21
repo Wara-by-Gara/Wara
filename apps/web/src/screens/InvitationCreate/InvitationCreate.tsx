@@ -15,11 +15,12 @@ import { LocationSelector } from "@/components/molecules/LocationSelector";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { TemplateCard } from "@/components/organisms/TemplateCard";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { toast } from "@/components/molecules/Toast";
-import { mockTemplates, mockInvitation } from "@/lib/mockData";
+import { mockTemplates, mockInvitation, mockTemplateSlides } from "@/lib/mockData";
 
 export type CreateStep =
   | "start"
@@ -173,6 +174,13 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
               <Icon name="palette" size="xl" color="inactive" decorative />
               <p className="text-[15px] font-semibold text-text-primary">빈 화면에서 시작</p>
               <p className="text-[13px] text-text-tertiary">처음부터 직접 디자인할 수 있어요</p>
+            </div>
+          ) : step === "templatePreview" ? (
+            <div className="flex flex-col gap-4">
+              <AutoSlide slides={[...mockTemplateSlides]} intervalMs={4000} />
+              <p className="text-center text-[13px] text-text-tertiary">
+                Y2K · 레트로 · 콜라주 스타일을 둘러보세요
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
