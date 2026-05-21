@@ -149,6 +149,7 @@ export class ParticipantsRepository {
     | { outcome: 'created'; participant: Participant }
     | { outcome: 'not_found' }
     | { outcome: 'closed' }
+    | { outcome: 'conflict' }
   > {
     return this.db.transaction(async (tx) => {
       const [inv] = await tx
@@ -160,11 +161,19 @@ export class ParticipantsRepository {
       if (!inv) return { outcome: 'not_found' };
       if (inv.status === 'closed') return { outcome: 'closed' };
 
-      const [participant] = await tx
-        .insert(participants)
-        .values({ ...data, memberRole: 'GUEST' })
-        .returning();
-      return { outcome: 'created', participant: participant! };
+      try {
+        const [participant] = await tx
+          .insert(participants)
+          .values({ ...data, memberRole: 'GUEST' })
+          .returning();
+        return { outcome: 'created', participant: participant! };
+      } catch (err: unknown) {
+        // PostgreSQL unique_violation (23505): 동시 참가 요청 race condition
+        if ((err as { code?: string })?.code === '23505') {
+          return { outcome: 'conflict' };
+        }
+        throw err;
+      }
     });
   }
 

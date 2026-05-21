@@ -55,7 +55,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(@Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto) {

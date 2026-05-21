@@ -76,9 +76,11 @@ export class ParticipantsService {
     }
 
     // status 확인 + insert를 단일 트랜잭션으로 처리해 TOCTOU race condition 방지
+    // conflict: 동시 요청이 findByUserAndInvitation을 동시에 통과한 경우 unique constraint가 잡음
     const result = await this.repository.joinWithTransaction({ userId, invitationId, rsvpStatus: dto.rsvpStatus });
     if (result.outcome === 'not_found') throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
     if (result.outcome === 'closed') throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    if (result.outcome === 'conflict') throw new ConflictException(ErrorCode.PARTICIPANT_ALREADY_EXISTS);
     return result.participant;
   }
 
