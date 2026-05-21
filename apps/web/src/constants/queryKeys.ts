@@ -3,6 +3,7 @@ export const QUERY_KEYS = {
     all: () => ["invitations"] as const,
     detail: (id: string) => ["invitations", id] as const,
     participants: (id: string) => ["invitations", id, "participants"] as const,
+    myParticipant: (id: string) => ["invitations", id, "participants", "me"] as const,
     missions: (id: string) => ["invitations", id, "missions"] as const,
     photos: (id: string) => ["invitations", id, "photos"] as const,
     photoBest9: (id: string) => ["invitations", id, "photos", "best9"] as const,

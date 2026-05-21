@@ -165,6 +165,15 @@ export class ParticipantsRepository {
     return rows[0] ?? null;
   }
 
+  async updateHostMemo(id: string, hostMemo: string | null): Promise<Participant | null> {
+    const rows = await this.db
+      .update(participants)
+      .set({ hostMemo, updatedAt: new Date() })
+      .where(eq(participants.id, id))
+      .returning();
+    return rows[0] ?? null;
+  }
+
   async hardDelete(id: string): Promise<void> {
     await this.db.delete(participants).where(eq(participants.id, id));
   }

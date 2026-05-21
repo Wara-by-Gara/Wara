@@ -1,5 +1,6 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 
+
 export type RsvpStatus = "attending" | "undecided" | "absent";
 export type MemberRole = "HOST" | "GUEST";
 
@@ -10,6 +11,9 @@ export interface Participant {
   memberRole: MemberRole;
   rsvpStatus: RsvpStatus;
   isHidden: boolean;
+  createdAt: string;
+  note: string | null;
+  hostMemo: string | null;
   user?: {
     id: string;
     nickname: string | null;
@@ -53,4 +57,8 @@ export function updateRsvp(invitationId: string, participantId: string, rsvpStat
 
 export function leaveInvitation(invitationId: string, participantId: string, token: string): Promise<void> {
   return apiDelete(`/invitations/${invitationId}/participants/${participantId}`, token);
+}
+
+export function updateHostMemo(invitationId: string, participantId: string, memo: string | null, token: string): Promise<Participant> {
+  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/host-memo`, { memo }, token);
 }

@@ -20,7 +20,7 @@ export class ParticipantsService {
     private readonly blocklistRepository: BlocklistRepository,
   ) {}
 
-  async findAll(invitationId: string, filter?: string, viewerRole?: string) {
+  async findAll(invitationId: string) {
     const all = await this.repository.findAllByInvitation(invitationId);
 
     const summary = {
@@ -30,14 +30,7 @@ export class ParticipantsService {
       absentCount: all.filter((r) => r.participant.rsvpStatus === 'absent').length,
     };
 
-    const isHost = viewerRole === 'HOST';
-    const list = filter
-      ? all.filter((r) => r.participant.rsvpStatus === filter)
-      : isHost
-        ? all
-        : all.filter((r) => r.participant.rsvpStatus !== 'absent');
-
-    return { summary, participants: list };
+    return { summary, participants: all };
   }
 
   async getProfile(invitationId: string, participantId: string) {
@@ -87,10 +80,10 @@ export class ParticipantsService {
     dto: UpdateRsvpDto,
     viewer: Participant,
   ) {
-    if (viewer.id !== participantId) {
+    if (viewer.memberRole !== 'HOST' && viewer.id !== participantId) {
       throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
     }
-    if (viewer.memberRole === 'HOST') {
+    if (viewer.memberRole === 'HOST' && viewer.id === participantId) {
       throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
     }
 
@@ -103,6 +96,14 @@ export class ParticipantsService {
     }
 
     return this.repository.updateRsvpStatus(participantId, dto.rsvpStatus);
+  }
+
+  async updateHostMemo(invitationId: string, participantId: string, memo: string | null) {
+    const target = await this.repository.findById(participantId);
+    if (!target || target.invitationId !== invitationId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    return this.repository.updateHostMemo(participantId, memo);
   }
 
   async updateHidden(isHidden: boolean, viewer: Participant) {
