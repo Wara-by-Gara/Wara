@@ -105,6 +105,7 @@ import {
   NaverLogo,
   AppleLogo,
   AppleLogoWhite,
+  GoogleLogo,
   CrownYellow,
 } from "./custom";
 
@@ -235,6 +236,7 @@ export const ICON_REGISTRY: Record<IconName, ComponentType<LucideProps>> = {
   "naver-logo": NaverLogo,
   "apple-logo": AppleLogo,
   "apple-logo-white": AppleLogoWhite,
+  "google-logo": GoogleLogo,
 };
 
 const BRAND_ICONS: ReadonlySet<IconName> = new Set([
@@ -242,6 +244,7 @@ const BRAND_ICONS: ReadonlySet<IconName> = new Set([
   "naver-logo",
   "apple-logo",
   "apple-logo-white",
+  "google-logo",
   "crown-yellow",
 ]);
 

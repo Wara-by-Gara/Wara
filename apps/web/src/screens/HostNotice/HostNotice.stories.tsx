@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { HostNotice } from "./HostNotice";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof HostNotice> = {
   title: "Pages/21 Host Notice/Page",
   component: HostNotice,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof HostNotice>;

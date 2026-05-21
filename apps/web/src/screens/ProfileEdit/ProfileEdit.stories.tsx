@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ProfileEdit } from "./ProfileEdit";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof ProfileEdit> = {
   title: "Pages/18 Profile Edit/Page",
   component: ProfileEdit,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
   args: { avatarUrl: "https://i.pravatar.cc/120?img=18" },
 };
 export default meta;

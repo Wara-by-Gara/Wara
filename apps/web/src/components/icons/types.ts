@@ -143,7 +143,8 @@ export type IconName =
   | "kakao-logo"
   | "naver-logo"
   | "apple-logo"
-  | "apple-logo-white";
+  | "apple-logo-white"
+  | "google-logo";
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "color"> {
   name: IconName;
