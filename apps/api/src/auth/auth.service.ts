@@ -140,7 +140,7 @@ export class AuthService {
     provider: Provider;
     platform: Platform;
     code: string;
-    state?: string;
+    state: string;
   }) {
     if (!params.state) {
       throw new UnauthorizedException(ErrorCode.AUTH_INVALID_STATE);

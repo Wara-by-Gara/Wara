@@ -17,6 +17,7 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
+import { InquiriesModule } from './inquiries/inquiries.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 
 @Module({
@@ -39,6 +40,7 @@ import { BlocklistModule } from './blocklist/blocklist.module';
     NotificationsModule,
     SendLogsModule,
     S3Module,
+    InquiriesModule,
     BlocklistModule,
   ],
   controllers: [AppController],

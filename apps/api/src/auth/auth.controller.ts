@@ -27,6 +27,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Get(':provider/url')
   getAuthUrl(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
