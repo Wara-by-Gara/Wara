@@ -44,6 +44,12 @@ export class InquiriesController {
     return this.service.findByUserId(user.id);
   }
 
+  @Get('public')
+  @UseGuards(JwtAuthGuard)
+  findAllPublic() {
+    return this.service.findAllPublic();
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findById(

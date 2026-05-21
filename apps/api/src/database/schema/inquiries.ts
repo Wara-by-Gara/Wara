@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp, index, boolean } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
 import { inquiryTypeEnum, inquiryStatusEnum } from './enums';
 import { users } from './users';
@@ -11,6 +11,7 @@ export const inquiries = pgTable('inquiries', {
   status: inquiryStatusEnum('status').notNull().default('pending'),
   title: varchar('title', { length: 200 }).notNull(),
   content: text('content').notNull(),
+  isPublic: boolean('is_public').notNull().default(true),
   answer: text('answer'),
   answeredAt: timestamp('answered_at', { withTimezone: true }),
   adminId: text('admin_id').references(() => users.id, { onDelete: 'set null' }),

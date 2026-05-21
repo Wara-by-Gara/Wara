@@ -8,6 +8,13 @@
       "when": 1779174083288,
       "tag": "0000_rapid_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779260250287,
+      "tag": "0001_nervous_kronos",
+      "breakpoints": true
     }
   ]
 }

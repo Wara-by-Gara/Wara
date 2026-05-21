@@ -10,20 +10,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.100.11",
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@wara/tsconfig": "workspace:*",
-    "@wara/eslint-config": "workspace:*",
-    "typescript": "^5.7.0",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
+    "@wara/eslint-config": "workspace:*",
+    "@wara/tsconfig": "workspace:*",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.3.0"
+    "eslint-config-next": "^15.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
   }
 }

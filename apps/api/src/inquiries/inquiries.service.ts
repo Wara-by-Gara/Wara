@@ -14,6 +14,7 @@ export class InquiriesService {
       inquiryType: dto.inquiryType,
       title: dto.title,
       content: dto.content,
+      isPublic: dto.isPublic,
     });
   }
 
@@ -55,7 +56,11 @@ export class InquiriesService {
     if (inquiry.status !== 'pending') {
       throw new ConflictException('답변 중이거나 완료된 문의는 수정할 수 없습니다.');
     }
-    return this.repository.update(inquiryId, dto);
+    return this.repository.update(inquiryId, {
+      title: dto.title,
+      content: dto.content,
+      isPublic: dto.isPublic,
+    });
   }
 
   async softDelete(userId: string, inquiryId: string) {
@@ -99,5 +104,9 @@ export class InquiriesService {
       });
     }
     return this.repository.answer(inquiryId, adminId, { answer: dto.answer, status: dto.status });
+  }
+
+  async findAllPublic() {
+    return this.repository.findAllPublic();
   }
 }
