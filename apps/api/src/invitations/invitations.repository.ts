@@ -13,14 +13,19 @@ export class InvitationsRepository {
 
   findAllByUserId(userId: string) {
     return this.db.query.invitations.findMany({
-      where: (inv, { eq, isNull, and }) => and(eq(inv.userId, userId), isNull(inv.deletedAt)),
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.userId, userId), isNull(inv.deletedAt)),
       orderBy: (inv, { desc }) => desc(inv.createdAt),
     });
   }
 
   findById(id: string) {
     return this.db.query.invitations.findFirst({
-      where: (inv, { eq, isNull, and }) => and(eq(inv.id, id), isNull(inv.deletedAt)),
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.id, id), isNull(inv.deletedAt)),
+      with: {
+        eventLocation: true,
+      },
     });
   }
 
