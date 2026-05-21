@@ -77,5 +77,5 @@
 | notifications 인덱스 2종 | ✅ | user_id / user_id+is_read |
 | send_logs FK 인덱스 | ✅ | idx_send_logs_invitation_id |
 | countGuests N+1 → COUNT() | ✅ | invitations.repository.ts |
-| photos.viewCount increment 동시성 | ⚠️ | read-then-write 패턴 — 확인 필요 |
-| 트랜잭션 누락 여부 | ⚠️ | 복수 테이블 write 패턴 확인 필요 |
+| photos.viewCount increment 동시성 | ✅ | `sql\`${photos.viewCount}+1\`` — DB 레벨 atomic increment |
+| 트랜잭션 누락 여부 | ✅ | like toggle, createInvitation 모두 db.transaction 적용 확인 |
