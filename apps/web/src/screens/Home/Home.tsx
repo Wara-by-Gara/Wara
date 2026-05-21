@@ -4,6 +4,7 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Chip } from "@/components/primitives/Chip";
+import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { MainBottomNav } from "@/components/layout/MainBottomNav";
@@ -13,7 +14,7 @@ import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
-import { mockInvitation, mockMe, type MockInvitation, type MockUser } from "@/lib/mockData";
+import { mockInvitation, mockMe, mockTemplateSlides, type MockInvitation, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
@@ -46,7 +47,7 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
   if (state === "guestLanding") {
     return (
       <div className="mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background">
-        <TopAppBar title="Wara" />
+        <TopAppBar title="Wara" brandLogo />
         <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <Icon name="pixel-heart" size="xl" color="primary" decorative />
           <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
@@ -69,6 +70,7 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
         className="shrink-0"
         title="WARA"
         largeTitle
+        brandLogo
         rightSlot={
           <>
             <button type="button" aria-label="알림" className="relative inline-flex size-11 items-center justify-center text-text-secondary">
@@ -110,7 +112,16 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
         ) : state === "searchEmpty" ? (
           <EmptyState icon="search" title="검색 결과가 없어요" description="다른 키워드로 검색해보세요" />
         ) : (
-          <div className="flex flex-col gap-5 px-5 py-4 pb-6">
+          <div className="flex flex-col gap-5 pb-6">
+            {state === "loggedInFilled" ? (
+              <AutoSlide
+                slides={mockTemplateSlides}
+                intervalMs={2500}
+                aspectClassName="aspect-[16/9]"
+                rounded={false}
+              />
+            ) : null}
+            <div className="flex flex-col gap-5 px-5 pt-4">
             {state === "todayHighlight" || state === "loggedInFilled" || state === "searchResults" ? (
               <section>
                 <h2 className="mb-2 text-[15px] font-bold text-text-primary">오늘의 모임</h2>
@@ -149,6 +160,7 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
                 ))}
               </div>
             </section>
+            </div>
           </div>
         )}
       </main>
