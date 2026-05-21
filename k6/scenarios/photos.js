@@ -42,10 +42,22 @@ const CONTENT_TYPES = [
   'image/heif',
 ];
 
+// ULID Crockford Base32 charset (0123456789ABCDEFGHJKMNPQRSTVWXYZ)
+const ULID_CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+function makeUlid() {
+  let result = '';
+  for (let i = 0; i < 26; i++) {
+    result += ULID_CHARS[Math.floor(Math.random() * 32)];
+  }
+  return result;
+}
+
 // 가상의 imageKey — 실제 S3 업로드 없이 DB 저장만 검증
 // 실제 테스트 시에는 presigned URL로 S3 업로드 후 받은 key를 사용해야 한다
-function makeImageKey(vuId, iter) {
-  return `photos/test-vu${vuId}-iter${iter}/photo_${Date.now()}.jpg`;
+function makeImageKey() {
+  const ext = ['jpg', 'png', 'webp'][Math.floor(Math.random() * 3)];
+  return `photos/${makeUlid()}/photo_${Date.now()}.${ext}`;
 }
 
 export const options = {
@@ -147,7 +159,7 @@ export default function () {
 
   // --- 3단계: 업로드 완료 후 DB 저장 ---
   // imageKey를 presigned-url 응답에서 받지 못한 경우 폴백 key 사용
-  const uploadImageKey = imageKey || makeImageKey(__VU, __ITER);
+  const uploadImageKey = imageKey || makeImageKey();
 
   // 촬영 시간 — 실제 EXIF에서 추출한 값 모사
   const takenAt = new Date(

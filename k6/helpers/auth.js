@@ -44,7 +44,11 @@ export function getAccessToken() {
 export function getTokenForVu(vuId) {
   const raw = __ENV.TOKENS;
   if (!raw) {
-    // TOKENS가 없으면 단일 토큰 폴백
+    // TOKENS가 없으면 단일 토큰 폴백 — 멀티 VU 시나리오에서는 모든 VU가 같은 토큰을 공유한다
+    console.warn(
+      `[VU ${vuId}] TOKENS 환경변수가 없어 단일 ACCESS_TOKEN으로 폴백합니다. ` +
+      '멀티 사용자 시나리오에서는 TOKENS=\'["tok1","tok2",...]\' 형태로 제공하세요.',
+    );
     return getAccessToken();
   }
   const tokens = JSON.parse(raw);

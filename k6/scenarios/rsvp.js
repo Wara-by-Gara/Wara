@@ -54,7 +54,7 @@ export const options = {
     rsvp_change_duration: ['p(95)<500'],
     // 에러율 1% 미만 (409 Conflict는 정상 비즈니스 케이스로 제외)
     rsvp_errors: ['rate<0.01'],
-    http_req_failed: ['rate<0.05'],
+    http_req_failed: ['rate<0.01'],
   },
 };
 
