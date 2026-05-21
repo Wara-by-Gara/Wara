@@ -1,4 +1,4 @@
-import { apiGet } from "./client";
+import { apiGet, apiPost } from './client';
 
 export interface Photo {
   id: string;
@@ -24,10 +24,29 @@ export function getPhotos(
   limit = 8,
 ): Promise<PhotoListResponse> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (cursor) params.set("cursor", cursor);
-  return apiGet<PhotoListResponse>(`/invitations/${invitationId}/photos?${params}`, token);
+  if (cursor) params.set('cursor', cursor);
+  return apiGet<PhotoListResponse>(
+    `/invitations/${invitationId}/photos?${params}`,
+    token,
+  );
 }
 
-export function getPhoto(invitationId: string, photoId: string, token: string): Promise<Photo> {
+export function getPhoto(
+  invitationId: string,
+  photoId: string,
+  token: string,
+): Promise<Photo> {
   return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`, token);
+}
+
+export function togglePhotoLike(
+  invitationId: string,
+  photoId: string,
+  token: string,
+): Promise<{ liked: boolean }> {
+  return apiPost<{ liked: boolean }>(
+    `/invitations/${invitationId}/photos/${photoId}/likes`,
+    {},
+    token,
+  );
 }
