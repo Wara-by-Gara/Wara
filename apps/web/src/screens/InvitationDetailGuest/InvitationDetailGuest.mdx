@@ -1,0 +1,35 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationDetailGuest.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Invitation Detail (Guest)</Title>
+<Subtitle>Wara에서 가장 중요한 화면 — 게스트 시각의 초대장 상세</Subtitle>
+
+## 목적
+초대받은 게스트가 보는 초대장. 대표 이미지·제목·날짜·장소·RSVP·앨범 미리보기·댓글까지 한 화면에서 흐름 있게 보여줍니다.
+
+## 권한별 분기
+- public / loggedOut / loggedIn — 접근 가능
+- passwordRequired / passwordError — 비공개 초대장 비밀번호 입력
+- expired / deleted / private / permissionDenied — 차단
+
+## 시나리오 (Access)
+<Canvas of={Stories.Public} />
+<Canvas of={Stories.LoggedOut} />
+<Canvas of={Stories.PasswordRequired} />
+<Canvas of={Stories.Expired} />
+
+## 시나리오 (Content)
+<Canvas of={Stories.WithCoverImage} />
+<Canvas of={Stories.WithoutCoverImage} />
+<Canvas of={Stories.LocationUnknown} />
+<Canvas of={Stories.OnlineMeeting} />
+<Canvas of={Stories.ParticipantPreview} />
+
+## 시나리오 (RSVP)
+<Canvas of={Stories.BeforeRsvp} />
+<Canvas of={Stories.RsvpBottomSheetOpen} />
+<Canvas of={Stories.AlreadyResponded} />
+<Canvas of={Stories.ClosedRsvp} />
+<Canvas of={Stories.FullCapacity} />
