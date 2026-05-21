@@ -1,12 +1,11 @@
 'use client';
 
-import { NotificationSettingsForm } from './notification-settings-form';
-
 interface Props {
   onClose: () => void;
+  children: React.ReactNode;
 }
 
-export function NotificationSettingsSheet({ onClose }: Props) {
+export function NotificationSettingsSheet({ onClose, children }: Props) {
   return (
     <>
       <div
@@ -26,7 +25,7 @@ export function NotificationSettingsSheet({ onClose }: Props) {
           </button>
         </div>
         <div className="overflow-y-auto flex-1">
-          <NotificationSettingsForm />
+          {children}
         </div>
       </div>
     </>
