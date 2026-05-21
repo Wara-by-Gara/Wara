@@ -1,0 +1,19 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationEdit.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Invitation Edit</Title>
+<Subtitle>발행된 초대장 수정 — 9 섹션 + 변경 알림</Subtitle>
+
+## 핵심
+- 날짜·장소 변경 시 참석자에게 알림 발송 모달
+- 마감된 초대장은 일부 항목만 수정 가능
+
+<Canvas of={Stories.BasicInfo} />
+<Canvas of={Stories.DateTime} />
+<Canvas of={Stories.DateChangeWarningModal} />
+<Canvas of={Stories.LocationChangeNotifyModal} />
+<Canvas of={Stories.UnsavedChangesModal} />
+<Canvas of={Stories.SaveComplete} />
+<Canvas of={Stories.ClosedInvitationEditLimited} />

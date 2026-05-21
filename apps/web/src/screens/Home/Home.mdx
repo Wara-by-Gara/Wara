@@ -1,0 +1,23 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Home.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Home</Title>
+<Subtitle>오늘의 모임 + 다가오는 초대장 + FAB</Subtitle>
+
+## 권한
+- 비로그인 → guestLanding (시작하기 CTA)
+- 로그인 → loggedInEmpty / loggedInFilled
+
+## 시나리오
+<Canvas of={Stories.GuestLanding} />
+<Canvas of={Stories.LoggedInEmpty} />
+<Canvas of={Stories.LoggedInFilled} />
+<Canvas of={Stories.TodayHighlight} />
+<Canvas of={Stories.LoadingSkeleton} />
+<Canvas of={Stories.NetworkError} />
+<Canvas of={Stories.SearchActivated} />
+<Canvas of={Stories.SearchEmpty} />
+<Canvas of={Stories.FabMenuOpened} />
+<Canvas of={Stories.FilterSheet} />
