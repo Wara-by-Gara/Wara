@@ -95,8 +95,9 @@ describe('AuthService', () => {
       repo.revokeValidRefreshToken.mockResolvedValue(null);
       repo.findRefreshTokenByHash.mockResolvedValue({ id: '1', userId: 'U001' });
 
-      await expect(service.refresh('expired-token')).rejects.toThrow(UnauthorizedException);
-      await expect(service.refresh('expired-token')).rejects.toMatchObject({
+      const promise = service.refresh('expired-token');
+      await expect(promise).rejects.toThrow(UnauthorizedException);
+      await expect(promise).rejects.toMatchObject({
         response: expect.objectContaining({ code: ErrorCode.TOKEN_EXPIRED }),
       });
     });
@@ -105,8 +106,9 @@ describe('AuthService', () => {
       repo.revokeValidRefreshToken.mockResolvedValue(null);
       repo.findRefreshTokenByHash.mockResolvedValue(null);
 
-      await expect(service.refresh('unknown-token')).rejects.toThrow(UnauthorizedException);
-      await expect(service.refresh('unknown-token')).rejects.toMatchObject({
+      const promise = service.refresh('unknown-token');
+      await expect(promise).rejects.toThrow(UnauthorizedException);
+      await expect(promise).rejects.toMatchObject({
         response: expect.objectContaining({ code: ErrorCode.TOKEN_INVALID }),
       });
     });
@@ -138,6 +140,17 @@ describe('AuthService', () => {
 
       await expect(service.refresh('reused-token')).rejects.toThrow(UnauthorizedException);
     });
+
+    it('유효한 token이지만 유저가 탈퇴된 경우 — TOKEN_INVALID(401)', async () => {
+      repo.revokeValidRefreshToken.mockResolvedValue({ userId: 'U001' });
+      repo.findUserById.mockResolvedValue(null);
+
+      const promise = service.refresh('valid-but-deleted-user');
+      await expect(promise).rejects.toThrow(UnauthorizedException);
+      await expect(promise).rejects.toMatchObject({
+        response: expect.objectContaining({ code: ErrorCode.TOKEN_INVALID }),
+      });
+    });
   });
 
   describe('socialLogin', () => {
@@ -149,6 +162,28 @@ describe('AuthService', () => {
       await expect(
         service.socialLogin({ provider: 'kakao' as any, platform: 'WEB' as any, code: 'code123', state: 'tampered-state' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('소셜 계정 upsert 후 유저 조회 실패 — AUTH_USER_NOT_FOUND(401)', async () => {
+      jwtService.verify.mockReturnValue({ nonce: 'abc' });
+      const mockStrategy = {
+        authenticate: jest.fn().mockResolvedValue({ providerAccountId: 'social123', email: 'test@test.com' }),
+      };
+      const factory = service['socialAuthFactory'] as any;
+      factory.getStrategy = jest.fn().mockReturnValue(mockStrategy);
+      repo.upsertSocialAccount.mockResolvedValue({ userId: 'U001' });
+      repo.findUserById.mockResolvedValue(null);
+
+      const promise = service.socialLogin({
+        provider: 'kakao' as any,
+        platform: 'WEB' as any,
+        code: 'valid-code',
+        state: 'valid-state',
+      });
+      await expect(promise).rejects.toThrow(UnauthorizedException);
+      await expect(promise).rejects.toMatchObject({
+        response: expect.objectContaining({ code: ErrorCode.AUTH_USER_NOT_FOUND }),
+      });
     });
 
     it('유효한 state — 소셜 로그인 진행', async () => {

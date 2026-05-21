@@ -66,34 +66,69 @@ describe('PhotosService', () => {
     repo = module.get(PhotosRepository) as unknown as ReturnType<typeof mockRepo>;
   });
 
+  describe('generatePresignedUrl', () => {
+    it('비참가자 접근 시 PARTICIPANT_NOT_FOUND(404)', async () => {
+      repo.findParticipantId.mockResolvedValue(null);
+
+      await expect(
+        service.generatePresignedUrl('INV001', 'U999', { fileName: 'test.jpg', contentType: 'image/jpeg' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('listPhotos', () => {
+    it('비참가자 접근 시 PARTICIPANT_NOT_FOUND(404)', async () => {
+      repo.findParticipantId.mockResolvedValue(null);
+
+      await expect(
+        service.listPhotos('INV001', 'U999', { limit: 20, sort: 'createdAt', order: 'desc' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('uploadPhoto', () => {
+    it('비참가자 접근 시 PARTICIPANT_NOT_FOUND(404)', async () => {
+      repo.findParticipantId.mockResolvedValue(null);
+
+      await expect(
+        service.uploadPhoto('INV001', 'U999', { imageKey: 'photos/ULID/file.jpg' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getBest9', () => {
+    it('비참가자 접근 시 PARTICIPANT_NOT_FOUND(404)', async () => {
+      repo.findParticipantId.mockResolvedValue(null);
+
+      await expect(service.getBest9('INV001', 'U999')).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('getPhoto', () => {
     it('비참가자 접근 시 PARTICIPANT_NOT_FOUND(404)', async () => {
       repo.findParticipantId.mockResolvedValue(null);
 
-      await expect(service.getPhoto('INV001', 'PHOTO001', 'U999')).rejects.toThrow(NotFoundException);
-      await expect(service.getPhoto('INV001', 'PHOTO001', 'U999')).rejects.toMatchObject({
-        message: ErrorCode.PARTICIPANT_NOT_FOUND,
-      });
+      const promise = service.getPhoto('INV001', 'PHOTO001', 'U999');
+      await expect(promise).rejects.toThrow(NotFoundException);
+      await expect(promise).rejects.toMatchObject({ message: ErrorCode.PARTICIPANT_NOT_FOUND });
     });
 
     it('존재하지 않는 사진 조회 시 PHOTO_NOT_FOUND(404)', async () => {
       repo.findParticipantId.mockResolvedValue('P001');
       repo.findPhotoById.mockResolvedValue(null);
 
-      await expect(service.getPhoto('INV001', 'PHOTO999', 'U001')).rejects.toThrow(NotFoundException);
-      await expect(service.getPhoto('INV001', 'PHOTO999', 'U001')).rejects.toMatchObject({
-        message: ErrorCode.PHOTO_NOT_FOUND,
-      });
+      const promise = service.getPhoto('INV001', 'PHOTO999', 'U001');
+      await expect(promise).rejects.toThrow(NotFoundException);
+      await expect(promise).rejects.toMatchObject({ message: ErrorCode.PHOTO_NOT_FOUND });
     });
 
     it('다른 초대장 사진 조회 시도 시 PHOTO_NOT_FOUND(404) — IDOR 방지', async () => {
       repo.findParticipantId.mockResolvedValue('P001');
       repo.findPhotoById.mockResolvedValue(makePhoto({ invitationId: 'INV002' }));
 
-      await expect(service.getPhoto('INV001', 'PHOTO001', 'U001')).rejects.toThrow(NotFoundException);
-      await expect(service.getPhoto('INV001', 'PHOTO001', 'U001')).rejects.toMatchObject({
-        message: ErrorCode.PHOTO_NOT_FOUND,
-      });
+      const promise = service.getPhoto('INV001', 'PHOTO001', 'U001');
+      await expect(promise).rejects.toThrow(NotFoundException);
+      await expect(promise).rejects.toMatchObject({ message: ErrorCode.PHOTO_NOT_FOUND });
     });
 
     it('정상 조회 시 viewCount 증가 및 presigned URL 반환', async () => {
@@ -119,10 +154,9 @@ describe('PhotosService', () => {
       repo.findPhotoById.mockResolvedValue(makePhoto({ participantId: 'P002' }));
       repo.findParticipantId.mockResolvedValue('P001');
 
-      await expect(service.deletePhoto('PHOTO001', 'U001')).rejects.toThrow(ForbiddenException);
-      await expect(service.deletePhoto('PHOTO001', 'U001')).rejects.toMatchObject({
-        message: ErrorCode.PHOTO_FORBIDDEN,
-      });
+      const promise = service.deletePhoto('PHOTO001', 'U001');
+      await expect(promise).rejects.toThrow(ForbiddenException);
+      await expect(promise).rejects.toMatchObject({ message: ErrorCode.PHOTO_FORBIDDEN });
     });
 
     it('본인 사진 삭제 성공', async () => {
@@ -141,10 +175,9 @@ describe('PhotosService', () => {
     it('다른 초대장 사진 좋아요 시도 시 PHOTO_NOT_FOUND(404) — IDOR 방지', async () => {
       repo.findPhotoById.mockResolvedValue(makePhoto({ invitationId: 'INV002' }));
 
-      await expect(service.toggleLike('PHOTO001', 'INV001', 'U001')).rejects.toThrow(NotFoundException);
-      await expect(service.toggleLike('PHOTO001', 'INV001', 'U001')).rejects.toMatchObject({
-        message: ErrorCode.PHOTO_NOT_FOUND,
-      });
+      const promise = service.toggleLike('PHOTO001', 'INV001', 'U001');
+      await expect(promise).rejects.toThrow(NotFoundException);
+      await expect(promise).rejects.toMatchObject({ message: ErrorCode.PHOTO_NOT_FOUND });
     });
 
     it('비참가자 좋아요 시도 시 PARTICIPANT_NOT_FOUND(404)', async () => {
