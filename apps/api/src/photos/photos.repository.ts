@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq,  inArray, isNull,  sql } from 'drizzle-orm';
 import { ListPhotosDto } from './dto/list-photos.dto';
 import {
   NewPhoto,
