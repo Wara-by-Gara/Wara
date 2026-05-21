@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Provider } from './enums/provider.enum';
@@ -54,7 +55,7 @@ describe('AuthController', () => {
     it('OAuth URL로 redirect', () => {
       mockService.getAuthorizationUrl.mockReturnValue({ url: 'https://nid.naver.com/...', state: 'st' });
 
-      controller.oauthRedirect({ provider: Provider.NAVER }, mockRes as any);
+      controller.oauthRedirect({ provider: Provider.NAVER }, mockRes as unknown as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith('https://nid.naver.com/...');
     });
@@ -67,7 +68,7 @@ describe('AuthController', () => {
         '',
         '',
         'access_denied',
-        mockRes as any,
+        mockRes as unknown as Response,
       );
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
@@ -81,7 +82,7 @@ describe('AuthController', () => {
         '',
         'state',
         '',
-        mockRes as any,
+        mockRes as unknown as Response,
       );
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
@@ -101,7 +102,7 @@ describe('AuthController', () => {
         'code123',
         'state123',
         '',
-        mockRes as any,
+        mockRes as unknown as Response,
       );
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
@@ -120,7 +121,7 @@ describe('AuthController', () => {
         'code123',
         'bad-state',
         '',
-        mockRes as any,
+        mockRes as unknown as Response,
       );
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
