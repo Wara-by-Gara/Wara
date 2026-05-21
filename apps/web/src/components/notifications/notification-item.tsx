@@ -21,22 +21,19 @@ export function NotificationItem({ notification, onRead }: Props) {
     <button
       type="button"
       onClick={() => !notification.isRead && onRead(notification.id)}
-      className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors ${
-        notification.isRead ? '' : 'bg-blue-50/50'
+      className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-surface transition-colors ${
+        notification.isRead ? '' : 'bg-primary-soft/40'
       }`}
     >
-      {!notification.isRead && (
-        <span className="mt-1.5 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-      )}
-      {notification.isRead && <span className="mt-1.5 w-2 h-2 flex-shrink-0" />}
+      <span className={`mt-1.5 size-2 rounded-full flex-shrink-0 ${notification.isRead ? '' : 'bg-primary'}`} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-xs font-medium text-gray-500">
+        <div className="mb-0.5">
+          <span className="text-xs font-medium text-text-secondary">
             {TYPE_LABELS[notification.type]}
           </span>
         </div>
-        <p className="text-sm text-gray-800">{notification.content}</p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-sm text-text-primary">{notification.content}</p>
+        <p className="text-xs text-text-tertiary mt-1">
           {new Date(notification.createdAt).toLocaleString('ko-KR', {
             month: 'short',
             day: 'numeric',

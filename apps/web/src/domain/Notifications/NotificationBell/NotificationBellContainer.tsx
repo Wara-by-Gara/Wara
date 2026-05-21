@@ -64,18 +64,16 @@ export function NotificationBellContainer() {
           onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
-      {settingsOpen && (
-        <NotificationSettingsSheet onClose={() => setSettingsOpen(false)}>
-          <NotificationSettingsForm
-            settings={settings}
-            isLoading={isSettingsLoading}
-            isPending={isSettingsPending}
-            onToggle={(key: NotificationSettingKey, value: boolean) =>
-              updateSettings({ [key]: value })
-            }
-          />
-        </NotificationSettingsSheet>
-      )}
+      <NotificationSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)}>
+        <NotificationSettingsForm
+          settings={settings}
+          isLoading={isSettingsLoading}
+          isPending={isSettingsPending}
+          onToggle={(key: NotificationSettingKey, value: boolean) =>
+            updateSettings({ [key]: value })
+          }
+        />
+      </NotificationSettingsSheet>
     </div>
   );
 }
