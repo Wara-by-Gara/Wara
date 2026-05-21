@@ -14,4 +14,14 @@
   #storybook-root {
     background: #ffffff !important;
   }
+
+  /* Docs 탭: Album/Map 등 긴 MDX 문서가 아래까지 스크롤되도록 */
+  #storybook-docs,
+  #storybook-docs #storybook-docs-wrapper,
+  .sbdocs-wrapper,
+  .docs-story {
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
 </style>

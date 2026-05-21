@@ -94,9 +94,16 @@ const preview: Preview = {
       const isPage = context.title?.startsWith("Pages/");
       const disableFrame = context.parameters?.mobileFrame === false;
       const immersive = context.parameters?.mobileFrameImmersive === true;
+      const isDocs = context.viewMode === "docs";
       if (!isPage || disableFrame) return <Story />;
       return (
-        <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div
+          className={
+            isDocs
+              ? "flex w-full items-center justify-center bg-white py-6"
+              : "flex h-screen w-full items-center justify-center bg-white"
+          }
+        >
           <MobileDeviceFrame immersive={immersive}>
             <Story />
           </MobileDeviceFrame>
