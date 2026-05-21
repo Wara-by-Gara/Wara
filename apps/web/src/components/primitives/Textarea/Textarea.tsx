@@ -1,0 +1,66 @@
+"use client";
+
+import { forwardRef, useState } from "react";
+import { cn } from "@/lib/cn";
+
+export interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  /** 에러 메시지 (있으면 빨간 테두리) */
+  error?: string;
+  /** 최대 글자 수 표시 */
+  maxLength?: number;
+  /** 글자 수 카운터 표시 */
+  showCounter?: boolean;
+}
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  function Textarea(
+    {
+      className,
+      error,
+      maxLength,
+      showCounter,
+      defaultValue = "",
+      onChange,
+      disabled,
+      rows = 4,
+      ...props
+    },
+    ref,
+  ) {
+    const [length, setLength] = useState(String(defaultValue).length);
+
+    return (
+      <div className="w-full">
+        <textarea
+          ref={ref}
+          rows={rows}
+          maxLength={maxLength}
+          disabled={disabled}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setLength(e.target.value.length);
+            onChange?.(e);
+          }}
+          defaultValue={defaultValue}
+          className={cn(
+            "w-full rounded-[14px] border bg-surface p-4 text-[16px] text-text-primary placeholder:text-text-tertiary transition-colors resize-y",
+            "outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
+            "disabled:bg-gray-50 disabled:cursor-not-allowed",
+            error
+              ? "border-danger focus:border-danger focus:ring-danger/20"
+              : "border-border-strong",
+            className,
+          )}
+          {...props}
+        />
+        {(showCounter || maxLength) && !error ? (
+          <div className="mt-1.5 text-right text-[13px] text-text-tertiary">
+            {length}
+            {maxLength ? ` / ${maxLength}` : ""}
+          </div>
+        ) : null}
+      </div>
+    );
+  },
+);
