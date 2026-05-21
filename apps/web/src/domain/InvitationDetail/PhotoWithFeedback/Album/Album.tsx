@@ -46,7 +46,6 @@ export default function Album({ photos, invitationId, fetchNextPage, hasNextPage
       {showModal && (
        <AlbumModal
           photos={photos}
-          invitationId={invitationId}
           onClose={() => setShowModal(false)}
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}
