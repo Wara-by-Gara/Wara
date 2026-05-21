@@ -100,7 +100,8 @@ export class ParticipantsController {
   @Post()
   @ApiOperation({ summary: '초대장 참가' })
   @ApiResponse({ status: 201, description: '성공' })
-  @ApiResponse({ status: 404, description: 'INVITATION_NOT_FOUND' })
+  @ApiResponse({ status: 403, description: 'INVITATION_ACCESS_REVOKED' })
+  @ApiResponse({ status: 404, description: 'PARTICIPANT_NOT_FOUND' })
   @ApiResponse({ status: 409, description: 'PARTICIPANT_ALREADY_EXISTS' })
   @ApiResponse({ status: 422, description: 'INVITATION_CLOSED' })
   join(
