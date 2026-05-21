@@ -54,6 +54,7 @@ async function bootstrap() {
       .setDescription('WARA 서비스 REST API 문서')
       .setVersion('1.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
+      .addCookieAuth('refreshToken', { type: 'apiKey', in: 'cookie' }, 'cookie-refresh')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);
