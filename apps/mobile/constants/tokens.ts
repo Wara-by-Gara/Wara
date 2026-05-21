@@ -7,6 +7,11 @@
  * 본 파일은 web `globals.css`의 `@theme {}` 블록과 값 1:1 일치를 유지함.
  * 토큰 추가/변경은 web에서 먼저 결정 후 본 파일 미러링 — 절대 mobile 단독 결정 금지.
  *
+ * 미러링 안 하는 것:
+ * - web `globals.css`의 "Legacy WARA Brand Colors" 섹션(`--color-wara-primary`,
+ *   `--color-wara-bg`, `--color-wara-secondary` 등) — PR #69 이전 디자인의 잔재.
+ *   새 디자인 시스템(pink/sky/yellow semantic)만 SoT로 인정.
+ *
  * 사용:
  *   import { colors, radius, shadow, spacing, typography } from '@/constants/tokens';
  *   const styles = StyleSheet.create({
