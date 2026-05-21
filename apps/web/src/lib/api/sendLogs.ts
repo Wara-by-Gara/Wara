@@ -1,10 +1,8 @@
 import { apiPost } from "./client";
 
-type Channel = "kakao" | "sms" | "link" | "email" | "dm" | "instagram";
-
-interface CreateSendLogPayload {
-  channel: Channel;
-}
+type CreateSendLogPayload = {
+  channel: "kakao" | "link" | "sms" | "email" | "dm" | "instagram";
+};
 
 interface SendLogResponse {
   inviteUrl: string;

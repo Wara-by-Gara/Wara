@@ -13,7 +13,7 @@ export interface CreatedInvitation {
   id: string;
   title: string;
   description: string;
-  mainImageKey: string;
+  mainImageUrl: string;
   eventStartAt: string | null;
 }
 

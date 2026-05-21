@@ -25,13 +25,6 @@ export class SendLogsService {
 
     const inviteUrlWithRef = `${inviteUrl}?ref=${log.id}`;
 
-    if (dto.channel === 'kakao') {
-      return {
-        inviteUrl: inviteUrlWithRef,
-        kakaoMeta: dto.kakaoMeta,
-      };
-    }
-
     if (dto.channel === 'sms') {
       return {
         inviteUrl: inviteUrlWithRef,

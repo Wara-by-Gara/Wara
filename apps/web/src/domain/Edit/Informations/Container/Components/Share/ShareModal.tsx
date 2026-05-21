@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function ShareModal({ invitation, onGoToGatherings }: Props) {
-  const { copyLink, shareViaSms, shareViaInstagram, copied } = useShareInvitation(invitation.id);
+  const { copyLink, shareViaKakao, shareViaSms, shareViaInstagram, copied } = useShareInvitation(invitation.id, invitation.title, invitation.description, invitation.mainImageUrl);
   const displayUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/i/${invitation.id}`;
 
   return (
@@ -40,7 +40,7 @@ export default function ShareModal({ invitation, onGoToGatherings }: Props) {
 
           <ShareLinkBox shareUrl={displayUrl} onCopy={copyLink} copied={copied} />
 
-          <SocialShareButtons onSms={shareViaSms} onInstagram={shareViaInstagram} />
+          <SocialShareButtons onKakao={shareViaKakao} onSms={shareViaSms} onInstagram={shareViaInstagram} />
 
           <button
             onClick={onGoToGatherings}
