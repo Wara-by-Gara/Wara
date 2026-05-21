@@ -24,12 +24,16 @@ export function NotificationBellContainer() {
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.count ?? 0;
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useNotifications();
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
-  const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
+  const { mutate: markAllAsRead, isPending: isMarkingAllRead } =
+    useMarkAllAsRead();
 
-  const { data: settings, isLoading: isSettingsLoading } = useNotificationSettings();
-  const { mutate: updateSettings, isPending: isSettingsPending } = useUpdateNotificationSettings();
+  const { data: settings, isLoading: isSettingsLoading } =
+    useNotificationSettings();
+  const { mutate: updateSettings, isPending: isSettingsPending } =
+    useUpdateNotificationSettings();
 
   useNotificationSocket();
 
@@ -64,7 +68,10 @@ export function NotificationBellContainer() {
           onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
-      <NotificationSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)}>
+      <NotificationSettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      >
         <NotificationSettingsForm
           settings={settings}
           isLoading={isSettingsLoading}

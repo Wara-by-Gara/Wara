@@ -61,7 +61,11 @@ export function NotificationDropdown({
           </div>
         )}
         {notifications.map((n) => (
-          <NotificationItem key={n.id} notification={n} onReadAction={onMarkAsRead} />
+          <NotificationItem
+            key={n.id}
+            notification={n}
+            onReadAction={onMarkAsRead}
+          />
         ))}
         {hasNextPage && (
           <button

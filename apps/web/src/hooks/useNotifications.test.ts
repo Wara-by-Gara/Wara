@@ -29,13 +29,21 @@ function makeWrapper() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   function w({ children }: { children: React.ReactNode }) {
-    return createElement(QueryClientProvider, { client: queryClient }, children);
+    return createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      children,
+    );
   }
   return { wrapper: w, queryClient };
 }
 
 function wrap<T>(data: T) {
-  return { success: true, data, meta: { requestId: 'test', timestamp: '2026-05-20T10:00:00.000Z' } };
+  return {
+    success: true,
+    data,
+    meta: { requestId: 'test', timestamp: '2026-05-20T10:00:00.000Z' },
+  };
 }
 
 describe('useUnreadCount', () => {
@@ -74,7 +82,9 @@ describe('useNotifications', () => {
   it('nextCursor가 있으면 hasNextPage가 true다', async () => {
     server.use(
       http.get(`${BASE}/notifications`, () =>
-        HttpResponse.json(wrap({ items: [], nextCursor: 'next-cursor', hasNext: true })),
+        HttpResponse.json(
+          wrap({ items: [], nextCursor: 'next-cursor', hasNext: true }),
+        ),
       ),
     );
     const { result } = renderHook(() => useNotifications(), { wrapper });
@@ -89,18 +99,26 @@ describe('useMarkAsRead', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useMarkAsRead(), { wrapper: w });
 
-    act(() => { result.current.mutate('n1'); });
+    act(() => {
+      result.current.mutate('n1');
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationKeys.lists() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationKeys.unread() });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: notificationKeys.lists(),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: notificationKeys.unread(),
+    });
   });
 
   it('읽음 처리된 알림을 반환한다', async () => {
     const { wrapper: w } = makeWrapper();
     const { result } = renderHook(() => useMarkAsRead(), { wrapper: w });
 
-    act(() => { result.current.mutate('n1'); });
+    act(() => {
+      result.current.mutate('n1');
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.isRead).toBe(true);
@@ -114,18 +132,26 @@ describe('useMarkAllAsRead', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
     const { result } = renderHook(() => useMarkAllAsRead(), { wrapper: w });
 
-    act(() => { result.current.mutate(); });
+    act(() => {
+      result.current.mutate();
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationKeys.lists() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationKeys.unread() });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: notificationKeys.lists(),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: notificationKeys.unread(),
+    });
   });
 });
 
 describe('useNotificationSettings', () => {
   it('알림 설정을 반환한다', async () => {
     const { wrapper: w } = makeWrapper();
-    const { result } = renderHook(() => useNotificationSettings(), { wrapper: w });
+    const { result } = renderHook(() => useNotificationSettings(), {
+      wrapper: w,
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.id).toBe('s1');
     expect(result.current.data?.isFeedback).toBe(true);
@@ -141,9 +167,13 @@ describe('useUpdateNotificationSettings', () => {
     );
     const { wrapper: w, queryClient } = makeWrapper();
     const setQueryData = vi.spyOn(queryClient, 'setQueryData');
-    const { result } = renderHook(() => useUpdateNotificationSettings(), { wrapper: w });
+    const { result } = renderHook(() => useUpdateNotificationSettings(), {
+      wrapper: w,
+    });
 
-    act(() => { result.current.mutate({ isFeedback: false }); });
+    act(() => {
+      result.current.mutate({ isFeedback: false });
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(setQueryData).toHaveBeenCalledWith(
@@ -159,9 +189,13 @@ describe('useUpdateNotificationSettings', () => {
       ),
     );
     const { wrapper: w } = makeWrapper();
-    const { result } = renderHook(() => useUpdateNotificationSettings(), { wrapper: w });
+    const { result } = renderHook(() => useUpdateNotificationSettings(), {
+      wrapper: w,
+    });
 
-    act(() => { result.current.mutate({ isPhoto: false }); });
+    act(() => {
+      result.current.mutate({ isPhoto: false });
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.isPhoto).toBe(false);
