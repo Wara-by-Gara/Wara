@@ -1,13 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Splash } from "./Splash";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof Splash> = {
   title: "Pages/01 Splash/Page",
   component: Splash,
-  parameters: {
-    layout: "fullscreen",
-    viewport: { defaultViewport: "mobile" },
-  },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof Splash>;

@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { mockInvitation } from "@/lib/mockData";
 import { Home } from "./Home";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof Home> = {
   title: "Pages/05 Home/Page",
   component: Home,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof Home>;

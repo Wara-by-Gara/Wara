@@ -60,7 +60,9 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
           <p className="text-[14px] text-text-secondary">저장 중...</p>
         </main>
-      <MainBottomNav activeKey="create" />
+        <div className="mt-auto shrink-0">
+          <MainBottomNav activeKey="create" />
+        </div>
       </div>
     );
   }
@@ -73,7 +75,9 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <Icon name="badge-check" size="xl" color="success" decorative />
           <p className="text-[18px] font-bold text-text-primary">변경 사항이 저장됐어요</p>
         </main>
-      <MainBottomNav activeKey="create" />
+        <div className="mt-auto shrink-0">
+          <MainBottomNav activeKey="create" />
+        </div>
       </div>
     );
   }
@@ -87,7 +91,9 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
           <Button variant="outline">다시 시도</Button>
         </main>
-      <MainBottomNav activeKey="create" />
+        <div className="mt-auto shrink-0">
+          <MainBottomNav activeKey="create" />
+        </div>
       </div>
     );
   }
@@ -136,29 +142,43 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
   };
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background pb-24">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="초대장 수정" onBack={onBack} />
-      <div className="flex gap-1.5 overflow-x-auto px-5 py-3">
-        {STEPS.map((s) => (
-          <Chip key={s} variant="filter" selected={s === step}>{STEP_LABELS[s]}</Chip>
-        ))}
-      </div>
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">{renderBody()}</main>
+      <nav
+        className="shrink-0 overflow-x-auto overscroll-x-contain px-5 py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="수정 단계"
+      >
+        <div className="flex w-max flex-nowrap gap-1.5">
+          {STEPS.map((s) => (
+            <Chip
+              key={s}
+              variant="filter"
+              selected={s === step}
+              className="shrink-0 whitespace-nowrap"
+            >
+              {STEP_LABELS[s]}
+            </Chip>
+          ))}
+        </div>
+      </nav>
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+        {renderBody()}
+      </main>
 
       {step === "closedInvitationEditLimited" ? (
-        <p className="px-5 pb-4 text-center text-[13px] text-text-tertiary">
+        <p className="shrink-0 px-5 pb-2 text-center text-[13px] text-text-tertiary">
           마감된 초대장은 일부만 수정할 수 있어요
         </p>
       ) : null}
 
-      <div className="relative z-10 shrink-0">
-      <StickyCTA primary={{ label: "저장" }} secondary={{ label: "취소" }} />
+      <div className="relative z-10 mt-auto shrink-0">
+        <StickyCTA primary={{ label: "저장" }} secondary={{ label: "취소" }} />
+        <MainBottomNav activeKey="create" />
       </div>
 
       <ConfirmModal contained open={step === "unsavedChangesModal"} onOpenChange={() => {}} title="저장하지 않고 나갈까요?" description="변경 내용이 사라져요" confirmLabel="나가기" confirmVariant="danger" />
       <ConfirmModal contained open={step === "dateChangeWarningModal"} onOpenChange={() => {}} title="날짜를 바꾸면 참석자에게 알림이 가요" description="변경 사실을 알릴까요?" confirmLabel="변경" />
       <ConfirmModal contained open={step === "locationChangeNotifyModal"} onOpenChange={() => {}} title="장소가 바뀌었어요" description="참석자에게 알림을 보낼까요?" confirmLabel="알림 보내기" />
-      <MainBottomNav activeKey="create" />
     </div>
   );
 };

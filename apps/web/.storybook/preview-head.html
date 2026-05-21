@@ -14,4 +14,21 @@
   #storybook-root {
     background: #ffffff !important;
   }
+
+  /* Docs: Canvas iframe 블록이 문서 스크롤을 막지 않도록 */
+  .sb-story,
+  .sb-previewBlock_body,
+  .docs-story,
+  .sbdocs-preview,
+  .sbdocs-wrapper,
+  #storybook-docs,
+  #storybook-docs #storybook-docs-wrapper {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .sbdocs-preview {
+    margin-bottom: 1.5rem;
+  }
 </style>
