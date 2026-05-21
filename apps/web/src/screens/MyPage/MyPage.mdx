@@ -1,0 +1,15 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./MyPage.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>My Page</Title>
+<Subtitle>프로필 · 통계 · 최근 초대장 · 설정 진입</Subtitle>
+
+## 시나리오
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.NoProfile} />
+<Canvas of={Stories.NoInvitations} />
+<Canvas of={Stories.LoggedOut} />
+<Canvas of={Stories.Loading} />
+<Canvas of={Stories.ErrorState} />
