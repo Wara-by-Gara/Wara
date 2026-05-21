@@ -25,7 +25,9 @@ export function NotificationItem({ notification, onRead }: Props) {
         notification.isRead ? '' : 'bg-primary-soft/40'
       }`}
     >
-      <span className={`mt-1.5 size-2 rounded-full flex-shrink-0 ${notification.isRead ? '' : 'bg-primary'}`} />
+      <span
+        className={`mt-1.5 size-2 rounded-full shrink-0 ${notification.isRead ? '' : 'bg-primary'}`}
+      />
       <div className="flex-1 min-w-0">
         <div className="mb-0.5">
           <span className="text-xs font-medium text-text-secondary">
