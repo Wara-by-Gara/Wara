@@ -32,8 +32,8 @@ export const invitations = pgTable('invitations', {
 }, (t) => [
   // 내 초대장 목록 조회 (findAllByUserId)
   index('idx_invitations_user_id').on(t.userId),
-  // soft delete 필터 조합: user_id + deleted_at IS NULL 커버링 인덱스
-  index('idx_invitations_user_deleted').on(t.userId, t.deletedAt),
+  // 내 활성 초대장 조회: user_id WHERE deleted_at IS NULL — 삭제 row 제외로 인덱스 크기·속도 모두 유리
+  index('idx_invitations_user_deleted').on(t.userId).where(sql`${t.deletedAt} IS NULL`),
 ]);
 
 export const participants = pgTable('participants', {
