@@ -15,7 +15,7 @@ import {
 import { NotificationListSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { mockNotifications, type MockNotification } from "@/lib/mockData";
+import { mockNotifications } from "@/lib/mockData";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
@@ -31,13 +31,37 @@ export type NotificationsState =
   | "pushPermissionGuide"
   | "pushDisabledGuide";
 
+export type NotificationListItem = {
+  id: string;
+  type: string;
+  title: string;
+  description?: string;
+  time: string;
+  unread?: boolean;
+};
+
 export interface NotificationsProps {
   state?: NotificationsState;
-  items?: MockNotification[];
+  items?: NotificationListItem[];
   onBack?: () => void;
+  onMarkAllAsRead?: () => void;
+  onMarkAsRead?: (id: string) => void;
+  onFilterChange?: (filter: 'all' | 'unread') => void;
+  onRetry?: () => void;
+  onSettings?: () => void;
+  isMarkingAllRead?: boolean;
 }
 
-export const Notifications = ({ state = "default", items = mockNotifications, onBack }: NotificationsProps) => {
+export const Notifications = ({
+  state = "default",
+  items = mockNotifications,
+  onBack,
+  onMarkAllAsRead,
+  onMarkAsRead,
+  onFilterChange,
+  onRetry,
+  onSettings,
+}: NotificationsProps) => {
   if (state === "settings") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -85,17 +109,17 @@ export const Notifications = ({ state = "default", items = mockNotifications, on
         title="알림"
         onBack={onBack}
         rightSlot={
-          <button type="button" aria-label="설정" className="inline-flex size-11 items-center justify-center text-text-secondary">
+          <button type="button" aria-label="설정" onClick={onSettings} className="inline-flex size-11 items-center justify-center text-text-secondary">
             <Icon name="settings" size="lg" color="currentColor" decorative />
           </button>
         }
       />
       <div className="flex items-center justify-between gap-2 px-5 py-2">
         <div className="flex gap-1.5">
-          <Chip variant="filter" selected={state !== "unreadOnly"}>전체</Chip>
-          <Chip variant="filter" selected={state === "unreadOnly"}>안 읽음</Chip>
+          <Chip variant="filter" selected={state !== "unreadOnly"} onClick={() => onFilterChange?.('all')}>전체</Chip>
+          <Chip variant="filter" selected={state === "unreadOnly"} onClick={() => onFilterChange?.('unread')}>안 읽음</Chip>
         </div>
-        <button type="button" className="text-[13px] text-primary">모두 읽음</button>
+        <button type="button" onClick={onMarkAllAsRead} className="text-[13px] text-primary">모두 읽음</button>
       </div>
 
       <main
@@ -106,7 +130,7 @@ export const Notifications = ({ state = "default", items = mockNotifications, on
         {state === "loading" ? (
           <div className="px-3 py-2"><NotificationListSkeleton /></div>
         ) : state === "error" ? (
-          <ErrorState title="알림을 불러오지 못했어요" onRetry={() => {}} />
+          <ErrorState title="알림을 불러오지 못했어요" onRetry={onRetry} />
         ) : state === "empty" ? (
           <EmptyState icon="bell" title="새 알림이 없어요" description="초대장 활동이 생기면 알려드릴게요" />
         ) : state === "dateGrouped" ? (
@@ -114,20 +138,20 @@ export const Notifications = ({ state = "default", items = mockNotifications, on
             <h3 className="px-3 py-2 text-[12px] font-medium text-text-tertiary">오늘</h3>
             <div className="flex flex-col gap-3">
               {items.slice(0, 3).map((n) => (
-                <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} unread={n.unread} />
+                <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} unread={n.unread} onClick={() => onMarkAsRead?.(n.id)} />
               ))}
             </div>
             <h3 className="px-3 pt-3 pb-1 text-[12px] font-medium text-text-tertiary">이전</h3>
             <div className="flex flex-col gap-3">
               {items.slice(3).map((n) => (
-                <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} />
+                <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} onClick={() => onMarkAsRead?.(n.id)} />
               ))}
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3 px-2 py-2">
             {(state === "unreadOnly" ? items.filter((n) => n.unread) : items).map((n) => (
-              <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} unread={n.unread} />
+              <NotificationItem key={n.id} type={n.type as NotificationType} title={n.title} description={n.description} time={n.time} unread={n.unread} onClick={() => onMarkAsRead?.(n.id)} />
             ))}
           </div>
         )}

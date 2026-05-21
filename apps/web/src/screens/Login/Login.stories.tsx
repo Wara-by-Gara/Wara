@@ -15,7 +15,7 @@ export const WithInvitationContext: Story = {
 };
 export const KakaoLoading: Story = { args: { state: "kakaoLoading" } };
 export const NaverLoading: Story = { args: { state: "naverLoading" } };
-export const AppleLoading: Story = { args: { state: "appleLoading" } };
+export const GoogleLoading: Story = { args: { state: "googleLoading" } };
 export const SocialFailed: Story = { args: { state: "socialFailed" } };
 export const SocialCancelled: Story = { args: { state: "socialCancelled" } };
 export const AccountBlocked: Story = { args: { state: "accountBlocked" } };
