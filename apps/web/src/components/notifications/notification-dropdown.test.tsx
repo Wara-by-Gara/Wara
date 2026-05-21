@@ -70,19 +70,31 @@ describe('NotificationDropdown', () => {
         hasNextPage={false}
       />,
     );
-    expect(screen.queryByRole('button', { name: '더 보기' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '더 보기' }),
+    ).not.toBeInTheDocument();
   });
 
   it('설정 버튼 클릭 시 onOpenSettings가 호출된다', async () => {
     const onOpenSettings = vi.fn();
-    render(<NotificationDropdown {...defaultProps} onOpenSettings={onOpenSettings} />);
+    render(
+      <NotificationDropdown
+        {...defaultProps}
+        onOpenSettings={onOpenSettings}
+      />,
+    );
     await userEvent.click(screen.getByRole('button', { name: '설정' }));
     expect(onOpenSettings).toHaveBeenCalledOnce();
   });
 
   it('모두 읽음 클릭 시 onMarkAllAsRead가 호출된다', async () => {
     const onMarkAllAsRead = vi.fn();
-    render(<NotificationDropdown {...defaultProps} onMarkAllAsRead={onMarkAllAsRead} />);
+    render(
+      <NotificationDropdown
+        {...defaultProps}
+        onMarkAllAsRead={onMarkAllAsRead}
+      />,
+    );
     await userEvent.click(screen.getByRole('button', { name: '모두 읽음' }));
     expect(onMarkAllAsRead).toHaveBeenCalledOnce();
   });

@@ -13,14 +13,14 @@ const TYPE_LABELS: Record<NotificationType, string> = {
 
 type Props = {
   notification: Notification;
-  onRead: (id: string) => void;
+  onReadAction: (id: string) => void;
 };
 
-export function NotificationItem({ notification, onRead }: Props) {
+export function NotificationItem({ notification, onReadAction }: Props) {
   return (
     <button
       type="button"
-      onClick={() => !notification.isRead && onRead(notification.id)}
+      onClick={() => !notification.isRead && onReadAction(notification.id)}
       className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-surface transition-colors ${
         notification.isRead ? '' : 'bg-primary-soft/40'
       }`}

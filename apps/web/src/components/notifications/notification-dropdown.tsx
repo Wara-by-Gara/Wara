@@ -51,13 +51,17 @@ export function NotificationDropdown({
 
       <div className="max-h-96 overflow-y-auto divide-y divide-border">
         {isLoading && (
-          <div className="py-8 text-center text-sm text-text-tertiary">로딩 중...</div>
+          <div className="py-8 text-center text-sm text-text-tertiary">
+            로딩 중...
+          </div>
         )}
         {!isLoading && notifications.length === 0 && (
-          <div className="py-8 text-center text-sm text-text-tertiary">알림이 없어요</div>
+          <div className="py-8 text-center text-sm text-text-tertiary">
+            알림이 없어요
+          </div>
         )}
         {notifications.map((n) => (
-          <NotificationItem key={n.id} notification={n} onRead={onMarkAsRead} />
+          <NotificationItem key={n.id} notification={n} onReadAction={onMarkAsRead} />
         ))}
         {hasNextPage && (
           <button
