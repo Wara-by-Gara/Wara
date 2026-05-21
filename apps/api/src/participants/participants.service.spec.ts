@@ -22,6 +22,7 @@ const mockRepo = () => ({
 
 const mockBlocklistRepo = () => ({
   add: jest.fn(),
+  isBlocked: jest.fn(),
 });
 
 function makeParticipant(overrides: Partial<Participant> = {}): Participant {
@@ -58,7 +59,20 @@ describe('ParticipantsService', () => {
   });
 
   describe('join', () => {
+    it('차단된 사용자 참가 시도 시 INVITATION_ACCESS_REVOKED(403)', async () => {
+      blocklistRepo.isBlocked.mockResolvedValue(true);
+
+      await expect(
+        service.join('U001', 'INV001', { rsvpStatus: 'attending' }),
+      ).rejects.toThrow(ForbiddenException);
+
+      await expect(
+        service.join('U001', 'INV001', { rsvpStatus: 'attending' }),
+      ).rejects.toMatchObject({ message: ErrorCode.INVITATION_ACCESS_REVOKED });
+    });
+
     it('이미 참가한 초대장에 재참가 시 PARTICIPANT_ALREADY_EXISTS(409)', async () => {
+      blocklistRepo.isBlocked.mockResolvedValue(false);
       repo.findByUserAndInvitation.mockResolvedValue(makeParticipant());
 
       await expect(
@@ -71,6 +85,7 @@ describe('ParticipantsService', () => {
     });
 
     it('마감된 초대장 참가 시 INVITATION_CLOSED(422)', async () => {
+      blocklistRepo.isBlocked.mockResolvedValue(false);
       repo.findByUserAndInvitation.mockResolvedValue(null);
       repo.findInvitationStatus.mockResolvedValue('closed');
 
@@ -84,6 +99,7 @@ describe('ParticipantsService', () => {
     });
 
     it('존재하지 않는 초대장 참가 시 PARTICIPANT_NOT_FOUND(404)', async () => {
+      blocklistRepo.isBlocked.mockResolvedValue(false);
       repo.findByUserAndInvitation.mockResolvedValue(null);
       repo.findInvitationStatus.mockResolvedValue(null);
 
@@ -93,6 +109,7 @@ describe('ParticipantsService', () => {
     });
 
     it('정상 참가 시 participant 생성', async () => {
+      blocklistRepo.isBlocked.mockResolvedValue(false);
       repo.findByUserAndInvitation.mockResolvedValue(null);
       repo.findInvitationStatus.mockResolvedValue('open');
       repo.create.mockResolvedValue(makeParticipant());

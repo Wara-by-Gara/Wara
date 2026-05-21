@@ -57,6 +57,39 @@ describe('AuthService', () => {
     jwtService = module.get(JwtService) as unknown as ReturnType<typeof mockJwtService>;
   });
 
+  describe('verifyState', () => {
+    it('유효한 state — 예외 없음', () => {
+      jwtService.verify.mockReturnValue({ nonce: 'abc' });
+      expect(() => service.verifyState('valid-state')).not.toThrow();
+    });
+
+    it('위조된/만료된 state — AUTH_INVALID_STATE(401)', () => {
+      jwtService.verify.mockImplementation(() => {
+        throw new Error('invalid signature');
+      });
+
+      expect(() => service.verifyState('tampered')).toThrow(UnauthorizedException);
+      expect(() => service.verifyState('tampered')).toThrowError(
+        expect.objectContaining({ response: expect.objectContaining({ code: ErrorCode.AUTH_INVALID_STATE }) }),
+      );
+    });
+  });
+
+  describe('logout', () => {
+    it('유효한 refresh token — 폐기 후 정상 반환', async () => {
+      repo.revokeValidRefreshToken.mockResolvedValue({ userId: 'U001' });
+
+      await expect(service.logout('valid-token')).resolves.toBeUndefined();
+      expect(repo.revokeValidRefreshToken).toHaveBeenCalledTimes(1);
+    });
+
+    it('이미 폐기된/없는 token — idempotent 처리 (예외 없음)', async () => {
+      repo.revokeValidRefreshToken.mockResolvedValue(null);
+
+      await expect(service.logout('already-revoked')).resolves.toBeUndefined();
+    });
+  });
+
   describe('refresh', () => {
     it('만료된 refresh token — TOKEN_EXPIRED(401)', async () => {
       repo.revokeValidRefreshToken.mockResolvedValue(null);
