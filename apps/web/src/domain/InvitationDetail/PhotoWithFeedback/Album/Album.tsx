@@ -6,13 +6,12 @@ import AlbumModal from "../AlbumModal/AlbumModal";
 
 interface Props {
   photos: Photo[];
-  invitationId: string;
   fetchNextPage: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
 }
 
-export default function Album({ photos, invitationId, fetchNextPage, hasNextPage,isFetchingNextPage }: Props) {
+export default function Album({ photos, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
   const [showModal, setShowModal] = useState(false);
   const preview = photos.slice(0, 4);
 
@@ -44,7 +43,7 @@ export default function Album({ photos, invitationId, fetchNextPage, hasNextPage
 
       {/* 앨범 모달 */}
       {showModal && (
-       <AlbumModal
+        <AlbumModal
           photos={photos}
           onClose={() => setShowModal(false)}
           fetchNextPage={fetchNextPage}
