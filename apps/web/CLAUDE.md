@@ -34,42 +34,68 @@
 ```
 src/
   app/
-    layout.tsx                 # 루트 레이아웃 (전역 Provider 주입)
-    page.tsx                   # 루트 페이지 (/)
-    (not-header)/              # 레이아웃 그룹 — 헤더 없음, URL 미포함
+    layout.tsx                     # 루트 레이아웃 (전역 Provider 주입)
+    (not-header)/                  # 레이아웃 그룹 — 헤더 없음, URL 미포함
+      layout.tsx
       login/
         page.tsx
-    (with-header)/             # 레이아웃 그룹 — 헤더 있음, URL 미포함
+    (with-header)/                 # 레이아웃 그룹 — 헤더 있음, URL 미포함
+      layout.tsx
+      page.tsx                     # 홈 페이지 (/)
       admin/
         page.tsx
       edit/
         page.tsx
       invitations/
-        page.tsx
+        page.tsx                   # 초대장 목록
+        [invitationId]/
+          page.tsx                 # 초대장 상세
       profile/
         page.tsx
-  domain/                       # 도메인별 UI 컴포넌트 (PascalCase)
-    [Domain]/
-      [SubComponent]/
-        index.tsx
-  hooks/                        # React Query hooks
-    use[Domain].ts             # e.g. useInvitations.ts, useNotifications.ts
+  domain/                          # 도메인별 UI 컴포넌트 (PascalCase)
+    Auth/
+      Login/                       # 로그인 UI 컴포넌트
+    Home/
+      Container.tsx                # HomeContainer — 홈 페이지 로직 + UI
+    Edit/
+      Container.tsx                # EditContainer
+      Informations/
+      InvitationCard/
+    InvitationDetail/
+      Container.tsx                # InvitationDetailContainer
+      Informations/
+      InvitationCard/
+      PhotoWithFeedback/
+    InvitationList/
+      Container.tsx                # InvitationListContainer
+      InvitationCards/
+    Profile/                       # 프로필 관련 UI 컴포넌트
+  hooks/                           # React Query hooks & 커스텀 훅
+    use[Domain].ts                 # e.g. useInvitations.ts, useParticipants.ts
   lib/
     api/
-      client.ts                # HTTP 클라이언트 (모든 fetch는 여기서)
-      [domain].ts              # 도메인별 API 함수 e.g. invitations.ts, photos.ts
-    utils.ts                   # cn() — clsx + tailwind-merge
-    error-messages.ts          # 에러 코드 → 사용자 친화적 메시지 변환
-    jwt.ts                     # JWT 디코딩 / 쿠키 읽기
+      client.ts                    # HTTP 클라이언트 (모든 fetch는 여기서)
+      auth.ts                      # 인증 API
+      users.ts                     # 사용자 API
+      invitations.ts               # 초대장 API
+      participants.ts              # 참가자 API
+      photos.ts                    # 사진 API
+      feedbacks.ts                 # 피드백 API
+      missions.ts                  # 미션 API
+      notifications.ts             # 알림 API
+      templates.ts                 # 템플릿 API
+      locations.ts                 # 위치 API
+    utils.ts                       # cn() — clsx + tailwind-merge
   constants/
-    queryKeys.ts               # QUERY_KEYS 중앙집중 팩토리
-    routes.ts                  # ROUTES 상수
-  stores/                       # Zustand 전역 상태
-    authStore.ts
-    notificationStore.ts
+    queryKeys.ts                   # QUERY_KEYS 중앙집중 팩토리
+    routes.ts                      # ROUTES 상수
+  stores/                          # Zustand 전역 상태
+    authStore.ts                   # 인증 상태
+    notificationStore.ts           # 알림 카운트 등
   providers/
-    index.tsx                  # QueryClientProvider 래퍼
-  components/                   # 공유 컴포넌트 (최소화, 주로 @wara/ui 사용)
+    index.tsx                      # QueryClientProvider 래퍼
+  components/                      # 공유 컴포넌트 (최소화, 주로 @wara/ui 사용)
+    notifications/                 # 알림 관련 UI 컴포넌트
 ```
 
 **규칙:**
