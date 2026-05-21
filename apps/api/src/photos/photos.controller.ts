@@ -24,7 +24,7 @@ import { CurrentParticipant } from '../common/decorators/current-participant.dec
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { ParticipantGuard } from '../common/guards/participant.guard';
-import type { Participant } from '../../drizzle/schema';
+import type { Participant } from '../database/schema';
 
 @UseGuards(JwtAuthGuard, BlocklistGuard, ParticipantGuard)
 @Controller('invitations')
