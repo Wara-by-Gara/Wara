@@ -7,23 +7,28 @@ import {
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
+  useNotificationSettings,
+  useUpdateNotificationSettings,
   useNotificationSocket,
 } from '@/hooks/useNotifications';
+import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
+import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
+import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 
 export default function NotificationsContainer() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [markAllReadModalOpen, setMarkAllReadModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
-  const { mutate: markAllAsRead, isPending: isMarkingAllRead } =
-    useMarkAllAsRead();
+  const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
+  const { data: settings, isLoading: isSettingsLoading } = useNotificationSettings();
+  const { mutate: updateSettings, isPending: isSettingsPending } = useUpdateNotificationSettings();
 
   useNotificationSocket();
 
   const allItems = data?.pages.flatMap((p) => p.items) ?? [];
-  const items =
-    filter === 'unread' ? allItems.filter((n) => !n.isRead) : allItems;
+  const items = filter === 'unread' ? allItems.filter((n) => !n.isRead) : allItems;
 
   const mappedItems = items.map((n) => ({
     id: n.id,
@@ -44,24 +49,32 @@ export default function NotificationsContainer() {
       ? 'error'
       : allItems.length === 0
         ? 'empty'
-        : markAllReadModalOpen
-          ? 'markAllReadModal'
-          : filter === 'unread'
-            ? 'unreadOnly'
-            : 'default';
+        : filter === 'unread'
+          ? 'unreadOnly'
+          : 'default';
 
   return (
-    <Notifications
-      state={state}
-      items={mappedItems}
-      onMarkAllAsRead={() => {
-        markAllAsRead();
-        setMarkAllReadModalOpen(false);
-      }}
-      onMarkAsRead={(id) => markAsRead(id)}
-      onFilterChange={setFilter}
-      onRetry={() => refetch()}
-      isMarkingAllRead={isMarkingAllRead}
-    />
+    <>
+      <Notifications
+        state={state}
+        items={mappedItems}
+        onMarkAllAsRead={() => markAllAsRead()}
+        onMarkAsRead={(id) => markAsRead(id)}
+        onFilterChange={setFilter}
+        onRetry={() => refetch()}
+        onSettings={() => setSettingsOpen(true)}
+        isMarkingAllRead={isMarkingAllRead}
+      />
+      <NotificationSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)}>
+        <NotificationSettingsForm
+          settings={settings}
+          isLoading={isSettingsLoading}
+          isPending={isSettingsPending}
+          onToggle={(key: NotificationSettingKey, value: boolean) =>
+            updateSettings({ [key]: value })
+          }
+        />
+      </NotificationSettingsSheet>
+    </>
   );
 }

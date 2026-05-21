@@ -18,6 +18,7 @@ import { ErrorState } from '@/components/organisms/ErrorState';
 import { mockNotifications } from '@/lib/mockData';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
+import { useState } from 'react';
 
 export type NotificationsState =
   | 'default'
@@ -61,7 +62,12 @@ export const Notifications = ({
   onFilterChange,
   onRetry,
   onSettings,
+  isMarkingAllRead,
 }: NotificationsProps) => {
+  const [markAllReadModalOpen, setMarkAllReadModalOpen] = useState(
+    state === 'markAllReadModal',
+  );
+
   if (state === 'settings') {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -166,8 +172,9 @@ export const Notifications = ({
         </div>
         <button
           type="button"
-          onClick={onMarkAllAsRead}
-          className="text-[13px] text-primary"
+          onClick={() => setMarkAllReadModalOpen(true)}
+          disabled={isMarkingAllRead}
+          className="text-[13px] text-primary disabled:opacity-40"
         >
           모두 읽음
         </button>
@@ -248,10 +255,14 @@ export const Notifications = ({
 
       <ConfirmModal
         contained
-        open={state === 'markAllReadModal'}
-        onOpenChange={() => {}}
+        open={markAllReadModalOpen}
+        onOpenChange={setMarkAllReadModalOpen}
         title="모든 알림을 읽음 처리할까요?"
         confirmLabel="모두 읽음"
+        onConfirm={() => {
+          onMarkAllAsRead?.();
+          setMarkAllReadModalOpen(false);
+        }}
       />
       <MainBottomNav activeKey="notifications" />
     </div>
