@@ -7,13 +7,12 @@ import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 interface Props {
   photos: Photo[];
   onClose: () => void;
-  invitationId: string;
   fetchNextPage: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
 }
 
-export default function AlbumModal({ photos, onClose, invitationId, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
+export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);

@@ -21,13 +21,6 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose }: Prop
   return (
     <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
       <div className="bg-white w-[340px] md:w-[700px] h-[600px] md:h-[500px] rounded-2xl flex flex-col md:flex-row overflow-hidden relative">
-        {/* 닫기 버튼 */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 text-xl z-10"
-        >
-          ✕
-        </button>
 
         {/* 사진 영역 */}
         <div className="flex-1 flex items-center justify-center relative bg-black">
@@ -60,7 +53,10 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose }: Prop
             <p className="text-sm text-gray-500">
               {new Date(photo.createdAt).toLocaleDateString("ko-KR")}
             </p>
-            <p className="text-sm">❤️ {photo.likeCount}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-sm">❤️ {photo.likeCount}</p>
+              <button onClick={onClose} className="text-gray-500 text-xl">✕</button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <p className="text-sm text-gray-400">댓글 준비 중...</p>
