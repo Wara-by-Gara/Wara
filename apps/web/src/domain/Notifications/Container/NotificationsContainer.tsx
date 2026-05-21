@@ -16,12 +16,14 @@ export default function NotificationsContainer() {
 
   const { data, isLoading, isError, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
-  const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
+  const { mutate: markAllAsRead, isPending: isMarkingAllRead } =
+    useMarkAllAsRead();
 
   useNotificationSocket();
 
   const allItems = data?.pages.flatMap((p) => p.items) ?? [];
-  const items = filter === 'unread' ? allItems.filter((n) => !n.isRead) : allItems;
+  const items =
+    filter === 'unread' ? allItems.filter((n) => !n.isRead) : allItems;
 
   const mappedItems = items.map((n) => ({
     id: n.id,

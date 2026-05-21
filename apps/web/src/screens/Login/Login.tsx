@@ -1,32 +1,35 @@
-"use client";
+'use client';
 
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { ConfirmModal } from "@/components/molecules/Modal";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { useState, useEffect } from "react";
+import { Icon } from '@/components/icons';
+import { Button } from '@/components/primitives/Button';
+import { ConfirmModal } from '@/components/molecules/Modal';
+import {
+  BottomSheet,
+  BottomSheetContent,
+} from '@/components/molecules/BottomSheet';
+import { useState, useEffect } from 'react';
 
 export type LoginState =
-  | "default"
-  | "withInvitationContext"
-  | "kakaoLoading"
-  | "naverLoading"
-  | "googleLoading"
-  | "appleLoading"
-  | "socialFailed"
-  | "socialCancelled"
-  | "accountBlocked"
-  | "withdrawnAccount"
-  | "sessionExpiredModal"
-  | "loginRequiredBottomSheet"
-  | "continueWithoutLogin";
+  | 'default'
+  | 'withInvitationContext'
+  | 'kakaoLoading'
+  | 'naverLoading'
+  | 'googleLoading'
+  | 'appleLoading'
+  | 'socialFailed'
+  | 'socialCancelled'
+  | 'accountBlocked'
+  | 'withdrawnAccount'
+  | 'sessionExpiredModal'
+  | 'loginRequiredBottomSheet'
+  | 'continueWithoutLogin';
 
 export interface LoginProps {
   state?: LoginState;
   /** 초대장 컨텍스트가 있는 경우 표시할 제목 */
   invitationTitle?: string;
   /** 세 번째 소셜 버튼 (기본 Google) */
-  thirdProvider?: "google" | "apple";
+  thirdProvider?: 'google' | 'apple';
   onKakao?: () => void;
   onNaver?: () => void;
   onGoogle?: () => void;
@@ -39,32 +42,32 @@ const SocialButton = ({
   loading,
   onClick,
 }: {
-  provider: "kakao" | "naver" | "google" | "apple";
+  provider: 'kakao' | 'naver' | 'google' | 'apple';
   loading?: boolean;
   onClick?: () => void;
 }) => {
   const label =
-    provider === "kakao"
-      ? "카카오로 시작하기"
-      : provider === "naver"
-        ? "네이버로 시작하기"
-        : provider === "google"
-          ? "Google로 시작하기"
-          : "Apple로 시작하기";
+    provider === 'kakao'
+      ? '카카오로 시작하기'
+      : provider === 'naver'
+        ? '네이버로 시작하기'
+        : provider === 'google'
+          ? 'Google로 시작하기'
+          : 'Apple로 시작하기';
   const bg =
-    provider === "kakao"
-      ? "bg-[#FEE500] text-[#181600]"
-      : provider === "naver"
-        ? "bg-[#03C75A] text-white"
-        : provider === "google"
-          ? "border border-border bg-white text-text-primary"
-          : "bg-black text-white";
+    provider === 'kakao'
+      ? 'bg-[#FEE500] text-[#181600]'
+      : provider === 'naver'
+        ? 'bg-[#03C75A] text-white'
+        : provider === 'google'
+          ? 'border border-border bg-white text-text-primary'
+          : 'bg-black text-white';
   const iconName =
-    provider === "google"
-      ? "google-logo"
-      : provider === "apple"
-        ? "apple-logo-white"
-        : ((provider + "-logo") as "kakao-logo" | "naver-logo");
+    provider === 'google'
+      ? 'google-logo'
+      : provider === 'apple'
+        ? 'apple-logo-white'
+        : ((provider + '-logo') as 'kakao-logo' | 'naver-logo');
   return (
     <button
       type="button"
@@ -75,7 +78,17 @@ const SocialButton = ({
       {loading ? (
         <span className="size-5 animate-spin rounded-full border-2 border-current border-r-transparent" />
       ) : (
-        <Icon name={iconName as "kakao-logo" | "naver-logo" | "google-logo" | "apple-logo-white"} size="md" decorative />
+        <Icon
+          name={
+            iconName as
+              | 'kakao-logo'
+              | 'naver-logo'
+              | 'google-logo'
+              | 'apple-logo-white'
+          }
+          size="md"
+          decorative
+        />
       )}
       <span>{label}</span>
     </button>
@@ -83,9 +96,9 @@ const SocialButton = ({
 };
 
 export const Login = ({
-  state = "default",
+  state = 'default',
   invitationTitle,
-  thirdProvider = "google",
+  thirdProvider = 'google',
   onKakao,
   onNaver,
   onGoogle,
@@ -93,20 +106,26 @@ export const Login = ({
   onContinueWithoutLogin,
 }: LoginProps) => {
   const [mounted, setMounted] = useState(false);
-  const [sessionModalOpen, setSessionModalOpen] = useState(state === "sessionExpiredModal");
-  const [loginSheetOpen, setLoginSheetOpen] = useState(state === "loginRequiredBottomSheet");
+  const [sessionModalOpen, setSessionModalOpen] = useState(
+    state === 'sessionExpiredModal',
+  );
+  const [loginSheetOpen, setLoginSheetOpen] = useState(
+    state === 'loginRequiredBottomSheet',
+  );
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const errorMessage =
-    state === "socialFailed"
-      ? "로그인에 실패했어요. 잠시 후 다시 시도해주세요."
-      : state === "socialCancelled"
-        ? "로그인이 취소되었어요."
-        : state === "accountBlocked"
-          ? "이용이 제한된 계정이에요. 고객센터에 문의해주세요."
-          : state === "withdrawnAccount"
-            ? "탈퇴한 계정이에요. 30일 후 다시 가입할 수 있어요."
+    state === 'socialFailed'
+      ? '로그인에 실패했어요. 잠시 후 다시 시도해주세요.'
+      : state === 'socialCancelled'
+        ? '로그인이 취소되었어요.'
+        : state === 'accountBlocked'
+          ? '이용이 제한된 계정이에요. 고객센터에 문의해주세요.'
+          : state === 'withdrawnAccount'
+            ? '탈퇴한 계정이에요. 30일 후 다시 가입할 수 있어요.'
             : null;
 
   return (
@@ -115,27 +134,39 @@ export const Login = ({
         <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-primary-soft">
           <Icon name="pixel-heart" size="xl" color="primary" decorative />
         </div>
-        <h1 className="text-[24px] font-extrabold text-text-primary">Wara에 오신 걸 환영해요</h1>
-        {state === "withInvitationContext" && invitationTitle ? (
+        <h1 className="text-[24px] font-extrabold text-text-primary">
+          Wara에 오신 걸 환영해요
+        </h1>
+        {state === 'withInvitationContext' && invitationTitle ? (
           <p className="rounded-full bg-pink-50 px-3 py-1 text-[13px] font-medium text-pink-600">
             {invitationTitle}에 초대받았어요
           </p>
         ) : (
-          <p className="text-[14px] text-text-secondary">소셜 계정으로 1초 만에 시작</p>
+          <p className="text-[14px] text-text-secondary">
+            소셜 계정으로 1초 만에 시작
+          </p>
         )}
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <SocialButton provider="kakao" loading={state === "kakaoLoading"} onClick={onKakao} />
-        <SocialButton provider="naver" loading={state === "naverLoading"} onClick={onNaver} />
+        <SocialButton
+          provider="kakao"
+          loading={state === 'kakaoLoading'}
+          onClick={onKakao}
+        />
+        <SocialButton
+          provider="naver"
+          loading={state === 'naverLoading'}
+          onClick={onNaver}
+        />
         <SocialButton
           provider={thirdProvider}
           loading={
-            thirdProvider === "google"
-              ? state === "googleLoading"
-              : state === "appleLoading"
+            thirdProvider === 'google'
+              ? state === 'googleLoading'
+              : state === 'appleLoading'
           }
-          onClick={thirdProvider === "google" ? onGoogle : onApple}
+          onClick={thirdProvider === 'google' ? onGoogle : onApple}
         />
 
         {errorMessage ? (
@@ -147,14 +178,16 @@ export const Login = ({
           </p>
         ) : null}
 
-        {state === "withInvitationContext" || state === "continueWithoutLogin" ? (
+        {state === 'withInvitationContext' ||
+        state === 'continueWithoutLogin' ? (
           <Button variant="text" size="md" onClick={onContinueWithoutLogin}>
             로그인 없이 초대장만 보기
           </Button>
         ) : null}
 
         <p className="mt-2 text-center text-[12px] text-text-tertiary">
-          시작 시 <a className="underline">이용약관</a>·<a className="underline">개인정보처리방침</a>에 동의하게 됩니다
+          시작 시 <a className="underline">이용약관</a>·
+          <a className="underline">개인정보처리방침</a>에 동의하게 됩니다
         </p>
       </section>
 
@@ -169,7 +202,12 @@ export const Login = ({
       />
 
       {mounted && (
-        <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} modal={false} noBodyStyles>
+        <BottomSheet
+          open={loginSheetOpen}
+          onOpenChange={setLoginSheetOpen}
+          modal={false}
+          noBodyStyles
+        >
           <BottomSheetContent
             contained
             title="로그인이 필요해요"
@@ -180,7 +218,7 @@ export const Login = ({
               <SocialButton provider="naver" onClick={onNaver} />
               <SocialButton
                 provider={thirdProvider}
-                onClick={thirdProvider === "google" ? onGoogle : onApple}
+                onClick={thirdProvider === 'google' ? onGoogle : onApple}
               />
             </div>
           </BottomSheetContent>
