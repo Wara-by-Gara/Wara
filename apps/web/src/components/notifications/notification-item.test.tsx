@@ -32,17 +32,21 @@ describe('NotificationItem', () => {
     const { container } = render(
       <NotificationItem notification={base} onRead={vi.fn()} />,
     );
-    expect(container.querySelector('.bg-blue-500')).toBeInTheDocument();
+    expect(container.querySelector('.bg-primary')).toBeInTheDocument();
   });
 
   it('이미 읽은 알림에 파란 점이 없다', () => {
     const { container } = render(
       <NotificationItem
-        notification={{ ...base, isRead: true, readAt: '2026-05-20T11:00:00.000Z' }}
+        notification={{
+          ...base,
+          isRead: true,
+          readAt: '2026-05-20T11:00:00.000Z',
+        }}
         onRead={vi.fn()}
       />,
     );
-    expect(container.querySelector('.bg-blue-500')).not.toBeInTheDocument();
+    expect(container.querySelector('.bg-primary')).not.toBeInTheDocument();
   });
 
   it('읽지 않은 알림 클릭 시 onRead가 id와 함께 호출된다', async () => {
@@ -56,7 +60,11 @@ describe('NotificationItem', () => {
     const onRead = vi.fn();
     render(
       <NotificationItem
-        notification={{ ...base, isRead: true, readAt: '2026-05-20T11:00:00.000Z' }}
+        notification={{
+          ...base,
+          isRead: true,
+          readAt: '2026-05-20T11:00:00.000Z',
+        }}
         onRead={onRead}
       />,
     );
