@@ -14,7 +14,7 @@ import { PhotoViewer } from "@/components/organisms/PhotoViewer";
 import { AlbumGridSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { albumViewerSampleSrc, mockPhotos } from "@/lib/mockData";
+import { albumViewerSampleSrc, mockComments, mockPhotos } from "@/lib/mockData";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
@@ -39,8 +39,8 @@ export type AlbumState =
   | "uploadFailed"
   | "uploadComplete"
   // viewer states
-  | "viewerDefault"
   | "viewerOwnerMenu"
+  | "viewerComments"
   | "viewerDelete"
   | "viewerReport";
 
@@ -78,34 +78,59 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
   const showUploadFab = !ALBUM_HIDE_FAB.includes(state);
 
   if (state.startsWith("viewer")) {
+    const photo = mockPhotos[0]!;
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-black">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar
-          className="shrink-0 text-text-inverse [&_h1]:text-text-inverse"
-          title="사진"
+          className="shrink-0"
+          title="앨범"
           onBack={onBack ?? (() => {})}
-          variant="transparent"
+          rightSlot={
+            <button type="button" aria-label="정렬" className="inline-flex size-11 items-center justify-center text-text-secondary">
+              <Icon name="sort" size="lg" color="currentColor" decorative />
+            </button>
+          }
         />
+        <main className={cn(mobileMainScroll, "px-3 py-3 opacity-40")}>
+          <PhotoGrid columns={3}>
+            {mockPhotos.map((p) => (
+              <PhotoGridItem key={p.id} src={p.src} alt="" />
+            ))}
+          </PhotoGrid>
+        </main>
         <PhotoViewer
+          open
+          contained
           src={albumViewerSampleSrc}
-          authorName={mockPhotos[0]!.authorName}
-          authorAvatarUrl={mockPhotos[0]!.authorAvatarUrl}
-          createdAt={mockPhotos[0]!.createdAt}
-          variant={state === "viewerOwnerMenu" ? "owner" : "default"}
+          authorName={photo.authorName}
+          authorAvatarUrl={photo.authorAvatarUrl}
+          createdAt={photo.createdAt}
+          variant="owner"
+          onOpenChange={(next) => {
+            if (!next) onBack?.();
+          }}
           onClose={onBack}
           onSave={() => {}}
           onShare={() => {}}
           onMore={() => {}}
-          className="flex-1"
+          likeCount={12}
+          liked={state === "viewerOwnerMenu" || state === "viewerComments"}
+          commentCount={mockComments.length}
+          commentsOpen={state === "viewerComments"}
+          comments={mockComments.slice(0, 4)}
+          onLike={() => {}}
+          onCommentSubmit={() => {}}
         />
-        <ConfirmModal contained
+        <ConfirmModal
+          contained
           open={state === "viewerDelete"}
           onOpenChange={() => {}}
           title="이 사진을 삭제할까요?"
           confirmLabel="삭제"
           confirmVariant="danger"
         />
-        <ConfirmModal contained
+        <ConfirmModal
+          contained
           open={state === "viewerReport"}
           onOpenChange={() => {}}
           title="이 사진을 신고할까요?"

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { MapPage } from "./MapPage";
+import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof MapPage> = {
   title: "Pages/13 Map/Page",
   component: MapPage,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: pageStoryParameters,
 };
 export default meta;
 type Story = StoryObj<typeof MapPage>;
