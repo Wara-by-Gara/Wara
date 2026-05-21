@@ -11,6 +11,7 @@ export type LoginState =
   | "withInvitationContext"
   | "kakaoLoading"
   | "naverLoading"
+  | "googleLoading"
   | "appleLoading"
   | "socialFailed"
   | "socialCancelled"
@@ -24,8 +25,11 @@ export interface LoginProps {
   state?: LoginState;
   /** 초대장 컨텍스트가 있는 경우 표시할 제목 */
   invitationTitle?: string;
+  /** 세 번째 소셜 버튼 (기본 Google) */
+  thirdProvider?: "google" | "apple";
   onKakao?: () => void;
   onNaver?: () => void;
+  onGoogle?: () => void;
   onApple?: () => void;
   onContinueWithoutLogin?: () => void;
 }
@@ -35,16 +39,32 @@ const SocialButton = ({
   loading,
   onClick,
 }: {
-  provider: "kakao" | "naver" | "apple";
+  provider: "kakao" | "naver" | "google" | "apple";
   loading?: boolean;
   onClick?: () => void;
 }) => {
-  const label = provider === "kakao" ? "카카오로 시작하기" : provider === "naver" ? "네이버로 시작하기" : "Apple로 시작하기";
-  const bg = provider === "kakao" ? "bg-[#FEE500] text-[#181600]" : provider === "naver" ? "bg-[#03C75A] text-white" : "bg-black text-white";
+  const label =
+    provider === "kakao"
+      ? "카카오로 시작하기"
+      : provider === "naver"
+        ? "네이버로 시작하기"
+        : provider === "google"
+          ? "Google로 시작하기"
+          : "Apple로 시작하기";
+  const bg =
+    provider === "kakao"
+      ? "bg-[#FEE500] text-[#181600]"
+      : provider === "naver"
+        ? "bg-[#03C75A] text-white"
+        : provider === "google"
+          ? "border border-border bg-white text-text-primary"
+          : "bg-black text-white";
   const iconName =
-    provider === "apple"
-      ? "apple-logo-white"
-      : ((provider + "-logo") as "kakao-logo" | "naver-logo");
+    provider === "google"
+      ? "google-logo"
+      : provider === "apple"
+        ? "apple-logo-white"
+        : ((provider + "-logo") as "kakao-logo" | "naver-logo");
   return (
     <button
       type="button"
@@ -65,8 +85,10 @@ const SocialButton = ({
 export const Login = ({
   state = "default",
   invitationTitle,
+  thirdProvider = "google",
   onKakao,
   onNaver,
+  onGoogle,
   onApple,
   onContinueWithoutLogin,
 }: LoginProps) => {
@@ -103,7 +125,15 @@ export const Login = ({
       <section className="flex flex-col gap-2.5">
         <SocialButton provider="kakao" loading={state === "kakaoLoading"} onClick={onKakao} />
         <SocialButton provider="naver" loading={state === "naverLoading"} onClick={onNaver} />
-        <SocialButton provider="apple" loading={state === "appleLoading"} onClick={onApple} />
+        <SocialButton
+          provider={thirdProvider}
+          loading={
+            thirdProvider === "google"
+              ? state === "googleLoading"
+              : state === "appleLoading"
+          }
+          onClick={thirdProvider === "google" ? onGoogle : onApple}
+        />
 
         {errorMessage ? (
           <p
@@ -144,7 +174,10 @@ export const Login = ({
           <div className="flex flex-col gap-2 pt-2">
             <SocialButton provider="kakao" onClick={onKakao} />
             <SocialButton provider="naver" onClick={onNaver} />
-            <SocialButton provider="apple" onClick={onApple} />
+            <SocialButton
+              provider={thirdProvider}
+              onClick={thirdProvider === "google" ? onGoogle : onApple}
+            />
           </div>
         </BottomSheetContent>
       </BottomSheet>
