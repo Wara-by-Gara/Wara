@@ -75,15 +75,11 @@ export class ParticipantsService {
       throw new ConflictException(ErrorCode.PARTICIPANT_ALREADY_EXISTS);
     }
 
-    const status = await this.repository.findInvitationStatus(invitationId);
-    if (!status) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    if (status === 'closed') {
-      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
-    }
-
-    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus });
+    // status 확인 + insert를 단일 트랜잭션으로 처리해 TOCTOU race condition 방지
+    const result = await this.repository.joinWithTransaction({ userId, invitationId, rsvpStatus: dto.rsvpStatus });
+    if (result.outcome === 'not_found') throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    if (result.outcome === 'closed') throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    return result.participant;
   }
 
   async updateRsvp(

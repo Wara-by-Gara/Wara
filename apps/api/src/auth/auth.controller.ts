@@ -55,12 +55,14 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(@Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto) {
     return this.authService.refresh(body.refreshToken);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(@Body(new ZodValidationPipe(RefreshTokenSchema)) body: RefreshTokenDto) {

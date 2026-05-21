@@ -20,7 +20,11 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: false,      // REST API — CSP 헤더 불필요
+    crossOriginEmbedderPolicy: false,  // CORS preflight 방해 방지
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+  }));
 
   app.setGlobalPrefix('api/v1');
 

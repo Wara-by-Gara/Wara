@@ -141,6 +141,33 @@ export class ParticipantsRepository {
     return rows[0]!;
   }
 
+  async joinWithTransaction(data: {
+    userId: string;
+    invitationId: string;
+    rsvpStatus: RsvpStatus;
+  }): Promise<
+    | { outcome: 'created'; participant: Participant }
+    | { outcome: 'not_found' }
+    | { outcome: 'closed' }
+  > {
+    return this.db.transaction(async (tx) => {
+      const [inv] = await tx
+        .select({ status: invitations.status })
+        .from(invitations)
+        .where(eq(invitations.id, data.invitationId))
+        .limit(1);
+
+      if (!inv) return { outcome: 'not_found' };
+      if (inv.status === 'closed') return { outcome: 'closed' };
+
+      const [participant] = await tx
+        .insert(participants)
+        .values({ ...data, memberRole: 'GUEST' })
+        .returning();
+      return { outcome: 'created', participant: participant! };
+    });
+  }
+
   async updateRsvpStatus(
     id: string,
     rsvpStatus: RsvpStatus,

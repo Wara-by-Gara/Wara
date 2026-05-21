@@ -14,7 +14,6 @@ export const users = pgTable('users', {
   promotedBy: text('promoted_by').references((): AnyPgColumn => users.id),
   promotedAt: timestamp('promoted_at', { withTimezone: true }),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
-  refreshToken: text('refresh_token'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
