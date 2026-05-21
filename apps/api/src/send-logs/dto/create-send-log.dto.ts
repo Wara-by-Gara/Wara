@@ -12,7 +12,7 @@ export const CreateSendLogSchema = z.discriminatedUnion('channel', [
     kakaoMeta: KakaoMetaSchema,
   }),
   z.object({
-    channel: z.enum(['link', 'sms', 'email', 'dm']),
+    channel: z.enum(['link', 'sms', 'email', 'dm', 'instagram']),
     kakaoMeta: z.undefined().optional(),
   }),
 ]);
