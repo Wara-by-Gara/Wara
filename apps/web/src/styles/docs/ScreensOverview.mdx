@@ -1,0 +1,114 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Docs/Screens Overview" />
+
+# Wara 페이지 전체 지도
+
+V1.0에 포함된 **21개 페이지** 와 주요 네비게이션 흐름. 각 페이지의 stories와 MDX 명세서는 사이드바 **Pages/** 에서 확인할 수 있습니다.
+
+> 모든 페이지는 모바일 390×844 기준으로 시각화됩니다. Storybook 우측 상단의 viewport 메뉴로 360 / 390 / 430 크기를 전환할 수 있습니다.
+
+---
+
+## 1순위 — 핵심 플로우 (PAGES.md §12.1)
+
+```txt
+[Splash]
+   ↓
+[Onboarding] ──── skip ────┐
+   ↓                        ↓
+[Login] ───── 비로그인 보기 ──→ [InvitationDetail - Guest]
+   ↓                                       │
+[Signup]                                   │
+   ↓                                       ↓
+[Home] ──→ [InvitationList] ──→ [InvitationCreate]    [RSVP]
+   ↓                                                   ↓
+[Notifications]                                       완료
+```
+
+핵심 화면:
+1. **Splash** — 앱 진입, 자동 로그인 시도
+2. **Onboarding** — 5장 인트로 + 권한 안내
+3. **Login** — 소셜 로그인 3종
+4. **Signup** — 약관 → 닉네임 → 프로필
+5. **Home** — 오늘/다가오는/임시저장
+6. **InvitationList** — 목록 + 필터 + 검색
+7. **InvitationCreate** — 8단계 multi-step
+8. **InvitationDetailGuest / Host** — 게스트/호스트 분리
+9. **RSVP** — 응답 제출 + 추가 정보
+10. **Participants** — 참석자 명단 + 호스트 관리
+
+## 2순위 — 모임 후 경험 (PAGES.md §12.2)
+
+```txt
+[Album] ──→ 사진 업로드 ──→ [PhotoViewer (Bottom Sheet)]
+[Comments] ──→ 댓글 등록
+```
+
+화면:
+- **Album** — 사진 그리드 + 업로드 (V1.1+ 예고)
+- **Comments** — 댓글 목록 + 입력바
+
+## 3순위 — 운영/보조 (PAGES.md §12.3)
+
+```txt
+[MyPage] ──→ [ProfileEdit]
+         └→ [AccountSettings] ──→ 탈퇴 플로우
+         └→ [Settings] ──→ 알림/권한/약관
+[MapPage] ──→ 길찾기 BottomSheet
+[HostNotice] ──→ 공지 작성/발송
+```
+
+화면:
+- **MyPage / ProfileEdit / AccountSettings**
+- **Settings** — 알림·권한·테마·약관
+- **MapPage** — 지도 전체보기·길찾기
+- **HostNotice** — 호스트 공지
+
+---
+
+## 상태 매트릭스
+
+모든 페이지는 최소한 다음 상태를 지원합니다 (DESIGN.md §3.5).
+
+| 상태 | 설명 |
+|---|---|
+| Default | 정상 데이터 표시 |
+| Loading | Skeleton 또는 spinner |
+| Empty | EmptyState 컴포넌트 + 감성 문구 + CTA |
+| Error | ErrorState 컴포넌트 + 재시도 |
+| PermissionRequired | 권한 안내 + 설정 이동 |
+| LoginRequired | 로그인 유도 BottomSheet 또는 inline |
+
+---
+
+## 컴포넌트 사용 (페이지 ↔ 조립 컴포넌트)
+
+| 영역 | 핵심 컴포넌트 |
+|---|---|
+| 모든 페이지 | `PageLayout`, `TopAppBar`, `StickyCTA` (Layout) |
+| 초대장 | `InvitationCard`, `InvitationCover`, `InvitationInfoCard`, `TemplateCard` |
+| RSVP / 참석자 | `RSVPButtonGroup`, `ParticipantItem`, `ParticipantSummaryCard` |
+| 앨범 | `PhotoGrid`, `PhotoGridItem`, `PhotoViewer` |
+| 댓글 | `CommentItem`, `CommentInputBar` |
+| 알림 | `NotificationItem` |
+| 폼 | `FormField`, `TextInput`, `Textarea`, `DateTimeSelector`, `LocationSelector` |
+| 오버레이 | `Modal`, `BottomSheet`, `Toast` |
+| 상태 | `EmptyState`, `ErrorState`, `Skeleton` |
+
+---
+
+## Next.js 라우트 매핑
+
+1순위 페이지만 실제 라우트로 연결되어 있습니다.
+
+| 경로 | 페이지 |
+|---|---|
+| `/` | Home |
+| `/onboarding` | Onboarding |
+| `/login` | Login |
+| `/invitations/new` | InvitationCreate |
+| `/invitations/[id]` | InvitationDetailGuest (또는 Host) |
+| `/invitations/[id]/edit` | InvitationEdit |
+| `/invitations/[id]/rsvp` | RSVPPage |
+| `/invitations/[id]/participants` | Participants |
