@@ -73,6 +73,19 @@ export const mockParticipants: MockParticipant[] = [
   { id: "p12", name: "전유진", avatarUrl: "https://i.pravatar.cc/80?img=68", status: "noResponse" },
 ];
 
+/** 로그인 사용자 프로필 사진 (Storybook·마이페이지·홈 헤더) */
+export const mockMeAvatarUrl = "/profile-me.png";
+
+export interface MockCommentReply {
+  id: string;
+  authorName: string;
+  authorAvatarUrl?: string;
+  content: string;
+  createdAt: string;
+  variant?: "default" | "mine" | "host";
+  replyToName?: string;
+}
+
 export interface MockComment {
   id: string;
   authorName: string;
@@ -80,19 +93,83 @@ export interface MockComment {
   content: string;
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
+  replies?: MockCommentReply[];
 }
 
 export const mockComments: MockComment[] = [
-  { id: "c1", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "기대돼요! 곧 봬요 ✨", createdAt: "3분 전" },
+  {
+    id: "c1",
+    authorName: "박미라",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
+    content: "기대돼요! 곧 봬요 ✨",
+    createdAt: "3분 전",
+    replies: [
+      {
+        id: "c1-r1",
+        authorName: "이지은",
+        authorAvatarUrl: "https://i.pravatar.cc/80?img=24",
+        replyToName: "박미라",
+        content: "저도 너무 기대돼요!",
+        createdAt: "2분 전",
+      },
+      {
+        id: "c1-r2",
+        authorName: "김와라",
+        authorAvatarUrl: mockMeAvatarUrl,
+        replyToName: "박미라",
+        content: "곧 봬요 💕",
+        createdAt: "1분 전",
+        variant: "host",
+      },
+    ],
+  },
   { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전" },
   { id: "c3", authorName: "김와라", authorAvatarUrl: "https://i.pravatar.cc/80?img=18", content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host" },
-  { id: "c4", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "주차장 위치 알려주실 수 있나요?", createdAt: "2시간 전" },
+  {
+    id: "c4",
+    authorName: "최하나",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=44",
+    content: "주차장 위치 알려주실 수 있나요?",
+    createdAt: "2시간 전",
+    replies: [
+      {
+        id: "c4-r1",
+        authorName: "김와라",
+        authorAvatarUrl: mockMeAvatarUrl,
+        replyToName: "최하나",
+        content: "건물 지하 1층 무료 주차 가능해요. 만차면 인근 공영주차장 이용해주세요!",
+        createdAt: "1시간 전",
+        variant: "host",
+      },
+      {
+        id: "c4-r2",
+        authorName: "최하나",
+        authorAvatarUrl: "https://i.pravatar.cc/80?img=44",
+        replyToName: "김와라",
+        content: "알려주셔서 감사해요!",
+        createdAt: "45분 전",
+      },
+      {
+        id: "c4-r3",
+        authorName: "박미라",
+        authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
+        replyToName: "김와라",
+        content: "저도 그쪽으로 갈게요~",
+        createdAt: "30분 전",
+      },
+    ],
+  },
   { id: "c5", authorName: "정민지", authorAvatarUrl: "https://i.pravatar.cc/80?img=49", content: "친구 한 명 더 데려가도 될까요?", createdAt: "어제" },
   { id: "c6", authorName: "이상민", authorAvatarUrl: "https://i.pravatar.cc/80?img=51", content: "케이크 너무 기대돼요 🎂", createdAt: "어제" },
   { id: "c7", authorName: "윤지호", authorAvatarUrl: "https://i.pravatar.cc/80?img=53", content: "조금 늦을 수도 있어요!", createdAt: "2일 전" },
   { id: "c8", authorName: "강수연", authorAvatarUrl: "https://i.pravatar.cc/80?img=56", content: "선물 포장 완료했어요", createdAt: "2일 전" },
   { id: "c9", authorName: "오현우", authorAvatarUrl: "https://i.pravatar.cc/80?img=60", content: "사진 많이 찍어주세요 📸", createdAt: "3일 전" },
   { id: "c10", authorName: "한지수", authorAvatarUrl: "https://i.pravatar.cc/80?img=62", content: "너무 설레요, 곧 봐요!", createdAt: "3일 전" },
+  { id: "c11", authorName: "송태형", authorAvatarUrl: "https://i.pravatar.cc/80?img=65", content: "드레스코드 있나요?", createdAt: "4일 전" },
+  { id: "c12", authorName: "전유진", authorAvatarUrl: "https://i.pravatar.cc/80?img=68", content: "케이크 기대 중이에요 🎂", createdAt: "4일 전" },
+  { id: "c13", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "카메라 챙겨갈게요!", createdAt: "5일 전" },
+  { id: "c14", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "같이 가는 친구도 데려도 될까요?", createdAt: "5일 전" },
+  { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전" },
 ];
 
 /** 초대장 상세·앨범 mock용 로컬 사진 (외부 URL 차단 환경 대비) */
@@ -154,6 +231,13 @@ export const mockNotifications: MockNotification[] = [
   { id: "n7", type: "hostNotice", title: "호스트가 공지를 보냈어요", description: "주차장 안내가 있어요", time: "3일 전" },
 ];
 
+/** 템플릿 자동 슬라이드용 로컬 이미지 */
+export const mockTemplateSlides = [
+  { src: "/template-slide-blue.png", alt: "BLUE 콜라주 템플릿" },
+  { src: "/template-slide-retro.png", alt: "레트로 포스터 템플릿" },
+  { src: "/template-slide-y2k.png", alt: "Y2K 콜라주 템플릿" },
+] as const;
+
 export interface MockTemplate {
   id: string;
   name: string;
@@ -163,9 +247,9 @@ export interface MockTemplate {
 }
 
 export const mockTemplates: MockTemplate[] = [
-  { id: "t1", name: "Y2K Pink", category: "Y2K", imageUrl: "https://placehold.co/300x400/FFC4DF/171717?text=Y2K" },
-  { id: "t2", name: "Pastel Cloud", category: "Minimal", imageUrl: "https://placehold.co/300x400/DDF1FF/171717?text=Cloud" },
-  { id: "t3", name: "Retro Ribbon", category: "Y2K", imageUrl: "https://placehold.co/300x400/FFE47A/171717?text=Ribbon" },
+  { id: "t1", name: "BLUE", category: "Y2K", imageUrl: mockTemplateSlides[0].src },
+  { id: "t2", name: "Retro Pop", category: "Y2K", imageUrl: mockTemplateSlides[1].src },
+  { id: "t3", name: "feels like Y2K", category: "Y2K", imageUrl: mockTemplateSlides[2].src },
   { id: "t4", name: "Garden Party", category: "Floral", imageUrl: "https://placehold.co/300x400/D3FBEA/171717?text=Garden" },
   { id: "t5", name: "Birthday Pop", category: "Birthday", imageUrl: "https://placehold.co/300x400/FF9ACA/171717?text=Birthday" },
   { id: "t6", name: "Premium Gold", category: "Premium", imageUrl: "https://placehold.co/300x400/FAB005/171717?text=Gold", premium: true },
@@ -184,7 +268,7 @@ export interface MockUser {
 export const mockMe: MockUser = {
   id: "u_me",
   nickname: "김와라",
-  avatarUrl: "https://i.pravatar.cc/80?img=18",
+  avatarUrl: mockMeAvatarUrl,
   socialProvider: "kakao",
   stats: { created: 4, joined: 12 },
 };
