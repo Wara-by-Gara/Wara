@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Photo, getPhoto } from '@/lib/api/photos';
+import { Photo, getPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 
@@ -9,13 +9,12 @@ interface Props {
   photos: Photo[];
   initialIndex: number;
   onClose: () => void;
+  likedMap: Map<string, boolean>;
+  likeCountMap: Map<string, number>;
+  onLikeChange: (photoId: string, liked: boolean, likeCount: number) => void;
 }
 
-export default function PhotoDetailModal({
-  photos,
-  initialIndex,
-  onClose,
-}: Props) {
+export default function PhotoDetailModal({ photos, initialIndex, onClose, likedMap, likeCountMap, onLikeChange }: Props) {
   const [index, setIndex] = useState(initialIndex);
   const [token, setToken] = useState('');
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -26,9 +25,9 @@ export default function PhotoDetailModal({
   }, []);
 
   useEffect(() => {
-    if (!photo) return;
+    if (!photo || !token) return;
     getPhoto(photo.invitationId, photo.id, token);
-  }, [photo?.id, photo?.invitationId, token]);
+  }, [photo?.id, token]);
 
   const { data: feedbackData, submitComment } = usePhotoFeedback(
     photo?.invitationId ?? '',
@@ -37,6 +36,15 @@ export default function PhotoDetailModal({
   );
 
   if (!photo) return null;
+
+  const currentLikeCount = likeCountMap.get(photo.id) ?? photo.likeCount;
+  const currentLiked = likedMap.get(photo.id) ?? false;
+
+  const handleLike = async () => {
+    const result = await togglePhotoLike(photo.invitationId, photo.id, token);
+    const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
+    onLikeChange(photo.id, result.liked, newCount);
+  };
 
   const comments = (feedbackData?.rows ?? []).map((f) => ({
     id: f.id,
@@ -48,18 +56,18 @@ export default function PhotoDetailModal({
   return (
     <PhotoViewer
       open={true}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       onClose={onClose}
       src={photo.url}
-      likeCount={photo.likeCount}
+      likeCount={currentLikeCount}
       commentCount={feedbackData?.rows.length ?? 0}
       createdAt={new Date(photo.createdAt).toLocaleDateString('ko-KR')}
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
       onCommentSubmit={submitComment}
+      liked={currentLiked}
+      onLike={handleLike}
       className="[&_.bg-gray-100]:bg-white/20"
       rightActions={
         <div className="flex items-center gap-1">
