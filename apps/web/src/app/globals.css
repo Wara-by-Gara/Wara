@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "DungGeunMo";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.3/NeoDunggeunmo.woff")
+    format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ============================================================
    Wara Design Tokens (sourced from src/styles/DESIGN.md)
    ============================================================ */
@@ -123,7 +132,8 @@
   /* ---------- Font ---------- */
   --font-sans: var(--font-be-vietnam-pro), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-serif: var(--font-noto-serif);
-  --font-display: "DungGeunMo", "Galmuri", "Pretendard", sans-serif;
+  --font-family-pixel: "DungGeunMo", "Galmuri", "Pretendard", sans-serif;
+  --font-display: var(--font-family-pixel);
 
   /* ---------- Legacy WARA Brand Colors (develop) ---------- */
   --color-foreground: #171717;
@@ -143,6 +153,10 @@ body {
   background: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+}
+
+@utility font-pixel {
+  font-family: var(--font-family-pixel);
 }
 
 /* Storybook MobileDeviceFrame: min-h-screen → frame height */
