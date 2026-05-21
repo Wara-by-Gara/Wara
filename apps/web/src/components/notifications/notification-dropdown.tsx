@@ -27,34 +27,34 @@ export function NotificationDropdown({
   onOpenSettings,
 }: Props) {
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <span className="text-sm font-semibold">알림</span>
+    <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-2xl shadow-lg border border-border overflow-hidden z-50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <span className="text-sm font-semibold text-text-primary">알림</span>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onMarkAllAsRead}
             disabled={isMarkingAllRead}
-            className="text-xs text-blue-500 hover:text-blue-600 disabled:opacity-50"
+            className="text-xs text-primary hover:opacity-70 disabled:opacity-40 transition-opacity"
           >
             모두 읽음
           </button>
           <button
             type="button"
             onClick={onOpenSettings}
-            className="text-xs text-gray-400 hover:text-gray-600"
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
             설정
           </button>
         </div>
       </div>
 
-      <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+      <div className="max-h-96 overflow-y-auto divide-y divide-border">
         {isLoading && (
-          <div className="py-8 text-center text-sm text-gray-400">로딩 중...</div>
+          <div className="py-8 text-center text-sm text-text-tertiary">로딩 중...</div>
         )}
         {!isLoading && notifications.length === 0 && (
-          <div className="py-8 text-center text-sm text-gray-400">알림이 없어요</div>
+          <div className="py-8 text-center text-sm text-text-tertiary">알림이 없어요</div>
         )}
         {notifications.map((n) => (
           <NotificationItem key={n.id} notification={n} onRead={onMarkAsRead} />
@@ -64,7 +64,7 @@ export function NotificationDropdown({
             type="button"
             onClick={onLoadMore}
             disabled={isFetchingNextPage}
-            className="w-full py-3 text-sm text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            className="w-full py-3 text-sm text-text-tertiary hover:text-text-secondary disabled:opacity-50 transition-colors"
           >
             {isFetchingNextPage ? '로딩 중...' : '더 보기'}
           </button>

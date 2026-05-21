@@ -1,5 +1,6 @@
 'use client';
 
+import { Switch } from '@/components/primitives/Switch';
 import type { NotificationSettings } from '@/lib/api/notifications';
 
 export type NotificationSettingKey = keyof Pick<
@@ -33,36 +34,25 @@ interface Props {
 export function NotificationSettingsForm({ settings, isLoading, isPending, onToggle }: Props) {
   if (isLoading) {
     return (
-      <div className="py-12 text-center text-sm text-gray-400">로딩 중...</div>
+      <div className="py-12 text-center text-sm text-text-tertiary">로딩 중...</div>
     );
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border">
       {SETTINGS.map(({ key, label, description }) => {
         const enabled = settings?.[key] ?? true;
         return (
           <div key={key} className="flex items-center justify-between px-4 py-4">
             <div>
-              <p className="text-sm font-medium text-gray-900">{label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+              <p className="text-sm font-medium text-text-primary">{label}</p>
+              <p className="text-xs text-text-tertiary mt-0.5">{description}</p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={enabled}
+            <Switch
+              checked={enabled}
+              onCheckedChange={(value) => onToggle(key, value)}
               disabled={isPending}
-              onClick={() => onToggle(key, !enabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                enabled ? 'bg-blue-500' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                  enabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+            />
           </div>
         );
       })}
