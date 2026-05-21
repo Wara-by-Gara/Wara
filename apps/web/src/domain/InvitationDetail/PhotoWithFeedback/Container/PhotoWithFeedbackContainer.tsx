@@ -15,14 +15,12 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePhotos(invitationId, token);
   const photos = data?.pages.flatMap((p) => p.rows) ?? [];
 
-console.log('page2 rows', data?.pages[1]?.rows.length);
   if (isLoading && token) return <div>로딩중 ....</div>;
 
   return (
     <>
       <Album
         photos={photos}
-        invitationId={invitationId}
         fetchNextPage={fetchNextPage}
         hasNextPage={!!hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
