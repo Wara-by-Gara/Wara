@@ -73,7 +73,7 @@ export class UsersController {
   @Get(':id')
   @ApiOperation({ summary: '유저 공개 프로필 조회' })
   @ApiResponse({ status: 200, description: '성공' })
-  @ApiResponse({ status: 404, description: 'PARTICIPANT_NOT_FOUND' })
+  @ApiResponse({ status: 404, description: 'USER_NOT_FOUND' })
   getUserById(@Param('id', ParseUlidPipe) id: string) {
     return this.usersService.getUserById(id);
   }

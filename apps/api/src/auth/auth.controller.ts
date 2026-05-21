@@ -60,8 +60,7 @@ export class AuthController {
   @Public()
   @Get(':provider/callback')
   @ApiOperation({ summary: '소셜 로그인 OAuth 콜백 (WEB 브라우저 리다이렉트)' })
-  @ApiResponse({ status: 302, description: '로그인 성공 시 프론트엔드로 토큰과 함께 리다이렉트' })
-  @ApiResponse({ status: 302, description: '로그인 실패 시 에러 파라미터와 함께 리다이렉트' })
+  @ApiResponse({ status: 302, description: '성공: 프론트엔드로 토큰과 함께 리다이렉트 / 실패: 에러 파라미터와 함께 리다이렉트' })
   async oauthCallback(
     @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
     @Query('code') code: string,

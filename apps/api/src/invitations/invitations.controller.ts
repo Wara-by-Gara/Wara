@@ -36,6 +36,7 @@ export class InvitationsController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: '초대장 생성' })
   @ApiResponse({ status: 201, description: '성공' })
   @ApiResponse({ status: 401, description: 'TOKEN_INVALID | TOKEN_EXPIRED' })
