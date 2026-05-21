@@ -1,9 +1,10 @@
 interface Props {
+  onKakao: () => void;
   onSms: () => void;
   onInstagram: () => void;
 }
 
-export default function SocialShareButtons({ onSms, onInstagram }: Props) {
+export default function SocialShareButtons({ onKakao, onSms, onInstagram }: Props) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -12,11 +13,8 @@ export default function SocialShareButtons({ onSms, onInstagram }: Props) {
         <div className="flex-1 h-px bg-wara-divider" />
       </div>
       <div className="flex justify-center gap-8">
-        {/* Kakao - UI only */}
-        <button
-          disabled
-          className="flex flex-col items-center gap-1.5 opacity-40 cursor-not-allowed"
-        >
+        {/* Kakao */}
+        <button onClick={onKakao} className="flex flex-col items-center gap-1.5">
           <div className="w-11 h-11 rounded-xl bg-[#FEE500] flex items-center justify-center">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path
