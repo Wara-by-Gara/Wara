@@ -1,0 +1,17 @@
+<style>
+  /* Hide scrollbars across the Storybook preview iframe (visual only — scroll still works). */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Force white canvas background so the device frame sits on a clean surface. */
+  html,
+  body,
+  #storybook-root {
+    background: #ffffff !important;
+  }
+</style>
