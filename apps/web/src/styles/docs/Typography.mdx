@@ -1,0 +1,90 @@
+import { Meta, Typeset } from "@storybook/addon-docs/blocks";
+
+<Meta title="Docs/Typography" />
+
+# Wara 타이포그래피
+
+DESIGN.md §5 기준. 기본 폰트는 **Pretendard**, 로고/이벤트 강조에만 픽셀 폰트(**DungGeunMo / Galmuri**)를 제한적으로 사용합니다.
+
+**규칙**
+- 본문 텍스트 최소 **14px**
+- 한 화면에서 폰트 크기는 **4단계 이하**
+- 픽셀 폰트는 긴 본문 금지 — 로고/짧은 제목/배지/장식 문구에만
+
+---
+
+## Display & Heading (긴 제목용)
+
+<Typeset
+  fontSizes={[32, 28, 24, 22, 20]}
+  fontWeight={800}
+  fontFamily='"Pretendard", -apple-system, sans-serif'
+  sampleText="Wara: 초대받은 사람의 설렘"
+/>
+
+`Display 1 = 32px / 40 / 800` · `Display 2 = 28px / 36 / 800` · `Heading 1 = 24px / 32 / 700` · `Heading 2 = 22px / 30 / 700` · `Heading 3 = 20px / 28 / 700`
+
+---
+
+## Title (섹션/리스트 제목용)
+
+<Typeset
+  fontSizes={[18, 17]}
+  fontWeight={700}
+  fontFamily='"Pretendard", -apple-system, sans-serif'
+  sampleText="오늘의 모임을 확인해보세요"
+/>
+
+`Title 1 = 18px / 26 / 700` · `Title 2 = 17px / 24 / 600`
+
+---
+
+## Body (본문)
+
+<Typeset
+  fontSizes={[16, 15, 14]}
+  fontWeight={400}
+  fontFamily='"Pretendard", -apple-system, sans-serif'
+  sampleText="설명 텍스트는 가독성을 우선합니다. 모바일에서 한 줄에 너무 많은 글자가 들어가지 않도록 합니다."
+/>
+
+`Body 1 = 16px / 24 / 400` · `Body 2 = 15px / 22 / 400` · `Body 3 = 14px / 20 / 400`
+
+---
+
+## Caption (보조 정보)
+
+<Typeset
+  fontSizes={[13, 12]}
+  fontWeight={400}
+  fontFamily='"Pretendard", -apple-system, sans-serif'
+  sampleText="2026년 5월 19일 화요일 · 오후 7시 30분"
+/>
+
+`Caption 1 = 13px / 18 / 400` · `Caption 2 = 12px / 16 / 400`
+
+---
+
+## Button Text
+
+<Typeset
+  fontSizes={[16, 15, 13]}
+  fontWeight={700}
+  fontFamily='"Pretendard", -apple-system, sans-serif'
+  sampleText="참석할게요"
+/>
+
+`Button Large = 16px / 22 / 700` · `Button Medium = 15px / 20 / 700` · `Button Small = 13px / 18 / 700`
+
+---
+
+## Display Font (픽셀, 장식용)
+
+<Typeset
+  fontSizes={[28, 22]}
+  fontWeight={400}
+  fontFamily='"DungGeunMo", "Galmuri", "Pretendard", sans-serif'
+  sampleText="WARA — 초대장이 도착했어요"
+/>
+
+`var(--font-display)` — 본문에는 사용하지 않습니다.

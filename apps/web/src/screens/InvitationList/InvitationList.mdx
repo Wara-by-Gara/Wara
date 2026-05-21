@@ -1,0 +1,17 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationList.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Invitation List</Title>
+<Subtitle>전체 / 내가 만든 / 초대받은 / 참여한 / 임시저장 / 종료됨</Subtitle>
+
+## 시나리오
+<Canvas of={Stories.All} />
+<Canvas of={Stories.Draft} />
+<Canvas of={Stories.Empty} />
+<Canvas of={Stories.Loading} />
+<Canvas of={Stories.Search} />
+<Canvas of={Stories.SearchEmpty} />
+<Canvas of={Stories.CardMoreMenu} />
+<Canvas of={Stories.DeleteConfirm} />
