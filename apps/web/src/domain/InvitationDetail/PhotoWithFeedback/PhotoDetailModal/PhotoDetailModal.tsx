@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { Photo, getPhoto } from "@/lib/api/photos";
+import { useState, useEffect } from 'react';
+import { Photo, getPhoto } from '@/lib/api/photos';
+import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 
 interface Props {
   photos: Photo[];
@@ -9,60 +11,76 @@ interface Props {
   onClose: () => void;
 }
 
-export default function PhotoDetailModal({ photos, initialIndex, onClose }: Props) {
+export default function PhotoDetailModal({
+  photos,
+  initialIndex,
+  onClose,
+}: Props) {
   const [index, setIndex] = useState(initialIndex);
-  const photo = photos[index]!;
+  const [token, setToken] = useState('');
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const photo = photos[index];
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token") ?? "";
+    setToken(localStorage.getItem('access_token') ?? '');
+  }, []);
+
+  useEffect(() => {
+    if (!photo) return;
     getPhoto(photo.invitationId, photo.id, token);
-  }, [photo.id, photo.invitationId]);
+  }, [photo?.id, photo?.invitationId, token]);
+
+  const { data: feedbackData, submitComment } = usePhotoFeedback(
+    photo?.invitationId ?? '',
+    photo?.id ?? '',
+    token,
+  );
+
+  if (!photo) return null;
+
+  const comments = (feedbackData?.rows ?? []).map((f) => ({
+    id: f.id,
+    authorName: f.participant.id,
+    content: f.content,
+    createdAt: new Date(f.createdAt).toLocaleDateString('ko-KR'),
+  }));
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
-      <div className="bg-white w-[340px] md:w-[700px] h-[600px] md:h-[500px] rounded-2xl flex flex-col md:flex-row overflow-hidden relative">
-
-        {/* 사진 영역 */}
-        <div className="flex-1 flex items-center justify-center relative bg-black">
+    <PhotoViewer
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      onClose={onClose}
+      src={photo.url}
+      likeCount={photo.likeCount}
+      commentCount={feedbackData?.rows.length ?? 0}
+      createdAt={new Date(photo.createdAt).toLocaleDateString('ko-KR')}
+      commentsOpen={commentsOpen}
+      onCommentsOpenChange={setCommentsOpen}
+      comments={comments}
+      onCommentSubmit={submitComment}
+      className="[&_.bg-gray-100]:bg-white/20"
+      rightActions={
+        <div className="flex items-center gap-1">
           {index > 0 && (
             <button
               onClick={() => setIndex((i) => i - 1)}
-              className="absolute left-4 text-white text-4xl z-10"
+              className="text-white text-4xl px-2"
             >
               ‹
             </button>
           )}
-          <img
-            src={photo.url}
-            alt=""
-            className="max-h-[60vh] md:max-h-full max-w-full object-contain"
-          />
           {index < photos.length - 1 && (
             <button
               onClick={() => setIndex((i) => i + 1)}
-              className="absolute right-4 text-white text-4xl z-10"
+              className="text-white text-4xl px-2"
             >
               ›
             </button>
           )}
         </div>
-
-        {/* 댓글 - 모바일: 하단, 웹: 우측 */}
-        <div className="w-full md:w-72 bg-white flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              {new Date(photo.createdAt).toLocaleDateString("ko-KR")}
-            </p>
-            <div className="flex items-center gap-3">
-              <p className="text-sm">❤️ {photo.likeCount}</p>
-              <button onClick={onClose} className="text-gray-500 text-xl">✕</button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-sm text-gray-400">댓글 준비 중...</p>
-          </div>
-        </div>
-      </div>
-    </div>
+      }
+    />
   );
 }
