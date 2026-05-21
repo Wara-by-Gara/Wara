@@ -4,7 +4,13 @@ import { MapPage } from "./MapPage";
 const meta: Meta<typeof MapPage> = {
   title: "Pages/13 Map/Page",
   component: MapPage,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: {
+    layout: "fullscreen",
+    viewport: { defaultViewport: "mobile" },
+    docs: {
+      story: { inline: false, iframeHeight: 880 },
+    },
+  },
 };
 export default meta;
 type Story = StoryObj<typeof MapPage>;

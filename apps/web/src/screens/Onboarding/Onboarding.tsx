@@ -43,7 +43,7 @@ const PERMISSION_GUIDES: Record<
   },
   permissionLocation: {
     icon: "map-pin",
-    title: "장소를 빠르게 찾으려면 위치가 필요해요",
+    title: "장소를 빠르게 찾으려면\n위치가 필요해요",
     description: "초대장의 장소를 지도로 보여드릴게요",
   },
   permissionDenied: {

@@ -4,7 +4,13 @@ import { Album } from "./Album";
 const meta: Meta<typeof Album> = {
   title: "Pages/14 Album/Page",
   component: Album,
-  parameters: { layout: "fullscreen", viewport: { defaultViewport: "mobile" } },
+  parameters: {
+    layout: "fullscreen",
+    viewport: { defaultViewport: "mobile" },
+    docs: {
+      story: { inline: false, iframeHeight: 880 },
+    },
+  },
   args: { onBack: () => {} },
 };
 export default meta;
@@ -27,7 +33,7 @@ export const UploadPartialFailed: Story = { args: { state: "uploadPartialFailed"
 export const UploadFailed: Story = { args: { state: "uploadFailed" } };
 export const UploadComplete: Story = { args: { state: "uploadComplete" } };
 export const SortBottomSheet: Story = { args: { state: "sortBottomSheet" } };
-export const ViewerDefault: Story = { args: { state: "viewerDefault" } };
 export const ViewerOwnerMenu: Story = { args: { state: "viewerOwnerMenu" } };
+export const ViewerComments: Story = { args: { state: "viewerComments" } };
 export const ViewerDelete: Story = { args: { state: "viewerDelete" } };
 export const ViewerReport: Story = { args: { state: "viewerReport" } };
