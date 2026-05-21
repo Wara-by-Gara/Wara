@@ -1,5 +1,5 @@
 {
-  "id": "c5b348ff-720f-4337-8f23-44508d4ebc01",
+  "id": "57f64710-8c69-4293-8e81-1e27dbb14798",
   "prevId": "85e734d9-a03e-417d-a442-d33395ce0803",
   "version": "7",
   "dialect": "postgresql",
@@ -614,6 +614,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "idx_link_events_created_at": {
+          "name": "idx_link_events_created_at",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -693,7 +708,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_send_logs_created_at": {
+          "name": "idx_send_logs_created_at",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "invitation_send_logs_invitation_id_invitations_id_fk": {
           "name": "invitation_send_logs_invitation_id_invitations_id_fk",
@@ -2421,8 +2452,7 @@
         "kakao",
         "sms",
         "email",
-        "dm",
-        "instagram"
+        "dm"
       ]
     },
     "public.social_provider": {
