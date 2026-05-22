@@ -16,7 +16,13 @@ export function useOAuthCallback() {
 
     if (accessToken && refreshToken) {
       login(accessToken, refreshToken);
-      router.replace(pathname);
+      const returnUrl = sessionStorage.getItem("returnUrl");
+      if (returnUrl) {
+        sessionStorage.removeItem("returnUrl");
+        router.replace(returnUrl);
+      } else {
+        router.replace(pathname);
+      }
     }
   }, [searchParams, login, router, pathname]);
 }

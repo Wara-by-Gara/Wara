@@ -37,8 +37,9 @@ export class ParticipantsController {
   @UseGuards(ParticipantGuard)
   findAll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentParticipant() viewer: Participant,
   ) {
-    return this.participantsService.findAll(invitationId);
+    return this.participantsService.findAll(invitationId, viewer);
   }
 
   @Get('me')
