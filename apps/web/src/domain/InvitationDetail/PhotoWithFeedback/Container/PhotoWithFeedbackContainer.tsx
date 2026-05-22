@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePhotos } from '@/hooks/usePhotos';
 import { InvitationDetailProps } from '../../types';
 import Album from '../Album/Album';
+import InvitationFeedbacks from '../InvitationFeedbacks/InvitationFeedbacks';
 
 export default function PhotoWithFeedbackContainer({
   invitationId,
@@ -29,7 +30,7 @@ export default function PhotoWithFeedbackContainer({
         hasNextPage={!!hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
       />
-      <div>댓글</div>
+      <InvitationFeedbacks invitationId={invitationId} token={token} />
     </>
   );
 }
