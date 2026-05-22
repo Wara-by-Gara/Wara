@@ -36,7 +36,7 @@ export class PhotosService {
   }
 
   //업로드용 presigned URL 을 발급 (업로드, 만료시간 15분)
-  async generatePresignedUrl(invitationId: string,dto: PresignedUrlDto) {
+  async generatePresignedUrl(invitationId: string, dto: PresignedUrlDto) {
     const key = `photos/${invitationId}/${ulid()}/${dto.fileName}`;
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -56,48 +56,53 @@ export class PhotosService {
   }
 
   //다운로드용 presigned URL 발급 (만료시간 24시간)
-private async toDownloadUrl(key: string, fileName: string) {
-  const encodedFileName = encodeURIComponent(fileName);
-  const command = new GetObjectCommand({
-    Bucket: this.bucket,
-    Key: key,
-    ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedFileName}`,
-  });
-  return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
-}
+  private async toDownloadUrl(key: string, fileName: string) {
+    const encodedFileName = encodeURIComponent(fileName);
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedFileName}`,
+    });
+    return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
+  }
 
   //전체 사진 db 조회
-async listPhotos(invitationId: string, dto: ListPhotosDto) {
-  const { rows, nextCursor, total } = await this.repository.findAllByInvitationId(
-    invitationId,
-    dto,
-  );
-  const data = await Promise.all(
-    rows.map(async (photo) => ({
-      ...photo,
-      url: await this.getViewUrl(photo.imageKey),
-      score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-    })),
-  );
-  return { rows: data, nextCursor, limit: dto.limit, total };
-}
+  async listPhotos(invitationId: string, dto: ListPhotosDto) {
+    const { rows, nextCursor, total } =
+      await this.repository.findAllByInvitationId(invitationId, dto);
+    const data = await Promise.all(
+      rows.map(async (photo) => ({
+        ...photo,
+        url: await this.getViewUrl(photo.imageKey),
+        score:
+          photo.viewCount * 0.5 +
+          photo.likeCount * 1.0 +
+          photo.feedbackCount * 1.5,
+      })),
+    );
+    return { rows: data, nextCursor, limit: dto.limit, total };
+  }
 
   //사진 db 단건 조회
-async getPhoto(id: string) {
-  const photo = await this.repository.findPhotoById(id);
+  async getPhoto(id: string, participantId: string) {
+    const photo = await this.repository.findPhotoById(id);
 
-  if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
+    if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
 
-  await this.repository.incrementViewCount(id);
-  const url = await this.getViewUrl(photo.imageKey);
+    await this.repository.incrementViewCount(id);
+    const url = await this.getViewUrl(photo.imageKey);
+    const liked = !!(await this.repository.findLike(id, participantId));
 
-  return {
-    ...photo,
-    url,
-    score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-  };
-}
-
+    return {
+      ...photo,
+      url,
+      liked,
+      score:
+        photo.viewCount * 0.5 +
+        photo.likeCount * 1.0 +
+        photo.feedbackCount * 1.5,
+    };
+  }
 
   //사진정보 db저장
   async uploadPhoto(
@@ -174,15 +179,18 @@ async getPhoto(id: string) {
   }
 
   //리마인드
-async getBest9(invitationId: string) {
-  const rows = await this.repository.findBest9(invitationId);
-  const data = await Promise.all(
-    rows.map(async (photo) => ({
-      ...photo,
-      url: await this.getViewUrl(photo.imageKey),
-      score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-    })),
-  );
-  return data;
-}
+  async getBest9(invitationId: string) {
+    const rows = await this.repository.findBest9(invitationId);
+    const data = await Promise.all(
+      rows.map(async (photo) => ({
+        ...photo,
+        url: await this.getViewUrl(photo.imageKey),
+        score:
+          photo.viewCount * 0.5 +
+          photo.likeCount * 1.0 +
+          photo.feedbackCount * 1.5,
+      })),
+    );
+    return data;
+  }
 }

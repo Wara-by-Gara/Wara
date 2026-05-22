@@ -9,6 +9,7 @@ export interface Photo {
   feedbackCount: number;
   url: string;
   createdAt: string;
+  liked?: boolean;
 }
 
 export interface PhotoListResponse {
