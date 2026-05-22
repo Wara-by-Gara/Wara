@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "./client";
+import { apiGet, apiPost } from './client';
 
 export interface FeedbackParticipant {
   id: string;
@@ -43,6 +43,31 @@ export function createPhotoFeedback(
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
+    { content },
+    token,
+  );
+}
+
+export function getInvitationFeedbacks(
+  invitationId: string,
+  token: string,
+  cursor?:string,
+): Promise<FeedbackListResponse> {
+  const params = new URLSearchParams();
+  if (cursor) params.set('cursor', cursor);
+  return apiGet<FeedbackListResponse>(
+    `/invitations/${invitationId}/feedbacks/all?${params}`,
+    token,
+  );
+}
+
+export function createInvitationFeedback(
+  invitationId: string,
+  content: string,
+  token: string,
+): Promise<Feedback> {
+  return apiPost<Feedback>(
+    `/invitations/${invitationId}/feedbacks`,
     { content },
     token,
   );
