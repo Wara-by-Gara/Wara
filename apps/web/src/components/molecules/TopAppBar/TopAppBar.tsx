@@ -31,6 +31,10 @@ export interface TopAppBarProps
   title?: ReactNode;
   /** 큰 제목 모드 — 좌측 정렬, 22px */
   largeTitle?: boolean;
+  /** WARA 브랜드 로고 — 픽셀 폰트 적용 */
+  brandLogo?: boolean;
+  /** 제목 추가 클래스 (로고·픽셀 폰트 등) */
+  titleClassName?: string;
   /** 우측 액션 슬롯 */
   rightSlot?: ReactNode;
 }
@@ -44,11 +48,19 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
       leftSlot,
       title,
       largeTitle,
+      brandLogo,
+      titleClassName,
       rightSlot,
       ...props
     },
     ref,
   ) {
+    const logoTitleClass = brandLogo
+      ? cn(
+          "font-pixel font-normal tracking-wide leading-none",
+          largeTitle ? "text-[32px]" : "text-[28px]",
+        )
+      : undefined;
     const left = leftSlot ??
       (onBack ? (
         <IconButton icon="chevron-left" aria-label="뒤로가기" onClick={onBack} variant="ghost" />
@@ -67,11 +79,23 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
         <div className="flex min-w-0 items-center justify-start">{left}</div>
         {title ? (
           largeTitle ? (
-            <h1 className="text-[22px] font-bold text-text-primary truncate text-left">
+            <h1
+              className={cn(
+                "truncate text-left text-text-primary",
+                brandLogo ? logoTitleClass : "text-[22px] font-bold",
+                titleClassName,
+              )}
+            >
               {title}
             </h1>
           ) : (
-            <h1 className="text-center text-[18px] font-bold text-text-primary truncate">
+            <h1
+              className={cn(
+                "truncate text-text-primary",
+                brandLogo ? cn("text-center", logoTitleClass) : "text-center text-[18px] font-bold",
+                titleClassName,
+              )}
+            >
               {title}
             </h1>
           )

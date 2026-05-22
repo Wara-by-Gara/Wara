@@ -68,6 +68,8 @@ export const Comments = ({ state = "list", comments = mockComments, onBack }: Co
                 authorAvatarUrl={c.authorAvatarUrl}
                 createdAt={c.createdAt}
                 content={c.content}
+                replies={c.replies}
+                onReply={() => {}}
                 onMore={() => {}}
               />
             ))}

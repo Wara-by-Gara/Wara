@@ -171,7 +171,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
   if (state === "loggedOut" || state === "loginRequiredForRsvp") ctaLabel = "로그인하고 참석하기";
   const ctaDisabled = state === "closedRsvp" || state === "fullCapacity";
   const isPublicDetail = state === "public";
-  const commentPreviewLimit = isPublicDetail ? 10 : 2;
+  const commentPreviewLimit = isPublicDetail ? 15 : 2;
   const showCommentMore = isPublicDetail || state !== "commentPreviewEmpty";
 
   return (
@@ -316,6 +316,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
                     content={c.content}
                     createdAt={c.createdAt}
                     variant={c.variant}
+                    replies={c.replies}
                   />
                 ))}
               </div>
