@@ -36,29 +36,103 @@ export type MapPageState =
   | "noMapAppGuide"
   | "onlineMeetingLink";
 
+export interface SearchResult {
+  placeId: string;
+  placeName: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
+
 export interface MapPageProps {
   state?: MapPageState;
   onBack?: () => void;
+
+  /** 행사 장소 (있을 때만 전달) */
+  eventLocation?: { placeName: string; address: string; lat?: number; lng?: number } | null;
+  onCopyAddress?: () => void;
+  onGetDirections?: () => void;
+  onRetry?: () => void;
+
+  /** 온라인 모임 링크 */
+  onlineLink?: string;
+
+  /** 실제 지도 컴포넌트 슬롯 (없으면 placeholder 이미지) */
+  mapSlot?: React.ReactNode;
+
+  /** 도착 여부 (도착 배너 표시) */
+  isArrived?: boolean;
+
+  /** 장소 검색 */
+  searchQuery?: string;
+  onSearchQueryChange?: (q: string) => void;
+  searchResults?: SearchResult[];
+  onSelectPlace?: (place: SearchResult) => void;
+
+  /** 길찾기 */
+  onOpenKakaoMap?: () => void;
+  onOpenNaverMap?: () => void;
+  onOpenGoogleMap?: () => void;
+  onCloseDirections?: () => void;
+
+  /** 위치 권한 */
+  onRequestPermission?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
+const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
+
+function MapPlaceholder() {
+  return (
+    <div className="absolute inset-0 bg-[url('https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map')] bg-cover bg-center" />
+  );
+}
+
+export const MapPage = ({
+  state = "fullscreen",
+  onBack,
+  eventLocation,
+  onCopyAddress,
+  onGetDirections,
+  onRetry,
+  onlineLink,
+  mapSlot,
+  isArrived,
+  searchQuery = "",
+  onSearchQueryChange,
+  searchResults,
+  onSelectPlace,
+  onOpenKakaoMap,
+  onOpenNaverMap,
+  onOpenGoogleMap,
+  onCloseDirections,
+  onRequestPermission,
+  onOpenSettings,
+}: MapPageProps) => {
+  const placeName = eventLocation?.placeName ?? mockInvitation.location;
+  const address = eventLocation?.address ?? mockInvitation.address;
+
+  // ── previewInInvitation ──────────────────────────────────────────────
   if (state === "previewInInvitation") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto p-5">
-        <LocationCard
-          variant="preview"
-          placeName={mockInvitation.location}
-          address={mockInvitation.address}
-          mapPreviewUrl="https://placehold.co/640x360/EEF8FF/8DD4FF?text=Map"
-        />
+          <LocationCard
+            variant="preview"
+            placeName={placeName}
+            address={address}
+            mapPreviewUrl={PLACEHOLDER_MAP_URL}
+            onCopyAddress={onCopyAddress}
+            onGetDirections={onGetDirections}
+          />
         </main>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
+  // ── loading ──────────────────────────────────────────────────────────
   if (state === "loading") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -66,23 +140,25 @@ export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
         <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto bg-gray-100">
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
         </main>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
+  // ── error ────────────────────────────────────────────────────────────
   if (state === "error") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
         <main className={mobileMainCenter}>
-          <ErrorState title="지도를 불러오지 못했어요" onRetry={() => {}} />
+          <ErrorState title="지도를 불러오지 못했어요" onRetry={onRetry ?? (() => {})} />
         </main>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
+  // ── noLocation / onlineMeetingLink ───────────────────────────────────
   if (state === "noLocation" || state === "onlineMeetingLink") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -91,33 +167,58 @@ export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
           {state === "noLocation" ? (
             <LocationCard variant="unknown" />
           ) : (
-            <LocationCard variant="online" onlineLink="https://meet.example.com/wara" />
+            <LocationCard
+              variant="online"
+              onlineLink={onlineLink ?? "https://meet.example.com/wara"}
+              onCopyAddress={onCopyAddress}
+            />
           )}
         </div>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
-  if (state === "permissionDenied" || state === "permissionSettingsGuide" || state === "currentLocationPermission") {
+  // ── permission states ────────────────────────────────────────────────
+  if (
+    state === "permissionDenied" ||
+    state === "permissionSettingsGuide" ||
+    state === "currentLocationPermission"
+  ) {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
         <main className={mobileMainCenter}>
           <EmptyState
             icon="map-pin"
-            title={state === "currentLocationPermission" ? "현재 위치가 필요해요" : "위치 권한이 꺼져있어요"}
-            description={state === "permissionSettingsGuide" ? "설정 > 위치에서 허용해주세요" : "정확한 지도를 보여드리려면 권한이 필요해요"}
-            action={<Button>{state === "currentLocationPermission" ? "권한 허용" : "설정 열기"}</Button>}
+            title={
+              state === "currentLocationPermission" ? "현재 위치가 필요해요" : "위치 권한이 꺼져있어요"
+            }
+            description={
+              state === "permissionSettingsGuide"
+                ? "설정 > 위치에서 허용해주세요"
+                : "정확한 지도를 보여드리려면 권한이 필요해요"
+            }
+            action={
+              <Button
+                onClick={
+                  state === "currentLocationPermission" ? onRequestPermission : onOpenSettings
+                }
+              >
+                {state === "currentLocationPermission" ? "권한 허용" : "설정 열기"}
+              </Button>
+            }
           />
         </main>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
-  // Search states
+  // ── search states ────────────────────────────────────────────────────
   if (state.startsWith("search")) {
+    const mockResults = ["와라 카페 (마포)", "와라 키친 (성수)", "와라 스튜디오 (강남)"];
+
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소 검색" onBack={onBack} />
@@ -126,7 +227,8 @@ export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
             leftIcon="search"
             placeholder="장소를 검색해보세요"
             autoFocus={state === "searchTyping"}
-            defaultValue={state === "searchResults" || state === "searchEmpty" ? "와라" : ""}
+            value={searchQuery}
+            onChange={(e) => onSearchQueryChange?.(e.target.value)}
           />
         </div>
         <main
@@ -136,15 +238,33 @@ export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
           )}
         >
           {state === "searchEmpty" ? (
-            <EmptyState icon="search" title="검색 결과가 없어요" description="주소를 직접 입력할 수도 있어요" />
+            <EmptyState
+              icon="search"
+              title="검색 결과가 없어요"
+              description="주소를 직접 입력할 수도 있어요"
+            />
           ) : state === "searchResults" ? (
             <ul className="divide-y divide-border">
-              {["와라 카페 (마포)", "와라 키친 (성수)", "와라 스튜디오 (강남)"].map((p) => (
-                <li key={p} className="flex items-center gap-3 px-3 py-3">
-                  <Icon name="map-pin" size="sm" color="inactive" decorative />
-                  <span className="text-[14px] text-text-primary">{p}</span>
-                </li>
-              ))}
+              {(searchResults ?? []).length > 0
+                ? (searchResults ?? []).map((r) => (
+                    <li
+                      key={r.placeId}
+                      className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-gray-50"
+                      onClick={() => onSelectPlace?.(r)}
+                    >
+                      <Icon name="map-pin" size="sm" color="inactive" decorative />
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
+                        <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
+                      </div>
+                    </li>
+                  ))
+                : mockResults.map((p) => (
+                    <li key={p} className="flex items-center gap-3 px-3 py-3">
+                      <Icon name="map-pin" size="sm" color="inactive" decorative />
+                      <span className="text-[14px] text-text-primary">{p}</span>
+                    </li>
+                  ))}
             </ul>
           ) : (
             <p className="px-3 py-6 text-center text-[13px] text-text-tertiary">
@@ -152,70 +272,110 @@ export const MapPage = ({ state = "fullscreen", onBack }: MapPageProps) => {
             </p>
           )}
         </main>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
+  // ── selectedPlace / manualAddress ────────────────────────────────────
   if (state === "selectedPlace" || state === "manualAddress") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="relative flex-1">
-          <div className="absolute inset-0 bg-[url('https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map')] bg-cover bg-center" />
+          {mapSlot ?? <MapPlaceholder />}
           <div className="absolute inset-x-0 bottom-0 p-4">
             <LocationCard
               variant="preview"
-              placeName={mockInvitation.location}
-              address={state === "manualAddress" ? "직접 입력한 주소" : mockInvitation.address}
+              placeName={placeName}
+              address={state === "manualAddress" ? "직접 입력한 주소" : address}
+              onCopyAddress={onCopyAddress}
+              onGetDirections={onGetDirections}
             />
           </div>
         </div>
-      <MainBottomNav activeKey="invitations" />
+        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
-  // fullscreen / direction sheets / map app open
+  // ── fullscreen / direction states ────────────────────────────────────
+  const isDirectionOpen =
+    state === "directionBottomSheet" ||
+    state === "openKakaoMap" ||
+    state === "openNaverMap" ||
+    state === "openGoogleMap" ||
+    state === "noMapAppGuide";
+
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-      <TopAppBar className="shrink-0" title={mockInvitation.location} onBack={onBack} />
+      <TopAppBar className="shrink-0" title={placeName} onBack={onBack} />
+
       <div className="relative flex-1">
-        <div className="absolute inset-0 bg-[url('https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map')] bg-cover bg-center" />
+        {/* 지도 슬롯 */}
+        {mapSlot ?? <MapPlaceholder />}
+
+        {/* 도착 배너 */}
+        {isArrived && (
+          <div className="absolute inset-x-0 top-0 bg-success px-4 py-2 text-center text-[13px] font-semibold text-white">
+            모임 장소에 도착했어요!
+          </div>
+        )}
+
+        {/* 내 위치 버튼 */}
         <button className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md">
           <Icon name="locate" size="sm" color="primary" decorative />
         </button>
+
+        {/* 하단 장소 카드 */}
         <div className="absolute inset-x-0 bottom-0 p-4">
           <LocationCard
             variant="preview"
-            placeName={mockInvitation.location}
-            address={mockInvitation.address}
+            placeName={placeName}
+            address={address}
+            onCopyAddress={onCopyAddress}
+            onGetDirections={onGetDirections}
           />
         </div>
       </div>
 
-      <BottomSheet
-        open={
-          state === "directionBottomSheet" ||
-          state === "openKakaoMap" ||
-          state === "openNaverMap" ||
-          state === "openGoogleMap" ||
-          state === "noMapAppGuide"
-        }
-        onOpenChange={() => {}}
-      >
+      {/* 길찾기 BottomSheet */}
+      <BottomSheet open={isDirectionOpen} onOpenChange={onCloseDirections ?? (() => {})}>
         <BottomSheetContent contained title="길찾기" description="원하는 지도 앱을 선택해주세요">
           {state === "noMapAppGuide" ? (
-            <EmptyState icon="alert-triangle" title="설치된 지도 앱이 없어요" description="앱스토어에서 지도 앱을 설치해주세요" />
+            <EmptyState
+              icon="alert-triangle"
+              title="설치된 지도 앱이 없어요"
+              description="앱스토어에서 지도 앱을 설치해주세요"
+            />
           ) : (
             <div className="flex flex-col gap-1">
-              <ShareOptionItem icon="map" title="카카오맵" iconBg="bg-yellow-300" iconColor="text-gray-900" />
-              <ShareOptionItem icon="map" title="네이버 지도" iconBg="bg-[#03C75A]/20" iconColor="text-[#03C75A]" />
-              <ShareOptionItem icon="map" title="구글 지도" iconBg="bg-sky-100" iconColor="text-sky-500" />
+              <ShareOptionItem
+                icon="map"
+                title="카카오맵"
+                iconBg="bg-yellow-300"
+                iconColor="text-gray-900"
+                onClick={onOpenKakaoMap}
+              />
+              <ShareOptionItem
+                icon="map"
+                title="네이버 지도"
+                iconBg="bg-[#03C75A]/20"
+                iconColor="text-[#03C75A]"
+                onClick={onOpenNaverMap}
+              />
+              <ShareOptionItem
+                icon="map"
+                title="구글 지도"
+                iconBg="bg-sky-100"
+                iconColor="text-sky-500"
+                onClick={onOpenGoogleMap}
+              />
             </div>
           )}
         </BottomSheetContent>
       </BottomSheet>
+
       <MainBottomNav activeKey="invitations" />
     </div>
   );
