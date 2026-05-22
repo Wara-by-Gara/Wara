@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@font-face {
+  font-family: "DungGeunMo";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.3/NeoDunggeunmo.woff")
+    format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================
+   Wara Design Tokens (sourced from src/styles/DESIGN.md)
+   ============================================================ */
+
+@theme {
+  /* ---------- Primitive Colors ---------- */
+  --color-wara-white: #ffffff;
+  --color-wara-black: #171717;
+
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #eaeaea;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
+
+  --color-pink-50: #fff1f7;
+  --color-pink-100: #ffe1ef;
+  --color-pink-200: #ffc4df;
+  --color-pink-300: #ff9aca;
+  --color-pink-400: #ff6db3;
+  --color-pink-500: #ff4fa3;
+  --color-pink-600: #e7358c;
+
+  --color-sky-50: #eef8ff;
+  --color-sky-100: #ddf1ff;
+  --color-sky-200: #bde6ff;
+  --color-sky-300: #8dd4ff;
+  --color-sky-400: #5bc1ff;
+  --color-sky-500: #2ea8f5;
+
+  --color-yellow-50: #fffbea;
+  --color-yellow-100: #fff3bf;
+  --color-yellow-200: #ffe47a;
+  --color-yellow-300: #ffd43b;
+  --color-yellow-400: #fab005;
+
+  --color-mint-50: #edfff8;
+  --color-mint-100: #d3fbea;
+  --color-mint-200: #a8f0d2;
+  --color-mint-300: #6ee7b7;
+  --color-mint-400: #34d399;
+
+  --color-red-50: #fff1f2;
+  --color-red-100: #ffe4e6;
+  --color-red-500: #f43f5e;
+  --color-red-600: #e11d48;
+
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+
+  /* ---------- Semantic Colors ---------- */
+  --color-background: var(--color-wara-white);
+  --color-background-soft: var(--color-gray-50);
+  --color-surface: var(--color-wara-white);
+  --color-surface-pastel: var(--color-pink-50);
+
+  --color-primary: var(--color-pink-500);
+  --color-primary-hover: var(--color-pink-600);
+  --color-primary-soft: var(--color-pink-100);
+
+  --color-secondary: var(--color-sky-400);
+  --color-secondary-soft: var(--color-sky-100);
+
+  --color-accent: var(--color-yellow-300);
+  --color-accent-soft: var(--color-yellow-100);
+
+  --color-success: var(--color-green-500);
+  --color-success-soft: var(--color-green-50);
+
+  --color-danger: var(--color-red-500);
+  --color-danger-soft: var(--color-red-50);
+
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-inverse: var(--color-wara-white);
+  --color-text-inactive: var(--color-gray-300);
+
+  --color-border: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  /* ---------- Icon Color Aliases ---------- */
+  --color-icon-default: var(--color-gray-700);
+  --color-icon-primary: var(--color-pink-500);
+  --color-icon-inactive: var(--color-gray-300);
+  --color-icon-danger: var(--color-red-500);
+  --color-icon-inverse: var(--color-wara-white);
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 999px;
+
+  /* ---------- Shadow ---------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  /* ---------- Icon Size ---------- */
+  --size-icon-xs: 12px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+  --size-icon-xl: 32px;
+
+  /* ---------- Spacing (DESIGN.md §6) ---------- */
+  --spacing: 4px;
+
+  /* ---------- Font ---------- */
+  --font-sans: var(--font-be-vietnam-pro), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: var(--font-noto-serif);
+  --font-family-pixel: "DungGeunMo", "Galmuri", "Pretendard", sans-serif;
+  --font-display: var(--font-family-pixel);
+
+  /* ---------- Legacy WARA Brand Colors (develop) ---------- */
+  --color-foreground: #171717;
+  --color-wara-primary: #a73921;
+  --color-wara-bg: #fbf9f8;
+  --color-wara-surface: #f5f3f3;
+  --color-wara-footer: #e4e2e2;
+  --color-wara-label: #58423d;
+  --color-wara-body: #1b1c1c;
+  --color-wara-secondary: #505f78;
+  --color-wara-placeholder: #6b7280;
+  --color-wara-divider: #dfc0b9;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+@utility font-pixel {
+  font-family: var(--font-family-pixel);
+}
+
+/* Storybook MobileDeviceFrame: min-h-screen → frame height */
+.mobile-frame-viewport > main,
+.mobile-frame-viewport > div {
+  box-sizing: border-box;
+  height: 100%;
+  max-height: 100%;
+  min-height: 100% !important;
 }
