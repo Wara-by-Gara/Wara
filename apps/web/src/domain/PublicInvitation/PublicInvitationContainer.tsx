@@ -57,7 +57,7 @@ export default function PublicInvitationContainer({ invitation }: Props) {
       setRsvp(savedRsvp);
       sessionStorage.removeItem(FORM_STORAGE_KEY(invitation.id));
     }
-  }, []);
+  }, [hydrate, invitation.id, rsvp, setValue]);
 
   const noteValue = watch("note") ?? "";
 
