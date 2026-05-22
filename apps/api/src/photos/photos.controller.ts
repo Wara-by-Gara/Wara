@@ -74,8 +74,11 @@ export class PhotosController {
 
   //사진 상세
   @Get(':invitationId/photos/:id')
-  getPhoto(@Param('id', ParseUlidPipe) id: string) {
-    return this.photosService.getPhoto(id);
+  getPhoto(
+    @Param('id', ParseUlidPipe) id: string,
+    @CurrentParticipant() participant: Participant,
+  ) {
+    return this.photosService.getPhoto(id, participant.id);
   }
 
   //사진 업로드

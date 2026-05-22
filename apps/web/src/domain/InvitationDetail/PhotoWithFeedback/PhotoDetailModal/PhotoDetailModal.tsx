@@ -14,7 +14,14 @@ interface Props {
   onLikeChange: (photoId: string, liked: boolean, likeCount: number) => void;
 }
 
-export default function PhotoDetailModal({ photos, initialIndex, onClose, likedMap, likeCountMap, onLikeChange }: Props) {
+export default function PhotoDetailModal({
+  photos,
+  initialIndex,
+  onClose,
+  likedMap,
+  likeCountMap,
+  onLikeChange,
+}: Props) {
   const [index, setIndex] = useState(initialIndex);
   const [token, setToken] = useState('');
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -24,10 +31,14 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose, likedM
     setToken(localStorage.getItem('access_token') ?? '');
   }, []);
 
-  useEffect(() => {
-    if (!photo || !token) return;
-    getPhoto(photo.invitationId, photo.id, token);
-  }, [photo?.id, token]);
+useEffect(() => {
+  if (!photo || !token) return;
+  getPhoto(photo.invitationId, photo.id, token).then((result) => {
+    if (result.liked !== undefined) {
+      onLikeChange(photo.id, result.liked, result.likeCount);
+    }
+  });
+}, [photo?.id, token]);
 
   const { data: feedbackData, submitComment } = usePhotoFeedback(
     photo?.invitationId ?? '',
@@ -46,17 +57,27 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose, likedM
     onLikeChange(photo.id, result.liked, newCount);
   };
 
-  const comments = (feedbackData?.rows ?? []).map((f) => ({
-    id: f.id,
-    authorName: f.participant.id,
-    content: f.content,
-    createdAt: new Date(f.createdAt).toLocaleDateString('ko-KR'),
-  }));
+  const comments = (feedbackData?.rows ?? []).flatMap((f) => [
+    {
+      id: f.id,
+      authorName: f.participant.id,
+      content: f.content,
+      createdAt: new Date(f.createdAt).toLocaleDateString('ko-KR'),
+    },
+    ...f.replies.map((r) => ({
+      id: r.id,
+      authorName: r.participant.id,
+      content: `↳ ${r.content}`,
+      createdAt: new Date(r.createdAt).toLocaleDateString('ko-KR'),
+    })),
+  ]);
 
   return (
     <PhotoViewer
       open={true}
-      onOpenChange={(open) => { if (!open) onClose(); }}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
       onClose={onClose}
       src={photo.url}
       likeCount={currentLikeCount}
