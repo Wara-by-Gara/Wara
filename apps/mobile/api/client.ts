@@ -88,7 +88,10 @@ export async function apiFetch<T>(
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
+      // RN 0.81의 fetch는 global.AbortSignal type을 요구하는데 DOM AbortSignal과
+      // onabort 콜백 시그니처가 미묘하게 다름. RN runtime은 둘 다 처리하므로
+      // unknown으로 우회 (런타임 안전).
+      signal: controller.signal as unknown as RequestInit['signal'],
     });
   } catch (err) {
     if (controller.signal.aborted && signal?.aborted !== true) {

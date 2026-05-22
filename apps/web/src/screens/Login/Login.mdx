@@ -1,0 +1,66 @@
+import { Meta, Canvas, Title, Subtitle } from '@storybook/addon-docs/blocks';
+import * as Stories from './Login.stories';
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Login</Title>
+<Subtitle>소셜 로그인 (카카오·네이버·Google/Apple) + 초대장 컨텍스트</Subtitle>
+
+## 목적
+
+사용자가 소셜 계정 1개로 즉시 가입/로그인할 수 있도록 한다. 초대장 링크를 통해 진입한 경우 초대 컨텍스트를 노출.
+
+## 접근 권한
+
+- 비로그인 사용자 전용 (이미 로그인된 경우 홈으로 자동 redirect)
+
+## 상태 다이어그램
+
+```
+default → kakao/naver/google Loading → (성공: 가입 or 홈) | failed | cancelled
+       → withInvitationContext → 동일 분기
+       → sessionExpiredModal (이전 세션 만료 안내)
+       → loginRequiredBottomSheet (다른 화면에서 호출 시)
+       → accountBlocked / withdrawnAccount (정책 차단)
+```
+
+## 시나리오
+
+### 기본
+
+<Canvas of={Stories.DefaultGoogle} />
+<Canvas of={Stories.DefaultApple} />
+
+### 초대장 컨텍스트
+
+<Canvas of={Stories.WithInvitationContext} />
+
+### 소셜 로그인 중
+
+<Canvas of={Stories.KakaoLoading} />
+<Canvas of={Stories.NaverLoading} />
+<Canvas of={Stories.GoogleLoading} />
+<Canvas of={Stories.AppleLoading} />
+
+### 로그인 실패
+
+<Canvas of={Stories.SocialFailed} />
+<Canvas of={Stories.SocialCancelled} />
+
+### 계정 정책
+
+<Canvas of={Stories.AccountBlocked} />
+<Canvas of={Stories.WithdrawnAccount} />
+
+### 세션 관리
+
+<Canvas of={Stories.SessionExpiredModal} />
+
+### 다른 화면에서 호출
+
+<Canvas of={Stories.LoginRequiredBottomSheet} />
+<Canvas of={Stories.ContinueWithoutLogin} />
+
+## 참고
+
+- DESIGN.md §33.2 로그인 규칙: 공식 브랜드 색·로고, 약관 문구 하단 작게
