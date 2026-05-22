@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMyInquiries, useCreateInquiry, useDeleteInquiry, usePublicInquiries } from '@/features/inquiries/hooks';
-import type { InquiryType, InquiryStatus, PublicInquiry } from '@/features/inquiries/types';
+import Link from 'next/link';
+import { useMyInquiries, useCreateInquiry, useUpdateInquiry, useDeleteInquiry, usePublicInquiries } from '@/hooks/useInquiries';
+import type { InquiryType, InquiryStatus, PublicInquiry } from '@/lib/api/inquiries';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
   invitation: '초대장',
@@ -30,9 +31,20 @@ export default function InquiriesPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ inquiryType: 'general' as InquiryType, title: '', content: '', isPublic: true });
-  const [expandedMyId, setExpandedMyId] = useState<string | null>(null);
-  const [expandedPublicId, setExpandedPublicId] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', content: '', isPublic: true });
+  const { mutate: update, isPending: isUpdating } = useUpdateInquiry(editTargetId ?? '');
+
+  function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    update(editForm, { onSuccess: () => setEditTargetId(null) });
+  }
+
+  function startEdit(inquiry: { id: string; title: string; content: string; isPublic: boolean }) {
+    setEditTargetId(inquiry.id);
+    setEditForm({ title: inquiry.title, content: inquiry.content, isPublic: inquiry.isPublic });
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,7 +58,7 @@ export default function InquiriesPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-10">
+    <main className="max-w-6xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">문의하기</h1>
@@ -132,16 +144,21 @@ export default function InquiriesPage() {
             {data?.items.map((inquiry) => {
               const status = STATUS_LABELS[inquiry.status];
               return (
-                <li key={inquiry.id} className="p-4 border rounded-xl hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between gap-2">
+                <li key={inquiry.id} className="border rounded-xl hover:bg-gray-50 transition-colors">
+                  <Link href={`/inquiries/${inquiry.id}`} className="block p-4">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-xs text-gray-400">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
+                        {status.label}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${inquiry.isPublic ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {inquiry.isPublic ? '공개' : '비공개'}
+                      </span>
+                    </div>
+                    <p className="font-medium truncate">{inquiry.title}</p>
+                  </Link>
+                  <div className="px-4 pb-4 flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-gray-400">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                      <p className="font-medium truncate">{inquiry.title}</p>
                       <p className="text-sm text-gray-500 mt-1 line-clamp-2">{inquiry.content}</p>
                       {inquiry.answer && (
                         <div className="mt-3 p-3 bg-blue-50 rounded-lg">
@@ -151,16 +168,60 @@ export default function InquiriesPage() {
                       )}
                     </div>
                     {inquiry.status === 'pending' && (
-                      <button
-                        onClick={() => setDeleteTargetId(inquiry.id)}
-                        className="text-gray-600 hover:text-red-500 shrink-0 transition-colors text-lg font-bold"
-                        title="삭제"
-                      >
-                        ✕
-                      </button>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => startEdit(inquiry)}
+                          className="text-gray-500 hover:text-blue-500 transition-colors text-sm"
+                          title="수정"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => setDeleteTargetId(inquiry.id)}
+                          className="text-gray-600 hover:text-red-500 transition-colors text-lg font-bold"
+                          title="삭제"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  {editTargetId === inquiry.id && (
+                    <form onSubmit={handleEdit} className="mt-3 pt-3 border-t space-y-2">
+                      <input
+                        value={editForm.title}
+                        onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                        required
+                      />
+                      <textarea
+                        value={editForm.content}
+                        onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                        rows={3}
+                        className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                        required
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`edit-public-${inquiry.id}`}
+                          checked={editForm.isPublic}
+                          onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                          className="w-4 h-4"
+                        />
+                        <label htmlFor={`edit-public-${inquiry.id}`} className="text-sm">공개</label>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="submit" disabled={isUpdating} className="px-3 py-1.5 bg-black text-white text-sm rounded-lg disabled:opacity-50">
+                          {isUpdating ? '저장 중...' : '저장'}
+                        </button>
+                        <button type="button" onClick={() => setEditTargetId(null)} className="px-3 py-1.5 border text-sm rounded-lg">
+                          취소
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                  <p className="text-xs text-gray-400 px-4 pb-3">
                     {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
                   </p>
                 </li>
@@ -193,16 +254,15 @@ export default function InquiriesPage() {
               <tbody>
                 {data?.items.map((inquiry) => {
                   const status = STATUS_LABELS[inquiry.status];
-                  const isExpanded = expandedMyId === inquiry.id;
                   return (
                     <React.Fragment key={inquiry.id}>
                       <tr
-                        onClick={() => setExpandedMyId(isExpanded ? null : inquiry.id)}
+                        onClick={() => router.push(`/inquiries/${inquiry.id}`)}
                         className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
                       >
-                        <td className="px-4 py-3 text-gray-600">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
-                        <td className="px-4 py-3 font-medium truncate">{inquiry.title}</td>
-                        <td className="px-4 py-3 text-gray-600">{inquiry.isPublic ? '공개' : '비공개'}</td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
+                        <td className="px-4 py-3 font-medium max-w-xs line-clamp-1">{inquiry.title}</td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{inquiry.isPublic ? '공개' : '비공개'}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
                             {status.label}
@@ -213,34 +273,59 @@ export default function InquiriesPage() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           {inquiry.status === 'pending' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTargetId(inquiry.id);
-                              }}
-                              className="text-gray-600 hover:text-red-500 transition-colors text-lg font-bold"
-                              title="삭제"
-                            >
-                              ✕
-                            </button>
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); startEdit(inquiry); }}
+                                className="text-gray-500 hover:text-blue-500 transition-colors text-sm"
+                              >
+                                수정
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setDeleteTargetId(inquiry.id); }}
+                                className="text-gray-600 hover:text-red-500 transition-colors text-lg font-bold"
+                              >
+                                ✕
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
-                      {isExpanded && (
-                        <tr className="border-b bg-gray-50">
+                      {editTargetId === inquiry.id && (
+                        <tr className="border-b bg-blue-50">
                           <td colSpan={6} className="px-4 py-4">
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-xs font-medium text-gray-500 mb-1">내용</p>
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{inquiry.content}</p>
+                            <form onSubmit={handleEdit} className="space-y-3">
+                              <input
+                                value={editForm.title}
+                                onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                                className="w-full border rounded-lg px-3 py-2 text-sm"
+                                required
+                              />
+                              <textarea
+                                value={editForm.content}
+                                onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                                rows={3}
+                                className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                                required
+                              />
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`pc-edit-public-${inquiry.id}`}
+                                  checked={editForm.isPublic}
+                                  onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                                  className="w-4 h-4"
+                                />
+                                <label htmlFor={`pc-edit-public-${inquiry.id}`} className="text-sm">공개</label>
                               </div>
-                              {inquiry.answer && (
-                                <div className="pt-3 border-t">
-                                  <p className="text-xs font-medium text-blue-600 mb-1">답변</p>
-                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{inquiry.answer}</p>
-                                </div>
-                              )}
-                            </div>
+                              <div className="flex gap-2">
+                                <button type="submit" disabled={isUpdating} className="px-3 py-1.5 bg-black text-white text-sm rounded-lg disabled:opacity-50">
+                                  {isUpdating ? '저장 중...' : '저장'}
+                                </button>
+                                <button type="button" onClick={() => setEditTargetId(null)} className="px-3 py-1.5 border text-sm rounded-lg">
+                                  취소
+                                </button>
+                              </div>
+                            </form>
                           </td>
                         </tr>
                       )}
@@ -289,7 +374,7 @@ export default function InquiriesPage() {
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-gray-400 px-4 pb-3">
                     {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
                   </p>
                 </li>
@@ -321,44 +406,24 @@ export default function InquiriesPage() {
               <tbody>
                 {publicData?.items.map((inquiry: PublicInquiry) => {
                   const status = STATUS_LABELS[inquiry.status];
-                  const isExpanded = expandedPublicId === inquiry.id;
                   return (
-                    <React.Fragment key={inquiry.id}>
-                      <tr
-                        onClick={() => setExpandedPublicId(isExpanded ? null : inquiry.id)}
-                        className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                      >
-                        <td className="px-4 py-3 text-gray-600">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
-                        <td className="px-4 py-3 font-medium truncate">{inquiry.title}</td>
-                        <td className="px-4 py-3 text-gray-600">{inquiry.authorNickname ?? '익명'}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
-                            {status.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
-                        </td>
-                      </tr>
-                      {isExpanded && (
-                        <tr className="border-b bg-gray-50">
-                          <td colSpan={5} className="px-4 py-4">
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-xs font-medium text-gray-500 mb-1">내용</p>
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{inquiry.content}</p>
-                              </div>
-                              {inquiry.answer && (
-                                <div className="pt-3 border-t">
-                                  <p className="text-xs font-medium text-blue-600 mb-1">답변</p>
-                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{inquiry.answer}</p>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
+                    <tr
+                      key={inquiry.id}
+                      onClick={() => router.push(`/inquiries/${inquiry.id}`)}
+                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
+                      <td className="px-4 py-3 font-medium max-w-xs line-clamp-1">{inquiry.title}</td>
+                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{inquiry.authorNickname ?? '익명'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>

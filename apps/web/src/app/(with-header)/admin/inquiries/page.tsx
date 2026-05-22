@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAdminInquiries, useAnswerInquiry } from '@/features/inquiries/hooks';
-import type { Inquiry, InquiryType, InquiryStatus, AnswerInquiryInput } from '@/features/inquiries/types';
+import { useAdminInquiries, useAnswerInquiry } from '@/hooks/useInquiries';
+import type { Inquiry, InquiryType, InquiryStatus, AnswerInquiryInput } from '@/lib/api/inquiries';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
   invitation: '초대장',

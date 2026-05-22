@@ -4,6 +4,8 @@ import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { UpdateInquiryDto } from './dto/update-inquiry.dto';
 import { AnswerInquiryDto } from './dto/answer-inquiry.dto';
 import { ErrorCode } from '../common/constants/error-codes';
+import { UserRole } from '../common/enums/role.enum';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 @Injectable()
 export class InquiriesService {
@@ -18,7 +20,7 @@ export class InquiriesService {
     });
   }
 
-  async findById(userId: string, inquiryId: string) {
+  async findById(inquiryId: string, requester?: JwtPayload) {
     const inquiry = await this.repository.findById(inquiryId);
     if (!inquiry) {
       throw new NotFoundException({
@@ -26,12 +28,22 @@ export class InquiriesService {
         message: '문의를 찾을 수 없습니다.',
       });
     }
-    if (inquiry.userId !== userId) {
-      throw new ForbiddenException({
-        code: ErrorCode.INQUIRY_NOT_FOUND,
-        message: '문의를 찾을 수 없습니다.',
-      });
+
+    if (!inquiry.isPublic) {
+      const isOwner = requester?.id === inquiry.userId;
+      const isAdmin = requester?.role === UserRole.ADMIN;
+      if (!isOwner && !isAdmin) {
+        return {
+          ...inquiry,
+          title: '비공개 문의입니다',
+          content: '작성자만 열람할 수 있는 문의입니다.',
+          answer: null,
+          answeredAt: null,
+          isPrivate: true,
+        };
+      }
     }
+
     return inquiry;
   }
 

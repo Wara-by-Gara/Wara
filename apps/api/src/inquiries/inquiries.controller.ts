@@ -6,10 +6,12 @@ import {
   Delete,
   Param,
   Body,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { InquiriesService } from './inquiries.service';
 import {
   createInquirySchema,
@@ -20,6 +22,7 @@ import {
   UpdateInquiryDto,
 } from './dto/update-inquiry.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -44,19 +47,20 @@ export class InquiriesController {
     return this.service.findByUserId(user.id);
   }
 
+  @Public()
   @Get('public')
-  @UseGuards(JwtAuthGuard)
   findAllPublic() {
     return this.service.findAllPublic();
   }
 
+  @Public()
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   findById(
     @Param('id', ParseUlidPipe) id: string,
-    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
   ) {
-    return this.service.findById(user.id, id);
+    const user = (req as Request & { user?: JwtPayload }).user;
+    return this.service.findById(id, user);
   }
 
   @Patch(':id')
