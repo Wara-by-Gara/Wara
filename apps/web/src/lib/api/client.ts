@@ -100,6 +100,20 @@ export function apiPatch<T>(path: string, body: unknown, token?: string): Promis
   );
 }
 
+export function apiPut<T>(path: string, body: unknown, token?: string): Promise<T> {
+  return request<T>(
+    (t) => fetch(`${API_URL}${path}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      },
+      body: JSON.stringify(body),
+    }),
+    token,
+  );
+}
+
 export async function apiDelete(path: string, token?: string): Promise<void> {
   await request<null>(
     (t) => fetch(`${API_URL}${path}`, {
