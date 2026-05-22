@@ -25,8 +25,24 @@ export interface Invitation {
   title: string;
   description: string;
   mainImageKey: string;
+  mainImageUrl: string;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  eventLocation: EventLocation | null;
+}
+
+export interface EventLocation {
+  id: string;
+  invitationId: string;
+  address: string;
+  placeName: string;
+  detailAddress: string;
+  lat: number;
+  lng: number;
+  placeId: string;
   createdAt: string;
   updatedAt: string;
 }

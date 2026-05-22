@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { mockMe } from "@/lib/mockData";
 import { ProfileEdit } from "./ProfileEdit";
 import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
@@ -6,7 +7,7 @@ const meta: Meta<typeof ProfileEdit> = {
   title: "Pages/18 Profile Edit/Page",
   component: ProfileEdit,
   parameters: pageStoryParameters,
-  args: { avatarUrl: "https://i.pravatar.cc/120?img=18" },
+  args: { avatarUrl: mockMe.avatarUrl },
 };
 export default meta;
 type Story = StoryObj<typeof ProfileEdit>;
