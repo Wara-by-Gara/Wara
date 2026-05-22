@@ -11,6 +11,7 @@ export interface Participant {
   memberRole: MemberRole;
   rsvpStatus: RsvpStatus;
   isHidden: boolean;
+  displayName: string | null;
   createdAt: string;
   note: string | null;
   hostMemo: string | null;
@@ -47,8 +48,12 @@ export function getMyParticipant(invitationId: string, token: string): Promise<P
     });
 }
 
-export function joinInvitation(invitationId: string, rsvpStatus: RsvpStatus, token: string): Promise<Participant> {
-  return apiPost<Participant>(`/invitations/${invitationId}/participants`, { rsvpStatus }, token);
+export function joinInvitation(
+  invitationId: string,
+  payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string },
+  token: string,
+): Promise<Participant> {
+  return apiPost<Participant>(`/invitations/${invitationId}/participants`, payload, token);
 }
 
 export function updateRsvp(invitationId: string, participantId: string, rsvpStatus: RsvpStatus, token: string): Promise<Participant> {

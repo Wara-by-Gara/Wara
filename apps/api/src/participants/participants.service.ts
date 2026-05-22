@@ -10,6 +10,7 @@ import { type Participant } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
+import { UsersRepository } from '../users/users.repository';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
 
@@ -18,9 +19,10 @@ export class ParticipantsService {
   constructor(
     private readonly repository: ParticipantsRepository,
     private readonly blocklistRepository: BlocklistRepository,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
-  async findAll(invitationId: string) {
+  async findAll(invitationId: string, viewer: Participant) {
     const all = await this.repository.findAllByInvitation(invitationId);
 
     const summary = {
@@ -30,7 +32,12 @@ export class ParticipantsService {
       absentCount: all.filter((r) => r.participant.rsvpStatus === 'absent').length,
     };
 
-    return { summary, participants: all };
+    const isHost = viewer.memberRole === 'HOST';
+    const participants = isHost
+      ? all
+      : all.map((r) => ({ ...r, participant: { ...r.participant, note: null } }));
+
+    return { summary, participants };
   }
 
   async getProfile(invitationId: string, participantId: string) {
@@ -71,7 +78,10 @@ export class ParticipantsService {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
-    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus });
+    const user = await this.usersRepository.findById(userId);
+    const displayName = dto.displayName ?? user?.nickname ?? user?.name ?? undefined;
+
+    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, displayName, note: dto.note });
   }
 
   async updateRsvp(

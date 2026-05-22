@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getInvitation } from "@/lib/api/invitations";
+import PublicInvitationContainer from "@/domain/PublicInvitation/PublicInvitationContainer";
 
 interface Props {
   params: Promise<{ invitationId: string }>;
@@ -27,9 +28,5 @@ export default async function PublicInvitationPage({ params }: Props) {
   const { invitationId } = await params;
   const invitation = await getInvitation(invitationId);
 
-  return (
-    <div>
-      <h1>{invitation.title}</h1>
-    </div>
-  );
+  return <PublicInvitationContainer invitation={invitation} />;
 }

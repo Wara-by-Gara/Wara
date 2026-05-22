@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { getParticipants, getMyParticipant, joinInvitation, type RsvpStatus } from "@/lib/api/participants";
+import { getParticipants, getMyParticipant, joinInvitation } from "@/lib/api/participants";
+import type { RsvpStatus } from "@/lib/api/participants";
 
 export function useParticipants(invitationId: string, token?: string) {
   return useQuery({
@@ -25,8 +26,8 @@ export function useMyParticipant(invitationId: string) {
 export function useJoinInvitation(invitationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (rsvpStatus: RsvpStatus) =>
-      joinInvitation(invitationId, rsvpStatus, localStorage.getItem("access_token") ?? ""),
+    mutationFn: (payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string }) =>
+      joinInvitation(invitationId, payload, localStorage.getItem("access_token") ?? ""),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myParticipant(invitationId) });
