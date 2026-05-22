@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Photo, getPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
+import { timeAgo } from '@/utils/timeAge';
 
 interface Props {
   photos: Photo[];
@@ -31,14 +32,14 @@ export default function PhotoDetailModal({
     setToken(localStorage.getItem('access_token') ?? '');
   }, []);
 
-useEffect(() => {
-  if (!photo || !token) return;
-  getPhoto(photo.invitationId, photo.id, token).then((result) => {
-    if (result.liked !== undefined) {
-      onLikeChange(photo.id, result.liked, result.likeCount);
-    }
-  });
-}, [photo?.id, token]);
+  useEffect(() => {
+    if (!photo || !token) return;
+    getPhoto(photo.invitationId, photo.id, token).then((result) => {
+      if (result.liked !== undefined) {
+        onLikeChange(photo.id, result.liked, result.likeCount);
+      }
+    });
+  }, [photo?.id, token]);
 
   const { data: feedbackData, submitComment } = usePhotoFeedback(
     photo?.invitationId ?? '',
@@ -62,13 +63,13 @@ useEffect(() => {
       id: f.id,
       authorName: f.participant.id,
       content: f.content,
-      createdAt: new Date(f.createdAt).toLocaleDateString('ko-KR'),
+      createdAt: timeAgo(f.createdAt),
     },
     ...f.replies.map((r) => ({
       id: r.id,
       authorName: r.participant.id,
       content: `↳ ${r.content}`,
-      createdAt: new Date(r.createdAt).toLocaleDateString('ko-KR'),
+      createdAt: timeAgo(r.createdAt),
     })),
   ]);
 
@@ -82,7 +83,7 @@ useEffect(() => {
       src={photo.url}
       likeCount={currentLikeCount}
       commentCount={feedbackData?.rows.length ?? 0}
-      createdAt={new Date(photo.createdAt).toLocaleDateString('ko-KR')}
+      createdAt={timeAgo(photo.createdAt)}
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
