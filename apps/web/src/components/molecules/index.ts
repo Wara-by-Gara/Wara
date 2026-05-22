@@ -1,3 +1,4 @@
+export * from "./AutoSlide";
 export * from "./BottomNavigation";
 export * from "./BottomSheet";
 export * from "./DateTimeSelector";
