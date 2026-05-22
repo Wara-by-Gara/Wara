@@ -12,7 +12,7 @@ export default function InvitationDetailContainer({
     <div>
       <div className="flex flex-col md:flex-row bg-white mx-10 mt-12 rounded-lg overflow-hidden">
         <InvitationCardContainer invitationId={invitationId} />
-        <InformationsContainer />
+        <InformationsContainer invitationId={invitationId} />
       </div>
       <PhotoWithFeedbackContainer invitationId={invitationId} />
     </div>
