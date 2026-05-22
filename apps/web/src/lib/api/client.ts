@@ -66,6 +66,7 @@ async function request<T>(fetchFn: (token?: string) => Promise<Response>, token?
 export function apiGet<T>(path: string, token?: string): Promise<T> {
   return request<T>(
     (t) => fetch(`${API_URL}${path}`, {
+      credentials: "include",
       headers: t ? { Authorization: `Bearer ${t}` } : {},
     }),
     token,
@@ -76,6 +77,7 @@ export function apiPost<T>(path: string, body: unknown, token?: string): Promise
   return request<T>(
     (t) => fetch(`${API_URL}${path}`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(t ? { Authorization: `Bearer ${t}` } : {}),
@@ -90,6 +92,7 @@ export function apiPatch<T>(path: string, body: unknown, token?: string): Promis
   return request<T>(
     (t) => fetch(`${API_URL}${path}`, {
       method: "PATCH",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(t ? { Authorization: `Bearer ${t}` } : {}),
@@ -104,6 +107,7 @@ export async function apiDelete(path: string, token?: string): Promise<void> {
   await request<null>(
     (t) => fetch(`${API_URL}${path}`, {
       method: "DELETE",
+      credentials: "include",
       headers: t ? { Authorization: `Bearer ${t}` } : {},
     }),
     token,

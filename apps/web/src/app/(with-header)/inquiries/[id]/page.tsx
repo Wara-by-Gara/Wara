@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useInquiry, useAnswerInquiry } from '@/features/inquiries/hooks';
-import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/features/inquiries/types';
+import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
+import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
 import { getUserRole } from '@/lib/jwt';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {

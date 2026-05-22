@@ -14,8 +14,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
   hydrated: false,
   hydrate: () => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    set({ isLoggedIn: !!token, hydrated: true });
+    const hasToken = typeof window !== "undefined"
+      ? document.cookie.split("; ").some((row) => row.startsWith("accessToken="))
+      : false;
+    set({ isLoggedIn: hasToken, hydrated: true });
   },
   login: (accessToken, refreshToken) => {
     localStorage.setItem("access_token", accessToken);
