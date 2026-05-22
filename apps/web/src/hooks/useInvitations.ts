@@ -11,4 +11,3 @@ export function useInvitation(id: string) {
     enabled: !!id,
   });
 }
-

@@ -21,13 +21,14 @@ const meta: Meta<typeof TopAppBar> = {
 export default meta;
 type Story = StoryObj<typeof TopAppBar>;
 
-export const TitleOnly: Story = { args: { title: "WARA" } };
+export const TitleOnly: Story = { args: { title: "WARA", brandLogo: true } };
 
-export const BackTitle: Story = { args: { title: "WARA", onBack: () => {} } };
+export const BackTitle: Story = { args: { title: "WARA", brandLogo: true, onBack: () => {} } };
 
 export const BackTitleAction: Story = {
   args: {
     title: "WARA",
+    brandLogo: true,
     onBack: () => {},
     rightSlot: (
       <>
@@ -43,14 +44,15 @@ export const Transparent: Story = {
 };
 
 export const Scrolled: Story = {
-  args: { variant: "scrolled", title: "WARA", onBack: () => {} },
+  args: { variant: "scrolled", title: "WARA", brandLogo: true, onBack: () => {} },
 };
 
-export const LargeTitle: Story = { args: { title: "WARA", largeTitle: true } };
+export const LargeTitle: Story = { args: { title: "WARA", largeTitle: true, brandLogo: true } };
 
 export const WithNotificationBadge: Story = {
   args: {
     title: "WARA",
+    brandLogo: true,
     rightSlot: <IconButton icon="bell" aria-label="알림" variant="ghost" badge />,
   },
 };
