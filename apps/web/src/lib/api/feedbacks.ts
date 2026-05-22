@@ -1,5 +1,11 @@
 import { apiGet, apiPost } from './client';
 
+export interface FeedbackPhoto{
+  id: string;
+  imageKey: string;
+}
+
+
 export interface FeedbackParticipant {
   id: string;
   userId: string;
@@ -16,6 +22,7 @@ export interface Feedback {
   deletedAt: string | null;
   createdAt: string;
   participant: FeedbackParticipant;
+  photo: FeedbackPhoto | null;
   replies: Feedback[];
 }
 
