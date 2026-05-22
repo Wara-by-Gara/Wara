@@ -1,0 +1,20 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./InvitationDetailHost.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Invitation Detail (Host)</Title>
+<Subtitle>호스트가 보는 초대장 — 관리 액션 + 통계</Subtitle>
+
+## 호스트 전용 액션
+- 수정 / 복제 / 비공개 전환 / 마감 / 삭제
+- 링크 재생성
+- QR 코드 보기
+- 공지 작성 (HostNotice 진입)
+
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.WithManagementSummary} />
+<Canvas of={Stories.NoParticipants} />
+<Canvas of={Stories.MoreMenuOpen} />
+<Canvas of={Stories.QrView} />
+<Canvas of={Stories.LinkRegenerateModal} />

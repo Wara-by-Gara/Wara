@@ -20,7 +20,7 @@ export class ParticipantsService {
     private readonly blocklistRepository: BlocklistRepository,
   ) {}
 
-  async findAll(invitationId: string, filter?: string) {
+  async findAll(invitationId: string, filter?: string, viewerRole?: string) {
     const all = await this.repository.findAllByInvitation(invitationId);
 
     const summary = {
@@ -30,10 +30,12 @@ export class ParticipantsService {
       absentCount: all.filter((r) => r.participant.rsvpStatus === 'absent').length,
     };
 
-    // 필터 없으면 absent 제외, 필터 있으면 해당 status만
+    const isHost = viewerRole === 'HOST';
     const list = filter
       ? all.filter((r) => r.participant.rsvpStatus === filter)
-      : all.filter((r) => r.participant.rsvpStatus !== 'absent');
+      : isHost
+        ? all
+        : all.filter((r) => r.participant.rsvpStatus !== 'absent');
 
     return { summary, participants: list };
   }

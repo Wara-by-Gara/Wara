@@ -1,0 +1,52 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Onboarding.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Onboarding</Title>
+<Subtitle>앱 첫 진입 인트로 5장 + 권한 안내</Subtitle>
+
+## 목적
+신규 사용자에게 Wara 서비스를 소개하고, 알림·사진·위치 권한을 사전에 안내합니다 (OS 권한 팝업 직전에 이유 설명).
+
+## 접근 권한
+- First Visit (한 번도 본 적 없는 사용자)
+- 이후 진입 시 자동 스킵 → `/login` 또는 `/`
+
+## 상태 다이어그램
+```
+intro1 → intro2 → intro3 → intro4 → intro5 (Start CTA)
+   ↓ skip 누르면
+skipModal (확인 후 종료)
+   ↓
+permissionNotification → permissionPhoto → permissionLocation
+   ↓ 허용/거부
+completedRedirect (홈으로)
+```
+
+## 시나리오
+
+### 인트로 화면
+<Canvas of={Stories.Intro1Wara} />
+<Canvas of={Stories.Intro2Invitation} />
+<Canvas of={Stories.Intro3Rsvp} />
+<Canvas of={Stories.Intro4Album} />
+<Canvas of={Stories.Intro5Start} />
+
+### 건너뛰기 확인
+<Canvas of={Stories.SkipConfirmModal} />
+
+### 권한 안내 (사전 설명)
+<Canvas of={Stories.NotificationPermissionGuide} />
+<Canvas of={Stories.PhotoPermissionGuide} />
+<Canvas of={Stories.LocationPermissionGuide} />
+
+### 권한 거부 후
+<Canvas of={Stories.PermissionDeniedGuide} />
+
+### 완료 후 리다이렉트
+<Canvas of={Stories.CompletedRedirectLoading} />
+
+## 참고
+- DESIGN.md §30 권한 UI 규칙: OS 팝업 직전에 사전 설명 필수
+- DESIGN.md §33.1 온보딩 규칙: 한 화면에 한 메시지만

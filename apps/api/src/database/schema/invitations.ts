@@ -51,7 +51,9 @@ export const invitationSendLogs = pgTable('invitation_send_logs', {
   channel: sendChannelEnum('channel').notNull(),
   inviteUrl: text('invite_url').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index('idx_send_logs_created_at').on(t.createdAt),
+]);
 
 export const invitationBlocklists = pgTable('invitation_blocklists', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
@@ -81,6 +83,7 @@ export const invitationLinkEvents = pgTable('invitation_link_events', {
 }, (t) => [
   index('idx_link_events_log_id').on(t.logId),
   index('idx_link_events_type').on(t.eventType),
+  index('idx_link_events_created_at').on(t.createdAt),
 ]);
 
 export type Invitation = typeof invitations.$inferSelect;

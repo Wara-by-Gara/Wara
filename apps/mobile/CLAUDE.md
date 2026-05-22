@@ -28,20 +28,29 @@
 ---
 
 ## Always
-- API 호출은 `@wara/api` 명세 기준 — `docs/api/api.md` 확인 후 fetcher 작성
-- 응답 envelope `{ success, data?, error?, meta }` 그대로 받아 처리
-- 에러 코드는 `docs/conventions/error-codes.md` 기준 — 사용자 메시지 매핑 별도 관리
+- API 호출은 **`api/`의 `apiFetch` + TanStack Query 훅**을 사용 (직접 `fetch()` 금지)
+  - `useQuery({ queryKey, queryFn: ({ signal }) => apiFetch<T>(path, { signal }) })`
+  - mutation은 `useMutation` + `queryClient.invalidateQueries` 패턴
+- 응답 envelope는 `apiFetch`가 풀어서 `data`만 반환, 실패는 `WaraApiError`로 throw
+- 에러 처리는 `error.code`(docs/conventions/error-codes.md 기준)로 분기 — message 그대로 노출 금지
+- JWT 토큰은 `api/auth-storage`의 `getAccessToken/setTokens/clearTokens` 사용 (SecureStore)
+- 환경 변수: `EXPO_PUBLIC_API_URL` → `app.config.ts` extra로 노출 → `Constants.expoConfig.extra.apiUrl`
 - 화면 라우팅은 Expo Router (file-based, `app/` 디렉터리)
-- 컴포넌트 styling은 RN `StyleSheet.create` 또는 Themed 컴포넌트
-- 환경 변수는 `expo-constants` + `app.json` extra 또는 EAS Secret
+- 컴포넌트 styling은 RN `StyleSheet.create` + **`constants/tokens.ts`의 디자인 토큰만 사용**
+  - `import { colors, radius, shadow, spacing, typography } from '@/constants/tokens'`
+  - 토큰 SoT는 `apps/web/src/styles/DESIGN.md` + `apps/web/src/app/globals.css` (mobile은 미러)
+  - 새 토큰 추가/변경은 **web에서 먼저 결정 후 mobile 미러** — mobile 단독 결정 금지
+- 공유 UI 컴포넌트는 **`@wara/ui`(web)와 시각 동등하게 RN 재구현** — 새로 만들 때 에스더님(`lareina7486`)에게 검토 요청
 - 모든 외부 입력은 Zod 등으로 검증 (서버에서 이미 검증해도 클라 안전망)
 
 ## Never
+- **컴포넌트 코드에 hex/`rgba(...)` 직접 사용 금지** — `constants/tokens.ts`만 SoT
 - `console.log` 커밋 (대신 디버그 도구 / Sentry 사용)
 - `any` 타입 사용 (`@typescript-eslint/no-explicit-any` warn 적용 중)
 - 환경 변수 하드코딩 (.env.* 또는 EAS Secret만)
 - Google OAuth 연동 (V1.0 소셜 로그인: kakao / naver / apple만)
 - V1.1+ 기능 화면·코드 작성
+- mobile 단독으로 `@wara/ui` 동등 공용 컴포넌트 신규 작성 — 에스더님 협의 우선
 
 ## 모노레포 / 빌드 메모
 - pnpm workspace — root `pnpm install` 한 번이면 전체 deps 정렬

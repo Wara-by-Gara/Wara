@@ -1,0 +1,20 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./ProfileEdit.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Profile Edit</Title>
+<Subtitle>닉네임 · 프로필 이미지 수정</Subtitle>
+
+## 상태 다이어그램
+```
+default → nicknameFocus → nicknameDuplicateError (중복)
+       → imageChange → imageCrop → 저장
+       → imageDeleteModal
+       → saveLoading → saveComplete | saveFailed
+```
+
+<Canvas of={Stories.Default} />
+<Canvas of={Stories.NicknameDuplicateError} />
+<Canvas of={Stories.ImageCrop} />
+<Canvas of={Stories.SaveComplete} />
