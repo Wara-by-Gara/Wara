@@ -1,0 +1,14 @@
+import { Meta, Canvas, Title, Subtitle } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Comments.stories";
+
+<Meta of={Stories} name="Docs" />
+
+<Title>Comments</Title>
+<Subtitle>댓글 목록 + 입력 + 더보기 액션</Subtitle>
+
+<Canvas of={Stories.List} />
+<Canvas of={Stories.Empty} />
+<Canvas of={Stories.LoginRequired} />
+<Canvas of={Stories.DisabledByHost} />
+<Canvas of={Stories.DeleteModal} />
+<Canvas of={Stories.ReportModal} />

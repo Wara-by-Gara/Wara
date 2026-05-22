@@ -13,11 +13,14 @@ export async function getAccessToken(): Promise<string | null> {
 
 export async function setTokens(params: {
   accessToken: string;
-  refreshToken: string;
+  /** dev-auth는 access만 반환하므로 optional. prod 흐름에선 항상 함께 전달. */
+  refreshToken?: string;
 }): Promise<void> {
   await Promise.all([
     SecureStore.setItemAsync(ACCESS_TOKEN_KEY, params.accessToken),
-    SecureStore.setItemAsync(REFRESH_TOKEN_KEY, params.refreshToken),
+    params.refreshToken === undefined
+      ? Promise.resolve()
+      : SecureStore.setItemAsync(REFRESH_TOKEN_KEY, params.refreshToken),
   ]);
 }
 
