@@ -1,22 +1,14 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { createInvitation, type CreatedInvitation } from "@/lib/api/invitations";
+import { useQuery } from "@tanstack/react-query";
+import { getInvitation } from "@/lib/api/invitations";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
-interface CreateInvitationPayload {
-  title: string;
-  description: string;
-  mainImageKey: string;
-  templateId?: string;
-  eventStartAt?: string;
-  isMissionEnabled?: boolean;
-}
-
-export function useCreateInvitation() {
-  return useMutation<CreatedInvitation, unknown, CreateInvitationPayload>({
-    mutationFn: (payload) => {
-      const token = localStorage.getItem("access_token") ?? "";
-      return createInvitation(payload, token);
-    },
+export function useInvitation(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.invitations.detail(id),
+    queryFn: () => getInvitation(id),
+    enabled: !!id,
   });
 }
+
