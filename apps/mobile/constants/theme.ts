@@ -1,29 +1,33 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * `useColorScheme` + `useThemeColor` 훅이 참조하는 라이트/다크 컬러 맵.
+ * 값 자체는 `constants/tokens.ts` (web `globals.css` SoT 미러)를 사용.
+ *
+ * 다크 모드는 DESIGN.md에서 별도 정의 안 됨 — 임시로 라이트 토큰의 반전 매핑.
+ * 정식 다크 토큰은 디자인팀 결정 후 본 파일 + tokens.ts 동시 갱신.
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+import { colors, palette } from './tokens';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: colors.textPrimary,
+    background: colors.background,
+    tint: colors.primary,
+    icon: colors.iconDefault,
+    tabIconDefault: colors.iconInactive,
+    tabIconSelected: colors.primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    // 다크 모드 — DESIGN.md에 별도 토큰 없음. 라이트의 반전 매핑(임시).
+    // 디자인팀 다크 토큰 확정 시 tokens.ts에 colorsDark export 추가 후 본 매핑 갱신.
+    text: palette.gray100,
+    background: palette.gray900,
+    tint: palette.pink400,
+    icon: palette.gray400,
+    tabIconDefault: palette.gray600,
+    tabIconSelected: palette.pink400,
   },
 };
 
