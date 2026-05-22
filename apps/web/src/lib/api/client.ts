@@ -59,6 +59,7 @@ async function request<T>(fetchFn: (token?: string) => Promise<Response>, token?
   }
 
   if (!res.ok) throw await res.json();
+  if (res.status === 204) return null as T;
   const json: ApiResponse<T> = await res.json();
   return json.data;
 }
