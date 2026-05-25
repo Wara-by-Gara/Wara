@@ -1,4 +1,4 @@
-import { apiGet } from "./client";
+import { apiGet, apiPatch } from "./client";
 
 export interface Me {
   id: string;
@@ -10,4 +10,8 @@ export interface Me {
 
 export function getMe(token: string): Promise<Me> {
   return apiGet<Me>("/users/me", token);
+}
+
+export function updateMe(payload: { nickname: string }, token: string): Promise<Me> {
+  return apiPatch<Me>("/users/me", payload, token);
 }

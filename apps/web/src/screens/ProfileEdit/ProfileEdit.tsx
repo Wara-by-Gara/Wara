@@ -27,10 +27,12 @@ export interface ProfileEditProps {
   defaultNickname?: string;
   avatarUrl?: string;
   onBack?: () => void;
+  onSave?: (nickname: string) => void;
 }
 
-export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", avatarUrl, onBack }: ProfileEditProps) => {
+export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", avatarUrl, onBack, onSave }: ProfileEditProps) => {
   const [modalOpen, setModalOpen] = useState(state === "imageDeleteModal");
+  const [nickname, setNickname] = useState(defaultNickname);
 
   if (state === "imageCrop") {
     return (
@@ -99,10 +101,12 @@ export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", 
           label="닉네임"
           required
           error={state === "nicknameDuplicateError" ? "이미 사용 중인 닉네임이에요" : undefined}
-          counter={{ current: defaultNickname.length, max: 20 }}
+          counter={{ current: (nickname ?? '').length, max: 8 }}
         >
           <TextInput
-            defaultValue={defaultNickname}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            maxLength={8}
             autoFocus={state === "nicknameFocus"}
             error={state === "nicknameDuplicateError" ? "dup" : undefined}
           />
@@ -113,7 +117,8 @@ export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", 
         primary={{
           label: "저장",
           loading: state === "saveLoading",
-          disabled: state === "nicknameDuplicateError",
+          disabled: state === "nicknameDuplicateError" || !nickname,
+          onClick: () => onSave?.(nickname ?? ''),
         }}
       />
       </div>
