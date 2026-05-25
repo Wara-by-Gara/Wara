@@ -25,9 +25,11 @@ export type AccountScreen =
 export interface AccountSettingsProps {
   screen?: AccountScreen;
   onBack?: () => void;
+  onLogout?: () => void;
+  onLoginAgain?: () => void;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
     screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
   );
@@ -41,10 +43,8 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack }: AccountS
           <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">연결된 소셜 계정</h2>
           <div className="divide-y divide-border bg-surface">
             <MenuItem leftIcon="kakao-logo" rightSlot={<span className="text-[13px] text-text-tertiary">연결됨</span>}>카카오</MenuItem>
-            <MenuItem leftIcon="naver-logo" rightSlot={
-              screen === "connectAdditional" ? <Button size="sm" variant="outline">연결</Button> : <Button size="sm" variant="text">연결</Button>
-            }>네이버</MenuItem>
-            <MenuItem leftIcon="apple-logo" rightSlot={<Button size="sm" variant="text">연결</Button>}>Apple</MenuItem>
+            <MenuItem leftIcon="naver-logo" rightSlot={<span className="text-[13px] text-text-tertiary">미연결</span>}>네이버</MenuItem>
+            <MenuItem leftIcon="apple-logo" rightSlot={<span className="text-[13px] text-text-tertiary">미연결</span>}>Apple</MenuItem>
           </div>
         </section>
         <section className="py-2">
@@ -56,7 +56,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack }: AccountS
         </section>
         </main>
 
-        <ConfirmModal contained
+        <ConfirmModal
           open={screen === "disconnectModal" ? true : modalOpen}
           onOpenChange={setModalOpen}
           title={screen === "disconnectModal" ? "연결 해제할까요?" : "로그아웃 할까요?"}
@@ -67,6 +67,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack }: AccountS
           }
           confirmLabel={screen === "disconnectModal" ? "해제" : "로그아웃"}
           confirmVariant="danger"
+          onConfirm={screen !== "disconnectModal" ? onLogout : undefined}
         />
       <MainBottomNav activeKey="me" />
       </div>
@@ -97,7 +98,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack }: AccountS
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="log-out" size="xl" color="primary" decorative />
           <p className="text-[18px] font-bold text-text-primary">로그아웃 됐어요</p>
-          <Button variant="primary" size="md">다시 로그인하기</Button>
+          <Button variant="primary" size="md" onClick={onLoginAgain}>다시 로그인하기</Button>
         </main>
       <MainBottomNav activeKey="me" />
       </div>
