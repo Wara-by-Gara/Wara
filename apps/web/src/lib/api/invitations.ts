@@ -51,3 +51,16 @@ export function createInvitation(payload: CreateInvitationPayload, token: string
 export function getInvitation(id: string): Promise<Invitation> {
   return apiGet<Invitation>(`/invitations/${id}`);
 }
+
+export interface MyInvitation {
+  id: string;
+  role: 'HOST' | 'GUEST';
+  title: string;
+  mainImageUrl: string;
+  eventStartAt: string | null;
+  status: string;
+}
+
+export function getMyInvitations(token: string): Promise<MyInvitation[]> {
+  return apiGet<MyInvitation[]>('/invitations', token);
+}
