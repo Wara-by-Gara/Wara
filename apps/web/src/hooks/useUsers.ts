@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getMe, updateMe } from '@/lib/api/users';
+import { deleteMe, getMe, updateMe } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export function useMe() {
@@ -21,6 +21,19 @@ export function useUpdateMe() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() });
+    },
+  });
+}
+
+export function useDeleteMe() {
+  return useMutation({
+    mutationFn: () => {
+      const token = localStorage.getItem('access_token') ?? '';
+      return deleteMe(token);
+    },
+    onSuccess: () => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
     },
   });
 }

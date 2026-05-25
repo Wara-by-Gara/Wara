@@ -27,9 +27,15 @@ export interface AccountSettingsProps {
   onBack?: () => void;
   onLogout?: () => void;
   onLoginAgain?: () => void;
+  onWithdrawStart?: () => void;
+  onWithdrawContinue?: () => void;
+  onWithdrawCancel?: () => void;
+  onWithdrawConfirm?: () => void;
+  onWithdrawComplete?: () => void;
+  isWithdrawing?: boolean;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
     screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
   );
@@ -51,7 +57,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">계정</h2>
           <div className="divide-y divide-border bg-surface">
             <MenuItem leftIcon="log-out" variant="danger" onClick={() => setModalOpen(true)}>로그아웃</MenuItem>
-            <MenuItem leftIcon="trash" variant="danger">회원 탈퇴</MenuItem>
+            <MenuItem leftIcon="trash" variant="danger" onClick={onWithdrawStart}>회원 탈퇴</MenuItem>
           </div>
         </section>
         </main>
@@ -118,7 +124,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           </ul>
         </main>
         <div className="relative z-10 shrink-0">
-      <StickyCTA primary={{ label: "계속 진행", variant: "danger" }} secondary={{ label: "취소" }} />
+      <StickyCTA primary={{ label: "계속 진행", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
       </div>
       <MainBottomNav activeKey="me" />
       </div>
@@ -147,7 +153,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           <Textarea className="mt-4" placeholder="더 들려주실 이야기가 있다면…" rows={4} />
         </main>
         <div className="relative z-10 shrink-0">
-      <StickyCTA primary={{ label: "계속", variant: "danger" }} secondary={{ label: "취소" }} />
+      <StickyCTA primary={{ label: "계속", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
       </div>
       <MainBottomNav activeKey="me" />
       </div>
@@ -158,13 +164,15 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
-        <ConfirmModal contained
+        <ConfirmModal
           open
-          onOpenChange={() => {}}
+          onOpenChange={(open) => { if (!open) onWithdrawCancel?.(); }}
           title="정말 탈퇴할까요?"
           description="복구할 수 없어요"
           confirmLabel="탈퇴"
           confirmVariant="danger"
+          onConfirm={onWithdrawConfirm}
+          loading={isWithdrawing}
         />
       <MainBottomNav activeKey="me" />
       </div>
@@ -179,7 +187,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <Icon name="user-x" size="xl" color="inactive" decorative />
         <p className="text-[18px] font-bold text-text-primary">탈퇴가 완료됐어요</p>
         <p className="text-[14px] text-text-secondary">언젠가 다시 만나길 바라요</p>
-        <Button variant="outline" size="md">홈으로</Button>
+        <Button variant="outline" size="md" onClick={onWithdrawComplete}>홈으로</Button>
       </main>
       <MainBottomNav activeKey="me" />
     </div>
