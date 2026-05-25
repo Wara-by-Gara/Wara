@@ -25,5 +25,7 @@ export const ROUTES = {
   PROFILE: {
     ME: "/profile",
     EDIT: "/profile/edit",
+    SETTINGS: "/profile/settings",
+    ACCOUNT: "/profile/account",
   },
 } as const;
