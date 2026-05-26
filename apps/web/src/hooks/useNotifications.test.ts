@@ -15,7 +15,7 @@ import {
   notificationKeys,
 } from './useNotifications';
 
-const BASE = 'http://localhost:3000/api/v1';
+const BASE = 'http://localhost:3001/api';
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient({
@@ -54,16 +54,17 @@ describe('useUnreadCount', () => {
   });
 
   it('refetch 시 최신 데이터로 갱신된다', async () => {
-    server.use(
-      http.get(`${BASE}/notifications/unread`, () =>
-        HttpResponse.json(wrap({ count: 10 })),
-      ),
-    );
-    const { result } = renderHook(() => useUnreadCount(), { wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    await result.current.refetch();
-    await waitFor(() => expect(result.current.data).toEqual({ count: 10 }));
-  });
+  server.use(
+    http.get(`http://localhost:3001/api/notifications/unread`, () =>
+      HttpResponse.json(wrap({ count: 10 })),
+    ),
+  );
+  const { wrapper: w } = makeWrapper();  // ← wrapper → makeWrapper()
+  const { result } = renderHook(() => useUnreadCount(), { wrapper: w });
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  await result.current.refetch();
+  await waitFor(() => expect(result.current.data).toEqual({ count: 10 }));
+});
 });
 
 describe('useNotifications', () => {
