@@ -13,7 +13,13 @@ export function useOAuthCallback() {
   useEffect(() => {
     if (searchParams.get('auth_success') === '1') {
       login();
-      router.replace(pathname);
+      const returnUrl = sessionStorage.getItem("returnUrl");
+      if (returnUrl) {
+        sessionStorage.removeItem("returnUrl");
+        router.replace(returnUrl);
+      } else {
+        router.replace(pathname);
+      }
     }
   }, [searchParams, login, router, pathname]);
 }
