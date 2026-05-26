@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/icons";
+import { Button } from "@/components/primitives/Button";
 import { PhotoGrid } from "@/components/organisms/PhotoGrid";
 import { PhotoGridItem } from "@/components/organisms/PhotoGridItem";
 import { PhotoViewer } from "@/components/organisms/PhotoViewer";
@@ -32,6 +33,10 @@ export interface PhotoListModalProps {
   contained?: boolean;
   onPhotoLike?: (photoId: string) => void;
   onCommentSubmit?: (photoId: string, text: string) => void;
+  /** 선택 다운로드 콜백 */
+  onSelectDownload?: (photoIds: string[]) => void;
+  /** 전체 다운로드 콜백 */
+  onDownloadAll?: (photoIds: string[]) => void;
 }
 
 export const PhotoListModal = ({
@@ -42,8 +47,46 @@ export const PhotoListModal = ({
   contained = false,
   onPhotoLike,
   onCommentSubmit,
+  onSelectDownload,
+  onDownloadAll,
 }: PhotoListModalProps) => {
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectDownload = () => {
+    if (!selectMode) {
+      setSelectMode(true);
+      return;
+    }
+    if (selectedIds.size === 0) return;
+    onSelectDownload?.(Array.from(selectedIds));
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleDownloadAll = () => {
+    onDownloadAll?.(photos.map((p) => p.id));
+  };
+
+  const handlePhotoClick = (idx: number, photoId: string) => {
+    if (selectMode) {
+      toggleSelect(photoId);
+    } else {
+      setViewingIndex(idx);
+    }
+  };
+
+  const viewingPhoto = viewingIndex !== null ? photos[viewingIndex] : null;
 
   const overlayClass = cn(
     "z-50 bg-black/60 data-[state=open]:animate-in data-[state=open]:fade-in",
@@ -57,8 +100,6 @@ export const PhotoListModal = ({
       : "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-md max-h-[80vh]",
   );
 
-  const viewingPhoto = viewingIndex !== null ? photos[viewingIndex] : null;
-
   const modalBody = (
     <>
       <ModalOverlay className={overlayClass} />
@@ -66,12 +107,23 @@ export const PhotoListModal = ({
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
           <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            {title ?? `전체 사진 ${photos.length}장`}
+            {selectMode
+              ? selectedIds.size > 0
+                ? `${selectedIds.size}장 선택됨`
+                : "사진을 선택하세요"
+              : (title ?? `전체 사진 ${photos.length}장`)}
           </ModalPrimitive.Title>
           <button
             type="button"
-            onClick={() => onOpenChange(false)}
-            aria-label="닫기"
+            onClick={() => {
+              if (selectMode) {
+                setSelectMode(false);
+                setSelectedIds(new Set());
+              } else {
+                onOpenChange(false);
+              }
+            }}
+            aria-label={selectMode ? "선택 취소" : "닫기"}
             className="inline-flex size-8 items-center justify-center rounded-full text-text-secondary hover:bg-gray-100"
           >
             <Icon name="x" size="md" color="currentColor" decorative />
@@ -86,20 +138,49 @@ export const PhotoListModal = ({
               <p className="text-[14px]">사진이 없어요</p>
             </div>
           ) : (
-            <PhotoGrid columns={3}>
+            <PhotoGrid columns={3} selectMode={selectMode}>
               {photos.map((photo, idx) => (
                 <PhotoGridItem
                   key={photo.id}
                   src={photo.src}
                   alt={photo.alt ?? ""}
-                  onClick={() => setViewingIndex(idx)}
+                  hostManageMode={selectMode}
+                  status={selectedIds.has(photo.id) ? "selected" : "default"}
+                  onClick={() => handlePhotoClick(idx, photo.id)}
                 />
               ))}
             </PhotoGrid>
           )}
         </div>
 
-        {/* 개별 사진 뷰어 (contained) */}
+        {/* 하단 액션 바 */}
+        {photos.length > 0 ? (
+          <div className="shrink-0 border-t border-border px-4 py-3">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                fullWidth
+                onClick={handleSelectDownload}
+                className={cn(selectMode && selectedIds.size > 0 && "border-primary text-primary")}
+              >
+                {selectMode
+                  ? selectedIds.size > 0
+                    ? `${selectedIds.size}장 다운`
+                    : "선택 취소"
+                  : "선택 다운"}
+              </Button>
+              <Button
+                fullWidth
+                onClick={handleDownloadAll}
+              >
+                <Icon name="download" size="sm" color="currentColor" decorative />
+                전체 다운
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* 개별 사진 뷰어 */}
         {viewingPhoto ? (
           <PhotoViewer
             open
