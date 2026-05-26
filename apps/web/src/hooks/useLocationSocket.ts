@@ -4,9 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ParticipantLocation } from "@/lib/api/locations";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
-// WebSocket connects to the base URL (not the /api/v1 path)
-const WS_BASE = API_URL.replace(/\/api\/v1\/?$/, "");
+const WS_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export interface LocationUpdate extends ParticipantLocation {
   invitationId: string;
@@ -15,14 +13,12 @@ export interface LocationUpdate extends ParticipantLocation {
 
 interface UseLocationSocketOptions {
   invitationId: string;
-  token: string;
   onLocationUpdated: (update: LocationUpdate) => void;
   enabled?: boolean;
 }
 
 export function useLocationSocket({
   invitationId,
-  token,
   onLocationUpdated,
   enabled = true,
 }: UseLocationSocketOptions) {
@@ -31,10 +27,10 @@ export function useLocationSocket({
   callbackRef.current = onLocationUpdated;
 
   useEffect(() => {
-    if (!enabled || !invitationId || !token) return;
+    if (!enabled || !invitationId) return;
 
     const socket = io(`${WS_BASE}/locations`, {
-      auth: { token: `Bearer ${token}` },
+      withCredentials: true,
       transports: ["websocket"],
       reconnection: true,
     });
@@ -54,7 +50,7 @@ export function useLocationSocket({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [invitationId, token, enabled]);
+  }, [invitationId, enabled]);
 
   const sendLocation = useCallback(
     (lat: number, lng: number, accuracy: number, isArrived?: boolean) => {

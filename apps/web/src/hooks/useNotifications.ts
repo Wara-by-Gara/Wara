@@ -83,18 +83,13 @@ export function useUpdateNotificationSettings() {
   });
 }
 
-const SOCKET_URL =
-  (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000') +
-  '/notifications';
+const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/notifications';
 
 export function useNotificationSocket() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-
     const socket = io(SOCKET_URL, {
-      auth: { token },
       withCredentials: true,
       transports: ['websocket'],
     });
