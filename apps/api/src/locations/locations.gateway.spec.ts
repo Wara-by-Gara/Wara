@@ -117,7 +117,7 @@ describe('LocationsGateway', () => {
       const client = makeMockSocket();
       client.data.user = { id: 'u1' };
       const saved = { id: 'l1', ...validPayload };
-      mockLocationsService.updateMyLocation.mockResolvedValue(saved);
+      mockLocationsService.updateMyLocation.mockResolvedValue({ location: saved, justArrived: false });
 
       const result = await gateway.handleLocationUpdate(client, validPayload);
 
