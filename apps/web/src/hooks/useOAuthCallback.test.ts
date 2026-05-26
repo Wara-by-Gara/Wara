@@ -32,31 +32,27 @@ describe('useOAuthCallback', () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('access_token만 있으면 login을 호출하지 않는다', () => {
+  it('auth_success=1이 아니면 login을 호출하지 않는다', () => {
     mockGetParam.mockImplementation((key: string) =>
-      key === 'access_token' ? 'at123' : null,
+      key === 'auth_error' ? '1' : null,
     );
     renderHook(() => useOAuthCallback());
     expect(mockLogin).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('access_token과 refresh_token이 모두 있으면 login을 호출한다', () => {
-    mockGetParam.mockImplementation((key: string) => {
-      if (key === 'access_token') return 'at123';
-      if (key === 'refresh_token') return 'rt456';
-      return null;
-    });
+  it('auth_success=1이면 login을 호출한다', () => {
+    mockGetParam.mockImplementation((key: string) =>
+      key === 'auth_success' ? '1' : null,
+    );
     renderHook(() => useOAuthCallback());
-    expect(mockLogin).toHaveBeenCalledWith('at123', 'rt456');
+    expect(mockLogin).toHaveBeenCalledWith();
   });
 
-  it('토큰 처리 후 pathname으로 URL을 클린업한다', () => {
-    mockGetParam.mockImplementation((key: string) => {
-      if (key === 'access_token') return 'at123';
-      if (key === 'refresh_token') return 'rt456';
-      return null;
-    });
+  it('로그인 처리 후 pathname으로 URL을 클린업한다', () => {
+    mockGetParam.mockImplementation((key: string) =>
+      key === 'auth_success' ? '1' : null,
+    );
     renderHook(() => useOAuthCallback());
     expect(mockReplace).toHaveBeenCalledWith('/invitations/create');
   });

@@ -14,8 +14,7 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose }: Prop
   const photo = photos[index]!;
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token") ?? "";
-    getPhoto(photo.invitationId, photo.id, token);
+    getPhoto(photo.invitationId, photo.id);
   }, [photo.id, photo.invitationId]);
 
   return (
