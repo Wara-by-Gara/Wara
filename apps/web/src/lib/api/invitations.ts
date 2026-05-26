@@ -47,8 +47,8 @@ export interface EventLocation {
   updatedAt: string;
 }
 
-export function createInvitation(payload: CreateInvitationPayload, token: string): Promise<CreatedInvitation> {
-  return apiPost<CreatedInvitation>("/invitations", payload, token);
+export function createInvitation(payload: CreateInvitationPayload): Promise<CreatedInvitation> {
+  return apiPost<CreatedInvitation>("/invitations", payload);
 }
 
 export function getInvitation(id: string): Promise<Invitation> {

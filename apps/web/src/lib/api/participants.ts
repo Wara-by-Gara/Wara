@@ -35,12 +35,12 @@ export interface ParticipantsResponse {
   }[];
 }
 
-export function getParticipants(invitationId: string, token: string): Promise<ParticipantsResponse> {
-  return apiGet<ParticipantsResponse>(`/invitations/${invitationId}/participants`, token);
+export function getParticipants(invitationId: string): Promise<ParticipantsResponse> {
+  return apiGet<ParticipantsResponse>(`/invitations/${invitationId}/participants`);
 }
 
-export function getMyParticipant(invitationId: string, token: string): Promise<Participant | null> {
-  return apiGet<{ participant: Participant }>(`/invitations/${invitationId}/participants/me`, token)
+export function getMyParticipant(invitationId: string): Promise<Participant | null> {
+  return apiGet<{ participant: Participant }>(`/invitations/${invitationId}/participants/me`)
     .then((r) => r.participant)
     .catch((err: { error?: { code?: string } }) => {
       if (err?.error?.code === "RSVP_PERMISSION_DENIED") return null;
@@ -51,19 +51,18 @@ export function getMyParticipant(invitationId: string, token: string): Promise<P
 export function joinInvitation(
   invitationId: string,
   payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string },
-  token: string,
 ): Promise<Participant> {
-  return apiPost<Participant>(`/invitations/${invitationId}/participants`, payload, token);
+  return apiPost<Participant>(`/invitations/${invitationId}/participants`, payload);
 }
 
-export function updateRsvp(invitationId: string, participantId: string, rsvpStatus: RsvpStatus, token: string): Promise<Participant> {
-  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/rsvp`, { rsvpStatus }, token);
+export function updateRsvp(invitationId: string, participantId: string, rsvpStatus: RsvpStatus): Promise<Participant> {
+  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/rsvp`, { rsvpStatus });
 }
 
-export function leaveInvitation(invitationId: string, participantId: string, token: string): Promise<void> {
-  return apiDelete(`/invitations/${invitationId}/participants/${participantId}`, token);
+export function leaveInvitation(invitationId: string, participantId: string): Promise<void> {
+  return apiDelete(`/invitations/${invitationId}/participants/${participantId}`);
 }
 
-export function updateHostMemo(invitationId: string, participantId: string, memo: string | null, token: string): Promise<Participant> {
-  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/host-memo`, { memo }, token);
+export function updateHostMemo(invitationId: string, participantId: string, memo: string | null): Promise<Participant> {
+  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/host-memo`, { memo });
 }
