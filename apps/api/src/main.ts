@@ -19,8 +19,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  // API 버전 관리
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
 
   // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
   app.enableCors({

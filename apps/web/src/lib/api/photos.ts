@@ -19,15 +19,14 @@ export interface PhotoListResponse {
 
 export function getPhotos(
   invitationId: string,
-  token: string,
   cursor?: string,
   limit = 8,
 ): Promise<PhotoListResponse> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
-  return apiGet<PhotoListResponse>(`/invitations/${invitationId}/photos?${params}`, token);
+  return apiGet<PhotoListResponse>(`/invitations/${invitationId}/photos?${params}`);
 }
 
-export function getPhoto(invitationId: string, photoId: string, token: string): Promise<Photo> {
-  return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`, token);
+export function getPhoto(invitationId: string, photoId: string): Promise<Photo> {
+  return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`);
 }
