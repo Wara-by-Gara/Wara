@@ -1,5 +1,6 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 
+
 export type RsvpStatus = "attending" | "undecided" | "absent";
 export type MemberRole = "HOST" | "GUEST";
 
@@ -10,6 +11,10 @@ export interface Participant {
   memberRole: MemberRole;
   rsvpStatus: RsvpStatus;
   isHidden: boolean;
+  displayName: string | null;
+  createdAt: string;
+  note: string | null;
+  hostMemo: string | null;
   user?: {
     id: string;
     nickname: string | null;
@@ -43,8 +48,11 @@ export function getMyParticipant(invitationId: string): Promise<Participant | nu
     });
 }
 
-export function joinInvitation(invitationId: string, rsvpStatus: RsvpStatus): Promise<Participant> {
-  return apiPost<Participant>(`/invitations/${invitationId}/participants`, { rsvpStatus });
+export function joinInvitation(
+  invitationId: string,
+  payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string },
+): Promise<Participant> {
+  return apiPost<Participant>(`/invitations/${invitationId}/participants`, payload);
 }
 
 export function updateRsvp(invitationId: string, participantId: string, rsvpStatus: RsvpStatus): Promise<Participant> {
@@ -53,4 +61,8 @@ export function updateRsvp(invitationId: string, participantId: string, rsvpStat
 
 export function leaveInvitation(invitationId: string, participantId: string): Promise<void> {
   return apiDelete(`/invitations/${invitationId}/participants/${participantId}`);
+}
+
+export function updateHostMemo(invitationId: string, participantId: string, memo: string | null): Promise<Participant> {
+  return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/host-memo`, { memo });
 }

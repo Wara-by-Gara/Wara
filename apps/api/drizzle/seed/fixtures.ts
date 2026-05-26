@@ -336,9 +336,9 @@ function buildSeeds() {
     const hostUserId = userIdByKey[userKeys[0]!]!;
     const invId = invIdByKey[invKey]!;
     const baseUrl = `https://wara.dev/invite/${invId}`;
-    const base = [
-      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao' as const, inviteUrl: baseUrl },
-      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link'  as const, inviteUrl: baseUrl },
+    const base: { id: string; invitationId: string; senderId: string; channel: 'link' | 'kakao' | 'sms' | 'instagram'; inviteUrl: string }[] = [
+      { id: id(`sendlog:${invKey}:0`), invitationId: invId, senderId: hostUserId, channel: 'kakao', inviteUrl: baseUrl },
+      { id: id(`sendlog:${invKey}:1`), invitationId: invId, senderId: hostUserId, channel: 'link',  inviteUrl: baseUrl },
     ];
     if (invIdx % 2 === 0 && userKeys.length >= 2) {
       const guestUserId = userIdByKey[userKeys[1]!]!;

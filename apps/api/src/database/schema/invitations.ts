@@ -38,6 +38,9 @@ export const participants = pgTable('participants', {
   memberRole: memberRoleEnum('member_role').notNull(),
   rsvpStatus: rsvpStatusEnum('rsvp_status').notNull().default('undecided'),
   isHidden: boolean('is_hidden').notNull().default(false),
+  displayName: varchar('display_name', { length: 100 }),
+  note: text('note'),
+  hostMemo: text('host_memo'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

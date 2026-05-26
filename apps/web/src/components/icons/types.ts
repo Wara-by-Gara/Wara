@@ -144,7 +144,8 @@ export type IconName =
   | "naver-logo"
   | "apple-logo"
   | "apple-logo-white"
-  | "google-logo";
+  | "google-logo"
+  | "instagram-logo";
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "color"> {
   name: IconName;
