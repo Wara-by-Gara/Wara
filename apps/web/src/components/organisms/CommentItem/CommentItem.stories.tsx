@@ -101,3 +101,34 @@ export const WithReplies: Story = {
   },
 };
 
+export const WithPhotoReplies: Story = {
+  args: {
+    authorName: "박미라",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
+    content: "현장 분위기 어때요?",
+    createdAt: "1시간 전",
+    onReply: () => {},
+    replies: [
+      {
+        id: "r1",
+        authorName: "이지은",
+        authorAvatarUrl: "https://i.pravatar.cc/80?img=24",
+        replyToName: "박미라",
+        content: "너무 좋아요! 사진 찍었어요 📸",
+        createdAt: "50분 전",
+        imageUrl: "/invitation-cover-cake.png",
+      },
+      {
+        id: "r2",
+        authorName: "김와라",
+        authorAvatarUrl: "/profile-me.png",
+        replyToName: "이지은",
+        content: "",
+        createdAt: "40분 전",
+        imageUrl: "/invitation-cover-cake.png",
+        variant: "host" as const,
+      },
+    ],
+  },
+};
+

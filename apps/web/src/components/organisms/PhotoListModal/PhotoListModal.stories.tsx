@@ -61,6 +61,8 @@ const InteractiveDemo = () => {
         photos={mockModalPhotos}
         onPhotoLike={() => {}}
         onCommentSubmit={() => {}}
+        onSelectDownload={(ids) => alert(`선택 다운: ${ids.length}장`)}
+        onDownloadAll={(ids) => alert(`전체 다운: ${ids.length}장`)}
       />
     </div>,
   );
@@ -100,6 +102,8 @@ const OpenGridDemo = () => {
         title={`전체 사진 ${mockModalPhotos.length}장`}
         onPhotoLike={() => {}}
         onCommentSubmit={() => {}}
+        onSelectDownload={(ids) => alert(`선택 다운: ${ids.length}장`)}
+        onDownloadAll={(ids) => alert(`전체 다운: ${ids.length}장`)}
       />
     </div>,
   );
