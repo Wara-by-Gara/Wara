@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { CommentInputBar } from '@/components/organisms';
@@ -11,14 +12,13 @@ interface Props {
   currentUserId: string | null;
 }
 
-export default function InvitationFeedbacks({
-  invitationId,
-  token,
-  currentUserId,
-}: Props) {
-  const { data, submitComment, fetchNextPage, hasNextPage } =
+export default function InvitationFeedbacks({ invitationId, token, currentUserId }: Props) {
+  const { data, submitComment, fetchNextPage, hasNextPage, removeComment, editComment } =
     useInvitationFeedback(invitationId, token);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
 
   return (
     <div className="mt-4">
@@ -34,15 +34,76 @@ export default function InvitationFeedbacks({
                 />
               </div>
             )}
+
+            {/* 수정/삭제 메뉴 */}
+            {menuOpenId === f.id && (
+              <div className="flex gap-2 px-4 py-1">
+                <button
+                  className="text-xs text-blue-500"
+                  onClick={() => {
+                    setEditingId(f.id);
+                    setEditContent(f.content);
+                    setMenuOpenId(null);
+                  }}
+                >
+                  수정
+                </button>
+                <button
+                  className="text-xs text-red-500"
+                  onClick={async () => {
+                    await removeComment(f.id);
+                    setMenuOpenId(null);
+                  }}
+                >
+                  삭제
+                </button>
+                <button
+                  className="text-xs text-gray-400"
+                  onClick={() => setMenuOpenId(null)}
+                >
+                  취소
+                </button>
+              </div>
+            )}
+
             <CommentItem
               authorName={f.participant.id}
-              content={f.content}
+              content={f.deletedAt ? '' : f.content}
               createdAt={timeAgo(f.createdAt)}
               variant={
+                f.deletedAt ? 'deleted' :
                 f.participant.userId === currentUserId ? 'mine' : 'default'
               }
               onMore={
-                f.participant.userId === currentUserId ? () => {} : undefined
+                f.participant.userId === currentUserId && !f.deletedAt
+                  ? () => setMenuOpenId(f.id)
+                  : undefined
+              }
+              editingSlot={
+                editingId === f.id ? (
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 border rounded px-2 py-1 text-sm"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                    />
+                    <button
+                      className="text-xs text-blue-500"
+                      onClick={async () => {
+                        await editComment(f.id, editContent);
+                        setEditingId(null);
+                      }}
+                    >
+                      저장
+                    </button>
+                    <button
+                      className="text-xs text-gray-400"
+                      onClick={() => setEditingId(null)}
+                    >
+                      취소
+                    </button>
+                  </div>
+                ) : undefined
               }
               replies={f.replies.map((r) => ({
                 id: r.id,
