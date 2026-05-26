@@ -77,12 +77,11 @@ function applySort(list: ParticipantRow[], sort: SortKey): ParticipantRow[] {
   return copy;
 }
 
-const token = () => localStorage.getItem("access_token") ?? "";
-
 export default function ParticipantsContainer() {
   const { invitationId } = useParams<{ invitationId: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const token = localStorage.getItem("access_token") ?? "";
 
   const [tab, setTab] = useState<Tab>("all");
   const [showSearch, setShowSearch] = useState(false);
@@ -93,8 +92,8 @@ export default function ParticipantsContainer() {
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
   const [memoInput, setMemoInput] = useState("");
 
-  const { data, isLoading, isError, refetch } = useParticipants(invitationId);
-  const { data: myParticipant } = useMyParticipant(invitationId);
+  const { data, isLoading, isError, refetch } = useParticipants(invitationId, token);
+  const { data: myParticipant } = useMyParticipant(invitationId, token);
   const isHost = myParticipant?.memberRole === "HOST";
 
   const invalidateParticipants = () =>
@@ -102,19 +101,19 @@ export default function ParticipantsContainer() {
 
   const memoMutation = useMutation({
     mutationFn: ({ participantId, memo }: { participantId: string; memo: string | null }) =>
-      updateHostMemo(invitationId, participantId, memo, token()),
+      updateHostMemo(invitationId, participantId, memo, token),
     onSuccess: () => { invalidateParticipants(); setSheetMode(null); },
   });
 
   const rsvpMutation = useMutation({
     mutationFn: ({ participantId, rsvpStatus }: { participantId: string; rsvpStatus: RsvpStatus }) =>
-      updateRsvp(invitationId, participantId, rsvpStatus, token()),
+      updateRsvp(invitationId, participantId, rsvpStatus, token),
     onSuccess: () => { invalidateParticipants(); setSheetMode(null); },
   });
 
   const kickMutation = useMutation({
     mutationFn: ({ participantId }: { participantId: string }) =>
-      leaveInvitation(invitationId, participantId, token()),
+      leaveInvitation(invitationId, participantId, token),
     onSuccess: () => { invalidateParticipants(); setSelectedRow(null); setSheetMode(null); },
   });
 

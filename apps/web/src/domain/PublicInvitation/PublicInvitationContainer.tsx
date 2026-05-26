@@ -40,7 +40,8 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
-  const { mutate: join, isPending } = useJoinInvitation(invitation.id);
+  const token = localStorage.getItem("access_token") ?? "";
+  const { mutate: join, isPending } = useJoinInvitation(invitation.id, token);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
