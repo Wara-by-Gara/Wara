@@ -11,6 +11,7 @@ import {
 } from '@/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { colors, shadow } from '@/constants/tokens';
 
 /**
  * 본인 host 초대장 목록.
@@ -134,8 +135,9 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     borderRadius: 12,
-    backgroundColor: 'rgba(127,127,127,0.08)',
+    backgroundColor: colors.surface,
     gap: 6,
+    ...shadow.xs,
   },
   cardMeta: { fontSize: 13, opacity: 0.6 },
   empty: { textAlign: 'center', marginTop: 48, opacity: 0.6 },
@@ -145,12 +147,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: 'rgba(10,126,164,0.15)',
+    backgroundColor: colors.primarySoft,
   },
   buttonGhost: {
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: 'rgba(127,127,127,0.08)',
+    backgroundColor: colors.backgroundSoft,
   },
 });

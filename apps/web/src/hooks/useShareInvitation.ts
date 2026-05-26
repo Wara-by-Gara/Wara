@@ -23,10 +23,8 @@ function loadKakaoSdk(): Promise<void> {
 export function useShareInvitation(invitationId: string, title?: string, description?: string, mainImageUrl?: string) {
   const [copied, setCopied] = useState(false);
 
-  const getToken = () => localStorage.getItem("access_token") ?? "";
-
   const copyLink = async () => {
-    const { inviteUrl } = await createSendLog(invitationId, { channel: "link" }, getToken());
+    const { inviteUrl } = await createSendLog(invitationId, { channel: "link" });
     await navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -37,7 +35,7 @@ export function useShareInvitation(invitationId: string, title?: string, descrip
     const resolvedDescription = description ?? KAKAO_DEFAULT_DESCRIPTION;
     const resolvedImageUrl = mainImageUrl ?? `${window.location.origin}${KAKAO_LOGO_PATH}`;
 
-    const { inviteUrl } = await createSendLog(invitationId, { channel: "kakao" }, getToken());
+    const { inviteUrl } = await createSendLog(invitationId, { channel: "kakao" });
 
     await loadKakaoSdk();
 
@@ -65,12 +63,12 @@ export function useShareInvitation(invitationId: string, title?: string, descrip
   };
 
   const shareViaSms = async () => {
-    const { smsUri } = await createSendLog(invitationId, { channel: "sms" }, getToken());
+    const { smsUri } = await createSendLog(invitationId, { channel: "sms" });
     window.location.href = smsUri ?? `sms:?body=${encodeURIComponent(`${window.location.origin}/i/${invitationId}`)}`;
   };
 
   const shareViaInstagram = async () => {
-    const { inviteUrl } = await createSendLog(invitationId, { channel: "instagram" }, getToken());
+    const { inviteUrl } = await createSendLog(invitationId, { channel: "instagram" });
     await navigator.clipboard.writeText(inviteUrl);
     window.location.href = "instagram://";
   };

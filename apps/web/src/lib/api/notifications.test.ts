@@ -11,7 +11,7 @@ import {
   updateNotificationSettings,
 } from './notifications';
 
-const BASE = 'http://localhost:3000/api/v1';
+const BASE = 'http://localhost:3001/api';
 
 function wrap<T>(data: T) {
   return { success: true, data, meta: { requestId: 'test', timestamp: '2026-05-20T10:00:00.000Z' } };

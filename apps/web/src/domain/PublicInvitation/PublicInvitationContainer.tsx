@@ -41,8 +41,7 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
-  const token = localStorage.getItem("access_token") ?? "";
-  const { mutate: join, isPending } = useJoinInvitation(invitation.id, token);
+  const { mutate: join, isPending } = useJoinInvitation(invitation.id);
   const prefilled = useRef(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
@@ -65,13 +64,13 @@ export default function PublicInvitationContainer({ invitation }: Props) {
 
   useEffect(() => {
     if (!hydrated || !isLoggedIn || prefilled.current) return;
-    getMe(token).then((me) => {
+    getMe().then((me) => {
       if (!prefilled.current) {
         setValue("displayName", me.nickname ?? me.name ?? "");
         prefilled.current = true;
       }
     });
-  }, [hydrated, isLoggedIn, token, setValue]);
+  }, [hydrated, isLoggedIn, setValue]);
 
   const noteValue = watch("note") ?? "";
 

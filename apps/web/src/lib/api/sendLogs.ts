@@ -12,11 +12,9 @@ interface SendLogResponse {
 export function createSendLog(
   invitationId: string,
   payload: CreateSendLogPayload,
-  token: string,
 ): Promise<SendLogResponse> {
   return apiPost<SendLogResponse>(
     `/invitations/${invitationId}/logs`,
     payload,
-    token,
   );
 }

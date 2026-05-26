@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { fetchInvitation, invitationKeys, WaraApiError } from '@/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { colors } from '@/constants/tokens';
 
 /**
  * 초대장 상세. Expo Router dynamic route — /invitations/:id.
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(10,126,164,0.15)',
+    backgroundColor: colors.primarySoft,
   },
   badgeText: { fontSize: 12 },
   errorBody: { fontSize: 13, opacity: 0.7, textAlign: 'center' },

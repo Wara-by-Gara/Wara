@@ -93,6 +93,22 @@ export class LocationsGateway implements OnGatewayConnection {
       return authHeader.slice(7);
     }
 
+    const cookieHeader = client.handshake.headers.cookie;
+    if (typeof cookieHeader === 'string') {
+      for (const part of cookieHeader.split(';')) {
+        const idx = part.indexOf('=');
+        if (idx === -1) continue;
+        const key = part.slice(0, idx).trim();
+        if (key === 'accessToken') {
+          try {
+            return decodeURIComponent(part.slice(idx + 1).trim());
+          } catch {
+            return part.slice(idx + 1).trim();
+          }
+        }
+      }
+    }
+
     throw new Error('NO_TOKEN');
   }
 }
