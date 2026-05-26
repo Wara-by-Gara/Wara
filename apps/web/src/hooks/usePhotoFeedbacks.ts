@@ -1,4 +1,4 @@
-import { createPhotoFeedback, getPhotoFeedbacks } from '@/lib/api/feedbacks';
+import { createPhotoFeedback, getPhotoFeedbacks, updateFeedback, deleteFeedback } from '@/lib/api/feedbacks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function usePhotoFeedback(
@@ -25,5 +25,15 @@ export function usePhotoFeedback(
     queryClient.invalidateQueries({ queryKey });
   };
 
-  return { ...query, submitComment };
+  const updateComment = async (feedbackId: string, content: string) => {
+    await updateFeedback(invitationId, feedbackId, content);
+    queryClient.invalidateQueries({ queryKey });
+  };
+
+  const deleteComment = async (feedbackId: string) => {
+    await deleteFeedback(invitationId, feedbackId);
+    queryClient.invalidateQueries({ queryKey });
+  };
+
+  return { ...query, submitComment, updateComment, deleteComment };
 }

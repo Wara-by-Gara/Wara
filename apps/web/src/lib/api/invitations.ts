@@ -29,6 +29,10 @@ export interface Invitation {
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+  host: {
+    nickname: string | null;
+    profileImageUrl: string | null;
+  } | null;
 }
 
 export interface EventLocation {

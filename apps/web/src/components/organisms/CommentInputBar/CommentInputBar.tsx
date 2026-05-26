@@ -15,6 +15,8 @@ export interface CommentInputBarProps {
   onSubmit?: (text: string) => void;
   /** 비제어 placeholder */
   placeholder?: string;
+  /** 초기 입력값 (수정 모드 pre-fill용) */
+  initialValue?: string;
   /** 상단(헤더 아래) / 하단 고정 */
   placement?: "top" | "bottom";
   className?: string;
@@ -28,12 +30,13 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       state = "default",
       onSubmit,
       placeholder = "댓글 남기기",
+      initialValue,
       placement = "bottom",
       className,
     },
     ref,
   ) {
-    const [value, setValue] = useState("");
+    const [value, setValue] = useState(initialValue ?? "");
     const isTop = placement === "top";
     const edgeBorder = isTop ? "border-b border-border" : "border-t border-border";
 
