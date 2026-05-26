@@ -13,6 +13,7 @@ import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { CommentItem } from "@/components/organisms/CommentItem";
+import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal";
 import { PhotoGrid } from "@/components/organisms/PhotoGrid";
 import { PhotoGridItem } from "@/components/organisms/PhotoGridItem";
 import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
@@ -66,7 +67,8 @@ export type InvitationDetailGuestState =
   | "cancelRsvpModal"
   | "closedRsvp"
   | "fullCapacity"
-  | "loginRequiredForRsvp";
+  | "loginRequiredForRsvp"
+  | "alreadyRespondedProfileOpen";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
@@ -94,6 +96,14 @@ function ParticipantAvatarStrip() {
 export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: InvitationDetailGuestProps) => {
   const [rsvpOpen, setRsvpOpen] = useState(state === "rsvpBottomSheetOpen");
   const [cancelOpen, setCancelOpen] = useState(state === "cancelRsvpModal");
+  const [profileModalOpen, setProfileModalOpen] = useState(state === "alreadyRespondedProfileOpen");
+  const [selectedParticipantIdx, setSelectedParticipantIdx] = useState(0);
+
+  const openProfile = (idx: number) => {
+    setSelectedParticipantIdx(idx);
+    setProfileModalOpen(true);
+  };
+  const selectedParticipant = mockParticipants[selectedParticipantIdx];
 
   // ── Access/permission gate states ────────────────────────────
   if (state === "loading") {
@@ -255,15 +265,23 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
             </>
           ) : null}
 
-          {state === "participantPreview" || state === "alreadyResponded" || state === "withCoverImage" ? (
+          {state === "participantPreview" || state === "alreadyResponded" || state === "alreadyRespondedProfileOpen" || state === "withCoverImage" ? (
             <section className="rounded-3xl border border-border bg-surface p-4">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-text-primary">참석 {mockInvitation.rsvp?.current}명</h3>
                 <button className="text-[13px] text-primary">전체보기</button>
               </div>
               <div className="flex flex-col">
-                {mockParticipants.slice(0, 3).map((p) => (
-                  <ParticipantItem key={p.id} name={p.name} avatarUrl={p.avatarUrl} status={p.status} isHost={p.isHost} />
+                {mockParticipants.slice(0, 3).map((p, idx) => (
+                  <ParticipantItem
+                    key={p.id}
+                    name={p.name}
+                    avatarUrl={p.avatarUrl}
+                    status={p.status}
+                    isHost={p.isHost}
+                    onClick={() => openProfile(idx)}
+                    className="cursor-pointer rounded-xl transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  />
                 ))}
               </div>
             </section>
@@ -362,6 +380,22 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
         </div>
       ) : null}
       <MainBottomNav activeKey="invitations" />
+
+      {/* 참석자 프로필 모달 */}
+      {selectedParticipant ? (
+        <ParticipantProfileModal
+          contained
+          open={profileModalOpen}
+          onOpenChange={setProfileModalOpen}
+          name={selectedParticipant.name}
+          avatarUrl={selectedParticipant.avatarUrl}
+          status={selectedParticipant.status}
+          isHost={selectedParticipant.isHost}
+          companionCount={selectedParticipant.companionCount}
+          requestPreview={selectedParticipant.requestPreview}
+          onDm={() => {}}
+        />
+      ) : null}
     </div>
   );
 };
