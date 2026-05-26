@@ -16,3 +16,4 @@ export { AppleLogo } from "./AppleLogo";
 export { AppleLogoWhite } from "./AppleLogoWhite";
 export { GoogleLogo } from "./GoogleLogo";
 export { CrownYellow } from "./CrownYellow";
+export { InstagramLogo } from "./InstagramLogo";
