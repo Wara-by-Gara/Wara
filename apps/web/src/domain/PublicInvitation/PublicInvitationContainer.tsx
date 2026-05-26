@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { useJoinInvitation } from "@/hooks/useParticipants";
+import { getMe } from "@/lib/api/users";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 import { FormField } from "@/components/molecules/FormField";
@@ -42,6 +43,7 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
   const token = localStorage.getItem("access_token") ?? "";
   const { mutate: join, isPending } = useJoinInvitation(invitation.id, token);
+  const prefilled = useRef(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -57,8 +59,19 @@ export default function PublicInvitationContainer({ invitation }: Props) {
       setValue("note", note ?? "");
       setRsvp(savedRsvp);
       sessionStorage.removeItem(FORM_STORAGE_KEY(invitation.id));
+      prefilled.current = true;
     }
   }, [hydrate, invitation.id, rsvp, setValue]);
+
+  useEffect(() => {
+    if (!hydrated || !isLoggedIn || prefilled.current) return;
+    getMe(token).then((me) => {
+      if (!prefilled.current) {
+        setValue("displayName", me.nickname ?? me.name ?? "");
+        prefilled.current = true;
+      }
+    });
+  }, [hydrated, isLoggedIn, token, setValue]);
 
   const noteValue = watch("note") ?? "";
 
