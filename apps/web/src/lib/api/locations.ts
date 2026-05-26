@@ -60,38 +60,34 @@ export interface PlaceSearchResponse {
   };
 }
 
-export function getEventLocation(invitationId: string, token: string): Promise<EventLocation> {
-  return apiGet<EventLocation>(`/invitations/${invitationId}/location`, token);
+export function getEventLocation(invitationId: string): Promise<EventLocation> {
+  return apiGet<EventLocation>(`/invitations/${invitationId}/location`);
 }
 
 export function setEventLocation(
   invitationId: string,
   payload: SetEventLocationPayload,
-  token: string,
 ): Promise<EventLocation> {
-  return apiPut<EventLocation>(`/invitations/${invitationId}/location`, payload, token);
+  return apiPut<EventLocation>(`/invitations/${invitationId}/location`, payload);
 }
 
-export function deleteEventLocation(invitationId: string, token: string): Promise<void> {
-  return apiDelete(`/invitations/${invitationId}/location`, token);
+export function deleteEventLocation(invitationId: string): Promise<void> {
+  return apiDelete(`/invitations/${invitationId}/location`);
 }
 
 export function getParticipantLocations(
   invitationId: string,
-  token: string,
 ): Promise<ParticipantLocation[]> {
-  return apiGet<ParticipantLocation[]>(`/invitations/${invitationId}/participant/locations`, token);
+  return apiGet<ParticipantLocation[]>(`/invitations/${invitationId}/participant/locations`);
 }
 
 export function updateMyLocation(
   invitationId: string,
   payload: UpdateMyLocationPayload,
-  token: string,
 ): Promise<ParticipantLocation> {
   return apiPut<ParticipantLocation>(
     `/invitations/${invitationId}/participant/me/location`,
     payload,
-    token,
   );
 }
 

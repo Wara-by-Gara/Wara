@@ -32,9 +32,6 @@ interface MapContainerProps {
 
 export function MapContainer({ invitationId }: MapContainerProps) {
   const router = useRouter();
-  const token =
-    typeof window !== "undefined" ? (localStorage.getItem("access_token") ?? "") : "";
-
   // ── SDK 준비 ──────────────────────────────────────────────────────────
   const [mapSdkReady, setMapSdkReady] = useState(false);
 
@@ -60,10 +57,10 @@ export function MapContainer({ invitationId }: MapContainerProps) {
     isLoading: locationLoading,
     isError: locationError,
     refetch,
-  } = useEventLocation(invitationId, token);
-  const { data: participantsData } = useParticipants(invitationId, token);
-  const { data: initialLocations } = useParticipantLocations(invitationId, token);
-  const { mutate: saveLocation } = useSetEventLocation(invitationId, token);
+  } = useEventLocation(invitationId);
+  const { data: participantsData } = useParticipants(invitationId);
+  const { data: initialLocations } = useParticipantLocations(invitationId);
+  const { mutate: saveLocation } = useSetEventLocation(invitationId);
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
   const [participantLocations, setParticipantLocations] = useState<
@@ -87,7 +84,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   // ── WebSocket ─────────────────────────────────────────────────────────
   const { sendLocation } = useLocationSocket({
     invitationId,
-    token,
     enabled: gpsPermission === "granted" && !isArrived,
     onLocationUpdated: useCallback((update: LocationUpdate) => {
       setParticipantLocations((prev) => {

@@ -8,8 +8,8 @@ export interface Me {
   profileImageUrl: string | null;
 }
 
-export function getMe(token: string): Promise<Me> {
-  return apiGet<Me>("/users/me", token);
+export function getMe(): Promise<Me> {
+  return apiGet<Me>("/users/me");
 }
 
 export function updateMe(payload: { nickname: string }, token: string): Promise<Me> {
