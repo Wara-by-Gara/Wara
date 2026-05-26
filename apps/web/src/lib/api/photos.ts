@@ -27,26 +27,22 @@ export function getPhotos(
   if (cursor) params.set('cursor', cursor);
   return apiGet<PhotoListResponse>(
     `/invitations/${invitationId}/photos?${params}`,
-    token,
   );
 }
 
 export function getPhoto(
   invitationId: string,
   photoId: string,
-  token: string,
 ): Promise<Photo> {
-  return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`, token);
+  return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`);
 }
 
 export function togglePhotoLike(
   invitationId: string,
   photoId: string,
-  token: string,
 ): Promise<{ liked: boolean }> {
   return apiPost<{ liked: boolean }>(
     `/invitations/${invitationId}/photos/${photoId}/likes`,
     {},
-    token,
   );
 }

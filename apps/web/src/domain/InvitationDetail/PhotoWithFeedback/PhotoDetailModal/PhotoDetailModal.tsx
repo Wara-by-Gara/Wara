@@ -24,27 +24,21 @@ export default function PhotoDetailModal({
   onLikeChange,
 }: Props) {
   const [index, setIndex] = useState(initialIndex);
-  const [token, setToken] = useState('');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const photo = photos[index];
 
   useEffect(() => {
-    setToken(localStorage.getItem('access_token') ?? '');
-  }, []);
-
-  useEffect(() => {
-    if (!photo || !token) return;
-    getPhoto(photo.invitationId, photo.id, token).then((result) => {
+    if (!photo) return;
+    getPhoto(photo.invitationId, photo.id).then((result) => {
       if (result.liked !== undefined) {
         onLikeChange(photo.id, result.liked, result.likeCount);
       }
     });
-  }, [photo?.id, token]);
+  }, [photo?.id]);
 
   const { data: feedbackData, submitComment } = usePhotoFeedback(
     photo?.invitationId ?? '',
     photo?.id ?? '',
-    token,
   );
 
   if (!photo) return null;
@@ -53,7 +47,7 @@ export default function PhotoDetailModal({
   const currentLiked = likedMap.get(photo.id) ?? false;
 
   const handleLike = async () => {
-    const result = await togglePhotoLike(photo.invitationId, photo.id, token);
+    const result = await togglePhotoLike(photo.invitationId, photo.id);
     const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
     onLikeChange(photo.id, result.liked, newCount);
   };

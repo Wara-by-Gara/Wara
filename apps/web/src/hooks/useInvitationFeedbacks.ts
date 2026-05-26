@@ -1,30 +1,30 @@
 import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, updateFeedback } from '@/lib/api/feedbacks';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export function useInvitationFeedback(invitationId: string, token: string) {
+export function useInvitationFeedback(invitationId: string) {
   const queryClient = useQueryClient();
   const queryKey = ['invitations', invitationId, 'feedbacks'];
 
   const query = useInfiniteQuery({
     queryKey,
-    queryFn: ({ pageParam }) => getInvitationFeedbacks(invitationId, token, pageParam),
+    queryFn: ({ pageParam }) => getInvitationFeedbacks(invitationId, pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: !!invitationId && !!token,
+    enabled: !!invitationId,
   });
 
   const submitComment = async (content: string) => {
-    await createInvitationFeedback(invitationId, content, token);
+    await createInvitationFeedback(invitationId, content);
     queryClient.invalidateQueries({ queryKey });
   };
 
   const removeComment = async (feedbackId: string) => {
-    await deleteFeedback(invitationId, feedbackId, token);
+    await deleteFeedback(invitationId, feedbackId);
     queryClient.invalidateQueries({queryKey})
   }
 
   const editComment = async (feedbackId: string, content: string) => {
-    await updateFeedback(invitationId, feedbackId, content, token);
+    await updateFeedback(invitationId, feedbackId, content);
     queryClient.invalidateQueries({queryKey})
   }
 

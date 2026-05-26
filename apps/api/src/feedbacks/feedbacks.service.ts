@@ -59,7 +59,7 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    const feedbacks = await this.repository.findManyByPhoto(photoId, dto);
+    const feedbacks = await this.repository.findAllByInvitation(photoId, dto);
     return {
       rows: this.applyDeletedPlaceholder(feedbacks.rows),
       nextCursor: feedbacks.nextCursor,

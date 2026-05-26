@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 export function usePhotoFeedback(
   invitationId: string,
   photoId: string,
-  token: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = [
@@ -17,12 +16,12 @@ export function usePhotoFeedback(
 
   const query = useQuery({
     queryKey,
-    queryFn: () => getPhotoFeedbacks(invitationId, photoId, token),
-    enabled: !!invitationId && !!photoId && !!token,
+    queryFn: () => getPhotoFeedbacks(invitationId, photoId),
+    enabled: !!invitationId && !!photoId,
   });
 
   const submitComment = async (text: string) => {
-    await createPhotoFeedback(invitationId, photoId, text, token);
+    await createPhotoFeedback(invitationId, photoId, text);
     queryClient.invalidateQueries({ queryKey });
   };
 
