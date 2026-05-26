@@ -17,6 +17,7 @@ export const QUERY_KEYS = {
   },
   users: {
     me: () => ["users", "me"] as const,
+    socials: () => ["users", "socials"] as const,
   },
   templates: {
     all: () => ["templates"] as const,

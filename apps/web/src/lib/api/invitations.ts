@@ -61,6 +61,6 @@ export interface MyInvitation {
   status: string;
 }
 
-export function getMyInvitations(token: string): Promise<MyInvitation[]> {
-  return apiGet<MyInvitation[]>('/invitations', token);
+export function getMyInvitations(): Promise<MyInvitation[]> {
+  return apiGet<MyInvitation[]>('/invitations');
 }

@@ -31,7 +31,7 @@ export default function ProfileContainer() {
   // 인증 에러 → 로그아웃 상태
   if (isError) {
     const code = (error as { error?: { code?: string } })?.error?.code;
-    if (code === 'TOKEN_INVALID' || code === 'TOKEN_EXPIRED' || code === 'AUTH_USER_NOT_FOUND') {
+    if (code === 'TOKEN_INVALID' || code === 'AUTH_USER_NOT_FOUND') {
       return <MyPage state="loggedOut" />;
     }
     return <MyPage state="error" />;

@@ -12,9 +12,6 @@ export function useInvitation(id: string) {
 export function useMyInvitations() {
   return useQuery({
     queryKey: QUERY_KEYS.invitations.all(),
-    queryFn: () => {
-      const token = localStorage.getItem('access_token') ?? '';
-      return getMyInvitations(token);
-    },
+    queryFn: () => getMyInvitations(),
   });
 }

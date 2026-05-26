@@ -33,9 +33,13 @@ export interface AccountSettingsProps {
   onWithdrawConfirm?: () => void;
   onWithdrawComplete?: () => void;
   isWithdrawing?: boolean;
+  connectedProviders?: string[];
+  onDisconnectRequest?: (provider: string) => void;
+  onDisconnectConfirm?: () => void;
+  isDisconnecting?: boolean;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
     screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
   );
@@ -48,9 +52,21 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <section className="py-2">
           <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">연결된 소셜 계정</h2>
           <div className="divide-y divide-border bg-surface">
-            <MenuItem leftIcon="kakao-logo" rightSlot={<span className="text-[13px] text-text-tertiary">연결됨</span>}>카카오</MenuItem>
-            <MenuItem leftIcon="naver-logo" rightSlot={<span className="text-[13px] text-text-tertiary">미연결</span>}>네이버</MenuItem>
-            <MenuItem leftIcon="apple-logo" rightSlot={<span className="text-[13px] text-text-tertiary">미연결</span>}>Apple</MenuItem>
+            {(["kakao", "naver", "google"] as const).map((provider) => {
+              const isConnected = connectedProviders?.includes(provider);
+              const label = { kakao: "카카오", naver: "네이버", google: "Google" }[provider];
+              const icon = { kakao: "kakao-logo", naver: "naver-logo", google: "google-logo" }[provider] as "kakao-logo" | "naver-logo" | "google-logo";
+              return (
+                <MenuItem
+                  key={provider}
+                  leftIcon={icon}
+                  onClick={isConnected ? () => onDisconnectRequest?.(provider) : undefined}
+                  rightSlot={<span className="text-[13px] text-text-tertiary">{isConnected ? "연결됨" : "미연결"}</span>}
+                >
+                  {label}
+                </MenuItem>
+              );
+            })}
           </div>
         </section>
         <section className="py-2">
@@ -73,7 +89,8 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           }
           confirmLabel={screen === "disconnectModal" ? "해제" : "로그아웃"}
           confirmVariant="danger"
-          onConfirm={screen !== "disconnectModal" ? onLogout : undefined}
+          onConfirm={screen === "disconnectModal" ? onDisconnectConfirm : onLogout}
+          loading={screen === "disconnectModal" ? isDisconnecting : undefined}
         />
       <MainBottomNav activeKey="me" />
       </div>
