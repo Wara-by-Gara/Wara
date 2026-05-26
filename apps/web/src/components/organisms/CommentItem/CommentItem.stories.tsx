@@ -36,6 +36,41 @@ export const Editing: Story = {
   },
 };
 
+export const PhotoComment: Story = {
+  args: {
+    authorName: "이지은",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=24",
+    createdAt: "5분 전",
+    content: "현장 사진 찍었어요 📸",
+    imageUrl: "/invitation-cover-cake.png",
+    onImageClick: () => {},
+  },
+};
+
+export const PhotoOnly: Story = {
+  args: {
+    authorName: "박미라",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
+    createdAt: "30분 전",
+    content: "",
+    imageUrl: "/invitation-cover-cake.png",
+    onImageClick: () => {},
+  },
+};
+
+export const PhotoCommentMine: Story = {
+  args: {
+    variant: "mine",
+    authorName: "김와라",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=18",
+    createdAt: "방금",
+    content: "기념 사진이에요!",
+    imageUrl: "/invitation-cover-cake.png",
+    onImageClick: () => {},
+    onMore: () => {},
+  },
+};
+
 export const WithReplies: Story = {
   args: {
     authorName: "최하나",
@@ -61,6 +96,37 @@ export const WithReplies: Story = {
         replyToName: "김와라",
         content: "알려주셔서 감사해요!",
         createdAt: "45분 전",
+      },
+    ],
+  },
+};
+
+export const WithPhotoReplies: Story = {
+  args: {
+    authorName: "박미라",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
+    content: "현장 분위기 어때요?",
+    createdAt: "1시간 전",
+    onReply: () => {},
+    replies: [
+      {
+        id: "r1",
+        authorName: "이지은",
+        authorAvatarUrl: "https://i.pravatar.cc/80?img=24",
+        replyToName: "박미라",
+        content: "너무 좋아요! 사진 찍었어요 📸",
+        createdAt: "50분 전",
+        imageUrl: "/invitation-cover-cake.png",
+      },
+      {
+        id: "r2",
+        authorName: "김와라",
+        authorAvatarUrl: "/profile-me.png",
+        replyToName: "이지은",
+        content: "",
+        createdAt: "40분 전",
+        imageUrl: "/invitation-cover-cake.png",
+        variant: "host" as const,
       },
     ],
   },
