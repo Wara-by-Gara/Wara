@@ -1,22 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useMyInquiries, useCreateInquiry, useUpdateInquiry, useDeleteInquiry, usePublicInquiries } from '@/hooks/useInquiries';
-import type { InquiryType, InquiryStatus, PublicInquiry } from '@/lib/api/inquiries';
+import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { MainBottomNav } from '@/components/layout/MainBottomNav';
+import { FormField } from '@/components/molecules/FormField';
+import { TextInput } from '@/components/primitives/TextInput';
+import { Textarea } from '@/components/primitives/Textarea';
+import { Button } from '@/components/primitives/Button';
+import { Chip } from '@/components/primitives/Chip';
+import { Switch } from '@/components/primitives/Switch';
+import { ConfirmModal } from '@/components/molecules/Modal';
+import {
+  useMyInquiries,
+  useCreateInquiry,
+  useDeleteInquiry,
+  usePublicInquiries,
+} from '@/hooks/useInquiries';
+import { useAuthStore } from '@/stores/authStore';
+import type {
+  InquiryType,
+  InquiryStatus,
+  PublicInquiry,
+} from '@/lib/api/inquiries';
 
-const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
-  invitation: '초대장',
-  photo: '사진',
-  notification: '알림',
-  mission: '미션',
-  bug: '버그 신고',
-  feature: '기능 요청',
-  general: '기타',
-};
+const INQUIRY_TYPES: { value: InquiryType; label: string }[] = [
+  { value: 'invitation', label: '초대장' },
+  { value: 'photo', label: '사진' },
+  { value: 'mission', label: '미션' },
+  { value: 'notification', label: '알림' },
+  { value: 'bug', label: '버그 신고' },
+  { value: 'feature', label: '기능 요청' },
+  { value: 'general', label: '기타' },
+];
 
-const STATUS_LABELS: Record<InquiryStatus, { label: string; className: string }> = {
+const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = Object.fromEntries(
+  INQUIRY_TYPES.map(({ value, label }) => [value, label]),
+) as Record<InquiryType, string>;
+
+const STATUS_LABELS: Record<
+  InquiryStatus,
+  { label: string; className: string }
+> = {
   pending: { label: '답변 대기', className: 'bg-gray-100 text-gray-600' },
   in_progress: { label: '답변 중', className: 'bg-blue-100 text-blue-600' },
   resolved: { label: '답변 완료', className: 'bg-green-100 text-green-600' },
@@ -24,439 +50,297 @@ const STATUS_LABELS: Record<InquiryStatus, { label: string; className: string }>
 
 export default function InquiriesPage() {
   const router = useRouter();
-  const { data, isLoading } = useMyInquiries();
-  const { mutate: create, isPending: isCreating } = useCreateInquiry();
-  const { mutate: remove } = useDeleteInquiry();
-  const { data: publicData, isLoading: isPublicLoading } = usePublicInquiries();
+  const { isLoggedIn } = useAuthStore();
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ inquiryType: 'general' as InquiryType, title: '', content: '', isPublic: true });
+  const [doneModalOpen, setDoneModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [editTargetId, setEditTargetId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', content: '', isPublic: true });
-  const { mutate: update, isPending: isUpdating } = useUpdateInquiry(editTargetId ?? '');
+  const [submitError, setSubmitError] = useState('');
 
-  function handleEdit(e: React.FormEvent) {
-    e.preventDefault();
-    update(editForm, { onSuccess: () => setEditTargetId(null) });
-  }
+  const [form, setForm] = useState({
+    inquiryType: 'general' as InquiryType,
+    title: '',
+    content: '',
+    isPublic: true,
+  });
 
-  function startEdit(inquiry: { id: string; title: string; content: string; isPublic: boolean }) {
-    setEditTargetId(inquiry.id);
-    setEditForm({ title: inquiry.title, content: inquiry.content, isPublic: inquiry.isPublic });
-  }
+  const { data, isLoading } = useMyInquiries();
+  const { data: publicData, isLoading: isPublicLoading } = usePublicInquiries();
+  const { mutate: create, isPending: isCreating } = useCreateInquiry();
+  const { mutate: remove } = useDeleteInquiry();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit() {
+    if (!isLoggedIn) {
+      setSubmitError('로그인 후 문의를 보낼 수 있습니다');
+      return;
+    }
+    if (!form.title.trim() || !form.content.trim()) return;
+    setSubmitError('');
     create(form, {
-      onSuccess: (newInquiry) => {
-        setShowForm(false);
-        setForm({ inquiryType: 'general', title: '', content: '', isPublic: true });
-        router.push(`/inquiries/${newInquiry.id}`);
+      onSuccess: () => {
+        setDoneModalOpen(true);
+        setForm({
+          inquiryType: 'general',
+          title: '',
+          content: '',
+          isPublic: true,
+        });
       },
+      onError: () => setSubmitError('문의 제출 중 오류가 발생했습니다'),
     });
   }
 
-  return (
-    <main className="max-w-6xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">문의하기</h1>
-          {data && <p className="text-sm text-gray-500 mt-1">총 {data.total}개</p>}
-        </div>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          {showForm ? '취소' : '문의 작성'}
-        </button>
-      </div>
+  // ── 문의 작성 화면 ──────────────────────────────────────────────────────────
+  if (showForm) {
+    return (
+      <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background">
+        <TopAppBar
+          className="shrink-0"
+          title="문의하기"
+          onBack={() => setShowForm(false)}
+        />
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 p-5 border rounded-xl space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">문의 유형</label>
-            <select
-              value={form.inquiryType}
-              onChange={(e) => setForm((f) => ({ ...f, inquiryType: e.target.value as InquiryType }))}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            >
-              {Object.entries(INQUIRY_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-6">
+          {/* 문의 유형 */}
+          <FormField label="문의 유형" required>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {INQUIRY_TYPES.map((type) => (
+                <Chip
+                  key={type.value}
+                  variant="selectable"
+                  selected={form.inquiryType === type.value}
+                  disabled={isCreating}
+                  onClick={() =>
+                    setForm((f) => ({ ...f, inquiryType: type.value }))
+                  }
+                >
+                  {type.label}
+                </Chip>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
-            <input
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            </div>
+          </FormField>
+
+          {/* 제목 */}
+          <FormField label="제목" required>
+            <TextInput
               placeholder="제목을 입력해주세요"
+              value={form.title}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, title: e.target.value }))
+              }
               maxLength={200}
-              required
-              className="w-full border rounded-lg px-3 py-2 text-sm"
+              disabled={isCreating}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">내용</label>
-            <textarea
+          </FormField>
+
+          {/* 문의 내용 */}
+          <FormField label="문의 내용" required>
+            <Textarea
+              rows={6}
+              placeholder="내용을 입력해주세요. 빠른 답변을 위해 가능한 자세히 작성해주세요."
               value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-              placeholder="문의 내용을 입력해주세요"
-              maxLength={5000}
-              required
-              rows={5}
-              className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+              onChange={(e) =>
+                setForm((f) => ({ ...f, content: e.target.value }))
+              }
+              maxLength={1000}
+              disabled={isCreating}
             />
-          </div>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isPublic}
-                onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <span className="text-sm font-medium">
-                {form.isPublic ? '공개' : '비공개'}
-              </span>
-            </label>
-          </div>
-          <button
-            type="submit"
-            disabled={isCreating}
-            className="w-full py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+          </FormField>
+
+          {/* 공개 여부 */}
+          <label className="flex cursor-pointer items-center gap-3">
+            <Switch
+              checked={form.isPublic}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, isPublic: v }))}
+              disabled={isCreating}
+            />
+            <span className="text-[15px] text-text-primary">
+              {form.isPublic ? '공개' : '비공개'}
+            </span>
+          </label>
+
+          {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+        </main>
+
+        <footer className="px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3">
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={isCreating}
+            onClick={handleSubmit}
           >
-            {isCreating ? '제출 중...' : '문의 제출'}
-          </button>
-        </form>
-      )}
+            보내기
+          </Button>
+        </footer>
 
-      {/* 내 문의 목록 - 모바일 카드 버전 */}
-      <div className="block md:hidden">
-        <h2 className="text-lg font-bold mb-4">나의 문의</h2>
-        {isLoading ? (
-          <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-        ) : data?.items.length === 0 ? (
-          <p className="text-center text-gray-400 py-10">문의 내역이 없습니다</p>
-        ) : (
-          <ul className="space-y-3">
-            {data?.items.map((inquiry) => {
-              const status = STATUS_LABELS[inquiry.status];
-              return (
-                <li key={inquiry.id} className="border rounded-xl hover:bg-gray-50 transition-colors">
-                  <Link href={`/inquiries/${inquiry.id}`} className="block p-4">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs text-gray-400">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
-                        {status.label}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${inquiry.isPublic ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
-                        {inquiry.isPublic ? '공개' : '비공개'}
-                      </span>
-                    </div>
-                    <p className="font-medium truncate">{inquiry.title}</p>
-                  </Link>
-                  <div className="px-4 pb-4 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{inquiry.content}</p>
-                      {inquiry.answer && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-xs text-blue-500 font-medium mb-1">답변</p>
-                          <p className="text-sm text-gray-700">{inquiry.answer}</p>
-                        </div>
-                      )}
-                    </div>
-                    {inquiry.status === 'pending' && (
-                      <div className="flex gap-2 shrink-0">
-                        <button
-                          onClick={() => startEdit(inquiry)}
-                          className="text-gray-500 hover:text-blue-500 transition-colors text-sm"
-                          title="수정"
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => setDeleteTargetId(inquiry.id)}
-                          className="text-gray-600 hover:text-red-500 transition-colors text-lg font-bold"
-                          title="삭제"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {editTargetId === inquiry.id && (
-                    <form onSubmit={handleEdit} className="mt-3 pt-3 border-t space-y-2">
-                      <input
-                        value={editForm.title}
-                        onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                        className="w-full border rounded-lg px-3 py-2 text-sm"
-                        required
-                      />
-                      <textarea
-                        value={editForm.content}
-                        onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
-                        rows={3}
-                        className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
-                        required
-                      />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id={`edit-public-${inquiry.id}`}
-                          checked={editForm.isPublic}
-                          onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                          className="w-4 h-4"
-                        />
-                        <label htmlFor={`edit-public-${inquiry.id}`} className="text-sm">공개</label>
-                      </div>
-                      <div className="flex gap-2">
-                        <button type="submit" disabled={isUpdating} className="px-3 py-1.5 bg-black text-white text-sm rounded-lg disabled:opacity-50">
-                          {isUpdating ? '저장 중...' : '저장'}
-                        </button>
-                        <button type="button" onClick={() => setEditTargetId(null)} className="px-3 py-1.5 border text-sm rounded-lg">
-                          취소
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                  <p className="text-xs text-gray-400 px-4 pb-3">
-                    {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {/* 접수 완료 모달 */}
+        <ConfirmModal
+          open={doneModalOpen}
+          onOpenChange={setDoneModalOpen}
+          title="문의가 접수됐어요"
+          description="빠른 시일 내 답변드릴게요"
+          confirmLabel="확인"
+          onConfirm={() => {
+            setDoneModalOpen(false);
+            setShowForm(false);
+          }}
+        />
+
+        <MainBottomNav activeKey="me" />
       </div>
+    );
+  }
 
-      {/* 내 문의 목록 - PC 테이블 버전 */}
-      <div className="hidden md:block mb-12">
-        <h2 className="text-lg font-bold mb-4">나의 문의</h2>
-        {isLoading ? (
-          <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-        ) : data?.items.length === 0 ? (
-          <p className="text-center text-gray-400 py-10">문의 내역이 없습니다</p>
-        ) : (
-          <div className="overflow-x-auto border rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">분류</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">제목</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">공개</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">상태</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">날짜</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-700 w-12">삭제</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.items.map((inquiry) => {
+  // ── 문의 목록 화면 ──────────────────────────────────────────────────────────
+  return (
+    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-soft">
+      <TopAppBar
+        className="shrink-0"
+        title="문의하기"
+        rightSlot={
+          <Button size="sm" variant="ghost" onClick={() => setShowForm(true)}>
+            작성
+          </Button>
+        }
+      />
+
+      <main className="min-h-0 flex-1 overflow-y-auto pb-24">
+        {/* 나의 문의 — 로그인한 경우만 표시 */}
+        {isLoggedIn && (
+          <section className="px-5 py-4">
+            <h2 className="mb-3 text-[13px] font-bold uppercase tracking-wide text-text-tertiary">
+              나의 문의
+            </h2>
+            {isLoading ? (
+              <p className="py-6 text-center text-gray-400">불러오는 중...</p>
+            ) : !data?.items.length ? (
+              <p className="py-6 text-center text-gray-400">
+                문의 내역이 없습니다
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {data.items.map((inquiry) => {
                   const status = STATUS_LABELS[inquiry.status];
                   return (
-                    <React.Fragment key={inquiry.id}>
-                      <tr
-                        onClick={() => router.push(`/inquiries/${inquiry.id}`)}
-                        className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                      >
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
-                        <td className="px-4 py-3 font-medium max-w-xs line-clamp-1">{inquiry.title}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{inquiry.isPublic ? '공개' : '비공개'}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
+                    <li
+                      key={inquiry.id}
+                      className="rounded-2xl border border-border bg-surface p-4"
+                    >
+                      <Link href={`/inquiries/${inquiry.id}`} className="block">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className="text-[12px] text-text-tertiary">
+                            {INQUIRY_TYPE_LABELS[inquiry.inquiryType]}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${status.className}`}
+                          >
                             {status.label}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {inquiry.status === 'pending' && (
-                            <div className="flex gap-2 justify-center">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); startEdit(inquiry); }}
-                                className="text-gray-500 hover:text-blue-500 transition-colors text-sm"
-                              >
-                                수정
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setDeleteTargetId(inquiry.id); }}
-                                className="text-gray-600 hover:text-red-500 transition-colors text-lg font-bold"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                      {editTargetId === inquiry.id && (
-                        <tr className="border-b bg-blue-50">
-                          <td colSpan={6} className="px-4 py-4">
-                            <form onSubmit={handleEdit} className="space-y-3">
-                              <input
-                                value={editForm.title}
-                                onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                                className="w-full border rounded-lg px-3 py-2 text-sm"
-                                required
-                              />
-                              <textarea
-                                value={editForm.content}
-                                onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
-                                rows={3}
-                                className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
-                                required
-                              />
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  id={`pc-edit-public-${inquiry.id}`}
-                                  checked={editForm.isPublic}
-                                  onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                                  className="w-4 h-4"
-                                />
-                                <label htmlFor={`pc-edit-public-${inquiry.id}`} className="text-sm">공개</label>
-                              </div>
-                              <div className="flex gap-2">
-                                <button type="submit" disabled={isUpdating} className="px-3 py-1.5 bg-black text-white text-sm rounded-lg disabled:opacity-50">
-                                  {isUpdating ? '저장 중...' : '저장'}
-                                </button>
-                                <button type="button" onClick={() => setEditTargetId(null)} className="px-3 py-1.5 border text-sm rounded-lg">
-                                  취소
-                                </button>
-                              </div>
-                            </form>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* 전체 공개 문의 목록 - 모바일 카드 버전 */}
-      <div className="block md:hidden">
-        <h2 className="text-lg font-bold mb-4">전체 문의 보기</h2>
-        {isPublicLoading ? (
-          <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-        ) : publicData?.items.length === 0 ? (
-          <p className="text-center text-gray-400 py-10">공개된 문의가 없습니다</p>
-        ) : (
-          <ul className="space-y-3">
-            {publicData?.items.map((inquiry: PublicInquiry) => {
-              const status = STATUS_LABELS[inquiry.status];
-              return (
-                <li
-                  key={inquiry.id}
-                  onClick={() => router.push(`/inquiries/${inquiry.id}`)}
-                  className="p-4 border rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-gray-400">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</span>
-                        <span className="text-xs text-gray-500">by {inquiry.authorNickname ?? '익명'}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                      <p className="font-medium truncate">{inquiry.title}</p>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{inquiry.content}</p>
-                      {inquiry.answer && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-xs text-blue-500 font-medium mb-1">답변</p>
-                          <p className="text-sm text-gray-700">{inquiry.answer}</p>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-400 px-4 pb-3">
-                    {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      {/* 전체 공개 문의 목록 - PC 테이블 버전 */}
-      <div className="hidden md:block">
-        <h2 className="text-lg font-bold mb-4">전체 문의 보기</h2>
-        {isPublicLoading ? (
-          <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-        ) : publicData?.items.length === 0 ? (
-          <p className="text-center text-gray-400 py-10">공개된 문의가 없습니다</p>
-        ) : (
-          <div className="overflow-x-auto border rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">분류</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">제목</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">작성자</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">상태</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">날짜</th>
-                </tr>
-              </thead>
-              <tbody>
-                {publicData?.items.map((inquiry: PublicInquiry) => {
-                  const status = STATUS_LABELS[inquiry.status];
-                  return (
-                    <tr
-                      key={inquiry.id}
-                      onClick={() => router.push(`/inquiries/${inquiry.id}`)}
-                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                    >
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{INQUIRY_TYPE_LABELS[inquiry.inquiryType]}</td>
-                      <td className="px-4 py-3 font-medium max-w-xs line-clamp-1">{inquiry.title}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{inquiry.authorNickname ?? '익명'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
-                      </td>
-                    </tr>
+                        <p className="truncate text-[15px] font-medium text-text-primary">
+                          {inquiry.title}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-[13px] text-text-secondary">
+                          {inquiry.content}
+                        </p>
+                      </Link>
+                      <div className="mt-3 flex items-center justify-between">
+                        <time
+                          suppressHydrationWarning
+                          className="text-[12px] text-text-tertiary"
+                        >
+                          {new Date(inquiry.createdAt).toLocaleDateString(
+                            'ko-KR',
+                          )}
+                        </time>
+                        {inquiry.status === 'pending' && (
+                          <button
+                            onClick={() => setDeleteTargetId(inquiry.id)}
+                            className="text-[13px] text-text-tertiary hover:text-danger transition-colors"
+                          >
+                            삭제
+                          </button>
+                        )}
+                      </div>
+                    </li>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </ul>
+            )}
+          </section>
         )}
-      </div>
+
+        {/* 전체 공개 문의 */}
+        <section className="px-5 py-4">
+          <h2 className="mb-3 text-[13px] font-bold uppercase tracking-wide text-text-tertiary">
+            전체 문의
+          </h2>
+          {isPublicLoading ? (
+            <p className="py-6 text-center text-gray-400">불러오는 중...</p>
+          ) : !publicData?.items.length ? (
+            <p className="py-6 text-center text-gray-400">
+              공개된 문의가 없습니다
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {publicData.items.map((inquiry: PublicInquiry) => {
+                const status = STATUS_LABELS[inquiry.status];
+                return (
+                  <li
+                    key={inquiry.id}
+                    onClick={() => router.push(`/inquiries/${inquiry.id}`)}
+                    className="cursor-pointer rounded-2xl border border-border bg-surface p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <span className="text-[12px] text-text-tertiary">
+                        {INQUIRY_TYPE_LABELS[inquiry.inquiryType]}
+                      </span>
+                      <span className="text-[12px] text-text-tertiary">
+                        by {inquiry.authorNickname ?? '익명'}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${status.className}`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+                    <p className="truncate text-[15px] font-medium text-text-primary">
+                      {inquiry.title}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-[13px] text-text-secondary">
+                      {inquiry.content}
+                    </p>
+                    <time
+                      suppressHydrationWarning
+                      className="mt-3 block text-[12px] text-text-tertiary"
+                    >
+                      {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
+                    </time>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </main>
 
       {/* 삭제 확인 모달 */}
-      {deleteTargetId && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-            <p className="text-lg font-medium mb-6">문의를 삭제하시겠습니까?</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTargetId(null)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  remove(deleteTargetId);
-                  setDeleteTargetId(null);
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                삭제
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+      <ConfirmModal
+        open={!!deleteTargetId}
+        onOpenChange={(open) => !open && setDeleteTargetId(null)}
+        title="문의를 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        confirmVariant="danger"
+        onConfirm={() => {
+          if (deleteTargetId) {
+            remove(deleteTargetId);
+            setDeleteTargetId(null);
+          }
+        }}
+      />
+
+      <MainBottomNav activeKey="me" />
+    </div>
   );
 }
