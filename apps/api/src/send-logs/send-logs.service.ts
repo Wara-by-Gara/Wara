@@ -14,7 +14,7 @@ export class SendLogsService {
 
   async create(userId: string, invitationId: string, dto: CreateSendLogDto) {
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
-    const inviteUrl = `${frontendUrl}/rsvp/${invitationId}`;
+    const inviteUrl = `${frontendUrl}/i/${invitationId}`;
 
     const log = await this.sendLogsRepository.create({
       invitationId,
@@ -24,13 +24,6 @@ export class SendLogsService {
     });
 
     const inviteUrlWithRef = `${inviteUrl}?ref=${log.id}`;
-
-    if (dto.channel === 'kakao') {
-      return {
-        inviteUrl: inviteUrlWithRef,
-        kakaoMeta: dto.kakaoMeta,
-      };
-    }
 
     if (dto.channel === 'sms') {
       return {
