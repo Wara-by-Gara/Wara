@@ -20,7 +20,6 @@ export interface PhotoListResponse {
 
 export function getPhotos(
   invitationId: string,
-  token: string,
   cursor?: string,
   limit = 8,
 ): Promise<PhotoListResponse> {

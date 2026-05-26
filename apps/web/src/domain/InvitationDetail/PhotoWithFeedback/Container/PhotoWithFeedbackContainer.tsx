@@ -29,7 +29,7 @@ export default function PhotoWithFeedbackContainer({
   const total = data?.pages[0]?.total ?? 0;
   const photos = data?.pages.flatMap((p) => p.rows) ?? [];
 
-  if (isLoading && token) return <div>로딩중 ....</div>;
+  if (isLoading) return <div>로딩중 ....</div>;
 
   return (
     <>
