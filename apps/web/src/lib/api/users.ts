@@ -18,10 +18,10 @@ export interface UpdateMeInput {
   profileImageUrl?: string;
 }
 
-export function getMe(token: string): Promise<Me> {
-  return apiGet<Me>("/users/me", token);
+export function getMe(): Promise<Me> {
+  return apiGet<Me>("/users/me");
 }
 
-export function updateMe(data: UpdateMeInput, token: string): Promise<Me> {
-  return apiPatch<Me>("/users/me", data, token);
+export function updateMe(data: UpdateMeInput): Promise<Me> {
+  return apiPatch<Me>("/users/me", data);
 }
