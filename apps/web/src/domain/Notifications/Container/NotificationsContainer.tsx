@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Notifications } from '@/screens/Notifications';
 import type { NotificationsState } from '@/screens/Notifications';
 import {
@@ -11,11 +12,13 @@ import {
   useUpdateNotificationSettings,
   useNotificationSocket,
 } from '@/hooks/useNotifications';
+import { ROUTES } from '@/constants/routes';
 import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 
 export default function NotificationsContainer() {
+  const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -53,13 +56,21 @@ export default function NotificationsContainer() {
           ? 'unreadOnly'
           : 'default';
 
+  const handleItemClick = (id: string) => {
+    markAsRead(id);
+    const notification = allItems.find((n) => n.id === id);
+    if (notification?.targetType === 'invitation' && notification.targetId) {
+      router.push(ROUTES.INVITATIONS.DETAIL(notification.targetId));
+    }
+  };
+
   return (
     <>
       <Notifications
         state={state}
         items={mappedItems}
         onMarkAllAsRead={() => markAllAsRead()}
-        onMarkAsRead={(id) => markAsRead(id)}
+        onMarkAsRead={handleItemClick}
         onFilterChange={setFilter}
         onRetry={() => refetch()}
         onSettings={() => setSettingsOpen(true)}
