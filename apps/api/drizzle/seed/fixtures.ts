@@ -346,7 +346,7 @@ function buildSeeds() {
         id: id(`sendlog:${invKey}:guest`),
         invitationId: invId,
         senderId: guestUserId,
-        channel: 'sms' as const,
+        channel: 'link' as const,
         inviteUrl: baseUrl,
       });
     }
