@@ -21,6 +21,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       maxLength,
       showCounter,
       defaultValue = "",
+      value,
       onChange,
       disabled,
       rows = 4,
@@ -28,7 +29,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     },
     ref,
   ) {
-    const [length, setLength] = useState(String(defaultValue).length);
+    const isControlled = value !== undefined;
+    const [uncontrolledLength, setUncontrolledLength] = useState(
+      String(defaultValue).length,
+    );
+    const length = isControlled ? String(value).length : uncontrolledLength;
 
     return (
       <div className="w-full">
@@ -39,10 +44,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           disabled={disabled}
           aria-invalid={!!error}
           onChange={(e) => {
-            setLength(e.target.value.length);
+            if (!isControlled) setUncontrolledLength(e.target.value.length);
             onChange?.(e);
           }}
-          defaultValue={defaultValue}
+          {...(isControlled ? { value } : { defaultValue })}
           className={cn(
             "w-full rounded-[14px] border bg-surface p-4 text-[16px] text-text-primary placeholder:text-text-tertiary transition-colors resize-y",
             "outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",

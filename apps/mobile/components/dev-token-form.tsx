@@ -1,100 +1,99 @@
-import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { issueDevToken, setTokens, type DevUserEmail, DEV_USER_EMAILS, WaraApiError } from '@/api';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { DEV_USER_EMAILS, issueDevToken } from '@/api/dev-auth';
+import type { DevUserEmail } from '@/api/dev-auth';
+import { setTokens } from '@/api/auth-storage';
+import { colors, spacing, typography, radius } from '@/constants/tokens';
 
-/**
- * 개발 전용 토큰 발급 UI. auth-kakao PR 머지 후 로그인 화면으로 대체.
- * 시드 유저 이메일 선택 → BE /auth/dev/token 호출 → SecureStore 저장.
- */
-export function DevTokenForm({ onIssued }: { onIssued: () => void }) {
-  const [selected, setSelected] = useState<DevUserEmail>('host1@wara.dev');
+interface DevTokenFormProps {
+  onIssued: () => void;
+}
 
-  const mutation = useMutation<void, Error, DevUserEmail>({
-    mutationFn: async (email) => {
+export function DevTokenForm({ onIssued }: DevTokenFormProps) {
+  const [loading, setLoading] = useState<DevUserEmail | null>(null);
+  const [error, setError] = useState('');
+
+  async function handlePress(email: DevUserEmail) {
+    setLoading(email);
+    setError('');
+    try {
       const { accessToken } = await issueDevToken(email);
       await setTokens({ accessToken });
-    },
-    onSuccess: onIssued,
-  });
+      onIssued();
+    } catch {
+      setError('토큰 발급 실패 — API 서버가 실행 중인지 확인하세요');
+    } finally {
+      setLoading(null);
+    }
+  }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">와라</ThemedText>
-      <ThemedText style={styles.subtitle}>개발용 — 시드 유저 선택</ThemedText>
+    <View style={styles.container}>
+      <Text style={styles.title}>DEV 로그인</Text>
+      <Text style={styles.subtitle}>시드 유저 선택 후 토큰 발급</Text>
 
-      <View style={styles.list}>
-        {DEV_USER_EMAILS.map((email) => (
-          <Pressable
-            key={email}
-            onPress={() => setSelected(email)}
-            style={[styles.row, selected === email && styles.rowActive]}>
-            <ThemedText>{email}</ThemedText>
-          </Pressable>
-        ))}
-      </View>
+      {DEV_USER_EMAILS.map((email) => (
+        <TouchableOpacity
+          key={email}
+          style={[styles.button, loading === email && styles.buttonDisabled]}
+          onPress={() => handlePress(email)}
+          disabled={loading !== null}
+          activeOpacity={0.7}
+        >
+          {loading === email ? (
+            <ActivityIndicator size="small" color={colors.textInverse} />
+          ) : (
+            <Text style={styles.buttonText}>{email}</Text>
+          )}
+        </TouchableOpacity>
+      ))}
 
-      <Pressable
-        style={[styles.button, mutation.isPending && styles.buttonDisabled]}
-        disabled={mutation.isPending}
-        onPress={() => mutation.mutate(selected)}>
-        <ThemedText style={styles.buttonText}>
-          {mutation.isPending ? '발급 중…' : '토큰 발급'}
-        </ThemedText>
-      </Pressable>
-
-      {mutation.error && (
-        <ThemedText style={styles.error}>
-          {mutation.error instanceof WaraApiError
-            ? `${mutation.error.code} — ${mutation.error.message}`
-            : '네트워크 오류 — 서버가 켜져 있나요?'}
-        </ThemedText>
-      )}
-    </ThemedView>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    gap: 16,
+    alignItems: 'center',
     justifyContent: 'center',
+    padding: spacing[5],
+    backgroundColor: colors.backgroundSoft,
+  },
+  title: {
+    ...typography.heading2,
+    color: colors.textPrimary,
+    marginBottom: spacing[1],
   },
   subtitle: {
-    opacity: 0.6,
-  },
-  list: {
-    gap: 6,
-    marginVertical: 8,
-  },
-  row: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: 'rgba(127,127,127,0.08)',
-  },
-  rowActive: {
-    backgroundColor: 'rgba(10,126,164,0.15)',
+    ...typography.body2,
+    color: colors.textTertiary,
+    marginBottom: spacing[6],
   },
   button: {
-    backgroundColor: '#0a7ea4',
-    paddingVertical: 14,
-    borderRadius: 10,
+    width: '100%',
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
     alignItems: 'center',
+    marginBottom: spacing[2],
+    minHeight: 48,
+    justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    ...typography.body1,
+    color: colors.textInverse,
   },
   error: {
-    color: '#c33',
-    fontSize: 13,
+    ...typography.caption1,
+    color: colors.danger,
+    marginTop: spacing[3],
+    textAlign: 'center',
   },
 });
