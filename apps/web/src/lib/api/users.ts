@@ -12,10 +12,25 @@ export function getMe(): Promise<Me> {
   return apiGet<Me>("/users/me");
 }
 
-export function updateMe(payload: { nickname: string }, token: string): Promise<Me> {
-  return apiPatch<Me>("/users/me", payload, token);
+export function updateMe(payload: { nickname: string }): Promise<Me> {
+  return apiPatch<Me>("/users/me", payload);
 }
 
-export function deleteMe(token: string): Promise<void> {
-  return apiDelete("/users/me", token);
+export function deleteMe(): Promise<void> {
+  return apiDelete("/users/me");
+}
+
+export interface MySocial {
+  id: string;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function getMySocials(): Promise<MySocial[]> {
+  return apiGet<MySocial[]>("/users/me/socials");
+}
+
+export function deleteMySocial(provider: string): Promise<void> {
+  return apiDelete(`/users/me/socials/${provider}`);
 }

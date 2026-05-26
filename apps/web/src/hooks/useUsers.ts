@@ -1,24 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteMe, getMe, updateMe } from '@/lib/api/users';
+import { deleteMe, deleteMySocial, getMe, getMySocials, updateMe } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export function useMe() {
   return useQuery({
     queryKey: QUERY_KEYS.users.me(),
-    queryFn: () => {
-      const token = localStorage.getItem('access_token') ?? '';
-      return getMe(token);
-    },
+    queryFn: () => getMe(),
   });
 }
 
 export function useUpdateMe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (nickname: string) => {
-      const token = localStorage.getItem('access_token') ?? '';
-      return updateMe({ nickname }, token);
-    },
+    mutationFn: (nickname: string) => updateMe({ nickname }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() });
     },
@@ -27,13 +21,23 @@ export function useUpdateMe() {
 
 export function useDeleteMe() {
   return useMutation({
-    mutationFn: () => {
-      const token = localStorage.getItem('access_token') ?? '';
-      return deleteMe(token);
-    },
+    mutationFn: () => deleteMe(),
+  });
+}
+
+export function useGetMySocials() {
+  return useQuery({
+    queryKey: QUERY_KEYS.users.socials(),
+    queryFn: () => getMySocials(),
+  });
+}
+
+export function useDeleteMySocial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (provider: string) => deleteMySocial(provider),
     onSuccess: () => {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.socials() });
     },
   });
 }
