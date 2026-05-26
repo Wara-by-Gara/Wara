@@ -10,11 +10,11 @@ export function usePhotoDetail(invitationId: string, photoId: string, token: str
 
   const trackView = () => {
     if (!token) return;
-    getPhoto(invitationId, photoId, token);
+    getPhoto(invitationId, photoId);
   };
 
   const toggleLike = async () => {
-    const result = await togglePhotoLike(invitationId, photoId, token);
+    const result = await togglePhotoLike(invitationId, photoId);
     setLiked(result.liked);
     setLikeCount((prev) => result.liked ? prev + 1 : prev - 1);
     queryClient.invalidateQueries({

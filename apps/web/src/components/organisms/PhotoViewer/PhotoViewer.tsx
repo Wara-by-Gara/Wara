@@ -6,7 +6,6 @@ import { CommentInputBar } from "@/components/organisms/CommentInputBar";
 import { CommentItem } from "@/components/organisms/CommentItem";
 import {
   Modal,
-  ModalOverlay,
   ModalPortal,
   ModalPrimitive,
 } from "@/components/molecules/Modal";
@@ -333,10 +332,6 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
       );
     }
 
-    const overlayClass = cn(
-      "z-50 bg-black/80 data-[state=open]:animate-in data-[state=open]:fade-in",
-      contained ? "absolute inset-0" : "fixed inset-0",
-    );
     const contentClass = cn(
       "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden rounded-3xl bg-black p-0 shadow-lg focus:outline-none",
       "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
