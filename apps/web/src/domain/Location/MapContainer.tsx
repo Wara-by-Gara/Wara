@@ -8,6 +8,7 @@ import { KakaoMap, type ParticipantPin } from "@/components/molecules/KakaoMap/K
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocket";
+import { useMe } from "@/hooks/useUsers";
 import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
 
@@ -64,6 +65,13 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const { data: participantsData } = useParticipants(invitationId, token);
   const { data: initialLocations } = useParticipantLocations(invitationId, token);
   const { mutate: saveLocation } = useSetEventLocation(invitationId, token);
+  const { data: me } = useMe();
+
+  const isHost =
+    !!me &&
+    participantsData?.participants.some(
+      (p) => p.user.id === me.id && p.participant.memberRole === "HOST",
+    ) === true;
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
   const [participantLocations, setParticipantLocations] = useState<
@@ -341,6 +349,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           );
         }}
         onOpenSettings={() => window.open("app-settings:", "_self")}
+        isHost={isHost}
+        onSetLocation={() => setPageState("searchInitial")}
       />
     </>
   );
