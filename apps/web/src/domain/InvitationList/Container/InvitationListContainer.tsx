@@ -15,11 +15,9 @@ export default function InvitationListContainer() {
     hydrate();
   }, [hydrate]);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") ?? "" : "";
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["my-invitations"],
-    queryFn: () => getMyInvitations(token),
+    queryFn: () => getMyInvitations(),
     enabled: hydrated && isLoggedIn,
     retry: 1,
   });

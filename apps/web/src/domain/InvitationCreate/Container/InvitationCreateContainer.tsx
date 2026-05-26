@@ -152,19 +152,14 @@ export default function InvitationCreateContainer() {
   });
 
   const { mutate: publish, isPending } = useMutation({
-    mutationFn: () => {
-      const token = localStorage.getItem("access_token") ?? "";
-      return createInvitation(
-        {
-          title: form.title,
-          description: form.description,
-          mainImageKey: form.mainImageKey,
-          templateId: form.templateId || undefined,
-          eventStartAt: toEventStartAt(form.date, form.time),
-        },
-        token,
-      );
-    },
+    mutationFn: () =>
+      createInvitation({
+        title: form.title,
+        description: form.description,
+        mainImageKey: form.mainImageKey,
+        templateId: form.templateId || undefined,
+        eventStartAt: toEventStartAt(form.date, form.time),
+      }),
     onSuccess: (data) => { setCreatedInvitationId(data.id); setStep("publishComplete"); },
     onError: () => setPublishError(true),
   });
@@ -175,9 +170,8 @@ export default function InvitationCreateContainer() {
     setImageUploading(true);
     setImageUploadError(false);
     try {
-      const token = localStorage.getItem("access_token") ?? "";
       const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
-      const { presignedUrl, key } = await getInvitationImagePresignedUrl(file.name, contentType, token);
+      const { presignedUrl, key } = await getInvitationImagePresignedUrl(file.name, contentType);
       await uploadImageToS3(presignedUrl, file);
       set({ mainImageKey: key });
     } catch {
@@ -743,7 +737,8 @@ export default function InvitationCreateContainer() {
           primary={{
               label: "초대장 만들기",
               onClick: () => {
-                if (!localStorage.getItem("access_token")) { setLoginSheetOpen(true); return; }
+                const isLoggedIn = document.cookie.split("; ").some((r) => r.startsWith("is_logged_in="));
+                if (!isLoggedIn) { setLoginSheetOpen(true); return; }
                 setShowPublishConfirm(true);
               },
             }}
