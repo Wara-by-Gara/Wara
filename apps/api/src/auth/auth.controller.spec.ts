@@ -31,10 +31,6 @@ const mockRes = {
   clearCookie: jest.fn(),
 };
 
-const mockReq = {
-  cookies: {} as Record<string, string>,
-};
-
 describe('AuthController', () => {
   let controller: AuthController;
 
