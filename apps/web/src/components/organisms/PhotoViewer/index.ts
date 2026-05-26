@@ -1,1 +1,1 @@
-export { PhotoViewer, type PhotoViewerProps } from "./PhotoViewer";
+export { PhotoViewer, type PhotoViewerProps, type PhotoViewerComment } from "./PhotoViewer";

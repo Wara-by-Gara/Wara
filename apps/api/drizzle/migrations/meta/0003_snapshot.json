@@ -1,6 +1,6 @@
 {
-  "id": "3518cd7f-c3b5-4f63-8065-9aaf173154af",
-  "prevId": "57f64710-8c69-4293-8e81-1e27dbb14798",
+  "id": "0ad3f898-46c9-4a9a-bcc8-59af36fc8583",
+  "prevId": "c5b348ff-720f-4337-8f23-44508d4ebc01",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -989,6 +989,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "host_memo": {
+          "name": "host_memo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -2249,13 +2261,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
-        },
-        "is_public": {
-          "name": "is_public",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
         },
         "answer": {
           "name": "answer",
