@@ -30,11 +30,19 @@ export class FeedbacksRepository {
 
     if (cursor) {
       const [cursorRow] = await this.db
-        .select({ createdAt: feedbacks.createdAt })
+        .select({ createdAt: feedbacks.createdAt, id: feedbacks.id })
         .from(feedbacks)
         .where(eq(feedbacks.id, cursor));
-      if (cursorRow?.createdAt) {
-        cursorConditions.push(lt(feedbacks.createdAt, cursorRow.createdAt));
+      if (cursorRow) {
+        cursorConditions.push(
+          or(
+            lt(feedbacks.createdAt, cursorRow.createdAt),
+            and(
+              eq(feedbacks.createdAt, cursorRow.createdAt),
+              lt(feedbacks.id, cursorRow.id),
+            ),
+          ) as SQL,
+        );
       }
     }
     return { LIMIT, cursorConditions };
@@ -89,11 +97,57 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
         orderBy: (t, { asc }) => [asc(t.createdAt)],
       },
     },
-    orderBy: (t, { desc }) => [desc(t.createdAt)],
+    orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
     limit: LIMIT + 1,
   });
   return this.paginate(rows, LIMIT);
 }
+
+  //사진 댓글 목록
+  async findAllByPhoto(photoId: string, dto: ListFeedbacksDto) {
+    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+
+    const conditions = [
+      eq(feedbacks.photoId, photoId),
+      isNull(feedbacks.parentId),
+      ...cursorConditions,
+    ];
+
+    const rows = await this.db.query.feedbacks.findMany({
+      where: and(...conditions),
+      with: {
+        participant: {
+          with: {
+            user: {
+              columns: {
+                nickname: true,
+                profileImageUrl: true,
+              },
+            },
+          },
+        },
+        photo: true,
+        replies: {
+          with: {
+            participant: {
+              with: {
+                user: {
+                  columns: {
+                    nickname: true,
+                    profileImageUrl: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: (t, { asc }) => [asc(t.createdAt)],
+        },
+      },
+      orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
+      limit: LIMIT + 1,
+    });
+    return this.paginate(rows, LIMIT);
+  }
 
   //댓글 단건 조회
   async findById(id: string) {

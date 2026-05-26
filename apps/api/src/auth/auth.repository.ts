@@ -68,6 +68,7 @@ export class AuthRepository {
           .values({
             email,
             name,
+            nickname: name,
             profileImageUrl,
           })
           .returning({
