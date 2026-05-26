@@ -107,6 +107,7 @@ import {
   AppleLogoWhite,
   GoogleLogo,
   CrownYellow,
+  InstagramLogo,
 } from "./custom";
 
 import type { IconName } from "./types";
@@ -237,6 +238,7 @@ export const ICON_REGISTRY: Record<IconName, ComponentType<LucideProps>> = {
   "apple-logo": AppleLogo,
   "apple-logo-white": AppleLogoWhite,
   "google-logo": GoogleLogo,
+  "instagram-logo": InstagramLogo,
 };
 
 const BRAND_ICONS: ReadonlySet<IconName> = new Set([
@@ -246,6 +248,7 @@ const BRAND_ICONS: ReadonlySet<IconName> = new Set([
   "apple-logo-white",
   "google-logo",
   "crown-yellow",
+  "instagram-logo",
 ]);
 
 export const isBrandIcon = (name: IconName): boolean => BRAND_ICONS.has(name);
