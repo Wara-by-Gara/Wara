@@ -5,12 +5,10 @@ type ImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic"
 export async function getInvitationImagePresignedUrl(
   fileName: string,
   contentType: ImageContentType,
-  token: string,
 ): Promise<{ presignedUrl: string; key: string }> {
   return apiPost<{ presignedUrl: string; key: string }>(
     "/invitations/presigned-url",
     { fileName, contentType },
-    token,
   );
 }
 
@@ -75,6 +73,6 @@ export function getInvitation(id: string): Promise<Invitation> {
   return apiGet<Invitation>(`/invitations/${id}`);
 }
 
-export function getMyInvitations(token: string): Promise<Invitation[]> {
-  return apiGet<Invitation[]>("/invitations", token);
+export function getMyInvitations(): Promise<Invitation[]> {
+  return apiGet<Invitation[]>("/invitations");
 }
