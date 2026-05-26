@@ -11,11 +11,8 @@ export function useOAuthCallback() {
   const login = useAuthStore((s) => s.login);
 
   useEffect(() => {
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-
-    if (accessToken && refreshToken) {
-      login(accessToken, refreshToken);
+    if (searchParams.get('auth_success') === '1') {
+      login();
       router.replace(pathname);
     }
   }, [searchParams, login, router, pathname]);

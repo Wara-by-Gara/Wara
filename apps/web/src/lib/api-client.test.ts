@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from './api-client';
 
-const BASE = 'http://localhost:3000/api/v1';
+const BASE = 'http://localhost:3001/api'; 
 
 function makeFetchResponse(body: unknown, status = 200) {
   return Promise.resolve({
