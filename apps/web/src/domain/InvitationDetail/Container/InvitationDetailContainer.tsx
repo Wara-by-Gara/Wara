@@ -9,11 +9,9 @@ export default function InvitationDetailContainer({
   invitationId,
 }: InvitationDetailProps) {
   return (
-    <div>
-      <div className="flex flex-col md:flex-row bg-white mx-10 mt-12 rounded-lg overflow-hidden">
-        <InvitationCardContainer invitationId={invitationId} />
-        <InformationsContainer invitationId={invitationId} />
-      </div>
+    <div className="mx-auto flex max-w-md flex-col gap-5 px-5 pb-6">
+      <InvitationCardContainer invitationId={invitationId} />
+      <InformationsContainer invitationId={invitationId} />
       <PhotoWithFeedbackContainer invitationId={invitationId} />
     </div>
   );

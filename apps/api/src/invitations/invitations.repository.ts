@@ -25,6 +25,12 @@ export class InvitationsRepository {
         and(eq(inv.id, id), isNull(inv.deletedAt)),
       with: {
         eventLocation: true,
+        host: {
+          columns: {
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
       },
     });
   }

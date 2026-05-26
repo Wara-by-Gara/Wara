@@ -37,6 +37,28 @@ export function getPhoto(
   return apiGet<Photo>(`/invitations/${invitationId}/photos/${photoId}`);
 }
 
+export interface PhotoDownloadItem {
+  id: string;
+  url: string;
+}
+
+export function getDownloadUrls(
+  invitationId: string,
+  ids: string[],
+): Promise<PhotoDownloadItem[]> {
+  return apiGet<PhotoDownloadItem[]>(
+    `/invitations/${invitationId}/photos/download?ids=${ids.join(',')}`,
+  );
+}
+
+export function getAllDownloadUrls(
+  invitationId: string,
+): Promise<PhotoDownloadItem[]> {
+  return apiGet<PhotoDownloadItem[]>(
+    `/invitations/${invitationId}/photos/download/all`,
+  );
+}
+
 export function togglePhotoLike(
   invitationId: string,
   photoId: string,

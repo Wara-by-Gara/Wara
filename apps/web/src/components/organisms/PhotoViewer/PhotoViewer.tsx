@@ -21,6 +21,7 @@ export interface PhotoViewerComment {
   content: string;
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
+  moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -51,6 +52,8 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   comments?: PhotoViewerComment[];
   onCommentSubmit?: (text: string) => void;
   commentPlaceholder?: string;
+  /** 수정 중인 댓글 (pre-fill용) */
+  editingComment?: { id: string; content: string };
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -158,6 +161,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       comments = [],
       onCommentSubmit,
       commentPlaceholder = "댓글 남기기",
+      editingComment,
       rightActions,
       ...props
     },
@@ -261,6 +265,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           authorAvatarUrl={c.authorAvatarUrl}
                           createdAt={c.createdAt}
                           content={c.content}
+                          moreMenuItems={c.moreMenuItems}
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
                         />
                       </li>
@@ -273,9 +278,11 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                 )}
               </div>
               <CommentInputBar
+                key={editingComment?.id ?? 'new'}
                 avatarUrl={authorAvatarUrl}
                 authorName={authorName}
-                placeholder={commentPlaceholder}
+                placeholder={editingComment ? '댓글 수정' : commentPlaceholder}
+                initialValue={editingComment?.content}
                 onSubmit={onCommentSubmit}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
@@ -339,10 +346,10 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
 
     const modalBody = (
       <>
-        <ModalOverlay className={overlayClass} />
-        <ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
-          {body}
-        </ModalPrimitive.Content>
+<ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
+  <ModalPrimitive.Title className="sr-only">사진 뷰어</ModalPrimitive.Title>
+  {body}
+</ModalPrimitive.Content>
       </>
     );
 
