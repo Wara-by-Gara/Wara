@@ -41,64 +41,59 @@ export class FeedbacksRepository {
   }
 
   //초대장댓글 + 사진 댓글 통합 목록
-  async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
-    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
+  const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
-    const photoIds = await this.db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(eq(photos.invitationId, invitationId))
-      .then((rows) => rows.map((r) => r.id));
+  const photoIds = await this.db
+    .select({ id: photos.id })
+    .from(photos)
+    .where(eq(photos.invitationId, invitationId))
+    .then((rows) => rows.map((r) => r.id));
 
-    const conditions = [
-      or(
-        eq(feedbacks.invitationId, invitationId),
-        photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
-      ),
-      isNull(feedbacks.parentId),
-      ...cursorConditions,
-    ];
+  const conditions = [
+    or(
+      eq(feedbacks.invitationId, invitationId),
+      photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
+    ),
+    isNull(feedbacks.parentId),
+    ...cursorConditions,
+  ];
 
-    const rows = await this.db.query.feedbacks.findMany({
-      where: and(...conditions),
-      with: {
-        participant: true,
-        photo: true,
-        replies: {
-          with: { participant: true },
-          orderBy: (t, { asc }) => [asc(t.createdAt)],
+  const rows = await this.db.query.feedbacks.findMany({
+    where: and(...conditions),
+    with: {
+      participant: {
+        with: {
+          user: {
+            columns: {
+              nickname: true,
+              profileImageUrl: true,
+            },
+          },
         },
       },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
-      limit: LIMIT + 1,
-    });
-    return this.paginate(rows, LIMIT);
-  }
-
-  //사진 댓글 목록 조회
-  async findManyByPhoto(photoId: string, dto: ListFeedbacksDto) {
-    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
-
-    const conditions = [
-      eq(feedbacks.photoId, photoId),
-      isNull(feedbacks.parentId),
-      ...cursorConditions,
-    ];
-
-    const rows = await this.db.query.feedbacks.findMany({
-      where: and(...conditions),
-      with: {
-        participant: true,
-        replies: {
-          with: { participant: true },
-          orderBy: (t, { asc }) => [asc(t.createdAt)],
+      photo: true,
+      replies: {
+        with: {
+          participant: {
+            with: {
+              user: {
+                columns: {
+                  nickname: true,
+                  profileImageUrl: true,
+                },
+              },
+            },
+          },
         },
+        orderBy: (t, { asc }) => [asc(t.createdAt)],
       },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
-      limit: LIMIT + 1,
-    });
-    return this.paginate(rows, LIMIT);
-  }
+    },
+    orderBy: (t, { desc }) => [desc(t.createdAt)],
+    limit: LIMIT + 1,
+  });
+  return this.paginate(rows, LIMIT);
+}
 
   //댓글 단건 조회
   async findById(id: string) {
