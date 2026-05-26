@@ -319,7 +319,13 @@ export default function InvitationCreateContainer() {
           <StickyCTA
             primary={{
               label: "선택",
-              onClick: () => { set({ templateId: previewTemplateId }); setStep("templateList"); },
+              onClick: () => {
+                set({
+                  templateId: previewTemplateId,
+                  mainImageKey: previewTemplate?.previewImageKey ?? DEFAULT_COVER_KEY,
+                });
+                setStep("templateList");
+              },
             }}
           />
         </div>
@@ -339,40 +345,49 @@ export default function InvitationCreateContainer() {
         <TopAppBar className="shrink-0" title="기본 정보" onBack={() => setStep(form.templateId ? "templateList" : "start")} />
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
           <FormField label="대표 이미지">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
-            />
-            {imageUploading ? (
-              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
-                <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-              </div>
-            ) : imageUploadError ? (
-              <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
-                <Icon name="alert-triangle" size="lg" color="danger" decorative />
-                <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
-              </div>
-            ) : !form.templateId && form.mainImageKey === DEFAULT_COVER_KEY ? (
-              <button
-                type="button"
-                className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed border-border-strong bg-gray-50"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="flex flex-col items-center gap-2 text-text-tertiary">
-                  <Icon name="image" size="xl" color="inactive" decorative />
-                  <span className="text-[13px]">사진을 추가해보세요</span>
-                </div>
-              </button>
+            {form.templateId ? (
+              <InvitationCover
+                imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
+                variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+              />
             ) : (
-              <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                <InvitationCover
-                  imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-                  variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
                 />
-              </button>
+                {imageUploading ? (
+                  <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
+                    <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+                  </div>
+                ) : imageUploadError ? (
+                  <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                    <Icon name="alert-triangle" size="lg" color="danger" decorative />
+                    <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
+                  </div>
+                ) : form.mainImageKey === DEFAULT_COVER_KEY ? (
+                  <button
+                    type="button"
+                    className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed border-border-strong bg-gray-50"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                      <Icon name="image" size="xl" color="inactive" decorative />
+                      <span className="text-[13px]">사진을 추가해보세요</span>
+                    </div>
+                  </button>
+                ) : (
+                  <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                    <InvitationCover
+                      imageUrl={form.mainImageKey}
+                      variant="image"
+                    />
+                  </button>
+                )}
+              </>
             )}
           </FormField>
           <FormField label="제목" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "제목을 입력해주세요" : undefined}>
@@ -848,7 +863,7 @@ export default function InvitationCreateContainer() {
                 naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
                 google: { label: "Google로 시작하기", cls: "border border-border bg-white text-text-primary", path: "google" },
               }[provider];
-              const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api/v1";
+              const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
               return (
                 <button
                   key={provider}
