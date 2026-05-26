@@ -39,3 +39,25 @@ export const Mine: Story = {
     onMore: () => {},
   },
 };
+
+export const PhotoReply: Story = {
+  args: {
+    authorName: "이지은",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=24",
+    replyToName: "김와라",
+    content: "현장 사진이에요!",
+    createdAt: "30분 전",
+    imageUrl: "/invitation-cover-cake.png",
+  },
+};
+
+export const PhotoReplyOnly: Story = {
+  args: {
+    authorName: "최하나",
+    authorAvatarUrl: "https://i.pravatar.cc/80?img=44",
+    replyToName: "박미라",
+    content: "",
+    createdAt: "1시간 전",
+    imageUrl: "/invitation-cover-cake.png",
+  },
+};
