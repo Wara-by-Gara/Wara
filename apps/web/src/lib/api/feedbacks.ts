@@ -1,10 +1,9 @@
-import { apiGet, apiPost } from './client';
+import { apiDelete, apiGet, apiPatch, apiPost } from './client';
 
-export interface FeedbackPhoto{
+export interface FeedbackPhoto {
   id: string;
   imageKey: string;
 }
-
 
 export interface FeedbackParticipant {
   id: string;
@@ -58,7 +57,7 @@ export function createPhotoFeedback(
 export function getInvitationFeedbacks(
   invitationId: string,
   token: string,
-  cursor?:string,
+  cursor?: string,
 ): Promise<FeedbackListResponse> {
   const params = new URLSearchParams();
   if (cursor) params.set('cursor', cursor);
@@ -76,6 +75,30 @@ export function createInvitationFeedback(
   return apiPost<Feedback>(
     `/invitations/${invitationId}/feedbacks`,
     { content },
+    token,
+  );
+}
+
+export function updateFeedback(
+  invitationId: string,
+  feedbackId: string,
+  content: string,
+  token: string,
+): Promise<Feedback> {
+  return apiPatch<Feedback>(
+    `invitations/${invitationId}/feedbacks/${feedbackId}`,
+    { content },
+    token,
+  );
+}
+
+export function deleteFeedback(
+  invitationId: string,
+  feedbackId: string,
+  token: string,
+): Promise<void> {
+  return apiDelete(
+    `/invitations/${invitationId}/feedbacks/${feedbackId}`,
     token,
   );
 }

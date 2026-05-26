@@ -1,4 +1,4 @@
-import { createInvitationFeedback, getInvitationFeedbacks } from '@/lib/api/feedbacks';
+import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, updateFeedback } from '@/lib/api/feedbacks';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useInvitationFeedback(invitationId: string, token: string) {
@@ -18,5 +18,15 @@ export function useInvitationFeedback(invitationId: string, token: string) {
     queryClient.invalidateQueries({ queryKey });
   };
 
-  return { ...query, submitComment };
+  const removeComment = async (feedbackId: string) => {
+    await deleteFeedback(invitationId, feedbackId, token);
+    queryClient.invalidateQueries({queryKey})
+  }
+
+  const editComment = async (feedbackId: string, content: string) => {
+    await updateFeedback(invitationId, feedbackId, content, token);
+    queryClient.invalidateQueries({queryKey})
+  }
+
+  return { ...query, submitComment, removeComment,editComment };
 }
