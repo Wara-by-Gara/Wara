@@ -123,17 +123,17 @@ export const RemindAlbum = ({
           />
         ) : state === "dateGrouped" ? (
           <div className="flex flex-col gap-4">
-            <PhotoGrid groupLabel="좋아요 TOP 3">
+            <PhotoGrid>
               {mockRemindPhotos.slice(0, 3).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}
             </PhotoGrid>
-            <PhotoGrid groupLabel="조회수 TOP 3">
+            <PhotoGrid>
               {mockRemindPhotos.slice(3, 6).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}
             </PhotoGrid>
-            <PhotoGrid groupLabel="댓글 TOP 3">
+            <PhotoGrid>
               {mockRemindPhotos.slice(6, 9).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}

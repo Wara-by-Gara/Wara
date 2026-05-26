@@ -3,7 +3,7 @@ import { RemindAlbum } from "./RemindAlbum";
 import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
 
 const meta: Meta<typeof RemindAlbum> = {
-  title: "Pages/22 RemindAlbum/Page",
+  title: "Pages/22 MomentLog(RemindAlbum)/Page",
   component: RemindAlbum,
   parameters: pageStoryParameters,
   args: {
