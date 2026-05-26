@@ -13,10 +13,16 @@ export interface LocationUpdate extends ParticipantLocation {
   updatedAt: string;
 }
 
+export interface ArrivedEvent {
+  participantId: string;
+  invitationId: string;
+}
+
 interface UseLocationSocketOptions {
   invitationId: string;
   token: string;
   onLocationUpdated: (update: LocationUpdate) => void;
+  onArrived?: (event: ArrivedEvent) => void;
   enabled?: boolean;
 }
 
@@ -24,11 +30,14 @@ export function useLocationSocket({
   invitationId,
   token,
   onLocationUpdated,
+  onArrived,
   enabled = true,
 }: UseLocationSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
   const callbackRef = useRef(onLocationUpdated);
   callbackRef.current = onLocationUpdated;
+  const arrivedRef = useRef(onArrived);
+  arrivedRef.current = onArrived;
 
   useEffect(() => {
     if (!enabled || !invitationId || !token) return;
@@ -47,6 +56,10 @@ export function useLocationSocket({
 
     socket.on("location:updated", (update: LocationUpdate) => {
       callbackRef.current(update);
+    });
+
+    socket.on("location:arrived", (event: ArrivedEvent) => {
+      arrivedRef.current?.(event);
     });
 
     return () => {
