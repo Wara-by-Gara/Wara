@@ -31,6 +31,7 @@ export interface LocationSelectorProps {
   onUnknownChange?: (v: boolean) => void;
   /** 로딩/no-result/error/permission required */
   state?: "default" | "loading" | "no-result" | "error" | "permission-required";
+  onModeChange?: (mode: "search" | "manual") => void;
   error?: string;
   className?: string;
 }
@@ -49,6 +50,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
       unknown,
       onUnknownChange,
       state = "default",
+      onModeChange,
       error,
       className,
     },
@@ -80,6 +82,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               onClick={() => {
                 clearUnknown();
                 setInternalMode("search");
+                onModeChange?.("search");
               }}
               className={cn(
                 "rounded-full px-2.5 py-1 text-[12px]",
@@ -93,6 +96,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               onClick={() => {
                 clearUnknown();
                 setInternalMode("manual");
+                onModeChange?.("manual");
               }}
               className={cn(
                 "rounded-full px-2.5 py-1 text-[12px]",

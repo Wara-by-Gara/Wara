@@ -38,6 +38,7 @@ export interface InvitationListProps {
   state?: InvitationListState;
   invitations?: (MockInvitation & { variant?: InvitationCardVariant })[];
   onBack?: () => void;
+  onCardClick?: (id: string) => void;
 }
 
 const TAB_LABELS: Record<InvitationListTab, string> = {
@@ -60,6 +61,7 @@ export const InvitationList = ({
   state = "default",
   invitations = sample,
   onBack,
+  onCardClick,
 }: InvitationListProps) => {
   const isSearch = state === "search" || state === "searchResult" || state === "searchEmpty";
   const mainCentered = state === "error" || state === "empty" || state === "searchEmpty";
@@ -127,6 +129,7 @@ export const InvitationList = ({
                 location={inv.location}
                 imageUrl={inv.coverImageUrl}
                 variant={inv.variant ?? tab === "draft" ? "draft" : tab === "ended" ? "ended" : "default"}
+                onClick={() => onCardClick?.(inv.id)}
               />
             ))}
           </div>
