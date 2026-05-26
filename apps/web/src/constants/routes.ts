@@ -26,4 +26,16 @@ export const ROUTES = {
     ME: "/profile",
     EDIT: "/profile/edit",
   },
+  ADMIN: {
+    INQUIRIES: '/admin/inquiries',
+    INQUIRY_DETAIL: (id: string) => `/admin/inquiries/${id}`,
+    FAQ: '/admin/faq',
+  },
+  INQUIRIES: {
+    HOME: "/inquiries",
+    WRITE: "/inquiries/write",
+    LIST: "/inquiries/list",
+    ME: "/inquiries/me",
+    DETAIL: (id: string) => `/inquiries/${id}`,
+  },
 } as const;

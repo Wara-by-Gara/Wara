@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="ko"
       className={`${beVietnamPro.variable} ${notoSerif.variable} h-full antialiased`}
     >
-      <body className="w-full max-w-[80vw] mx-auto flex flex-col min-h-full">
+      <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
         <Providers>{children}</Providers>
       </body>
     </html>
