@@ -1,5 +1,28 @@
 import { apiGet, apiPost } from "./client";
 
+type ImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
+
+export async function getInvitationImagePresignedUrl(
+  fileName: string,
+  contentType: ImageContentType,
+  token: string,
+): Promise<{ presignedUrl: string; key: string }> {
+  return apiPost<{ presignedUrl: string; key: string }>(
+    "/invitations/presigned-url",
+    { fileName, contentType },
+    token,
+  );
+}
+
+export async function uploadImageToS3(presignedUrl: string, file: File): Promise<void> {
+  const res = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!res.ok) throw new Error("이미지 업로드에 실패했어요");
+}
+
 interface CreateInvitationPayload {
   title: string;
   description: string;
@@ -50,4 +73,8 @@ export function createInvitation(payload: CreateInvitationPayload, token: string
 
 export function getInvitation(id: string): Promise<Invitation> {
   return apiGet<Invitation>(`/invitations/${id}`);
+}
+
+export function getMyInvitations(token: string): Promise<Invitation[]> {
+  return apiGet<Invitation[]>("/invitations", token);
 }
