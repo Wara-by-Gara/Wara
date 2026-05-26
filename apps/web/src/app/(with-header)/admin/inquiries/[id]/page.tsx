@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Divider } from '@/components/primitives/Divider';
-import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
+import { Button } from '@/components/primitives/Button';
+import { useAdminInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
-import { getUserRole } from '@/lib/jwt';
 import { ROUTES } from '@/constants/routes';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
@@ -21,29 +21,24 @@ const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
 };
 
 const STATUS_CONFIG: Record<InquiryStatus, { label: string; className: string }> = {
-  pending:    { label: '답변 대기', className: 'bg-gray-100 text-gray-500' },
-  in_progress:{ label: '답변 중',   className: 'bg-blue-100 text-blue-600' },
-  resolved:   { label: '답변 완료', className: 'bg-green-50 text-green-600' },
+  pending:     { label: '답변 대기', className: 'bg-gray-100 text-gray-500' },
+  in_progress: { label: '답변 중',   className: 'bg-blue-100 text-blue-600' },
+  resolved:    { label: '답변 완료', className: 'bg-green-50 text-green-600' },
 };
 
-export default function InquiryDetailPage() {
+export default function AdminInquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { data: inquiry, isLoading, refetch } = useInquiry(id);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { data: inquiry, isLoading, refetch } = useAdminInquiry(id);
   const [isAnswering, setIsAnswering] = useState(false);
-
-  useEffect(() => {
-    setIsAdmin(getUserRole() === 'admin');
-  }, []);
 
   return (
     <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar
         className="shrink-0"
         title="문의 상세"
-        onBack={() => router.push(ROUTES.INQUIRIES.ME)}
+        onBack={() => router.push(ROUTES.ADMIN.INQUIRIES)}
       />
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
@@ -55,9 +50,8 @@ export default function InquiryDetailPage() {
           </p>
         ) : (
           <>
-            {/* ── 게시물 헤더 ── */}
+            {/* ── 헤더 ── */}
             <div className="px-5 pb-5 pt-6">
-              {/* 유형 · 상태 · 공개 배지 */}
               <div className="mb-3 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex h-6 items-center rounded-full bg-gray-100 px-2 text-[11px] font-medium text-gray-600">
                   {INQUIRY_TYPE_LABELS[inquiry.inquiryType]}
@@ -69,22 +63,17 @@ export default function InquiryDetailPage() {
                 </span>
               </div>
 
-              {/* 제목 */}
               <h1 className="text-[18px] font-bold leading-snug text-text-primary">
                 {inquiry.title}
               </h1>
 
-              {/* 등록일 */}
               <time
                 className="mt-2 block text-[12px] text-text-tertiary"
                 suppressHydrationWarning
               >
                 {new Date(inquiry.createdAt).toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
+                  year: 'numeric', month: 'long', day: 'numeric',
+                  hour: '2-digit', minute: '2-digit',
                 })}
               </time>
             </div>
@@ -98,7 +87,7 @@ export default function InquiryDetailPage() {
               </p>
             </div>
 
-            {/* ── 답변 ── */}
+            {/* ── 기존 답변 표시 ── */}
             {inquiry.answer && (
               <>
                 <Divider strength="strong" />
@@ -106,10 +95,7 @@ export default function InquiryDetailPage() {
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-blue-700">답변</span>
                     {inquiry.answeredAt && (
-                      <time
-                        className="text-[11px] text-blue-400"
-                        suppressHydrationWarning
-                      >
+                      <time className="text-[11px] text-blue-400" suppressHydrationWarning>
                         {new Date(inquiry.answeredAt).toLocaleDateString('ko-KR')}
                       </time>
                     )}
@@ -121,28 +107,25 @@ export default function InquiryDetailPage() {
               </>
             )}
 
-            {/* ── 관리자 답변 작성 ── */}
-            {isAdmin && (
-              <>
-                <Divider />
-                <div className="px-5 py-5">
-                  {!isAnswering ? (
-                    <button
-                      onClick={() => setIsAnswering(true)}
-                      className="text-[14px] font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      {inquiry.answer ? '답변 수정' : '답변 작성'}
-                    </button>
-                  ) : (
-                    <AnswerForm
-                      inquiry={inquiry}
-                      onClose={() => setIsAnswering(false)}
-                      onSuccess={() => { setIsAnswering(false); refetch(); }}
-                    />
-                  )}
-                </div>
-              </>
-            )}
+            {/* ── 답변 작성 / 수정 ── */}
+            <Divider />
+            <div className="px-5 py-5">
+              {!isAnswering ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsAnswering(true)}
+                >
+                  {inquiry.answer ? '답변 수정' : '답변 작성'}
+                </Button>
+              ) : (
+                <AnswerForm
+                  inquiry={inquiry}
+                  onClose={() => setIsAnswering(false)}
+                  onSuccess={() => { setIsAnswering(false); refetch(); }}
+                />
+              )}
+            </div>
           </>
         )}
       </main>
@@ -166,10 +149,15 @@ function AnswerForm({
     answer: inquiry.answer ?? '',
     status: inquiry.status === 'pending' ? 'in_progress' : inquiry.status,
   });
+  const [submitError, setSubmitError] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    answer(form, { onSuccess });
+    setSubmitError('');
+    answer(form, {
+      onSuccess,
+      onError: () => setSubmitError('저장 중 오류가 발생했습니다'),
+    });
   }
 
   return (
@@ -198,13 +186,9 @@ function AnswerForm({
           <option value="in_progress">답변 중</option>
           <option value="resolved">해결됨</option>
         </select>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-lg bg-blue-600 px-4 py-1.5 text-[14px] text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? '저장 중...' : '저장'}
-        </button>
+        <Button type="submit" variant="primary" size="sm" loading={isPending}>
+          저장
+        </Button>
         <button
           type="button"
           onClick={onClose}
@@ -214,6 +198,7 @@ function AnswerForm({
           취소
         </button>
       </div>
+      {submitError && <p className="text-[13px] text-danger">{submitError}</p>}
     </form>
   );
 }
