@@ -17,10 +17,18 @@ const mockService = {
 
 const mockConfig = {
   getOrThrow: jest.fn().mockReturnValue('http://localhost:3000'),
+  get: jest.fn().mockImplementation((key: string, fallback?: unknown) => {
+    if (key === 'NODE_ENV') return 'test';
+    if (key === 'JWT_ACCESS_EXPIRES_IN') return 1800;
+    if (key === 'JWT_REFRESH_EXPIRES_IN') return 1209600;
+    return fallback;
+  }),
 };
 
 const mockRes = {
   redirect: jest.fn(),
+  cookie: jest.fn(),
+  clearCookie: jest.fn(),
 };
 
 describe('AuthController', () => {
@@ -90,7 +98,7 @@ describe('AuthController', () => {
       );
     });
 
-    it('성공 → access_token, refresh_token 포함 URL로 redirect', async () => {
+    it('성공 → 쿠키 설정 후 auth_success=1 URL로 redirect', async () => {
       mockService.socialLogin.mockResolvedValue({
         accessToken: 'acc',
         refreshToken: 'ref',
@@ -105,11 +113,10 @@ describe('AuthController', () => {
         mockRes as unknown as Response,
       );
 
+      expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'acc', expect.any(Object));
+      expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'ref', expect.any(Object));
       expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringContaining('access_token=acc'),
-      );
-      expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringContaining('refresh_token=ref'),
+        'http://localhost:3000/invitations/create?auth_success=1',
       );
     });
 
@@ -169,23 +176,36 @@ describe('AuthController', () => {
   });
 
   describe('refreshTokens', () => {
-    it('service.refresh 결과 반환', async () => {
-      mockService.refresh.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
+    it('쿠키에서 refreshToken 읽어 service.refresh 호출', async () => {
+      mockService.refresh.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref', refreshExpiresIn: 1209600 });
+      const req = { cookies: { refreshToken: 'raw-token' } };
 
-      const result = await controller.refreshTokens({ refreshToken: 'raw-token' });
+      const result = await controller.refreshTokens(
+        req as unknown as import('express').Request,
+        {},
+        mockRes as unknown as Response,
+      );
 
-      expect(result).toEqual({ accessToken: 'new-acc', refreshToken: 'new-ref' });
       expect(mockService.refresh).toHaveBeenCalledWith('raw-token');
+      expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'new-acc', expect.any(Object));
+      expect(result).toEqual({ refreshExpiresIn: 1209600 });
     });
   });
 
   describe('logout', () => {
-    it('service.logout 호출', async () => {
+    it('쿠키에서 refreshToken 읽어 service.logout 호출 후 쿠키 클리어', async () => {
       mockService.logout.mockResolvedValue(undefined);
+      const req = { cookies: { refreshToken: 'raw-token' } };
 
-      await controller.logout({ refreshToken: 'raw-token' });
+      await controller.logout(
+        req as unknown as import('express').Request,
+        {},
+        mockRes as unknown as Response,
+      );
 
       expect(mockService.logout).toHaveBeenCalledWith('raw-token');
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('accessToken', expect.any(Object));
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('refreshToken', expect.any(Object));
     });
   });
 });
