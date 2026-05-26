@@ -10,7 +10,7 @@ import { PhotoViewer } from "@/components/organisms/PhotoViewer";
 import { AlbumGridSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { albumViewerSampleSrc, mockComments, mockPhotos } from "@/lib/mockData";
+import { albumViewerSampleSrc, mockComments, mockRemindPhotos } from "@/lib/mockData";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
@@ -45,7 +45,7 @@ export const RemindAlbum = ({
   hostAvatarUrl = "https://i.pravatar.cc/80?img=18",
 }: RemindAlbumProps) => {
   const mainCentered = CENTERED_STATES.includes(state);
-  const photo = mockPhotos[0]!;
+  const photo = mockRemindPhotos[0]!;
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -85,7 +85,7 @@ export const RemindAlbum = ({
             <div className="flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5">
               <Icon name="retro-camera" size="sm" color="primary" decorative />
               <span className="text-[13px] font-semibold text-primary">
-                {mockPhotos.length}장
+                {mockRemindPhotos.length}장
               </span>
             </div>
           </div>
@@ -94,7 +94,7 @@ export const RemindAlbum = ({
           <div className="mt-3 flex gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-3 py-1 text-[12px] font-medium text-yellow-600">
               <Icon name="heart" size="xs" color="currentColor" decorative />
-              추억 {mockPhotos.length}개
+              베스트 {mockRemindPhotos.length}장
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[12px] font-medium text-blue-600">
               <Icon name="users" size="xs" color="currentColor" decorative />
@@ -123,26 +123,30 @@ export const RemindAlbum = ({
           />
         ) : state === "dateGrouped" ? (
           <div className="flex flex-col gap-4">
-            <PhotoGrid groupLabel="오늘">
-              {mockPhotos.slice(0, 3).map((p) => (
+            <PhotoGrid groupLabel="좋아요 TOP 3">
+              {mockRemindPhotos.slice(0, 3).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}
             </PhotoGrid>
-            <PhotoGrid groupLabel="어제">
-              {mockPhotos.slice(3, 7).map((p) => (
+            <PhotoGrid groupLabel="조회수 TOP 3">
+              {mockRemindPhotos.slice(3, 6).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}
             </PhotoGrid>
-            <PhotoGrid groupLabel="이번 주">
-              {mockPhotos.slice(7).map((p) => (
+            <PhotoGrid groupLabel="댓글 TOP 3">
+              {mockRemindPhotos.slice(6, 9).map((p) => (
                 <PhotoGridItem key={p.id} src={p.src} alt="" />
               ))}
             </PhotoGrid>
           </div>
         ) : (
           <PhotoGrid columns={3}>
-            {mockPhotos.map((p) => (
-              <PhotoGridItem key={p.id} src={p.src} alt="" />
+            {mockRemindPhotos.map((p) => (
+              <PhotoGridItem
+                key={p.id}
+                src={p.src}
+                alt=""
+              />
             ))}
           </PhotoGrid>
         )}
