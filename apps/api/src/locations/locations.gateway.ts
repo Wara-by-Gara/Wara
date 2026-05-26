@@ -9,7 +9,7 @@ import { HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
-import { LocationsService } from './locations.service';
+import { LocationsService, ARRIVAL_NOTIFICATION_DELAY_MS } from './locations.service';
 import { UpdateParticipantLocationSchema } from './dto/update-participant-location.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
@@ -65,15 +65,23 @@ export class LocationsGateway implements OnGatewayConnection {
     const { invitationId, ...dto } = result.data;
 
     try {
-      const location = await this.locationsService.updateMyLocation(
-        invitationId,
-        user.id,
-        dto,
-      );
+      const { location, justArrived } =
+        await this.locationsService.updateMyLocation(invitationId, user.id, dto);
 
       this.server
         .to(`invitation:${invitationId}`)
         .emit('location:updated', location);
+
+      if (justArrived) {
+        setTimeout(() => {
+          this.server
+            .to(`invitation:${invitationId}`)
+            .emit('location:arrived', {
+              participantId: location.participantId,
+              invitationId,
+            });
+        }, ARRIVAL_NOTIFICATION_DELAY_MS);
+      }
 
       return location;
     } catch (err) {

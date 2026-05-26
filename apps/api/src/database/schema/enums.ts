@@ -40,6 +40,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'feedback',
   'invitation_date',
   'photo',
+  'arrived',
 ]);
 export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'photo',
