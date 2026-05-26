@@ -133,6 +133,8 @@ export class ParticipantsRepository {
     userId: string;
     invitationId: string;
     rsvpStatus: RsvpStatus;
+    displayName?: string;
+    note?: string;
   }): Promise<Participant> {
     const rows = await this.db
       .insert(participants)
@@ -160,6 +162,15 @@ export class ParticipantsRepository {
     const rows = await this.db
       .update(participants)
       .set({ isHidden, updatedAt: new Date() })
+      .where(eq(participants.id, id))
+      .returning();
+    return rows[0] ?? null;
+  }
+
+  async updateHostMemo(id: string, hostMemo: string | null): Promise<Participant | null> {
+    const rows = await this.db
+      .update(participants)
+      .set({ hostMemo, updatedAt: new Date() })
       .where(eq(participants.id, id))
       .returning();
     return rows[0] ?? null;
