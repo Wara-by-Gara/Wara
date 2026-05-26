@@ -12,11 +12,14 @@ interface Props {
 }
 
 export default function InvitationFeedbacks({ invitationId, currentUserId }: Props) {
-  const { data, submitComment, fetchNextPage, hasNextPage, removeComment, editComment } =
+  const { data, isLoading, isError, submitComment, fetchNextPage, hasNextPage, isFetchingNextPage, removeComment, editComment } =
     useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+
+  if (isLoading) return <p className="text-center text-gray-400 py-10">불러오는 중...</p>;
+  if (isError) return <p className="text-center text-gray-400 py-10">댓글을 불러오지 못했습니다</p>;
 
   return (
     <div className="mt-4">
@@ -94,9 +97,10 @@ export default function InvitationFeedbacks({ invitationId, currentUserId }: Pro
         {hasNextPage && (
           <button
             onClick={() => fetchNextPage()}
-            className="text-sm text-gray-400 py-2 text-center"
+            disabled={isFetchingNextPage}
+            className="text-sm text-gray-400 py-2 text-center disabled:opacity-50"
           >
-            더 보기
+            {isFetchingNextPage ? '불러오는 중...' : '더 보기'}
           </button>
         )}
       </div>
