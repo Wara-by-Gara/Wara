@@ -201,8 +201,20 @@ export const mockPhotos = Array.from({ length: 12 }, (_, i) => {
     authorName: author.name,
     authorAvatarUrl: author.avatarUrl,
     createdAt: i < 4 ? "오늘" : i < 8 ? "어제" : "이번 주",
+    likeCount: [24, 18, 31, 9, 42, 15, 7, 28, 11, 35, 6, 20][i] ?? 0,
+    viewCount: [120, 88, 200, 45, 310, 72, 33, 155, 60, 240, 25, 95][i] ?? 0,
+    commentCount: [8, 3, 12, 1, 15, 4, 0, 9, 2, 11, 1, 5][i] ?? 0,
   };
 });
+
+/** 좋아요·조회수·댓글 수 합산 점수로 상위 9장 선정 (리마인드 앨범용) */
+export const mockRemindPhotos = [...mockPhotos]
+  .sort((a, b) => {
+    const scoreA = a.likeCount * 3 + a.viewCount + a.commentCount * 2;
+    const scoreB = b.likeCount * 3 + b.viewCount + b.commentCount * 2;
+    return scoreB - scoreA;
+  })
+  .slice(0, 9);
 
 export interface MockNotification {
   id: string;
