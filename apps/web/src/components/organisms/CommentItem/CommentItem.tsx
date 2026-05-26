@@ -15,6 +15,10 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 상대 시간 */
   createdAt: string;
   content: string;
+  /** 사진 첨부 URL (사진 댓글) */
+  imageUrl?: string;
+  /** 사진 클릭 콜백 */
+  onImageClick?: () => void;
   /** 대댓글 목록 */
   replies?: CommentReplyItemProps[];
   /** 답글 달기 */
@@ -34,6 +38,8 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       authorAvatarUrl,
       createdAt,
       content,
+      imageUrl,
+      onImageClick,
       replies,
       onReply,
       onMore,
@@ -90,9 +96,31 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
             {variant === "editing" && editingSlot ? (
               <div className="mt-1.5">{editingSlot}</div>
             ) : (
-              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
-                {content}
-              </p>
+              <>
+                {content ? (
+                  <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
+                    {content}
+                  </p>
+                ) : null}
+                {imageUrl ? (
+                  <button
+                    type="button"
+                    onClick={onImageClick}
+                    className={cn(
+                      "mt-1.5 block overflow-hidden rounded-xl",
+                      onImageClick && "cursor-pointer",
+                    )}
+                    aria-label="첨부 사진 보기"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageUrl}
+                      alt="첨부 사진"
+                      className="max-h-48 w-full object-cover"
+                    />
+                  </button>
+                ) : null}
+              </>
             )}
             {onReply ? (
               <button
