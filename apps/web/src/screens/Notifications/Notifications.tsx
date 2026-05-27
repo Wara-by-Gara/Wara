@@ -14,7 +14,6 @@ import {
 import { NotificationListSkeleton } from '@/components/organisms/Skeleton';
 import { EmptyState } from '@/components/organisms/EmptyState';
 import { ErrorState } from '@/components/organisms/ErrorState';
-import { mockNotifications } from '@/lib/mockData';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';
@@ -54,7 +53,7 @@ export interface NotificationsProps {
 
 export const Notifications = ({
   state = 'default',
-  items = mockNotifications,
+  items = [],
   onBack,
   onMarkAllAsRead,
   onMarkAsRead,

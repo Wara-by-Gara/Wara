@@ -131,7 +131,7 @@ export class LocationsService {
       this.notifications.notify({
         userId: participant.userId,
         type: 'arrived',
-        content: '모임 장소에 도착했어요!',
+        content: '모임 장소 근처에 도착했어요. 위치 공유를 종료합니다.',
         targetType: 'participantLocations',
         targetId: invitationId,
       }),
