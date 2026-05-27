@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
@@ -211,24 +211,132 @@ interface TimePickerProps {
   disabled?: boolean;
 }
 
+// ── Wheel Picker ────────────────────────────────────────────────────────────
+const ITEM_H = 44;
+const VISIBLE = 5;
+
+function WheelColumn({
+  items,
+  value,
+  onChange,
+  label,
+}: {
+  items: number[];
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isScrolling = useRef(false);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const selectedIdx = items.indexOf(value);
+
+  // 선택값 → 스크롤 위치 동기화 (외부 변경 시에만)
+  const scrollToIndex = useCallback((idx: number, smooth = true) => {
+    if (!ref.current) return;
+    ref.current.scrollTo({ top: idx * ITEM_H, behavior: smooth ? "smooth" : "instant" });
+  }, []);
+
+  useEffect(() => {
+    if (!isScrolling.current) scrollToIndex(selectedIdx, false);
+  }, [selectedIdx, scrollToIndex]);
+
+  const handleScroll = () => {
+    if (!ref.current) return;
+    isScrolling.current = true;
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => {
+      if (!ref.current) return;
+      const idx = Math.round(ref.current.scrollTop / ITEM_H);
+      const clamped = Math.max(0, Math.min(idx, items.length - 1));
+      isScrolling.current = false;
+      if (items[clamped] !== value) onChange(items[clamped]);
+      // snap
+      ref.current.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+    }, 120);
+  };
+
+  return (
+    <div className="relative flex flex-1 flex-col items-center" style={{ height: ITEM_H * VISIBLE }}>
+      {/* 선택 영역 하이라이트 */}
+      <div
+        className="pointer-events-none absolute inset-x-0 rounded-xl bg-primary/10"
+        style={{ top: ITEM_H * 2, height: ITEM_H }}
+      />
+      {/* 위 페이드 */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/90 to-transparent" style={{ height: ITEM_H * 2 }} />
+      {/* 아래 페이드 */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-white/90 to-transparent" style={{ height: ITEM_H * 2 }} />
+
+      {/* 스크롤 컨테이너 */}
+      <div
+        ref={ref}
+        onScroll={handleScroll}
+        className="w-full overflow-y-scroll overscroll-contain"
+        style={{
+          height: ITEM_H * VISIBLE,
+          scrollSnapType: "y mandatory",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
+        {/* 상단 패딩 */}
+        <div style={{ height: ITEM_H * 2 }} />
+        {items.map((item, i) => {
+          const dist = Math.abs(i - selectedIdx);
+          return (
+            <div
+              key={item}
+              style={{ height: ITEM_H, scrollSnapAlign: "center" }}
+              className="flex cursor-pointer items-center justify-center"
+              onClick={() => {
+                onChange(item);
+                scrollToIndex(i);
+              }}
+            >
+              <span
+                className={cn(
+                  "tabular-nums transition-all duration-150",
+                  dist === 0
+                    ? "text-[20px] font-extrabold text-primary"
+                    : dist === 1
+                      ? "text-[16px] font-semibold text-text-secondary opacity-60"
+                      : "text-[14px] font-medium text-text-tertiary opacity-30",
+                )}
+              >
+                {item}
+              </span>
+            </div>
+          );
+        })}
+        {/* 하단 패딩 */}
+        <div style={{ height: ITEM_H * 2 }} />
+      </div>
+
+      {/* 단위 레이블 */}
+      <span className="absolute right-2 text-[12px] font-bold text-text-tertiary" style={{ top: ITEM_H * 2 + 13 }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── TimePicker ───────────────────────────────────────────────────────────────
 function TimePicker({ onAdd, disabled }: TimePickerProps) {
   const [ampm, setAmpm] = useState<"오전" | "오후">("오후");
   const [hour, setHour] = useState(2);
   const [minute, setMinute] = useState(0);
-  const [sliderTarget, setSliderTarget] = useState<"hour" | "minute" | null>(null);
 
-  const stepHour = (delta: number) => setHour((h) => ((h - 1 + delta + 12) % 12) + 1);
-  const stepMinute = (delta: number) => setMinute((m) => (m + delta * 5 + 60) % 60);
+  const HOURS = [1,2,3,4,5,6,7,8,9,10,11,12];
+  const MINUTES = [0,5,10,15,20,25,30,35,40,45,50,55];
 
   const preview = formatTimeLabel(ampm, hour, minute);
-
-  const toggleSlider = (target: "hour" | "minute") =>
-    setSliderTarget((prev) => (prev === target ? null : target));
 
   return (
     <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-4">
 
-      {/* Row 1: 오전/오후 — 가로 플립 바 (높이 줄임) */}
+      {/* 오전/오후 플립 바 */}
       <button
         type="button"
         onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
@@ -245,105 +353,14 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         ))}
       </button>
 
-      {/* Row 2: 시 spinner + 분 spinner */}
-      <div className="flex gap-2">
-        {/* 시 spinner */}
-        <div
-          className={cn(
-            "flex flex-1 cursor-pointer items-center justify-between rounded-xl border bg-white px-2 py-2 transition-colors",
-            sliderTarget === "hour" ? "border-primary" : "border-border",
-          )}
-        >
-          <button type="button" onClick={() => stepHour(-1)}
-            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
-            <Icon name="chevron-left" size="xs" color="currentColor" decorative />
-          </button>
-          <button type="button" onClick={() => toggleSlider("hour")}
-            className="flex items-baseline gap-1 rounded-lg px-1 py-0.5 hover:bg-gray-50">
-            <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">{hour}</span>
-            <span className="text-[12px] font-bold text-text-tertiary">시</span>
-          </button>
-          <button type="button" onClick={() => stepHour(1)}
-            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
-            <Icon name="chevron-right" size="xs" color="currentColor" decorative />
-          </button>
-        </div>
-
-        {/* 분 spinner */}
-        <div
-          className={cn(
-            "flex flex-1 cursor-pointer items-center justify-between rounded-xl border bg-white px-2 py-2 transition-colors",
-            sliderTarget === "minute" ? "border-primary" : "border-border",
-          )}
-        >
-          <button type="button" onClick={() => stepMinute(-1)}
-            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
-            <Icon name="chevron-left" size="xs" color="currentColor" decorative />
-          </button>
-          <button type="button" onClick={() => toggleSlider("minute")}
-            className="flex items-baseline gap-1 rounded-lg px-1 py-0.5 hover:bg-gray-50">
-            <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">
-              {String(minute).padStart(2, "0")}
-            </span>
-            <span className="text-[12px] font-bold text-text-tertiary">분</span>
-          </button>
-          <button type="button" onClick={() => stepMinute(1)}
-            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
-            <Icon name="chevron-right" size="xs" color="currentColor" decorative />
-          </button>
-        </div>
+      {/* 시 · 분 휠 */}
+      <div className="flex items-center gap-0 rounded-xl border border-border bg-white px-2">
+        <WheelColumn items={HOURS} value={hour} onChange={setHour} label="시" />
+        <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
+        <WheelColumn items={MINUTES} value={minute} onChange={setMinute} label="분" />
       </div>
 
-      {/* Row 3: 드롭다운 슬라이더 */}
-      {sliderTarget && (
-        <div className="overflow-hidden rounded-xl border border-primary/30 bg-white shadow-md">
-          {/* 드롭다운 헤더 */}
-          <div className="flex items-center justify-between border-b border-border bg-primary/5 px-3 py-2">
-            <span className="text-[12px] font-bold text-primary">
-              {sliderTarget === "hour" ? "시간 선택" : "분 선택 (5분 단위)"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setSliderTarget(null)}
-              className="text-[11px] font-semibold text-text-tertiary hover:text-text-secondary"
-            >닫기</button>
-          </div>
-
-          {/* 스크롤 가능한 항목 리스트 */}
-          <div className="max-h-48 overflow-y-auto overscroll-contain">
-            {(sliderTarget === "hour"
-              ? [1,2,3,4,5,6,7,8,9,10,11,12]
-              : [0,5,10,15,20,25,30,35,40,45,50,55]
-            ).map((val) => {
-              const isSelected = sliderTarget === "hour" ? hour === val : minute === val;
-              const label = sliderTarget === "hour" ? `${val}시` : `${String(val).padStart(2,"0")}분`;
-              return (
-                <button
-                  key={val}
-                  type="button"
-                  onClick={() => {
-                    if (sliderTarget === "hour") setHour(val); else setMinute(val);
-                    setSliderTarget(null);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between px-4 py-3 text-left transition-colors",
-                    isSelected
-                      ? "bg-primary/10 font-extrabold text-primary"
-                      : "text-text-primary hover:bg-gray-50",
-                  )}
-                >
-                  <span className="text-[15px]">{label}</span>
-                  {isSelected && (
-                    <span className="text-[13px] font-bold text-primary">✓</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Add button */}
+      {/* 추가 버튼 */}
       <Button
         fullWidth
         variant="outline"
