@@ -156,6 +156,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const handleNativeShare = () => {
     navigator.share({ title: invitation.title, url: shareUrl }).catch(() => {});
   };
+
   const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
   const eventDate = invitation.eventStartAt
     ? new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
@@ -196,7 +197,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
             backgroundClass={invitation.bgColor}
             isHost
           />
-
           <header className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <Badge variant="host" size="md">호스트</Badge>
@@ -222,11 +222,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
             />
           )}
 
-          <InvitationInfoCard
-            variant="datetime"
-            title={eventDate}
-            time={eventTime}
-          />
+          <InvitationInfoCard variant="datetime" title={eventDate} time={eventTime} />
           <InvitationInfoCard
             variant="location"
             title={invitation.eventLocation?.placeName ?? "미정"}
@@ -357,10 +353,10 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         <header className="flex flex-col items-start gap-2">
           <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
           {me && (
-            <p className="flex items-center gap-2 text-[13px] text-text-tertiary">
+            <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
               <Avatar src={me.profileImageUrl ?? undefined} alt={me.nickname ?? ""} size="xs" />
               <span>{me.nickname}</span>
-            </p>
+            </span>
           )}
         </header>
 
@@ -419,7 +415,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
       <MainBottomNav activeKey="invitations" />
 
-      {/* RSVP 바텀시트 */}
       <BottomSheet open={rsvpOpen} onOpenChange={setRsvpOpen}>
         <BottomSheetContent contained title="참석 여부" description="원하는 응답을 선택해주세요">
           <div className="pt-2">
@@ -436,29 +431,17 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         </BottomSheetContent>
       </BottomSheet>
 
-      {/* 공유 바텀시트 */}
       <BottomSheet open={shareSheetOpen} onOpenChange={setShareSheetOpen}>
         <BottomSheetContent title="공유하기">
           <div className="flex flex-col gap-1 pt-1">
-            <ShareOptionItem
-              icon="link"
-              title={copied ? "복사됨!" : "링크 복사"}
-              iconBg="bg-gray-100"
-              onClick={handleCopy}
-            />
+            <ShareOptionItem icon="link" title={copied ? "복사됨!" : "링크 복사"} iconBg="bg-gray-100" onClick={handleCopy} />
             {canNativeShare && (
-              <ShareOptionItem
-                icon="share"
-                title="다른 앱으로 공유"
-                iconBg="bg-gray-100"
-                onClick={handleNativeShare}
-              />
+              <ShareOptionItem icon="share" title="다른 앱으로 공유" iconBg="bg-gray-100" onClick={handleNativeShare} />
             )}
           </div>
         </BottomSheetContent>
       </BottomSheet>
 
-      {/* 로그인 바텀시트 */}
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
           <div className="flex flex-col gap-2.5 pt-2">
