@@ -1,8 +1,9 @@
-import { pgTable, text, boolean, timestamp, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, check, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { notificationTypeEnum, notificationTargetTypeEnum } from './enums';
+import { notificationTypeEnum, notificationTargetTypeEnum, remindTypeEnum } from './enums';
 import { users } from './users';
+import { invitations } from './invitations';
 
 export const notifications = pgTable('notifications', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
@@ -33,6 +34,19 @@ export const notificationSettings = pgTable('notification_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const remindLogs = pgTable('remind_logs', {
+  id: text('id').primaryKey().$defaultFn(() => ulid()),
+  invitationId: text('invitation_id')
+    .notNull()
+    .references(() => invitations.id, { onDelete: 'cascade' }),
+  remindType: remindTypeEnum('remind_type').notNull(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('uq_remind_logs_invitation_type').on(t.invitationId, t.remindType),
+  index('idx_remind_logs_invitation').on(t.invitationId),
+]);
+
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type NotificationSetting = typeof notificationSettings.$inferSelect;
+export type RemindLog = typeof remindLogs.$inferSelect;

@@ -61,7 +61,7 @@ export default function InvitationListContainer() {
     host: { name: "" },
     _status: inv.status,
     _myRole: inv.myRole,
-    variant: (inv.myRole === "HOST" ? "createdByMe" : "default") as "createdByMe" | "default",
+    variant: (inv.myRole === "HOST" ? "createdByMe" : "invited") as "createdByMe" | "invited",
   }));
 
   const filtered = all

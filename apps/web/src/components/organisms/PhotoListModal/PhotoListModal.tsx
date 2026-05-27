@@ -37,6 +37,8 @@ export interface PhotoListModalProps {
   onSelectDownload?: (photoIds: string[]) => void;
   /** 전체 다운로드 콜백 */
   onDownloadAll?: (photoIds: string[]) => void;
+  /** 사진 클릭 시 외부에서 처리할 콜백 (없으면 내부 뷰어 사용) */
+  onPhotoClick?: (idx: number, photoId: string) => void;
 }
 
 export const PhotoListModal = ({
@@ -49,6 +51,7 @@ export const PhotoListModal = ({
   onCommentSubmit,
   onSelectDownload,
   onDownloadAll,
+  onPhotoClick,
 }: PhotoListModalProps) => {
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -79,11 +82,9 @@ export const PhotoListModal = ({
   };
 
   const handlePhotoClick = (idx: number, photoId: string) => {
-    if (selectMode) {
-      toggleSelect(photoId);
-    } else {
-      setViewingIndex(idx);
-    }
+    if (selectMode) { toggleSelect(photoId); return; }
+    if (onPhotoClick) { onPhotoClick(idx, photoId); }
+    else { setViewingIndex(idx); }
   };
 
   const viewingPhoto = viewingIndex !== null ? photos[viewingIndex] : null;
