@@ -43,6 +43,13 @@
       "when": 1779845544522,
       "tag": "0005_legal_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779860000000,
+      "tag": "0006_invitations_design_columns",
+      "breakpoints": true
     }
   ]
 }

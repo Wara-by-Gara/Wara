@@ -31,6 +31,7 @@ export interface LocationSelectorProps {
   onUnknownChange?: (v: boolean) => void;
   /** 로딩/no-result/error/permission required */
   state?: "default" | "loading" | "no-result" | "error" | "permission-required";
+  onModeChange?: (mode: "search" | "manual") => void;
   error?: string;
   className?: string;
 }
@@ -49,6 +50,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
       unknown,
       onUnknownChange,
       state = "default",
+      onModeChange,
       error,
       className,
     },
@@ -80,6 +82,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               onClick={() => {
                 clearUnknown();
                 setInternalMode("search");
+                onModeChange?.("search");
               }}
               className={cn(
                 "rounded-full px-2.5 py-1 text-[12px]",
@@ -87,19 +90,6 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               )}
             >
               검색
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                clearUnknown();
-                setInternalMode("manual");
-              }}
-              className={cn(
-                "rounded-full px-2.5 py-1 text-[12px]",
-                mode === "manual" ? "bg-primary-soft text-primary" : "text-text-tertiary",
-              )}
-            >
-              직접 입력
             </button>
           </div>
         </div>
