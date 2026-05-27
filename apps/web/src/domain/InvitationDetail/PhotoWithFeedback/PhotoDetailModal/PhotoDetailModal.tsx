@@ -27,6 +27,7 @@ export default function PhotoDetailModal({
   const [index, setIndex] = useState(initialIndex);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
+  const [isLiking, setIsLiking] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
 
@@ -63,9 +64,15 @@ export default function PhotoDetailModal({
   };
 
   const handleLike = async () => {
-    const result = await togglePhotoLike(photo.invitationId, photo.id);
-    const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
-    onLikeChange(photo.id, result.liked, newCount);
+    if (isLiking) return;
+    setIsLiking(true);
+    try {
+      const result = await togglePhotoLike(photo.invitationId, photo.id);
+      const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
+      onLikeChange(photo.id, result.liked, newCount);
+    } finally {
+      setIsLiking(false);
+    }
   };
 
   const buildMenuItems = (id: string, content: string) => [
@@ -137,6 +144,7 @@ export default function PhotoDetailModal({
       editingComment={editingComment}
       liked={currentLiked}
       onLike={handleLike}
+      isLiking={isLiking}
       className="[&_.bg-gray-100]:bg-white/20"
       rightActions={
         <div className="flex items-center gap-1">
