@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
   Inject,
 } from '@nestjs/common';
 import { InvitationsRepository } from './invitations.repository';
@@ -23,9 +24,13 @@ import { S3_CLIENT } from '../s3/s3.module';
 import { ConfigService } from '@nestjs/config';
 import { AiService } from '../ai/ai.service';
 
+const MAX_AI_RESULT_BYTES = 10 * 1024 * 1024; // 10MB
+
 @Injectable()
 export class InvitationsService {
   private readonly bucket: string;
+  /** 템플릿 이미지 인메모리 캐시 (key: templateId) */
+  private readonly templateCache = new Map<string, Buffer>();
 
   constructor(
     private readonly repository: InvitationsRepository,
@@ -75,15 +80,18 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    const [mainImageUrl, templatePreviewUrl] = await Promise.all([
+    const [mainImageUrl, templatePreviewUrl, uploadedImageUrl] = await Promise.all([
       this.getViewUrl(invitation.mainImageKey),
       invitation.templateId
         ? this.templatesRepository
             .findById(invitation.templateId)
             .then((t) => (t ? this.getViewUrl(t.previewImageKey) : null))
         : Promise.resolve(null),
+      invitation.uploadedImageKey
+        ? this.getViewUrl(invitation.uploadedImageKey)
+        : Promise.resolve(null),
     ]);
-    return { ...invitation, mainImageUrl, templatePreviewUrl };
+    return { ...invitation, mainImageUrl, templatePreviewUrl, uploadedImageUrl };
   }
 
   private async validateTemplateId(templateId: string) {
@@ -140,6 +148,11 @@ export class InvitationsService {
    * 결과를 S3에 업로드하고 key와 presigned view URL을 반환
    */
   async applyAiToMainImage(invitationId: string, dto: ApplyAiImageDto) {
+    // 이슈 1: imageKey가 이 초대장 소유의 경로인지 검증 (path traversal 방지)
+    if (!dto.imageKey.startsWith(`invitation-images/${invitationId}/`)) {
+      throw new ForbiddenException(ErrorCode.INSUFFICIENT_ROLE);
+    }
+
     const invitation = await this.repository.findById(invitationId);
     if (!invitation) {
       throw new NotFoundException({
@@ -163,10 +176,14 @@ export class InvitationsService {
       });
     }
 
-    const [userBuffer, templateBuffer] = await Promise.all([
-      getObject(this.s3, this.bucket, dto.imageKey),
-      getObject(this.s3, this.bucket, template.previewImageKey),
-    ]);
+    // 이슈 8: 템플릿 이미지 인메모리 캐시 (같은 템플릿 재요청 시 S3 다운로드 생략)
+    let templateBuffer = this.templateCache.get(template.id);
+    if (!templateBuffer) {
+      templateBuffer = await getObject(this.s3, this.bucket, template.previewImageKey);
+      this.templateCache.set(template.id, templateBuffer);
+    }
+
+    const userBuffer = await getObject(this.s3, this.bucket, dto.imageKey);
 
     const prompt =
       '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. ' +
@@ -177,6 +194,11 @@ export class InvitationsService {
       templateBuffer,
       prompt,
     );
+
+    // 이슈 6: AI 결과 이미지 크기 상한 검증 (10MB)
+    if (resultBuffer.length > MAX_AI_RESULT_BYTES) {
+      throw new InternalServerErrorException(ErrorCode.AI_PROCESSING_FAILED);
+    }
 
     const aiKey = `invitation-images/${invitationId}/ai/${ulid()}.png`;
     await this.s3.send(

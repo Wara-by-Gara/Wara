@@ -59,6 +59,7 @@ export default function InvitationCardContainer({ invitation }: Props) {
         initialFrame={invitation.mainImageFrame}
         initialMainImageKey={invitation.mainImageKey}
         initialUploadedImageKey={invitation.uploadedImageKey}
+        initialUploadedImageUrl={invitation.uploadedImageUrl}
         onSave={handleSave}
       />
 

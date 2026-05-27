@@ -42,6 +42,7 @@ export interface Invitation {
   mainImageFrame: MainImageFrame;
   uploadedImageKey: string | null;
   mainImageUrl: string;
+  uploadedImageUrl: string | null;
   templatePreviewUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
