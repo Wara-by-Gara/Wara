@@ -1,4 +1,5 @@
 import type { StorybookConfig } from "@storybook/nextjs";
+import path from "path";
 
 const config: StorybookConfig = {
   stories: [
@@ -22,6 +23,17 @@ const config: StorybookConfig = {
   },
   docs: {
     autodocs: false,
+  },
+  webpackFinal: async (config) => {
+    config.resolve = config.resolve ?? {};
+    config.resolve.alias = {
+      ...(config.resolve.alias as Record<string, string>),
+      "lucide-react": path.resolve(
+        __dirname,
+        "../node_modules/lucide-react/dist/cjs/lucide-react.js",
+      ),
+    };
+    return config;
   },
 };
 
