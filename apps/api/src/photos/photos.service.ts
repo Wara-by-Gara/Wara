@@ -84,8 +84,8 @@ export class PhotosService {
   }
 
   //사진 db 단건 조회
-  async getPhoto(id: string, participantId: string) {
-    const photo = await this.repository.findPhotoById(id);
+  async getPhoto(id: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(id, invitationId);
 
     if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
 
@@ -121,8 +121,8 @@ export class PhotosService {
   }
 
   //다운로드용 URL 발급 (낱개, 선택)
-  async getDownloadUrls(ids: string[]) {
-    const photos = await this.repository.findPhotosByIds(ids);
+  async getDownloadUrls(ids: string[], invitationId: string) {
+    const photos = await this.repository.findPhotosByIds(ids, invitationId);
 
     const data = await Promise.all(
       photos.map(async (photo) => {
@@ -143,12 +143,12 @@ export class PhotosService {
       order: 'asc',
     });
     const ids = rows.map((p) => p.id);
-    return this.getDownloadUrls(ids);
+    return this.getDownloadUrls(ids, invitationId);
   }
 
   //사진 삭제 (소프트 딜리트)
-  async deletePhoto(id: string, participantId: string) {
-    const photo = await this.repository.findPhotoById(id);
+  async deletePhoto(id: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(id, invitationId);
 
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -161,8 +161,8 @@ export class PhotosService {
   }
 
   //좋아요 토글
-  async toggleLike(photoId: string, participantId: string) {
-    const photo = await this.repository.findPhotoById(photoId);
+  async toggleLike(photoId: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(photoId, invitationId);
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
