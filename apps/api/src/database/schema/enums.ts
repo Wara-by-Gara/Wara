@@ -45,7 +45,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'nudge',
 ]);
 
-export const remindTypeEnum = pgEnum('remind_type', ['D-7', 'D-30', 'D+365']);
+export const remindTypeEnum = pgEnum('remind_type', ['D+7', 'D+30', 'D+365']);
 export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'photo',
   'feedback',

@@ -4,8 +4,8 @@ import { RemindSchedulerRepository, type RemindType } from './remind-scheduler.r
 import { NotificationsService } from './notifications.service';
 
 const REMIND_CONTENTS: Record<RemindType, (title: string) => string> = {
-  'D-7': (title) => `${title} 모임이 7일 후예요!`,
-  'D-30': (title) => `${title} 모임이 한 달 후예요!`,
+  'D+7': (title) => `${title} 모임이 일주일이 됐어요!`,
+  'D+30': (title) => `${title} 모임이 한 달이 됐어요!`,
   'D+365': (title) => `${title} 모임이 1년이 됐어요!`,
 };
 
@@ -23,7 +23,7 @@ export class RemindSchedulerService {
   async sendDailyReminders() {
     this.logger.log('리마인드 알림 크론 잡 시작');
 
-    for (const remindType of ['D-7', 'D-30', 'D+365'] as const) {
+    for (const remindType of ['D+7', 'D+30', 'D+365'] as const) {
       try {
         await this.processRemindType(remindType);
       } catch (error) {
