@@ -120,7 +120,7 @@ export const MapPage = ({
   // ── previewInInvitation ──────────────────────────────────────────────
   if (state === "previewInInvitation") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto p-5">
           <LocationCard
@@ -132,7 +132,6 @@ export const MapPage = ({
             onGetDirections={onGetDirections}
           />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -140,12 +139,11 @@ export const MapPage = ({
   // ── loading ──────────────────────────────────────────────────────────
   if (state === "loading") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
         <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto bg-gray-100">
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -153,12 +151,11 @@ export const MapPage = ({
   // ── error ────────────────────────────────────────────────────────────
   if (state === "error") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
         <main className={mobileMainCenter}>
           <ErrorState title="지도를 불러오지 못했어요" onRetry={onRetry ?? (() => {})} />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -166,7 +163,7 @@ export const MapPage = ({
   // ── noLocation / onlineMeetingLink ───────────────────────────────────
   if (state === "noLocation" || state === "onlineMeetingLink") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="px-5 py-4">
           {state === "noLocation" ? (
@@ -190,7 +187,6 @@ export const MapPage = ({
             />
           )}
         </div>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -202,7 +198,7 @@ export const MapPage = ({
     state === "currentLocationPermission"
   ) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
         <main className={mobileMainCenter}>
           <EmptyState
@@ -226,16 +222,14 @@ export const MapPage = ({
             }
           />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
 
   // ── search states ────────────────────────────────────────────────────
   if (state.startsWith("search")) {
-
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소 검색" onBack={onBack} />
         <div className="px-5 py-3">
           <TextInput
@@ -280,7 +274,6 @@ export const MapPage = ({
             </p>
           )}
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -288,7 +281,7 @@ export const MapPage = ({
   // ── selectedPlace / manualAddress ────────────────────────────────────
   if (state === "selectedPlace" || state === "manualAddress") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="relative flex-1">
           {mapSlot ?? <MapPlaceholder />}
@@ -302,7 +295,6 @@ export const MapPage = ({
             />
           </div>
         </div>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -316,7 +308,7 @@ export const MapPage = ({
     state === "noMapAppGuide";
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title={placeName} onBack={onBack} />
 
       <div className="relative flex-1">
@@ -383,8 +375,6 @@ export const MapPage = ({
           )}
         </BottomSheetContent>
       </BottomSheet>
-
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };
