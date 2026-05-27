@@ -22,6 +22,7 @@ export default function PhotoWithFeedbackContainer({
   return (
     <>
       <Album
+        invitationId={invitationId}
         photos={photos}
         total={total}
         fetchNextPage={fetchNextPage}
