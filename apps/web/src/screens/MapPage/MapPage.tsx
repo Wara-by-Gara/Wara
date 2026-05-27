@@ -292,7 +292,7 @@ export const MapPage = ({
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="relative flex-1">
           {mapSlot ?? <MapPlaceholder />}
-          <div className="absolute inset-x-0 bottom-0 p-4">
+          <div className="absolute inset-x-0 bottom-0 z-30 p-4">
             <LocationCard
               variant="preview"
               placeName={placeName}
@@ -324,21 +324,21 @@ export const MapPage = ({
 
         {/* 도착 배너 */}
         {isArrived && (
-          <div className="absolute inset-x-0 top-0 bg-success px-4 py-2 text-center text-[13px] font-semibold text-white">
+          <div className="absolute inset-x-0 top-0 z-30 bg-success px-4 py-2 text-center text-[13px] font-semibold text-white">
             모임 장소 근처에 도착했어요. 위치 공유를 종료합니다.
           </div>
         )}
 
         {/* 내 위치 버튼 */}
         <button
-          className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md"
+          className="absolute right-4 top-4 z-30 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md"
           onClick={onLocate}
         >
           <Icon name="locate" size="sm" color="primary" decorative />
         </button>
 
         {/* 하단 장소 카드 */}
-        <div className="absolute inset-x-0 bottom-0 p-4">
+        <div className="absolute inset-x-0 bottom-0 z-30 p-4">
           <LocationCard
             variant="preview"
             placeName={placeName}
