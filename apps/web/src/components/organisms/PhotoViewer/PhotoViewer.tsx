@@ -44,6 +44,7 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  isLiking?: boolean;
   /** 댓글 */
   commentCount?: number;
   commentsOpen?: boolean;
@@ -69,6 +70,7 @@ function ProfileActions({
   likeCount,
   liked,
   onLike,
+  isLiking,
   commentCount,
   commentsOpen,
   onCommentsOpenChange,
@@ -80,6 +82,7 @@ function ProfileActions({
   | "likeCount"
   | "liked"
   | "onLike"
+  | "isLiking"
   | "commentCount"
   | "commentsOpen"
   | "onCommentsOpenChange"
@@ -89,8 +92,9 @@ function ProfileActions({
       <button
         type="button"
         onClick={onLike}
+        disabled={isLiking}
         aria-label={liked ? "좋아요 취소" : "좋아요"}
-        className="inline-flex items-center gap-1.5 text-white"
+        className="inline-flex items-center gap-1.5 text-white disabled:opacity-60"
       >
         <Icon
           name="heart"
@@ -154,6 +158,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       likeCount = 0,
       liked = false,
       onLike,
+      isLiking = false,
       commentCount = 0,
       commentsOpen = false,
       onCommentsOpenChange,
@@ -246,6 +251,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             likeCount={likeCount}
             liked={liked}
             onLike={onLike}
+            isLiking={isLiking}
             commentCount={commentCount}
             commentsOpen={commentsOpen}
             onCommentsOpenChange={onCommentsOpenChange}

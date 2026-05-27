@@ -172,9 +172,14 @@ export class PhotosService {
     if (existing) {
       await this.repository.deleteLike(photoId, participantId);
       return { liked: false };
-    } else {
+    }
+
+    try {
       await this.repository.createLike(photoId, participantId);
       return { liked: true };
+    } catch (e: any) {
+      if (e?.code === '23505') return { liked: true };
+      throw e;
     }
   }
 

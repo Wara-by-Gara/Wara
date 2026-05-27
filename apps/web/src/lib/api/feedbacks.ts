@@ -80,7 +80,7 @@ export function updateFeedback(
   content: string,
 ): Promise<Feedback> {
   return apiPatch<Feedback>(
-    `invitations/${invitationId}/feedbacks/${feedbackId}`,
+    `/invitations/${invitationId}/feedbacks/${feedbackId}`,
     { content },
   );
 }

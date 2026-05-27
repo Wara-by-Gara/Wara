@@ -183,7 +183,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     return await this.db.transaction(async (tx) => {
       const [result] = await tx.insert(feedbacks).values(data).returning();
 
-      if (data.photoId ) {
+      if (data.photoId && !data.parentId) {
         await tx
           .update(photos)
           .set({ feedbackCount: sql`feedback_count + 1` })
