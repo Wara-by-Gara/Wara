@@ -3,10 +3,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3_CLIENT } from './s3.module';
+import { S3_CLIENT } from './s3.constants';
 
-const UPLOAD_URL_EXPIRES_IN = 900;    // 15분
-const GET_URL_EXPIRES_IN = 86400;     // 24시간
+const UPLOAD_URL_EXPIRES_IN = 900;
+const GET_URL_EXPIRES_IN = 86400;
 
 @Injectable()
 export class S3Service {
