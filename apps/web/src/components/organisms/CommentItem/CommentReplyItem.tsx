@@ -1,13 +1,13 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 
-export type CommentReplyVariant = "default" | "mine" | "host";
+export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
 export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivElement> {
   id?: string;
@@ -23,6 +23,8 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   /** 사진 클릭 콜백 (미제공 시 내장 확대 뷰어 사용) */
   onImageClick?: () => void;
   onMore?: () => void;
+  moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
+  editingSlot?: ReactNode;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -38,11 +40,23 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       imageUrl,
       onImageClick,
       onMore,
+      moreMenuItems,
+      editingSlot,
       ...props
     },
     ref,
   ) {
     const [expandedImage, setExpandedImage] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    if (variant === "deleted") {
+      return (
+        <div ref={ref} className={cn("flex items-center gap-2 py-2 text-text-tertiary", className)} {...props}>
+          <Icon name="trash" size="sm" color="inactive" decorative />
+          <p className="text-[13px]">삭제된 댓글입니다</p>
+        </div>
+      );
+    }
 
     const handleImageClick = () => {
       if (onImageClick) {
@@ -96,7 +110,9 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 </button>
               ) : null}
             </div>
-            {content ? (
+            {editingSlot ? (
+              <div className="mt-1">{editingSlot}</div>
+            ) : content ? (
               <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-snug text-text-primary">
                 {replyToName ? (
                   <>
@@ -107,15 +123,37 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
               </p>
             ) : null}
           </div>
-          {onMore ? (
-            <IconButton
-              icon="more-horizontal"
-              variant="ghost"
-              size="sm"
-              aria-label="더보기"
-              onClick={onMore}
-              className="size-8 shrink-0"
-            />
+          {(onMore || moreMenuItems) ? (
+            <div className="relative shrink-0">
+              <IconButton
+                icon="more-horizontal"
+                variant="ghost"
+                size="sm"
+                aria-label="더보기"
+                onClick={() => {
+                  setMenuOpen((v) => !v);
+                  onMore?.();
+                }}
+                className="size-8"
+              />
+              {menuOpen && moreMenuItems && (
+                <div className="absolute right-0 top-8 z-10 min-w-[80px] rounded-xl border border-border bg-surface shadow-md">
+                  {moreMenuItems.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-surface-hover", item.className)}
+                      onClick={() => {
+                        item.onClick();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : null}
         </div>
 

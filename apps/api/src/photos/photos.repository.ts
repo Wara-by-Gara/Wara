@@ -90,20 +90,32 @@ async findAllByInvitationId(invitationId: string, dto: ListPhotosDto) {
 }
 
   //다운로드용(낱개, 지정, 전체)
-  async findPhotosByIds(ids: string[]) {
+  async findPhotosByIds(ids: string[], invitationId: string) {
     const rows = await this.db
       .select()
       .from(photos)
-      .where(and(inArray(photos.id, ids), isNull(photos.deletedAt)));
+      .where(
+        and(
+          inArray(photos.id, ids),
+          eq(photos.invitationId, invitationId),
+          isNull(photos.deletedAt),
+        ),
+      );
     return rows;
   }
 
   //특정 id의 사진 단건 조회 (삭제된 사진은 제외)
-  async findPhotoById(id: string) {
+  async findPhotoById(id: string, invitationId: string) {
     const [row] = await this.db
       .select()
       .from(photos)
-      .where(and(eq(photos.id, id), isNull(photos.deletedAt)));
+      .where(
+        and(
+          eq(photos.id, id),
+          eq(photos.invitationId, invitationId),
+          isNull(photos.deletedAt),
+        ),
+      );
     return row ?? null;
   }
 
