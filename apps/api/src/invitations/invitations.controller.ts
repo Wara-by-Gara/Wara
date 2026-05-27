@@ -10,6 +10,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { InvitationsService } from './invitations.service';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -84,6 +85,7 @@ export class InvitationsController {
     return this.invitationsService.remove(id);
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 1분에 3회 제한 (AI 비용 보호)
   @RequireMemberRole(MemberRole.HOST)
   @UseGuards(HostGuard)
   @Post(':invitationId/main-image/ai')

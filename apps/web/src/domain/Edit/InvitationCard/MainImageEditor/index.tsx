@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import imageCompression from 'browser-image-compression';
 import type { Area } from 'react-easy-crop';
 import type { MainImageFrame } from '@/lib/api/invitations';
@@ -18,6 +18,7 @@ interface Props {
   initialFrame: MainImageFrame;
   initialMainImageKey: string;
   initialUploadedImageKey: string | null;
+  initialUploadedImageUrl: string | null; // 이슈 9: 서버에서 받은 presigned URL
   onSave: (data: {
     mainImageKey: string;
     mainImageFrame: MainImageFrame;
@@ -34,23 +35,22 @@ export default function MainImageEditor({
   initialFrame,
   initialMainImageKey,
   initialUploadedImageKey,
+  initialUploadedImageUrl,
   onSave,
 }: Props) {
   const [selectedFrame, setSelectedFrame] = useState<MainImageFrame>(initialFrame);
 
   // S3 keys
-  const [uploadedKey, setUploadedKey] = useState<string | null>(
-    initialUploadedImageKey ?? localStorage.getItem(TEMP_KEY(invitationId)),
-  );
+  const [uploadedKey, setUploadedKey] = useState<string | null>(initialUploadedImageKey ?? null);
   const [aiKey, setAiKey] = useState<string | null>(
     initialFrame === 'ai' ? initialMainImageKey : null,
   );
 
-  // 미리보기 URL (presigned)
-  const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string | null>(null);
-  const [aiPreviewUrl, setAiPreviewUrl] = useState<string | null>(
-    initialFrame === 'ai' ? /* 기존 mainImageUrl은 부모에서 받아올 수 있으나 일단 null */ null : null,
+  // 미리보기 URL
+  const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string | null>(
+    initialUploadedImageUrl,
   );
+  const [aiPreviewUrl, setAiPreviewUrl] = useState<string | null>(null);
 
   // 크롭 에디터 상태
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -63,23 +63,52 @@ export default function MainImageEditor({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 이슈 3: SSR-safe localStorage 읽기 (마운트 후에만 접근)
+  useEffect(() => {
+    if (!initialUploadedImageKey) {
+      const saved = localStorage.getItem(TEMP_KEY(invitationId));
+      if (saved) setUploadedKey(saved);
+    }
+  }, [invitationId, initialUploadedImageKey]);
+
+  // 이슈 4: cropSrc Object URL 메모리 해제
+  useEffect(() => {
+    return () => {
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+    };
+  }, [cropSrc]);
+
+  // 이슈 4: uploadedPreviewUrl Object URL 메모리 해제 (서버 presigned URL은 revoke 불필요하므로 blob: 로 시작할 때만)
+  useEffect(() => {
+    return () => {
+      if (uploadedPreviewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(uploadedPreviewUrl);
+      }
+    };
+  }, [uploadedPreviewUrl]);
+
   // 파일 선택 → 압축 → 크롭 에디터 열기
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setError('');
 
-    const compressed = await imageCompression(file, {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-      fileType: 'image/webp',
-    });
-
-    const objectUrl = URL.createObjectURL(compressed);
-    setCropSrc(objectUrl);
-    // input 초기화 (같은 파일 재선택 허용)
-    e.target.value = '';
+    // 이슈 5: 압축 에러 처리
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: 'image/webp',
+      });
+      const objectUrl = URL.createObjectURL(compressed);
+      setCropSrc(objectUrl);
+    } catch {
+      setError('이미지 처리에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      // input 초기화 (같은 파일 재선택 허용)
+      e.target.value = '';
+    }
   }, []);
 
   // 크롭 확정 → S3 업로드
@@ -151,7 +180,7 @@ export default function MainImageEditor({
     }
 
     const keyByFrame: Record<MainImageFrame, string | null> = {
-      default: null, // 디폴트는 template key를 부모가 관리
+      default: null,
       upload: uploadedKey,
       ai: aiKey,
     };
@@ -170,6 +199,7 @@ export default function MainImageEditor({
         templatePreviewUrl={templatePreviewUrl}
         uploadedImageUrl={uploadedPreviewUrl}
         aiImageUrl={aiPreviewUrl}
+        hasUploadedImage={!!uploadedKey}
         isAiApplying={isApplyingAi}
         onChange={handleFrameChange}
       />

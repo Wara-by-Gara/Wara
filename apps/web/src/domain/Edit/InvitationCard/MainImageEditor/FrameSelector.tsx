@@ -8,6 +8,7 @@ interface Props {
   templatePreviewUrl: string;
   uploadedImageUrl: string | null;
   aiImageUrl: string | null;
+  hasUploadedImage: boolean; // 업로드 이미지 존재 여부 (AI 탭 활성화 조건)
   isAiApplying: boolean;
   onChange: (frame: MainImageFrame) => void;
 }
@@ -23,6 +24,7 @@ export default function FrameSelector({
   templatePreviewUrl,
   uploadedImageUrl,
   aiImageUrl,
+  hasUploadedImage,
   isAiApplying,
   onChange,
 }: Props) {
@@ -37,7 +39,9 @@ export default function FrameSelector({
       {FRAMES.map(({ id, label }) => {
         const previewUrl = previewByFrame[id];
         const isSelected = selected === id;
-        const isDisabled = id === 'upload' && !uploadedImageUrl;
+        const isDisabled =
+          (id === 'upload' && !uploadedImageUrl) ||
+          (id === 'ai' && !hasUploadedImage);
 
         return (
           <button
