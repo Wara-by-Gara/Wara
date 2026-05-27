@@ -2439,7 +2439,8 @@
         "eventLocations",
         "feedback",
         "invitation_date",
-        "photo"
+        "photo",
+        "arrived"
       ]
     },
     "public.rsvp_status": {

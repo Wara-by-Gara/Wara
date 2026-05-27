@@ -33,6 +33,7 @@ const TYPE_TO_SETTING: Partial<
   photo: 'isPhoto',
   participantLocations: 'isParticipantLocations',
   eventLocations: 'isEventLocations',
+  arrived: 'isParticipantLocations',
 };
 
 @Injectable()
