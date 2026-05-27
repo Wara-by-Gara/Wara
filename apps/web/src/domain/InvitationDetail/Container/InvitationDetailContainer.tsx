@@ -31,6 +31,7 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
+import PhotoWithFeedbackContainer from '../PhotoWithFeedback/Container/PhotoWithFeedbackContainer';
 
 const FONT_CLASS: Record<string, string> = {
   default: "font-sans",
@@ -262,6 +263,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
               <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
             </section>
           )}
+          <PhotoWithFeedbackContainer invitationId={invitationId} />
         </main>
         <MainBottomNav activeKey="invitations" />
 
@@ -394,6 +396,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
             </section>
           )}
         </div>
+        <PhotoWithFeedbackContainer invitationId={invitationId} />
       </main>
 
       {!isLoggedIn && (

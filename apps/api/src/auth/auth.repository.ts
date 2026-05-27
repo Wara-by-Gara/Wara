@@ -101,8 +101,15 @@ export class AuthRepository {
         // 3. 신규 유저 생성
         const inserted = await tx
           .insert(users)
-          .values({ email, name, profileImageUrl })
-          .returning({ id: users.id });
+          .values({
+            email,
+            name,
+            nickname: name,
+            profileImageUrl,
+          })
+          .returning({
+            id: users.id,
+          });
 
         const newUserId = inserted[0]!.id;
 

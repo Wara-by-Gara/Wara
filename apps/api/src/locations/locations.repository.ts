@@ -33,6 +33,13 @@ export class LocationsRepository {
       .where(eq(eventLocations.invitationId, invitationId));
   }
 
+  async findParticipantById(id: string, invitationId: string) {
+    return this.db.query.participants.findFirst({
+      where: (t, { eq, and }) =>
+        and(eq(t.id, id), eq(t.invitationId, invitationId)),
+    });
+  }
+
   async findParticipant(userId: string, invitationId: string) {
     return this.db.query.participants.findFirst({
       where: (t, { eq, and }) =>

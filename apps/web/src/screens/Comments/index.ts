@@ -1,1 +1,1 @@
-export { Comments, type CommentsProps, type CommentsState } from "./Comments";
+export { Comments } from "./Comments";
