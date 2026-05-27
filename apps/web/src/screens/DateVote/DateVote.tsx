@@ -223,53 +223,58 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
-      {/* Row: 오전/오후 | 시 spinner | 분 spinner */}
-      <div className="flex items-center gap-2">
-        {/* AM/PM horizontal toggle */}
-        <div className="flex rounded-xl border border-border bg-gray-50 p-0.5">
-          {(["오전", "오후"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setAmpm(v)}
-              className={cn(
-                "rounded-[9px] px-4 py-2 text-[14px] font-extrabold transition-all duration-150",
-                ampm === v
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-text-tertiary hover:text-text-secondary",
-              )}
-            >{v}</button>
-          ))}
-        </div>
 
+      {/* Row 1: 오전/오후 — 가로 전체 너비 플립 바 */}
+      <button
+        type="button"
+        onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
+        className="flex w-full items-center overflow-hidden rounded-xl border border-border bg-gray-50"
+      >
+        {(["오전", "오후"] as const).map((v) => (
+          <span
+            key={v}
+            className={cn(
+              "flex flex-1 items-center justify-center py-2.5 text-[14px] font-extrabold transition-all duration-150",
+              ampm === v ? "bg-primary text-white" : "text-text-tertiary",
+            )}
+          >{v}</span>
+        ))}
+      </button>
+
+      {/* Row 2: 시 spinner + 분 spinner */}
+      <div className="flex gap-2">
         {/* 시 spinner */}
-        <div className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-white px-2 py-1.5">
+        <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-white px-2 py-2">
           <button type="button" onClick={() => stepHour(-1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-left" size="xs" color="currentColor" decorative />
           </button>
-          <span className="w-8 text-center text-[18px] font-extrabold text-text-primary tabular-nums">{hour}</span>
+          <div className="flex items-baseline gap-1">
+            <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">{hour}</span>
+            <span className="text-[12px] font-bold text-text-tertiary">시</span>
+          </div>
           <button type="button" onClick={() => stepHour(1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-right" size="xs" color="currentColor" decorative />
           </button>
-          <span className="ml-0.5 text-[13px] font-bold text-text-tertiary">시</span>
         </div>
 
         {/* 분 spinner */}
-        <div className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-white px-2 py-1.5">
+        <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-white px-2 py-2">
           <button type="button" onClick={() => stepMinute(-1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-left" size="xs" color="currentColor" decorative />
           </button>
-          <span className="w-8 text-center text-[18px] font-extrabold text-text-primary tabular-nums">
-            {String(minute).padStart(2, "0")}
-          </span>
+          <div className="flex items-baseline gap-1">
+            <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">
+              {String(minute).padStart(2, "0")}
+            </span>
+            <span className="text-[12px] font-bold text-text-tertiary">분</span>
+          </div>
           <button type="button" onClick={() => stepMinute(1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-right" size="xs" color="currentColor" decorative />
           </button>
-          <span className="ml-0.5 text-[13px] font-bold text-text-tertiary">분</span>
         </div>
       </div>
 
