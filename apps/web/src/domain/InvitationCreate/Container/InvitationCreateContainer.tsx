@@ -25,6 +25,7 @@ import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { createInvitation, getInvitationImagePresignedUrl, uploadImageToS3 } from "@/lib/api/invitations";
+import { setEventLocation } from "@/lib/api/locations";
 import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
@@ -49,6 +50,9 @@ interface FormData {
   time: string;
   placeName: string;
   address: string;
+  lat: number | null;
+  lng: number | null;
+  placeId: string;
 }
 
 const DEFAULT_COVER_KEY = "defaults/cover.jpg";
@@ -163,7 +167,7 @@ export default function InvitationCreateContainer() {
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [timeError, setTimeError] = useState(false);
   const [locationError, setLocationError] = useState(false);
-  const [locationMode, setLocationMode] = useState<"search" | "manual" | "selected">("search");
+  const [locationMode, setLocationMode] = useState<"search" | "selected">("search");
   const [locationQuery, setLocationQuery] = useState("");
   const [locationResults, setLocationResults] = useState<Place[]>([]);
   const [locationSearchState, setLocationSearchState] = useState<"default" | "loading" | "no-result" | "error">("default");
@@ -192,6 +196,9 @@ export default function InvitationCreateContainer() {
     time: "",
     placeName: "",
     address: "",
+    lat: null,
+    lng: null,
+    placeId: "",
   });
 
   // 로그인 리다이렉트 후 복귀 처리
@@ -252,6 +259,15 @@ export default function InvitationCreateContainer() {
         font: designFont,
         isMissionEnabled: missionEnabled,
       });
+      if (!locationUnknown && form.placeName && form.lat !== null && form.lng !== null) {
+        await setEventLocation(invitation.id, {
+          placeName: form.placeName,
+          address: form.address,
+          lat: form.lat,
+          lng: form.lng,
+          placeId: form.placeId,
+        });
+      }
       if (missionEnabled && selectedMissions.length > 0) {
         await Promise.all(
           selectedMissions.map((m) =>
@@ -603,16 +619,7 @@ export default function InvitationCreateContainer() {
             query={locationQuery}
             onQueryChange={handleLocationQueryChange}
             selected={locationMode === "selected" && form.placeName ? { name: form.placeName, address: form.address } : undefined}
-            manualAddress={form.address}
-            onManualAddressChange={(v) => { set({ placeName: v, address: v }); if (locationError) setLocationError(false); }}
             state={locationSearchState}
-            onModeChange={(m) => {
-              setLocationMode(m);
-              setLocationResults([]);
-              setLocationQuery("");
-              setLocationSearchState("default");
-              if (locationError) setLocationError(false);
-            }}
             unknown={locationUnknown}
             onUnknownChange={(v) => { setLocationUnknown(v); if (locationError) setLocationError(false); }}
             error={locationError ? "장소를 선택해주세요" : undefined}
@@ -625,7 +632,7 @@ export default function InvitationCreateContainer() {
                   type="button"
                   className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
                   onClick={() => {
-                    set({ placeName: place.placeName, address: place.roadAddress || place.address });
+                    set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
                     setLocationMode("selected");
                     setLocationResults([]);
                     setLocationQuery("");
@@ -900,7 +907,10 @@ export default function InvitationCreateContainer() {
                 <button
                   key={provider}
                   type="button"
-                  onClick={() => { window.location.href = `${apiBase}/auth/${config.path}/redirect`; }}
+                  onClick={() => {
+                    sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
+                    window.location.href = `${apiBase}/auth/${config.path}/redirect`;
+                  }}
                   className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
                 >
                   {config.label}
