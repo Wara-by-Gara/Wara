@@ -20,6 +20,8 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   onCopyAddress?: () => void;
   /** 길찾기 콜백 */
   onGetDirections?: () => void;
+  /** 복사 완료 상태 — true이면 버튼에 "복사됨!" 표시 */
+  copied?: boolean;
 }
 
 export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
@@ -33,6 +35,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       onlineLink,
       onCopyAddress,
       onGetDirections,
+      copied = false,
       ...props
     },
     ref,
@@ -84,14 +87,10 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         className={cn("flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4", className)}
         {...props}
       >
-        {mapPreviewUrl ? (
+        {mapPreviewUrl && (
           <div className="overflow-hidden rounded-2xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={mapPreviewUrl} alt={placeName ?? ""} className="aspect-[16/9] w-full object-cover" />
-          </div>
-        ) : (
-          <div className="flex aspect-[16/9] w-full items-center justify-center rounded-2xl bg-gray-50">
-            <Icon name="map" size="xl" color="inactive" decorative />
           </div>
         )}
         <div>
@@ -100,7 +99,8 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" fullWidth onClick={onCopyAddress}>
-            <Icon name="copy" size="sm" decorative /> 주소 복사
+            <Icon name={copied ? "check" : "copy"} size="sm" decorative />
+            {copied ? "복사됨!" : "주소 복사"}
           </Button>
           <Button variant="primary" size="sm" fullWidth onClick={onGetDirections}>
             <Icon name="navigation" size="sm" color="inverse" decorative /> 길찾기

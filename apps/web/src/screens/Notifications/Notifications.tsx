@@ -68,7 +68,7 @@ export const Notifications = ({
 
   if (state === 'settings') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <section className="py-2">
@@ -106,7 +106,7 @@ export const Notifications = ({
 
   if (state === 'pushPermissionGuide' || state === 'pushDisabledGuide') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="알림" onBack={onBack} />
         <main className={mobileMainCenter}>
           <EmptyState
@@ -133,7 +133,7 @@ export const Notifications = ({
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar
         className="shrink-0"
         title="알림"
