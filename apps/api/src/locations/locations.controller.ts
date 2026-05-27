@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Delete,
   Param,
   Body,
@@ -23,6 +24,7 @@ import {
   UpdateParticipantLocationSchema,
   type UpdateParticipantLocationDto,
 } from './dto/update-participant-location.dto';
+import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 @Controller('invitations/:invitationId')
@@ -66,5 +68,17 @@ export class LocationsController {
     dto: UpdateParticipantLocationDto,
   ) {
     return this.locationsService.updateMyLocation(invitationId, user.id, dto);
+  }
+
+  @Post('participants/:participantId/nudge')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  nudgeParticipant(
+    @Param('invitationId') invitationId: string,
+    @Param('participantId', ParseUlidPipe) participantId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.nudgeParticipant(invitationId, user.id, participantId);
   }
 }
