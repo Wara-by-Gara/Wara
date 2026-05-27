@@ -344,7 +344,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       xAnchor: 0.5,
       zIndex: 20,
     });
-  }, [myLocation]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [myLocation]);
 
   function fitBounds() {
     if (!mapRef.current || !window.kakao?.maps) return;
