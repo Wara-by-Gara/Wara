@@ -3,20 +3,45 @@ import { UsersRepository } from './users.repository';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
+import type { ProfileImagePresignedUrlDto } from './dto/profile-image-presigned-url.dto';
+import { S3Service } from '../s3/s3.service';
+import { ulid } from 'ulid';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly repository: UsersRepository) {}
+  constructor(
+    private readonly repository: UsersRepository,
+    private readonly s3Service: S3Service,
+  ) {}
+
+  async generatePresignedUrl(userId: string, dto: ProfileImagePresignedUrlDto) {
+    const key = `profile-images/${userId}/${ulid()}/${dto.fileName}`;
+    return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
+  }
+
+  private isS3Key(value: string): boolean {
+    return value.startsWith('profile-images/');
+  }
+
+  private async getViewUrl(key: string): Promise<string> {
+    return this.s3Service.getViewPresignedUrl(key);
+  }
 
   async getMe(userId: string) {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
+      return { ...user, profileImageUrl: await this.getViewUrl(user.profileImageUrl) };
+    }
     return user;
   }
 
   async updateMe(userId: string, data: UpdateUserDto) {
     const updated = await this.repository.updateUser(userId, data);
     if (!updated) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (updated.profileImageUrl && this.isS3Key(updated.profileImageUrl)) {
+      return { ...updated, profileImageUrl: await this.getViewUrl(updated.profileImageUrl) };
+    }
     return updated;
   }
 
@@ -24,6 +49,7 @@ export class UsersService {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     await this.repository.softDeleteUser(userId);
+    await this.repository.deleteSocialAccountsByUserId(userId);
   }
 
   async getMySocials(userId: string) {
@@ -42,6 +68,9 @@ export class UsersService {
   async getUserById(targetId: string) {
     const user = await this.repository.findPublicById(targetId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
+      return { ...user, profileImageUrl: await this.getViewUrl(user.profileImageUrl) };
+    }
     return user;
   }
 }

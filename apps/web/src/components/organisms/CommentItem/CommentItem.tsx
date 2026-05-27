@@ -9,24 +9,18 @@ import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
 
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** 표시 모드 */
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
   authorAvatarUrl?: string;
-  /** 상대 시간 */
   createdAt: string;
   content: string;
-  /** 사진 첨부 URL (사진 댓글) */
   imageUrl?: string;
-  /** 사진 클릭 콜백 */
   onImageClick?: () => void;
-  /** 대댓글 목록 */
   replies?: CommentReplyItemProps[];
-  /** 답글 달기 */
   onReply?: () => void;
-  /** 더보기 버튼 콜백 */
   onMore?: () => void;
-  /** Editing 모드일 때 우측 영역 (입력창 등) */
+  /** 더보기 메뉴 아이템 */
+  moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
 }
 
@@ -44,12 +38,14 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       replies,
       onReply,
       onMore,
+      moreMenuItems,
       editingSlot,
       ...props
     },
     ref,
   ) {
     const [expandedImage, setExpandedImage] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     if (variant === "deleted") {
       return (
@@ -88,29 +84,50 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
     };
 
     return (
-      <div ref={ref} className={cn("px-4 py-3", className)} {...props}>
+      <div ref={ref} className={cn("px-4 py-2", className)} {...props}>
         <div className="flex items-start gap-3">
           <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
           <div className="min-w-0 flex-1">
-            {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}
             <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="text-[14px] font-semibold text-text-primary">{authorName}</p>
-                {variant === "host" ? (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
-                    <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
-                  </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="text-[14px] font-semibold text-text-primary">{authorName}</p>
+                  {variant === "host" ? (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
+                      <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
+                    </span>
+                  ) : null}
+                  {variant === "mine" ? (
+                    <span className="rounded-full bg-primary-soft px-1.5 text-[11px] font-bold text-primary">나</span>
+                  ) : null}
+                  <span className="text-[12px] text-text-tertiary">· {createdAt}</span>
+                </div>
+                {variant === "editing" && editingSlot ? (
+                  <div className="mt-1">{editingSlot}</div>
+                ) : (
+                  <>
+                    {content ? (
+                      <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
+                        {content}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+                {onReply ? (
+                  <button
+                    type="button"
+                    onClick={onReply}
+                    className="mt-1 text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
+                  >
+                    답글 달기
+                  </button>
                 ) : null}
-                {variant === "mine" ? (
-                  <span className="rounded-full bg-primary-soft px-1.5 text-[11px] font-bold text-primary">나</span>
-                ) : null}
-                <span className="text-[12px] text-text-tertiary">· {createdAt}</span>
               </div>
               {imageUrl ? (
                 <button
                   type="button"
                   onClick={handleImageClick}
-                  className="relative shrink-0 size-[72px] overflow-hidden rounded-xl ring-1 ring-border"
+                  className="relative shrink-0 size-[52px] overflow-hidden rounded-xl ring-1 ring-border"
                   aria-label="첨부 사진 확대 보기"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -119,33 +136,42 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 </button>
               ) : null}
             </div>
-            {variant === "editing" && editingSlot ? (
-              <div className="mt-1.5">{editingSlot}</div>
-            ) : (
-              <>
-                {content ? (
-                  <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
-                    {content}
-                  </p>
-                ) : null}
-              </>
-            )}
-            {onReply ? (
-              <button
-                type="button"
-                onClick={onReply}
-                className="mt-1.5 text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
-              >
-                답글 달기
-              </button>
-            ) : null}
           </div>
-          {onMore ? (
-            <IconButton icon="more-horizontal" variant="ghost" size="sm" aria-label="더보기" onClick={onMore} />
+
+          {/* ... 버튼 + 드롭다운 */}
+          {(onMore || moreMenuItems) ? (
+            <div className="relative">
+              <IconButton
+                icon="more-horizontal"
+                variant="ghost"
+                size="sm"
+                aria-label="더보기"
+                onClick={() => {
+                  setMenuOpen((v) => !v);
+                  onMore?.();
+                }}
+              />
+              {menuOpen && moreMenuItems && (
+                <div className="absolute right-0 top-8 z-10 min-w-[80px] rounded-xl border border-border bg-surface shadow-md">
+                  {moreMenuItems.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-surface-hover", item.className)}
+                      onClick={() => {
+                        item.onClick();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : null}
         </div>
 
-        {/* 사진 확대 뷰어 (onImageClick 미제공 시 내장 뷰어 사용) */}
         {imageUrl && !onImageClick ? (
           <Modal open={expandedImage} onOpenChange={setExpandedImage}>
             <ModalOverlay className="fixed inset-0 z-50 bg-black/80" />
@@ -170,7 +196,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
 
         {hasReplies ? (
           <div
-            className="mt-2 ml-11 space-y-0.5 border-l-2 border-primary-soft pl-3"
+            className="mt-1.5 ml-11 space-y-0.5 border-l-2 border-primary-soft pl-3"
             role="group"
             aria-label={`${authorName}님 댓글의 답글`}
           >

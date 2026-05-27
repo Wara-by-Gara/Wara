@@ -80,4 +80,8 @@ export class UsersRepository {
   async deleteSocialAccount(id: string) {
     await this.db.delete(socialAccounts).where(eq(socialAccounts.id, id));
   }
+
+  async deleteSocialAccountsByUserId(userId: string) {
+    await this.db.delete(socialAccounts).where(eq(socialAccounts.userId, userId));
+  }
 }
