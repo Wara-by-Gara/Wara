@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Invitation } from '@/lib/api/invitations';
 
 interface Props {
@@ -10,10 +11,11 @@ export default function DetailCard({ invitation }: Props) {
       {/* 이미지 */}
       <div className="relative w-full aspect-[3/4]">
         {invitation.mainImageUrl && (
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=800"
             alt={invitation.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         )}
         <span className="absolute bottom-4 left-4 bg-black text-white text-xs px-2 py-1 rounded">
