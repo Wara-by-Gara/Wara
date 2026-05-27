@@ -22,8 +22,8 @@ export function usePhotoFeedback(
 
   const invitationFeedbackKey = ['invitations', invitationId, 'feedbacks'];
 
-  const submitComment = async (text: string) => {
-    await createPhotoFeedback(invitationId, photoId, text);
+  const submitComment = async (text: string, parentId?: string) => {
+    await createPhotoFeedback(invitationId, photoId, text, parentId);
     queryClient.invalidateQueries({ queryKey });
     queryClient.invalidateQueries({ queryKey: invitationFeedbackKey });
   };

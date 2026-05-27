@@ -27,6 +27,7 @@ export default function PhotoDetailModal({
   const [index, setIndex] = useState(initialIndex);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
+  const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [isLiking, setIsLiking] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
@@ -96,7 +97,8 @@ export default function PhotoDetailModal({
       await updateComment(editingComment.id, text);
       setEditingComment(undefined);
     } else {
-      await submitComment(text);
+      await submitComment(text, replyingTo?.id);
+      setReplyingTo(null);
     }
   };
 
@@ -120,6 +122,10 @@ export default function PhotoDetailModal({
         variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
         moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
         editingSlot,
+        onReply: !isDeleted ? () => {
+          setCommentsOpen(true);
+          setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
+        } : undefined,
       },
       ...f.replies.map((r) => {
         const isReplyDeleted = !!r.deletedAt;
@@ -135,6 +141,7 @@ export default function PhotoDetailModal({
         return {
           id: r.id,
           authorName: r.participant.user.nickname,
+          authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: `↳ ${r.content}`,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
@@ -161,6 +168,13 @@ export default function PhotoDetailModal({
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
       onCommentSubmit={handleCommentSubmit}
+      commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+      replyBanner={replyingTo ? (
+        <div className="flex items-center justify-between border-t border-white/10 px-4 py-1.5">
+          <span className="text-[12px] text-white/60">@{replyingTo.authorName}에게 답글</span>
+          <button type="button" onClick={() => setReplyingTo(null)} className="text-[12px] text-white/40 hover:text-white/70">취소</button>
+        </div>
+      ) : undefined}
       liked={currentLiked}
       onLike={handleLike}
       isLiking={isLiking}

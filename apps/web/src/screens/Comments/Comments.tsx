@@ -28,6 +28,7 @@ export const Comments = ({ invitationId }: Props) => {
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
   const [deletingCommentId, setDeletingCommentId] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
 
   const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
 
@@ -95,12 +96,14 @@ export const Comments = ({ invitationId }: Props) => {
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
                   authorName={f.participant.user.nickname}
+                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
                   content={f.content}
                   replies={f.replies.map((r) => {
                     const isReplyDeleted = !!r.deletedAt;
                     const isReplyMine = !isReplyDeleted && !!me && r.participant.userId === me.id;
+                    const isReplyEditing = editingComment?.id === r.id;
                     return {
                       id: r.id,
                       authorName: r.participant.user.nickname,
@@ -108,6 +111,14 @@ export const Comments = ({ invitationId }: Props) => {
                       createdAt: timeAgo(r.createdAt),
                       content: r.content,
                       variant: isReplyDeleted ? ("deleted" as const) : isReplyMine ? ("mine" as const) : ("default" as const),
+                      moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+                      editingSlot: isReplyEditing ? (
+                        <InlineCommentEditor
+                          initialValue={r.content}
+                          onSubmit={handleEdit}
+                          onCancel={() => setEditingComment(undefined)}
+                        />
+                      ) : undefined,
                     };
                   })}
                   moreMenuItems={isMine ? buildMenuItems(f.id, f.content) : undefined}
@@ -126,11 +137,20 @@ export const Comments = ({ invitationId }: Props) => {
       </main>
 
       <div className="shrink-0">
+        {replyingTo && (
+          <div className="flex items-center justify-between border-t border-border bg-primary-soft px-4 py-1.5">
+            <span className="text-[13px] text-primary">@{replyingTo.authorName}에게 답글</span>
+            <button type="button" onClick={() => setReplyingTo(null)} className="text-[13px] text-text-tertiary hover:text-text-secondary">취소</button>
+          </div>
+        )}
         <CommentInputBar
           avatarUrl={me?.profileImageUrl ?? undefined}
           authorName={me?.nickname ?? undefined}
-          placeholder="댓글 남기기"
-          onSubmit={submitComment}
+          placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+          onSubmit={async (text) => {
+            await submitComment(text, replyingTo?.id);
+            setReplyingTo(null);
+          }}
         />
       </div>
 
