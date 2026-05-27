@@ -1,8 +1,9 @@
+// s3.module.ts
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client } from '@aws-sdk/client-s3';
-
-export const S3_CLIENT = Symbol('S3_CLIENT');
+import { S3Service } from './s3.service';
+import { S3_CLIENT } from './s3.constants';
 
 @Global()
 @Module({
@@ -14,7 +15,8 @@ export const S3_CLIENT = Symbol('S3_CLIENT');
         return new S3Client({ region: config.getOrThrow('AWS_REGION') });
       },
     },
+    S3Service,
   ],
-  exports: [S3_CLIENT],
+  exports: [S3_CLIENT, S3Service],
 })
 export class S3Module {}

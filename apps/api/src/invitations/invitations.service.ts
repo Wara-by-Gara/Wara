@@ -16,23 +16,21 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
 import { ErrorCode } from '../common/constants/error-codes';
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { getObject } from '../common/utils/s3.util';
 import { InvitationPresignedUrlDto } from './dto/invitation-presigned-url.dto';
 import { ulid } from 'ulid';
-import { S3_CLIENT } from '../s3/s3.module';
+import { S3Service } from '../s3/s3.service';
+import { S3_CLIENT } from '../s3/s3.constants';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
+import { getObject } from '../common/utils/s3.util';
 import { AiService } from '../ai/ai.service';
 import { AiMonitoringService } from '../ai/ai-monitoring.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
 const MAX_AI_RESULT_BYTES = 10 * 1024 * 1024; // 10MB
 const AI_DAILY_LIMIT = 3;
+/** public/ 접두사: S3 버킷의 public-read 경로 */
+const PUBLIC_PREFIX = 'public/invitations/';
 
 @Injectable()
 export class InvitationsService {
@@ -45,6 +43,7 @@ export class InvitationsService {
     private readonly repository: InvitationsRepository,
     private readonly aiJobsRepository: AiImageJobsRepository,
     private readonly templatesRepository: TemplatesRepository,
+    private readonly s3Service: S3Service,
     @Inject(S3_CLIENT) private readonly s3: S3Client,
     private readonly config: ConfigService,
     private readonly aiService: AiService,
@@ -54,34 +53,17 @@ export class InvitationsService {
     this.bucket = this.config.getOrThrow('AWS_S3_BUCKET');
   }
 
-  // view URL(24시간)
-  private async getViewUrl(key: string): Promise<string> {
-    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.s3, command, { expiresIn: 86400 });
-  }
-
-  // Upload URL 발급
   async generatePresignedUrl(dto: InvitationPresignedUrlDto) {
-    const key = `invitation-images/${ulid()}/${dto.fileName}`;
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: dto.contentType,
-    });
-    const presignedUrl = await getSignedUrl(this.s3, command, {
-      expiresIn: 900,
-    });
-    return { presignedUrl, key };
+    const key = `${PUBLIC_PREFIX}${ulid()}/${dto.fileName}`;
+    return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
   }
 
   async findAll(userId: string) {
     const invitations = await this.repository.findAllByUserId(userId);
-    return Promise.all(
-      invitations.map(async (invitation) => ({
-        ...invitation,
-        mainImageUrl: await this.getViewUrl(invitation.mainImageKey),
-      })),
-    );
+    return invitations.map((invitation) => ({
+      ...invitation,
+      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
+    }));
   }
 
   async findOne(id: string) {
@@ -92,19 +74,22 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    const [mainImageUrl, templatePreviewUrl, uploadedImageUrl] =
-      await Promise.all([
-        this.getViewUrl(invitation.mainImageKey),
-        invitation.templateId
-          ? this.templatesRepository
-              .findById(invitation.templateId)
-              .then((t) => (t ? this.getViewUrl(t.previewImageKey) : null))
-          : Promise.resolve(null),
-        invitation.uploadedImageKey
-          ? this.getViewUrl(invitation.uploadedImageKey)
-          : Promise.resolve(null),
-      ]);
-    return { ...invitation, mainImageUrl, templatePreviewUrl, uploadedImageUrl };
+    const [templatePreviewUrl, uploadedImageUrl] = await Promise.all([
+      invitation.templateId
+        ? this.templatesRepository
+            .findById(invitation.templateId)
+            .then((t) => (t ? this.s3Service.getPublicUrl(t.previewImageKey) : null))
+        : Promise.resolve(null),
+      invitation.uploadedImageKey
+        ? Promise.resolve(this.s3Service.getPublicUrl(invitation.uploadedImageKey))
+        : Promise.resolve(null),
+    ]);
+    return {
+      ...invitation,
+      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
+      templatePreviewUrl,
+      uploadedImageUrl,
+    };
   }
 
   private async validateTemplateId(templateId: string) {
@@ -122,26 +107,27 @@ export class InvitationsService {
       await this.validateTemplateId(dto.templateId);
     }
     const invitation = await this.repository.create(userId, dto);
-    const mainImageUrl = await this.getViewUrl(invitation.mainImageKey);
-    return { ...invitation, mainImageUrl };
+    return {
+      ...invitation,
+      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
+    };
   }
 
   async update(id: string, dto: UpdateInvitationDto) {
     const current = await this.repository.findById(id);
-    if (!current) {
-      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
-    }
+    if (!current) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+
     if (dto.templateId && dto.templateId !== current.templateId) {
       await this.validateTemplateId(dto.templateId);
     }
 
     const updated = await this.repository.update(id, dto);
-    if (!updated) {
-      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
-    }
+    if (!updated) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
 
-    const mainImageUrl = await this.getViewUrl(updated.mainImageKey);
-    return { ...updated, mainImageUrl };
+    return {
+      ...updated,
+      mainImageUrl: this.s3Service.getPublicUrl(updated.mainImageKey),
+    };
   }
 
   async remove(id: string) {
@@ -166,8 +152,8 @@ export class InvitationsService {
     dto: ApplyAiImageDto,
     userId: string,
   ) {
-    // path traversal 방지
-    if (!dto.imageKey.startsWith(`invitation-images/${invitationId}/`)) {
+    // 허용된 S3 경로만 처리 (path traversal 방지)
+    if (!dto.imageKey.startsWith(PUBLIC_PREFIX)) {
       throw new ForbiddenException(ErrorCode.INSUFFICIENT_ROLE);
     }
 
@@ -184,12 +170,8 @@ export class InvitationsService {
 
     // 초대장 유효성 검사
     const invitation = await this.repository.findById(invitationId);
-    if (!invitation) {
-      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
-    }
-    if (!invitation.templateId) {
-      throw new NotFoundException(ErrorCode.AI_TEMPLATE_NOT_FOUND);
-    }
+    if (!invitation) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+    if (!invitation.templateId) throw new NotFoundException(ErrorCode.AI_TEMPLATE_NOT_FOUND);
 
     // 잡 생성
     const job = await this.aiJobsRepository.create({
@@ -221,7 +203,7 @@ export class InvitationsService {
 
     const resultUrl =
       job.resultKey && job.status === 'completed'
-        ? await this.getViewUrl(job.resultKey)
+        ? this.s3Service.getPublicUrl(job.resultKey)
         : null;
 
     return {
@@ -269,7 +251,6 @@ export class InvitationsService {
         '배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.';
       const prompt = template.prompt ?? DEFAULT_PROMPT;
 
-      // S3 key 확장자로 MIME type 추정 (업로드 시 항상 webp로 저장)
       const userMime = uploadedImageKey.endsWith('.webp') ? 'image/webp' : 'image/png';
       const resultBuffer = await this.aiService.compositeImages(
         userBuffer,
@@ -286,7 +267,7 @@ export class InvitationsService {
         return;
       }
 
-      const aiKey = `invitation-images/${invitationId}/ai/${ulid()}.png`;
+      const aiKey = `${PUBLIC_PREFIX}${invitationId}/ai/${ulid()}.png`;
       await this.s3.send(
         new PutObjectCommand({
           Bucket: this.bucket,
@@ -296,11 +277,8 @@ export class InvitationsService {
         }),
       );
 
-      const url = await this.getViewUrl(aiKey);
-      await this.aiJobsRepository.updateStatus(jobId, 'completed', {
-        resultKey: aiKey,
-      });
-
+      const url = this.s3Service.getPublicUrl(aiKey);
+      await this.aiJobsRepository.updateStatus(jobId, 'completed', { resultKey: aiKey });
       await this.sendAiNotification(userId, invitationId, jobId, aiKey, url);
     } catch (err) {
       const errorCode =

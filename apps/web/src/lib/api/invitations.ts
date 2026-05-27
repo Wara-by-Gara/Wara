@@ -53,6 +53,7 @@ export interface Invitation {
   bgColor: string;
   font: string;
   myRole?: 'HOST' | 'GUEST';
+  host?: { nickname: string | null; profileImageUrl: string | null } | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;

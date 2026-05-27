@@ -48,7 +48,6 @@ import { AiModule } from './ai/ai.module';
     S3Module,
     ParticipantsExampleModule,
     SendLogsModule,
-    S3Module,
     BlocklistModule,
     AdminModule,
     FaqModule,

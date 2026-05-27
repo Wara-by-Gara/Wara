@@ -39,7 +39,7 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: JwtPayload) {
+  findAll(@CurrentUser() user: JwtPayload) {
     return this.invitationsService.findAll(user.id);
   }
 
@@ -86,7 +86,7 @@ export class InvitationsController {
   }
 
   /** AI 합성 잡 생성 — 즉시 { jobId } 반환 (202), 백그라운드 처리 */
-  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 1분에 3회 제한 (AI 비용 보호)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @RequireMemberRole(MemberRole.HOST)
   @UseGuards(HostGuard)
   @Post(':invitationId/main-image/ai')
