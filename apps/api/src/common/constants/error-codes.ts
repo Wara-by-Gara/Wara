@@ -46,6 +46,10 @@ export const ErrorCode = {
   FAQ_NOT_FOUND: 'FAQ_NOT_FOUND',
   //Admin 분석
   ANALYTICS_PERIOD_TOO_LONG: 'ANALYTICS_PERIOD_TOO_LONG',
+  // AI
+  AI_PROCESSING_FAILED: 'AI_PROCESSING_FAILED',
+  AI_TIMEOUT: 'AI_TIMEOUT',
+  AI_TEMPLATE_NOT_FOUND: 'AI_TEMPLATE_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
