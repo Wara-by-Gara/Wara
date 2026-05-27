@@ -215,26 +215,30 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
   const [ampm, setAmpm] = useState<"오전" | "오후">("오후");
   const [hour, setHour] = useState(2);
   const [minute, setMinute] = useState(0);
+  const [sliderTarget, setSliderTarget] = useState<"hour" | "minute" | null>(null);
 
   const stepHour = (delta: number) => setHour((h) => ((h - 1 + delta + 12) % 12) + 1);
   const stepMinute = (delta: number) => setMinute((m) => (m + delta * 5 + 60) % 60);
 
   const preview = formatTimeLabel(ampm, hour, minute);
 
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+  const toggleSlider = (target: "hour" | "minute") =>
+    setSliderTarget((prev) => (prev === target ? null : target));
 
-      {/* Row 1: 오전/오후 — 가로 전체 너비 플립 바 */}
+  return (
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-4">
+
+      {/* Row 1: 오전/오후 — 가로 플립 바 (높이 줄임) */}
       <button
         type="button"
         onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
-        className="flex w-full items-center overflow-hidden rounded-xl border border-border bg-gray-50"
+        className="flex w-full items-center overflow-hidden rounded-lg border border-border bg-gray-50"
       >
         {(["오전", "오후"] as const).map((v) => (
           <span
             key={v}
             className={cn(
-              "flex flex-1 items-center justify-center py-2.5 text-[14px] font-extrabold transition-all duration-150",
+              "flex flex-1 items-center justify-center py-1.5 text-[13px] font-extrabold transition-all duration-150",
               ampm === v ? "bg-primary text-white" : "text-text-tertiary",
             )}
           >{v}</span>
@@ -244,15 +248,21 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       {/* Row 2: 시 spinner + 분 spinner */}
       <div className="flex gap-2">
         {/* 시 spinner */}
-        <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-white px-2 py-2">
+        <div
+          className={cn(
+            "flex flex-1 cursor-pointer items-center justify-between rounded-xl border bg-white px-2 py-2 transition-colors",
+            sliderTarget === "hour" ? "border-primary" : "border-border",
+          )}
+        >
           <button type="button" onClick={() => stepHour(-1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-left" size="xs" color="currentColor" decorative />
           </button>
-          <div className="flex items-baseline gap-1">
+          <button type="button" onClick={() => toggleSlider("hour")}
+            className="flex items-baseline gap-1 rounded-lg px-1 py-0.5 hover:bg-gray-50">
             <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">{hour}</span>
             <span className="text-[12px] font-bold text-text-tertiary">시</span>
-          </div>
+          </button>
           <button type="button" onClick={() => stepHour(1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-right" size="xs" color="currentColor" decorative />
@@ -260,23 +270,90 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         </div>
 
         {/* 분 spinner */}
-        <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-white px-2 py-2">
+        <div
+          className={cn(
+            "flex flex-1 cursor-pointer items-center justify-between rounded-xl border bg-white px-2 py-2 transition-colors",
+            sliderTarget === "minute" ? "border-primary" : "border-border",
+          )}
+        >
           <button type="button" onClick={() => stepMinute(-1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-left" size="xs" color="currentColor" decorative />
           </button>
-          <div className="flex items-baseline gap-1">
+          <button type="button" onClick={() => toggleSlider("minute")}
+            className="flex items-baseline gap-1 rounded-lg px-1 py-0.5 hover:bg-gray-50">
             <span className="w-7 text-center text-[20px] font-extrabold text-text-primary tabular-nums">
               {String(minute).padStart(2, "0")}
             </span>
             <span className="text-[12px] font-bold text-text-tertiary">분</span>
-          </div>
+          </button>
           <button type="button" onClick={() => stepMinute(1)}
             className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
             <Icon name="chevron-right" size="xs" color="currentColor" decorative />
           </button>
         </div>
       </div>
+
+      {/* Row 3: 슬라이더 (시간 또는 분 선택 시 표시) */}
+      {sliderTarget === "hour" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-gray-50 px-3 py-3">
+          <div className="flex items-center justify-between text-[11px] text-text-tertiary">
+            <span>1시</span>
+            <span className="font-bold text-primary">{hour}시 선택 중</span>
+            <span>12시</span>
+          </div>
+          <input
+            type="range"
+            min={1} max={12} step={1}
+            value={hour}
+            onChange={(e) => setHour(Number(e.target.value))}
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-primary"
+          />
+          <div className="flex justify-between">
+            {[1,2,3,4,5,6,7,8,9,10,11,12].map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => setHour(h)}
+                className={cn(
+                  "flex size-6 items-center justify-center rounded-full text-[11px] font-bold transition-all",
+                  hour === h ? "bg-primary text-white" : "text-text-tertiary hover:bg-gray-200",
+                )}
+              >{h}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {sliderTarget === "minute" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-gray-50 px-3 py-3">
+          <div className="flex items-center justify-between text-[11px] text-text-tertiary">
+            <span>0분</span>
+            <span className="font-bold text-primary">{String(minute).padStart(2,"0")}분 선택 중</span>
+            <span>55분</span>
+          </div>
+          <input
+            type="range"
+            min={0} max={55} step={5}
+            value={minute}
+            onChange={(e) => setMinute(Number(e.target.value))}
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-primary"
+          />
+          <div className="flex justify-between">
+            {[0,5,10,15,20,25,30,35,40,45,50,55].map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMinute(m)}
+                className={cn(
+                  "flex size-6 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+                  minute === m ? "bg-primary text-white" : "text-text-tertiary hover:bg-gray-200",
+                )}
+              >{String(m).padStart(2,"0")}</button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Add button */}
       <Button
