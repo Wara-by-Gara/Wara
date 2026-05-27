@@ -55,7 +55,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         ref={ref}
         className={cn(
           containerBase,
-          variant === "color" && (backgroundClass ?? "bg-pink-100"),
+          variant === "color" && (backgroundClass ?? "bg-white"),
           variant === "no-image" && "bg-gray-100",
           className,
         )}
