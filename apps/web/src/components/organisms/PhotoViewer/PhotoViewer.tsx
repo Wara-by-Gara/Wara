@@ -22,6 +22,7 @@ export interface PhotoViewerComment {
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: React.ReactNode;
+  onReply?: () => void;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -53,6 +54,8 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   comments?: PhotoViewerComment[];
   onCommentSubmit?: (text: string) => void;
   commentPlaceholder?: string;
+  /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
+  replyBanner?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -164,6 +167,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       comments = [],
       onCommentSubmit,
       commentPlaceholder = "댓글 남기기",
+      replyBanner,
       rightActions,
       ...props
     },
@@ -270,6 +274,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           content={c.content}
                           moreMenuItems={c.moreMenuItems}
                           editingSlot={c.editingSlot}
+                          onReply={c.onReply}
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
                         />
                       </li>
@@ -281,6 +286,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {replyBanner}
               <CommentInputBar
                 avatarUrl={authorAvatarUrl}
                 authorName={authorName}

@@ -47,10 +47,11 @@ export function createPhotoFeedback(
   invitationId: string,
   photoId: string,
   content: string,
+  parentId?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
-    { content },
+    { content, ...(parentId && { parentId }) },
   );
 }
 
@@ -68,9 +69,11 @@ export function getInvitationFeedbacks(
 export function createInvitationFeedback(
   invitationId: string,
   content: string,
+  parentId?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(`/invitations/${invitationId}/feedbacks`, {
     content,
+    ...(parentId && { parentId }),
   });
 }
 

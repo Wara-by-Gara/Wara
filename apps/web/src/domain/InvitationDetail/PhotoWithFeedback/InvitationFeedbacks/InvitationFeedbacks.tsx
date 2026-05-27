@@ -32,6 +32,7 @@ export default function InvitationFeedbacks({
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
@@ -66,6 +67,7 @@ export default function InvitationFeedbacks({
                   : undefined
               }
               onImageClick={f.photo ? () => handlePhotoClick(f.photo!.id) : undefined}
+              onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
                 f.deletedAt
                   ? 'deleted'
@@ -120,13 +122,51 @@ export default function InvitationFeedbacks({
                   </div>
                 ) : undefined
               }
-              replies={f.replies.map((r) => ({
-                id: r.id,
-                authorName:
-                  r.participant.user?.nickname ?? r.participant.userId,
-                content: r.content,
-                createdAt: timeAgo(r.createdAt),
-              }))}
+              replies={f.replies.map((r) => {
+                const isReplyDeleted = !!r.deletedAt;
+                const isReplyMine = !isReplyDeleted && r.participant.userId === currentUserId;
+                const isReplyEditing = editingId === r.id;
+                return {
+                  id: r.id,
+                  authorName: r.participant.user?.nickname ?? r.participant.userId,
+                  content: r.deletedAt ? '' : r.content,
+                  createdAt: timeAgo(r.createdAt),
+                  variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
+                  moreMenuItems: isReplyMine ? [
+                    {
+                      label: '수정',
+                      onClick: () => { setEditingId(r.id); setEditContent(r.content); },
+                      className: 'text-blue-500',
+                    },
+                    {
+                      label: '삭제',
+                      onClick: () => removeComment(r.id, f.photo?.id),
+                      className: 'text-red-500',
+                    },
+                  ] : undefined,
+                  editingSlot: isReplyEditing ? (
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 border rounded px-2 py-1 text-sm"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                      />
+                      <button
+                        className="text-xs text-blue-500"
+                        onClick={async () => {
+                          await editComment(r.id, editContent, f.photo?.id);
+                          setEditingId(null);
+                        }}
+                      >
+                        저장
+                      </button>
+                      <button className="text-xs text-gray-400" onClick={() => setEditingId(null)}>
+                        취소
+                      </button>
+                    </div>
+                  ) : undefined,
+                };
+              })}
             />
           </div>
         ))}
@@ -140,8 +180,18 @@ export default function InvitationFeedbacks({
           </button>
         )}
       </div>
+      {replyingTo && (
+        <div className="flex items-center justify-between border-t border-border bg-primary-soft px-4 py-1.5">
+          <span className="text-[13px] text-primary">@{replyingTo.authorName}에게 답글</span>
+          <button type="button" onClick={() => setReplyingTo(null)} className="text-[13px] text-text-tertiary hover:text-text-secondary">취소</button>
+        </div>
+      )}
       <CommentInputBar
-        onSubmit={submitComment}
+        placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+        onSubmit={async (text) => {
+          await submitComment(text, replyingTo?.id);
+          setReplyingTo(null);
+        }}
         state={isSubmitting ? 'submitting' : 'default'}
       />
       {selectedPhoto && (

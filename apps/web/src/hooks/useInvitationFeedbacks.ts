@@ -15,11 +15,11 @@ export function useInvitationFeedback(invitationId: string) {
     enabled: !!invitationId,
   });
 
-  const submitComment = async (content: string) => {
+  const submitComment = async (content: string, parentId?: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await createInvitationFeedback(invitationId, content);
+      await createInvitationFeedback(invitationId, content, parentId);
       queryClient.invalidateQueries({ queryKey });
     } finally {
       setIsSubmitting(false);
