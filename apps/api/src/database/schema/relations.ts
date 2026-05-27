@@ -13,7 +13,7 @@ import { eventLocations, participantLocations } from './locations';
 import { photos, photoLikes } from './photos';
 import { missions, missionAssignments } from './missions';
 import { feedbacks, feedbackLikes } from './feedbacks';
-import { notifications, notificationSettings } from './notifications';
+import { notifications, notificationSettings, remindLogs } from './notifications';
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   socialAccounts: many(socialAccounts),
@@ -108,4 +108,8 @@ export const invitationLinkEventsRelations = relations(invitationLinkEvents, ({ 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   receiver: one(users, { fields: [notifications.userId], references: [users.id], relationName: 'receiver' }),
   actor: one(users, { fields: [notifications.actorUserId], references: [users.id], relationName: 'actor' }),
+}));
+
+export const remindLogsRelations = relations(remindLogs, ({ one }) => ({
+  invitation: one(invitations, { fields: [remindLogs.invitationId], references: [invitations.id] }),
 }));

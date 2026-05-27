@@ -115,6 +115,29 @@ export class LocationsService {
     return { location: { ...location, isArrived: true }, justArrived: true };
   }
 
+  async nudgeParticipant(
+    invitationId: string,
+    hostUserId: string,
+    participantId: string,
+  ) {
+    const participant = await this.repository.findParticipantById(
+      participantId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    await this.notifications.notify({
+      userId: participant.userId,
+      actorUserId: hostUserId,
+      type: 'nudge',
+      content: '모임 장소로 출발해주세요!',
+      targetType: 'invitation',
+      targetId: invitationId,
+    });
+  }
+
   private async sendArrivalNotificationsDelayed(
     invitationId: string,
     participant: { userId: string; user: { name: string | null; nickname: string | null } },

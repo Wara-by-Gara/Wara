@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LocationCard } from "@/components/organisms/LocationCard";
+import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
 import { useInvitation } from "@/hooks/useInvitations";
 import { useMe } from "@/hooks/useUsers";
 import { ROUTES } from "@/constants/routes";
@@ -22,24 +23,29 @@ export default function LocationWithDate({ invitationId }: LocationWithDateProps
   return (
     <div className="flex flex-col gap-3">
       {invitation?.eventStartAt && (
-        <div>
-          <p className="text-[12px] font-medium uppercase text-text-tertiary">일시</p>
-          <p className="text-[15px] text-text-primary">
+        <InvitationInfoCard
+          variant="datetime"
+          title={
             <time suppressHydrationWarning>
               {new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+              })}
+            </time>
+          }
+          time={
+            <time suppressHydrationWarning>
+              {new Date(invitation.eventStartAt).toLocaleTimeString("ko-KR", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </time>
-          </p>
-        </div>
+          }
+        />
       )}
 
       <div>
-        <p className="mb-2 text-[12px] font-medium uppercase text-text-tertiary">장소</p>
         {eventLocation ? (
           <>
             <LocationCard
