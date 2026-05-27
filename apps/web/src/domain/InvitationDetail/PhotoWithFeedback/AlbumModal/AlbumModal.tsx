@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Photo } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 
@@ -88,7 +89,7 @@ const handleScroll = useCallback(() => {
                   }
                 }}
               >
-                <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                <Image src={photo.url} alt="" fill className="object-cover" />
                 {isSelectMode && (
                   <div className={`absolute top-1 right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${selectedIds.has(photo.id) ? 'bg-black' : 'bg-white/50'}`}>
                     {selectedIds.has(photo.id) && <span className="text-white text-xs">✓</span>}

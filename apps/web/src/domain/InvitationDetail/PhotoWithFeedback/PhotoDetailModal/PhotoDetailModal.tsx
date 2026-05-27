@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Photo, getPhoto } from "@/lib/api/photos";
 
 interface Props {
@@ -31,10 +32,11 @@ export default function PhotoDetailModal({ photos, initialIndex, onClose }: Prop
               ‹
             </button>
           )}
-          <img
+          <Image
             src={photo.url}
             alt=""
-            className="max-h-[60vh] md:max-h-full max-w-full object-contain"
+            fill
+            className="object-contain"
           />
           {index < photos.length - 1 && (
             <button
