@@ -79,12 +79,12 @@ export default function HomeContainer() {
 
   if (!isLoggedIn) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background">
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <Icon name="pixel-heart" size="xl" color="primary" decorative />
           <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
           <p className="text-[14px] text-text-secondary">로그인하고 첫 초대장을 만들어보세요</p>
-          <Button variant="primary" size="lg" className="mt-2" onClick={() => router.push(ROUTES.LOGIN)}>
+          <Button variant="primary" size="lg" className="mt-2" onClick={() => router.push(ROUTES.INVITATIONS.CREATE)}>
             시작하기
           </Button>
         </div>
