@@ -6,7 +6,6 @@ import { CommentInputBar } from "@/components/organisms/CommentInputBar";
 import { CommentItem } from "@/components/organisms/CommentItem";
 import {
   Modal,
-  ModalOverlay,
   ModalPortal,
   ModalPrimitive,
 } from "@/components/molecules/Modal";
@@ -21,6 +20,9 @@ export interface PhotoViewerComment {
   content: string;
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
+  moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
+  editingSlot?: React.ReactNode;
+  onReply?: () => void;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -44,6 +46,7 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  isLiking?: boolean;
   /** 댓글 */
   commentCount?: number;
   commentsOpen?: boolean;
@@ -51,6 +54,8 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   comments?: PhotoViewerComment[];
   onCommentSubmit?: (text: string) => void;
   commentPlaceholder?: string;
+  /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
+  replyBanner?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -67,6 +72,7 @@ function ProfileActions({
   likeCount,
   liked,
   onLike,
+  isLiking,
   commentCount,
   commentsOpen,
   onCommentsOpenChange,
@@ -78,6 +84,7 @@ function ProfileActions({
   | "likeCount"
   | "liked"
   | "onLike"
+  | "isLiking"
   | "commentCount"
   | "commentsOpen"
   | "onCommentsOpenChange"
@@ -87,8 +94,9 @@ function ProfileActions({
       <button
         type="button"
         onClick={onLike}
+        disabled={isLiking}
         aria-label={liked ? "좋아요 취소" : "좋아요"}
-        className="inline-flex items-center gap-1.5 text-white"
+        className="inline-flex items-center gap-1.5 text-white disabled:opacity-60"
       >
         <Icon
           name="heart"
@@ -152,12 +160,14 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       likeCount = 0,
       liked = false,
       onLike,
+      isLiking = false,
       commentCount = 0,
       commentsOpen = false,
       onCommentsOpenChange,
       comments = [],
       onCommentSubmit,
       commentPlaceholder = "댓글 남기기",
+      replyBanner,
       rightActions,
       ...props
     },
@@ -243,6 +253,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             likeCount={likeCount}
             liked={liked}
             onLike={onLike}
+            isLiking={isLiking}
             commentCount={commentCount}
             commentsOpen={commentsOpen}
             onCommentsOpenChange={onCommentsOpenChange}
@@ -256,11 +267,14 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                     {comments.map((c) => (
                       <li key={c.id}>
                         <CommentItem
-                          variant={c.variant}
+                          variant={c.editingSlot ? "editing" : c.variant}
                           authorName={c.authorName}
                           authorAvatarUrl={c.authorAvatarUrl}
                           createdAt={c.createdAt}
                           content={c.content}
+                          moreMenuItems={c.moreMenuItems}
+                          editingSlot={c.editingSlot}
+                          onReply={c.onReply}
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
                         />
                       </li>
@@ -272,6 +286,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {replyBanner}
               <CommentInputBar
                 avatarUrl={authorAvatarUrl}
                 authorName={authorName}
@@ -326,10 +341,6 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
       );
     }
 
-    const overlayClass = cn(
-      "z-50 bg-black/80 data-[state=open]:animate-in data-[state=open]:fade-in",
-      contained ? "absolute inset-0" : "fixed inset-0",
-    );
     const contentClass = cn(
       "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden rounded-3xl bg-black p-0 shadow-lg focus:outline-none",
       "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
@@ -339,10 +350,10 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
 
     const modalBody = (
       <>
-        <ModalOverlay className={overlayClass} />
-        <ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
-          {body}
-        </ModalPrimitive.Content>
+<ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
+  <ModalPrimitive.Title className="sr-only">사진 뷰어</ModalPrimitive.Title>
+  {body}
+</ModalPrimitive.Content>
       </>
     );
 

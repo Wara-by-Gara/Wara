@@ -1,4 +1,4 @@
-import InvitationDetailContainer from "@/domain/InvitationDetail/Container/InvitationDetailContainer";
+import InvitationDetailContainer from '@/domain/InvitationDetail/Container/InvitationDetailContainer';
 
 interface Props {
   params: Promise<{ invitationId: string }>;
