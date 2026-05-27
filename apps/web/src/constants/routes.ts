@@ -16,7 +16,7 @@ export const ROUTES = {
     SETTINGS: (id: string) => `/invitations/${id}/settings`,
   },
   PUBLIC: {
-    INVITATION: (id: string) => `/i/${id}`,
+    INVITATION: (id: string) => `/invitations/${id}`,
   },
   NOTIFICATIONS: {
     LIST: "/notifications",
