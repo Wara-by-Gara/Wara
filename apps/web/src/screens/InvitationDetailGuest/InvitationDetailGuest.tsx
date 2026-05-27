@@ -70,7 +70,8 @@ export type InvitationDetailGuestState =
   | "fullCapacity"
   | "loginRequiredForRsvp"
   | "alreadyRespondedProfileOpen"
-  | "publicMomentLog";
+  | "publicMomentLog"
+  | "dateVotePending";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
@@ -235,11 +236,28 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
         </p>
 
         <div className="flex flex-col gap-3">
-          <InvitationInfoCard
-            variant="datetime"
-            title={mockInvitation.date}
-            time={mockInvitation.time}
-          />
+          {state === "dateVotePending" ? (
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-left transition-colors active:bg-amber-100"
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                <Icon name="clock" size="md" color="currentColor" decorative className="text-amber-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-amber-500">날짜 미정</p>
+                <p className="text-[14px] font-bold text-text-primary">날짜 투표 진행 중</p>
+                <p className="text-[12px] text-text-secondary">마감 2시간 30분 전 · 8명 참여</p>
+              </div>
+              <Icon name="chevron-right" size="sm" color="inactive" decorative />
+            </button>
+          ) : (
+            <InvitationInfoCard
+              variant="datetime"
+              title={mockInvitation.date}
+              time={mockInvitation.time}
+            />
+          )}
           {showMap ? (
             <LocationCard
               variant="preview"
