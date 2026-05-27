@@ -17,7 +17,7 @@ import { mockInvitation, type MockInvitation } from "@/lib/mockData";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
-export type InvitationListTab = "all" | "createdByMe" | "invited" | "joined" | "draft" | "ended";
+export type InvitationListTab = "all" | "createdByMe" | "joined" | "ended";
 
 export type InvitationListState =
   | "default"
@@ -35,17 +35,18 @@ export type InvitationListState =
 
 export interface InvitationListProps {
   tab?: InvitationListTab;
+  onTabChange?: (tab: InvitationListTab) => void;
   state?: InvitationListState;
   invitations?: (MockInvitation & { variant?: InvitationCardVariant })[];
   onBack?: () => void;
+  onCardClick?: (id: string) => void;
+  onCreateClick?: () => void;
 }
 
 const TAB_LABELS: Record<InvitationListTab, string> = {
   all: "전체",
   createdByMe: "내가 만든",
-  invited: "초대받은",
   joined: "참여한",
-  draft: "임시저장",
   ended: "종료됨",
 };
 
@@ -57,15 +58,18 @@ const sample = [
 
 export const InvitationList = ({
   tab = "all",
+  onTabChange,
   state = "default",
   invitations = sample,
   onBack,
+  onCardClick,
+  onCreateClick,
 }: InvitationListProps) => {
   const isSearch = state === "search" || state === "searchResult" || state === "searchEmpty";
   const mainCentered = state === "error" || state === "empty" || state === "searchEmpty";
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <TopAppBar className="shrink-0" title="초대장"
         onBack={onBack}
         rightSlot={
@@ -77,7 +81,9 @@ export const InvitationList = ({
 
       <div className="shrink-0 flex flex-nowrap gap-1.5 overflow-x-auto px-5 py-3 scrollbar-hide">
         {(Object.keys(TAB_LABELS) as InvitationListTab[]).map((t) => (
-          <Chip key={t} variant="filter" selected={t === tab} className="shrink-0">{TAB_LABELS[t]}</Chip>
+          <Chip key={t} variant="filter" selected={t === tab} className="shrink-0" onClick={() => onTabChange?.(t)}>
+            {TAB_LABELS[t]}
+          </Chip>
         ))}
       </div>
 
@@ -113,7 +119,7 @@ export const InvitationList = ({
             icon="ticket"
             title="아직 초대장이 없어요"
             description="첫 모임을 Wara로 초대해보세요"
-            action={<Button>초대장 만들기</Button>}
+            action={<Button onClick={onCreateClick}>초대장 만들기</Button>}
           />
         ) : state === "searchEmpty" ? (
           <EmptyState icon="search" title="검색 결과가 없어요" description="다른 키워드로 검색해보세요" />
@@ -126,7 +132,8 @@ export const InvitationList = ({
                 date={inv.date}
                 location={inv.location}
                 imageUrl={inv.coverImageUrl}
-                variant={inv.variant ?? tab === "draft" ? "draft" : tab === "ended" ? "ended" : "default"}
+                variant={inv.variant ?? (tab === "ended" ? "ended" : "default")}
+                onClick={() => onCardClick?.(inv.id)}
               />
             ))}
           </div>

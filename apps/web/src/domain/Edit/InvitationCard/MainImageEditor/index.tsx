@@ -5,7 +5,7 @@ import imageCompression from 'browser-image-compression';
 import type { Area } from 'react-easy-crop';
 import type { MainImageFrame } from '@/lib/api/invitations';
 import {
-  getMainImagePresignedUrl,
+  getInvitationImagePresignedUrl,
   applyAiToMainImage,
 } from '@/lib/api/invitations';
 import type { AiCompleteEventDetail } from '@/hooks/useNotifications';
@@ -148,7 +148,7 @@ export default function MainImageEditor({
       const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
       const fileName = `main-${Date.now()}.webp`;
 
-      const { presignedUrl, key } = await getMainImagePresignedUrl(fileName, UPLOAD_CONTENT_TYPE);
+      const { presignedUrl, key } = await getInvitationImagePresignedUrl(fileName, UPLOAD_CONTENT_TYPE);
 
       await fetch(presignedUrl, {
         method: 'PUT',

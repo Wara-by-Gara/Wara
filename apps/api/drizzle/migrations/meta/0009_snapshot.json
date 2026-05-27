@@ -1,6 +1,6 @@
 {
-  "id": "848228a6-7918-4293-b5f1-33a931a9b4f1",
-  "prevId": "a56a5e33-c631-49df-856e-fe8c78e083b3",
+  "id": "17b44836-495a-4696-93c4-45ff420606db",
+  "prevId": "848228a6-7918-4293-b5f1-33a931a9b4f1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -798,6 +798,13 @@
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
+        },
+        "prompt": {
+          "name": "prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. 배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.'"
         },
         "is_active": {
           "name": "is_active",

@@ -1,4 +1,6 @@
-import { apiGet, apiPost, apiPatch } from "./client";
+import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
+
+type ImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
 
 interface CreateInvitationPayload {
   title: string;
@@ -73,18 +75,39 @@ export function getInvitation(id: string): Promise<Invitation> {
   return apiGet<Invitation>(`/invitations/${id}`);
 }
 
+export function getMyInvitations(): Promise<Invitation[]> {
+  return apiGet<Invitation[]>("/invitations");
+}
+
 export function updateInvitation(id: string, payload: UpdateInvitationPayload): Promise<Invitation> {
   return apiPatch<Invitation>(`/invitations/${id}`, payload);
 }
 
-export function getMainImagePresignedUrl(
+export function updateInvitationStatus(id: string, status: 'active' | 'closed'): Promise<Invitation> {
+  return apiPatch<Invitation>(`/invitations/${id}`, { status });
+}
+
+export function deleteInvitation(id: string): Promise<void> {
+  return apiDelete(`/invitations/${id}`);
+}
+
+export function getInvitationImagePresignedUrl(
   fileName: string,
-  contentType: string,
+  contentType: ImageContentType,
 ): Promise<{ presignedUrl: string; key: string }> {
   return apiPost<{ presignedUrl: string; key: string }>('/invitations/presigned-url', {
     fileName,
     contentType,
   });
+}
+
+export async function uploadImageToS3(presignedUrl: string, file: File): Promise<void> {
+  const res = await fetch(presignedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  });
+  if (!res.ok) throw new Error('이미지 업로드에 실패했어요');
 }
 
 export function applyAiToMainImage(
