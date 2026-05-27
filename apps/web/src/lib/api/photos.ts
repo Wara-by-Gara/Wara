@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client';
+import { apiGet, apiPost, apiDelete } from './client';
 
 export interface Photo {
   id: string;
@@ -98,4 +98,8 @@ export interface Best9Photo extends Photo {
 
 export function getBest9(invitationId: string): Promise<Best9Photo[]> {
   return apiGet<Best9Photo[]>(`/invitations/${invitationId}/photos/best9`);
+}
+
+export function deletePhoto(invitationId: string, photoId: string): Promise<void> {
+  return apiDelete(`/invitations/${invitationId}/photos/${photoId}`);
 }

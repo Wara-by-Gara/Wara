@@ -5,6 +5,9 @@ import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/pho
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
+import { useMyParticipant } from '@/hooks/useParticipants';
+import { useDeletePhoto } from '@/hooks/useDeletePhoto';
+import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
 
 interface Props {
@@ -29,8 +32,12 @@ export default function PhotoDetailModal({
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [isLiking, setIsLiking] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
+  const { data: myParticipant } = useMyParticipant(photo?.invitationId ?? '');
+  const { mutate: deleteMutate, isPending: isDeleting } = useDeletePhoto(photo?.invitationId ?? '', onClose);
+  const isOwner = !!myParticipant && !!photo && myParticipant.id === photo.participantId;
 
   useEffect(() => {
     if (!photo) return;
@@ -153,12 +160,24 @@ export default function PhotoDetailModal({
   });
 
   return (
+    <>
+    <ConfirmModal
+      open={showDeleteConfirm}
+      onOpenChange={(o) => { if (!o) setShowDeleteConfirm(false); }}
+      title="이 사진을 삭제하시겠습니까?"
+      confirmLabel="삭제"
+      confirmVariant="danger"
+      onConfirm={() => deleteMutate(photo.id)}
+      loading={isDeleting}
+    />
     <PhotoViewer
       open={true}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
       onClose={onClose}
+      variant={isOwner ? 'owner' : 'default'}
+      onMore={isOwner ? () => setShowDeleteConfirm(true) : undefined}
       onSave={handleSave}
       src={photo.url}
       likeCount={currentLikeCount}
@@ -200,6 +219,7 @@ export default function PhotoDetailModal({
         </div>
       }
     />
+    </>
   );
 }
 
