@@ -36,6 +36,13 @@
       "when": 1779418055875,
       "tag": "0004_cultured_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779845544522,
+      "tag": "0005_legal_puma",
+      "breakpoints": true
     }
   ]
 }
