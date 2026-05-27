@@ -4,7 +4,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
 import { LocationCard } from "@/components/organisms/LocationCard";
@@ -81,6 +80,12 @@ export interface MapPageProps {
   /** HOST 여부 — noLocation 상태에서 장소 설정 버튼 표시 */
   isHost?: boolean;
   onSetLocation?: () => void;
+
+  /** 주소 복사 완료 상태 */
+  addressCopied?: boolean;
+
+  /** 내 위치 버튼 */
+  onLocate?: () => void;
 }
 
 const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
@@ -113,6 +118,8 @@ export const MapPage = ({
   onOpenSettings,
   isHost,
   onSetLocation,
+  addressCopied,
+  onLocate,
 }: MapPageProps) => {
   const placeName = eventLocation?.placeName ?? '';
   const address = eventLocation?.address ?? '';
@@ -323,7 +330,10 @@ export const MapPage = ({
         )}
 
         {/* 내 위치 버튼 */}
-        <button className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md">
+        <button
+          className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md"
+          onClick={onLocate}
+        >
           <Icon name="locate" size="sm" color="primary" decorative />
         </button>
 
@@ -335,6 +345,7 @@ export const MapPage = ({
             address={address}
             onCopyAddress={onCopyAddress}
             onGetDirections={onGetDirections}
+            copied={addressCopied}
           />
         </div>
       </div>
