@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode, type ChangeEvent } from 'react';
 import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
@@ -101,25 +101,45 @@ export default function PhotoDetailModal({
   };
 
   const comments = (feedbackData?.rows ?? []).flatMap((f) => {
-    const isMine = !!me && f.participant.userId === me.id;
+    const isDeleted = !!f.deletedAt;
+    const isMine = !isDeleted && !!me && f.participant.userId === me.id;
+    const isEditing = editingComment?.id === f.id;
+    const editingSlot: ReactNode = isEditing ? (
+      <InlineCommentEditor
+        initialValue={f.content}
+        onSubmit={(text) => handleCommentSubmit(text)}
+        onCancel={() => setEditingComment(undefined)}
+      />
+    ) : undefined;
     return [
       {
         id: f.id,
         authorName: f.participant.user.nickname,
         content: f.content,
         createdAt: timeAgo(f.createdAt),
-        variant: isMine ? ('mine' as const) : ('default' as const),
+        variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
         moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
+        editingSlot,
       },
       ...f.replies.map((r) => {
-        const isReplyMine = !!me && r.participant.userId === me.id;
+        const isReplyDeleted = !!r.deletedAt;
+        const isReplyMine = !isReplyDeleted && !!me && r.participant.userId === me.id;
+        const isReplyEditing = editingComment?.id === r.id;
+        const replyEditingSlot: ReactNode = isReplyEditing ? (
+          <InlineCommentEditor
+            initialValue={r.content}
+            onSubmit={(text) => handleCommentSubmit(text)}
+            onCancel={() => setEditingComment(undefined)}
+          />
+        ) : undefined;
         return {
           id: r.id,
           authorName: r.participant.user.nickname,
           content: `↳ ${r.content}`,
           createdAt: timeAgo(r.createdAt),
-          variant: isReplyMine ? ('mine' as const) : ('default' as const),
+          variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
           moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+          editingSlot: replyEditingSlot,
         };
       }),
     ];
@@ -141,7 +161,6 @@ export default function PhotoDetailModal({
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
       onCommentSubmit={handleCommentSubmit}
-      editingComment={editingComment}
       liked={currentLiked}
       onLike={handleLike}
       isLiking={isLiking}
@@ -167,5 +186,44 @@ export default function PhotoDetailModal({
         </div>
       }
     />
+  );
+}
+
+function InlineCommentEditor({
+  initialValue,
+  onSubmit,
+  onCancel,
+}: {
+  initialValue: string;
+  onSubmit: (text: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <div className="flex flex-col gap-1 mt-1">
+      <input
+        autoFocus
+        value={value}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
+          if (e.key === 'Escape') onCancel();
+        }}
+        className="w-full rounded-lg bg-white/10 px-3 py-1.5 text-[14px] text-white placeholder:text-white/50 outline-none"
+      />
+      <div className="flex gap-2 justify-end">
+        <button type="button" onClick={onCancel} className="text-[12px] text-white/60 hover:text-white">
+          취소
+        </button>
+        <button
+          type="button"
+          onClick={() => { if (value.trim()) onSubmit(value.trim()); }}
+          className="text-[12px] text-primary font-semibold disabled:opacity-40"
+          disabled={!value.trim()}
+        >
+          저장
+        </button>
+      </div>
+    </div>
   );
 }

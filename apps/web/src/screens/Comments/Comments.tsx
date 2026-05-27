@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { CommentItem } from "@/components/organisms/CommentItem";
@@ -7,98 +9,182 @@ import { CommentInputBar } from "@/components/organisms/CommentInputBar";
 import { CommentListSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { mockComments, mockMe, type MockComment } from "@/lib/mockData";
-import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
+import { mobileMainScroll, mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
+import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
+import { useMe } from "@/hooks/useUsers";
+import { timeAgo } from "@/utils/timeAge";
 
-export type CommentsState =
-  | "empty"
-  | "list"
-  | "loading"
-  | "error"
-  | "moreLoading"
-  | "keyboardOpen"
-  | "loginRequired"
-  | "disabledByHost"
-  | "deleteModal"
-  | "reportModal";
-
-export interface CommentsProps {
-  state?: CommentsState;
-  comments?: MockComment[];
-  onBack?: () => void;
+interface Props {
+  invitationId: string;
 }
 
-export const Comments = ({ state = "list", comments = mockComments, onBack }: CommentsProps) => {
-  const mainCentered = state === "error" || state === "empty";
+export const Comments = ({ invitationId }: Props) => {
+  const router = useRouter();
+  const { data: me } = useMe();
+  const { data, isLoading, isError, submitComment, editComment, removeComment } =
+    useInvitationFeedback(invitationId);
 
-  const commentInput =
-    state === "disabledByHost" ? (
-      <p className="border-t border-border bg-surface px-5 py-4 text-center text-[13px] text-text-tertiary">
-        호스트가 댓글을 받지 않고 있어요
-      </p>
-    ) : state === "loginRequired" ? (
-      <CommentInputBar state="loginRequired" />
-    ) : (
-      <CommentInputBar
-        avatarUrl={mockMe.avatarUrl}
-        authorName={mockMe.nickname}
-        state={state === "keyboardOpen" ? "default" : "default"}
-      />
-    );
+  const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
+  const [deletingCommentId, setDeletingCommentId] = useState<string | undefined>();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
+
+  const buildMenuItems = (id: string, content: string) => [
+    {
+      label: "수정",
+      onClick: () => setEditingComment({ id, content }),
+      className: "text-gray-900",
+    },
+    {
+      label: "삭제",
+      onClick: () => setDeletingCommentId(id),
+      className: "text-danger",
+    },
+  ];
+
+  const handleEdit = async (text: string) => {
+    if (!editingComment) return;
+    await editComment(editingComment.id, text);
+    setEditingComment(undefined);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCommentId) return;
+    setIsDeleting(true);
+    try {
+      await removeComment(deletingCommentId);
+      setDeletingCommentId(undefined);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const mainCentered = isError || (!isLoading && feedbacks.length === 0);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-      <TopAppBar className="shrink-0" title={`댓글 ${comments.length}`} onBack={onBack ?? (() => {})} />
+      <TopAppBar
+        className="shrink-0"
+        title={`댓글 ${feedbacks.length}`}
+        onBack={() => router.back()}
+      />
 
       <main className={cn(mainCentered ? mobileMainCenter : mobileMainScroll)}>
-        {state === "loading" ? (
-          <div className="px-2 py-2"><CommentListSkeleton /></div>
-        ) : state === "error" ? (
+        {isLoading ? (
+          <div className="px-2 py-2">
+            <CommentListSkeleton />
+          </div>
+        ) : isError ? (
           <ErrorState title="댓글을 불러오지 못했어요" onRetry={() => {}} />
-        ) : state === "empty" ? (
-          <EmptyState icon="message-circle" title="댓글이 아직 없어요" description="첫 댓글을 남겨보세요" />
+        ) : feedbacks.length === 0 ? (
+          <EmptyState
+            icon="message-circle"
+            title="댓글이 아직 없어요"
+            description="첫 댓글을 남겨보세요"
+          />
         ) : (
           <div className="divide-y divide-border">
-            {comments.map((c) => (
-              <CommentItem
-                key={c.id}
-                variant={c.variant}
-                authorName={c.authorName}
-                authorAvatarUrl={c.authorAvatarUrl}
-                createdAt={c.createdAt}
-                content={c.content}
-                replies={c.replies}
-                onReply={() => {}}
-                onMore={() => {}}
-              />
-            ))}
-            {state === "moreLoading" ? (
-              <div className="flex justify-center py-4">
-                <span className="size-5 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-              </div>
-            ) : null}
+            {feedbacks.map((f) => {
+              const isDeleted = !!f.deletedAt;
+              const isMine = !isDeleted && !!me && f.participant.userId === me.id;
+              const isEditing = editingComment?.id === f.id;
+              return (
+                <CommentItem
+                  key={f.id}
+                  variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
+                  authorName={f.participant.user.nickname}
+                  authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
+                  createdAt={timeAgo(f.createdAt)}
+                  content={f.content}
+                  replies={f.replies.map((r) => {
+                    const isReplyDeleted = !!r.deletedAt;
+                    const isReplyMine = !isReplyDeleted && !!me && r.participant.userId === me.id;
+                    return {
+                      id: r.id,
+                      authorName: r.participant.user.nickname,
+                      authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
+                      createdAt: timeAgo(r.createdAt),
+                      content: r.content,
+                      variant: isReplyDeleted ? ("deleted" as const) : isReplyMine ? ("mine" as const) : ("default" as const),
+                    };
+                  })}
+                  moreMenuItems={isMine ? buildMenuItems(f.id, f.content) : undefined}
+                  editingSlot={isEditing ? (
+                    <InlineCommentEditor
+                      initialValue={f.content}
+                      onSubmit={handleEdit}
+                      onCancel={() => setEditingComment(undefined)}
+                    />
+                  ) : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </main>
 
-      <div className="shrink-0">{commentInput}</div>
+      <div className="shrink-0">
+        <CommentInputBar
+          avatarUrl={me?.profileImageUrl ?? undefined}
+          authorName={me?.nickname ?? undefined}
+          placeholder="댓글 남기기"
+          onSubmit={submitComment}
+        />
+      </div>
 
-      <ConfirmModal contained
-        open={state === "deleteModal"}
-        onOpenChange={() => {}}
+      <ConfirmModal
+        contained
+        open={!!deletingCommentId}
+        onOpenChange={(open) => {
+          if (!open) setDeletingCommentId(undefined);
+        }}
         title="이 댓글을 삭제할까요?"
         confirmLabel="삭제"
         confirmVariant="danger"
-      />
-      <ConfirmModal contained
-        open={state === "reportModal"}
-        onOpenChange={() => {}}
-        title="이 댓글을 신고할까요?"
-        description="검토 후 적절한 조치를 취해드릴게요"
-        confirmLabel="신고"
-        confirmVariant="danger"
+        onConfirm={handleDelete}
+        loading={isDeleting}
       />
     </div>
   );
 };
+
+function InlineCommentEditor({
+  initialValue,
+  onSubmit,
+  onCancel,
+}: {
+  initialValue: string;
+  onSubmit: (text: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <div className="flex flex-col gap-1 mt-1">
+      <input
+        autoFocus
+        value={value}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
+          if (e.key === "Escape") onCancel();
+        }}
+        className="w-full rounded-lg bg-gray-100 px-3 py-1.5 text-[14px] text-text-primary outline-none"
+      />
+      <div className="flex gap-2 justify-end">
+        <button type="button" onClick={onCancel} className="text-[12px] text-text-tertiary hover:text-text-secondary">
+          취소
+        </button>
+        <button
+          type="button"
+          onClick={() => { if (value.trim()) onSubmit(value.trim()); }}
+          className="text-[12px] text-primary font-semibold disabled:opacity-40"
+          disabled={!value.trim()}
+        >
+          저장
+        </button>
+      </div>
+    </div>
+  );
+}
