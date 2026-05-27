@@ -12,7 +12,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
-import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
+import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummaryCard";
@@ -56,7 +56,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
@@ -142,21 +141,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   const isHost = isLoggedIn && me?.id === invitation.userId;
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}${ROUTES.PUBLIC.INVITATION(invitationId)}`
-    : "";
-  const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(shareUrl).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  const handleNativeShare = () => {
-    navigator.share({ title: invitation.title, url: shareUrl }).catch(() => {});
-  };
-
   const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
   const eventDate = invitation.eventStartAt
     ? new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
@@ -263,16 +247,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         </main>
         <MainBottomNav activeKey="invitations" />
 
-        <BottomSheet open={shareSheetOpen} onOpenChange={setShareSheetOpen}>
-          <BottomSheetContent title="공유하기">
-            <div className="flex flex-col gap-1 pt-1">
-              <ShareOptionItem icon="link" title={copied ? "복사됨!" : "링크 복사"} iconBg="bg-gray-100" onClick={handleCopy} />
-              {canNativeShare && (
-                <ShareOptionItem icon="share" title="다른 앱으로 공유" iconBg="bg-gray-100" onClick={handleNativeShare} />
-              )}
-            </div>
-          </BottomSheetContent>
-        </BottomSheet>
+        <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 
         <BottomSheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen}>
           <BottomSheetContent>
@@ -431,16 +406,8 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         </BottomSheetContent>
       </BottomSheet>
 
-      <BottomSheet open={shareSheetOpen} onOpenChange={setShareSheetOpen}>
-        <BottomSheetContent title="공유하기">
-          <div className="flex flex-col gap-1 pt-1">
-            <ShareOptionItem icon="link" title={copied ? "복사됨!" : "링크 복사"} iconBg="bg-gray-100" onClick={handleCopy} />
-            {canNativeShare && (
-              <ShareOptionItem icon="share" title="다른 앱으로 공유" iconBg="bg-gray-100" onClick={handleNativeShare} />
-            )}
-          </div>
-        </BottomSheetContent>
-      </BottomSheet>
+      {/* 공유 바텀시트 */}
+      <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
