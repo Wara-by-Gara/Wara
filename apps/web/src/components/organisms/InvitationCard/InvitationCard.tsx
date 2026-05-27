@@ -22,7 +22,7 @@ const STATUS_BADGE: Record<
 > = {
   default: null,
   createdByMe: { label: "내가 만든", variant: "host" },
-  invited: { label: "초대 받음", variant: "private" },
+  invited: { label: "참여한", variant: "private" },
   today: { label: "오늘", variant: "today" },
   upcoming: { label: "D-3", variant: "dday" },
   ended: { label: "종료됨", variant: "ended" },
@@ -45,6 +45,8 @@ export interface InvitationCardProps extends React.HTMLAttributes<HTMLButtonElem
   rsvpStatus?: "attending" | "maybe" | "declined" | "noResponse";
   /** 참석자 수 (선택) */
   participantsCount?: number;
+  /** upcoming variant의 D-day 라벨 (예: "D-3"). 없으면 기본값 "D-?" 표시 */
+  ddayLabel?: string;
 }
 
 const RSVP_LABEL: Record<NonNullable<InvitationCardProps["rsvpStatus"]>, { label: string; variant: BadgeProps["variant"] }> = {
@@ -65,11 +67,16 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
       location,
       rsvpStatus,
       participantsCount,
+      ddayLabel,
       ...props
     },
     ref,
   ) {
-    const statusBadge = STATUS_BADGE[variant];
+    const rawBadge = STATUS_BADGE[variant];
+    const statusBadge =
+      rawBadge && variant === "upcoming" && ddayLabel
+        ? { ...rawBadge, label: ddayLabel }
+        : rawBadge;
     const showImage = variant !== "noImage" && imageUrl;
 
     return (
