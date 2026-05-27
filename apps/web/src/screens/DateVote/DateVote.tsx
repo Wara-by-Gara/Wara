@@ -249,7 +249,7 @@ function WheelColumn({
       const idx = Math.round(ref.current.scrollTop / ITEM_H);
       const clamped = Math.max(0, Math.min(idx, items.length - 1));
       isScrolling.current = false;
-      if (items[clamped] !== value) onChange(items[clamped]);
+      if (items[clamped] !== undefined && items[clamped] !== value) onChange(items[clamped]!);
       // snap
       ref.current.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
     }, 120);
@@ -496,8 +496,6 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
     arr.push(s);
     slotsByDate.set(s.dateKey, arr);
   }
-
-  const focusedTimes = focusedDate ? (slotsByDate.get(focusedDate) ?? []).map(s => s.time) : [];
 
   if (step === "settings") {
     return (
