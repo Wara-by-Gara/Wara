@@ -225,26 +225,15 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
       {/* Row: 오전/오후 | 시 spinner | 분 spinner */}
       <div className="flex items-center gap-2">
-        {/* AM/PM toggle — segmented control */}
-        <div className="relative flex rounded-xl bg-gray-100 p-0.5">
-          <div
-            className={cn(
-              "absolute inset-y-0.5 w-[calc(50%-2px)] rounded-[10px] bg-white shadow-sm transition-transform duration-200",
-              ampm === "오후" ? "translate-x-[calc(100%+4px)]" : "translate-x-0",
-            )}
-          />
-          {(["오전", "오후"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setAmpm(v)}
-              className={cn(
-                "relative z-10 flex-1 rounded-[10px] py-2 text-[13px] font-bold transition-colors duration-200",
-                ampm === v ? "text-text-primary" : "text-text-tertiary",
-              )}
-            >{v}</button>
-          ))}
-        </div>
+        {/* AM/PM flip toggle */}
+        <button
+          type="button"
+          onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
+          className="flex items-center gap-1.5 rounded-xl border border-border bg-white px-3.5 py-2 transition-colors hover:bg-gray-50 active:bg-gray-100"
+        >
+          <span className="text-[15px] font-extrabold text-primary">{ampm}</span>
+          <Icon name="chevron-down" size="xs" color="primary" decorative />
+        </button>
 
         {/* 시 spinner */}
         <div className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-white px-2 py-1.5">
