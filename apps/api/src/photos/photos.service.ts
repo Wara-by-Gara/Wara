@@ -36,7 +36,7 @@ export class PhotosService {
   }
 
   //업로드용 presigned URL 을 발급 (업로드, 만료시간 15분)
-  async generatePresignedUrl(invitationId: string,dto: PresignedUrlDto) {
+  async generatePresignedUrl(invitationId: string, dto: PresignedUrlDto) {
     const key = `photos/${invitationId}/${ulid()}/${dto.fileName}`;
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -56,48 +56,53 @@ export class PhotosService {
   }
 
   //다운로드용 presigned URL 발급 (만료시간 24시간)
-private async toDownloadUrl(key: string, fileName: string) {
-  const encodedFileName = encodeURIComponent(fileName);
-  const command = new GetObjectCommand({
-    Bucket: this.bucket,
-    Key: key,
-    ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedFileName}`,
-  });
-  return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
-}
+  private async toDownloadUrl(key: string, fileName: string) {
+    const encodedFileName = encodeURIComponent(fileName);
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedFileName}`,
+    });
+    return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
+  }
 
   //전체 사진 db 조회
-async listPhotos(invitationId: string, dto: ListPhotosDto) {
-  const { rows, nextCursor, total } = await this.repository.findAllByInvitationId(
-    invitationId,
-    dto,
-  );
-  const data = await Promise.all(
-    rows.map(async (photo) => ({
-      ...photo,
-      url: await this.getViewUrl(photo.imageKey),
-      score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-    })),
-  );
-  return { rows: data, nextCursor, limit: dto.limit, total };
-}
+  async listPhotos(invitationId: string, dto: ListPhotosDto) {
+    const { rows, nextCursor, total } =
+      await this.repository.findAllByInvitationId(invitationId, dto);
+    const data = await Promise.all(
+      rows.map(async (photo) => ({
+        ...photo,
+        url: await this.getViewUrl(photo.imageKey),
+        score:
+          photo.viewCount * 0.5 +
+          photo.likeCount * 1.0 +
+          photo.feedbackCount * 1.5,
+      })),
+    );
+    return { rows: data, nextCursor, limit: dto.limit, total };
+  }
 
   //사진 db 단건 조회
-async getPhoto(id: string) {
-  const photo = await this.repository.findPhotoById(id);
+  async getPhoto(id: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(id, invitationId);
 
-  if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
+    if (!photo) throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
 
-  await this.repository.incrementViewCount(id);
-  const url = await this.getViewUrl(photo.imageKey);
+    await this.repository.incrementViewCount(id);
+    const url = await this.getViewUrl(photo.imageKey);
+    const liked = !!(await this.repository.findLike(id, participantId));
 
-  return {
-    ...photo,
-    url,
-    score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-  };
-}
-
+    return {
+      ...photo,
+      url,
+      liked,
+      score:
+        photo.viewCount * 0.5 +
+        photo.likeCount * 1.0 +
+        photo.feedbackCount * 1.5,
+    };
+  }
 
   //사진정보 db저장
   async uploadPhoto(
@@ -116,8 +121,8 @@ async getPhoto(id: string) {
   }
 
   //다운로드용 URL 발급 (낱개, 선택)
-  async getDownloadUrls(ids: string[]) {
-    const photos = await this.repository.findPhotosByIds(ids);
+  async getDownloadUrls(ids: string[], invitationId: string) {
+    const photos = await this.repository.findPhotosByIds(ids, invitationId);
 
     const data = await Promise.all(
       photos.map(async (photo) => {
@@ -138,12 +143,12 @@ async getPhoto(id: string) {
       order: 'asc',
     });
     const ids = rows.map((p) => p.id);
-    return this.getDownloadUrls(ids);
+    return this.getDownloadUrls(ids, invitationId);
   }
 
   //사진 삭제 (소프트 딜리트)
-  async deletePhoto(id: string, participantId: string) {
-    const photo = await this.repository.findPhotoById(id);
+  async deletePhoto(id: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(id, invitationId);
 
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
@@ -156,8 +161,8 @@ async getPhoto(id: string) {
   }
 
   //좋아요 토글
-  async toggleLike(photoId: string, participantId: string) {
-    const photo = await this.repository.findPhotoById(photoId);
+  async toggleLike(photoId: string, participantId: string, invitationId: string) {
+    const photo = await this.repository.findPhotoById(photoId, invitationId);
     if (!photo) {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
@@ -167,22 +172,30 @@ async getPhoto(id: string) {
     if (existing) {
       await this.repository.deleteLike(photoId, participantId);
       return { liked: false };
-    } else {
+    }
+
+    try {
       await this.repository.createLike(photoId, participantId);
       return { liked: true };
+    } catch (e: any) {
+      if (e?.code === '23505') return { liked: true };
+      throw e;
     }
   }
 
   //리마인드
-async getBest9(invitationId: string) {
-  const rows = await this.repository.findBest9(invitationId);
-  const data = await Promise.all(
-    rows.map(async (photo) => ({
-      ...photo,
-      url: await this.getViewUrl(photo.imageKey),
-      score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
-    })),
-  );
-  return data;
-}
+  async getBest9(invitationId: string) {
+    const rows = await this.repository.findBest9(invitationId);
+    const data = await Promise.all(
+      rows.map(async (photo) => ({
+        ...photo,
+        url: await this.getViewUrl(photo.imageKey),
+        score:
+          photo.viewCount * 0.5 +
+          photo.likeCount * 1.0 +
+          photo.feedbackCount * 1.5,
+      })),
+    );
+    return data;
+  }
 }

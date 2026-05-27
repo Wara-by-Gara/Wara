@@ -30,53 +30,81 @@ export class FeedbacksRepository {
 
     if (cursor) {
       const [cursorRow] = await this.db
-        .select({ createdAt: feedbacks.createdAt })
+        .select({ createdAt: feedbacks.createdAt, id: feedbacks.id })
         .from(feedbacks)
         .where(eq(feedbacks.id, cursor));
-      if (cursorRow?.createdAt) {
-        cursorConditions.push(lt(feedbacks.createdAt, cursorRow.createdAt));
+      if (cursorRow) {
+        cursorConditions.push(
+          or(
+            lt(feedbacks.createdAt, cursorRow.createdAt),
+            and(
+              eq(feedbacks.createdAt, cursorRow.createdAt),
+              lt(feedbacks.id, cursorRow.id),
+            ),
+          ) as SQL,
+        );
       }
     }
     return { LIMIT, cursorConditions };
   }
 
   //초대장댓글 + 사진 댓글 통합 목록
-  async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
-    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
+  const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
-    const photoIds = await this.db
-      .select({ id: photos.id })
-      .from(photos)
-      .where(eq(photos.invitationId, invitationId))
-      .then((rows) => rows.map((r) => r.id));
+  const photoIds = await this.db
+    .select({ id: photos.id })
+    .from(photos)
+    .where(eq(photos.invitationId, invitationId))
+    .then((rows) => rows.map((r) => r.id));
 
-    const conditions = [
-      or(
-        eq(feedbacks.invitationId, invitationId),
-        photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
-      ),
-      isNull(feedbacks.parentId),
-      ...cursorConditions,
-    ];
+  const conditions = [
+    or(
+      eq(feedbacks.invitationId, invitationId),
+      photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
+    ),
+    isNull(feedbacks.parentId),
+    ...cursorConditions,
+  ];
 
-    const rows = await this.db.query.feedbacks.findMany({
-      where: and(...conditions),
-      with: {
-        participant: true,
-        photo: true,
-        replies: {
-          with: { participant: true },
-          orderBy: (t, { asc }) => [asc(t.createdAt)],
+  const rows = await this.db.query.feedbacks.findMany({
+    where: and(...conditions),
+    with: {
+      participant: {
+        with: {
+          user: {
+            columns: {
+              nickname: true,
+              profileImageUrl: true,
+            },
+          },
         },
       },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
-      limit: LIMIT + 1,
-    });
-    return this.paginate(rows, LIMIT);
-  }
+      photo: true,
+      replies: {
+        with: {
+          participant: {
+            with: {
+              user: {
+                columns: {
+                  nickname: true,
+                  profileImageUrl: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: (t, { asc }) => [asc(t.createdAt)],
+      },
+    },
+    orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
+    limit: LIMIT + 1,
+  });
+  return this.paginate(rows, LIMIT);
+}
 
-  //사진 댓글 목록 조회
-  async findManyByPhoto(photoId: string, dto: ListFeedbacksDto) {
+  //사진 댓글 목록
+  async findAllByPhoto(photoId: string, dto: ListFeedbacksDto) {
     const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
     const conditions = [
@@ -88,13 +116,34 @@ export class FeedbacksRepository {
     const rows = await this.db.query.feedbacks.findMany({
       where: and(...conditions),
       with: {
-        participant: true,
+        participant: {
+          with: {
+            user: {
+              columns: {
+                nickname: true,
+                profileImageUrl: true,
+              },
+            },
+          },
+        },
+        photo: true,
         replies: {
-          with: { participant: true },
+          with: {
+            participant: {
+              with: {
+                user: {
+                  columns: {
+                    nickname: true,
+                    profileImageUrl: true,
+                  },
+                },
+              },
+            },
+          },
           orderBy: (t, { asc }) => [asc(t.createdAt)],
         },
       },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
+      orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
       limit: LIMIT + 1,
     });
     return this.paginate(rows, LIMIT);
@@ -134,7 +183,7 @@ export class FeedbacksRepository {
     return await this.db.transaction(async (tx) => {
       const [result] = await tx.insert(feedbacks).values(data).returning();
 
-      if (data.photoId ) {
+      if (data.photoId && !data.parentId) {
         await tx
           .update(photos)
           .set({ feedbackCount: sql`feedback_count + 1` })
