@@ -294,45 +294,51 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         </div>
       </div>
 
-      {/* Row 3: 그리드 피커 (시 또는 분 숫자 탭 시 펼침) */}
-      {sliderTarget === "hour" && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-          <p className="mb-2 text-center text-[11px] font-bold text-primary">시간 선택</p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {[1,2,3,4,5,6,7,8,9,10,11,12].map((h) => (
-              <button
-                key={h}
-                type="button"
-                onClick={() => { setHour(h); setSliderTarget(null); }}
-                className={cn(
-                  "flex h-10 items-center justify-center rounded-xl text-[15px] font-extrabold transition-all active:scale-95",
-                  hour === h
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white text-text-secondary hover:bg-primary/10 hover:text-primary",
-                )}
-              >{h}</button>
-            ))}
+      {/* Row 3: 드롭다운 슬라이더 */}
+      {sliderTarget && (
+        <div className="overflow-hidden rounded-xl border border-primary/30 bg-white shadow-md">
+          {/* 드롭다운 헤더 */}
+          <div className="flex items-center justify-between border-b border-border bg-primary/5 px-3 py-2">
+            <span className="text-[12px] font-bold text-primary">
+              {sliderTarget === "hour" ? "시간 선택" : "분 선택 (5분 단위)"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSliderTarget(null)}
+              className="text-[11px] font-semibold text-text-tertiary hover:text-text-secondary"
+            >닫기</button>
           </div>
-        </div>
-      )}
 
-      {sliderTarget === "minute" && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-          <p className="mb-2 text-center text-[11px] font-bold text-primary">분 선택 (5분 단위)</p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {[0,5,10,15,20,25,30,35,40,45,50,55].map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => { setMinute(m); setSliderTarget(null); }}
-                className={cn(
-                  "flex h-10 items-center justify-center rounded-xl text-[15px] font-extrabold transition-all active:scale-95",
-                  minute === m
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white text-text-secondary hover:bg-primary/10 hover:text-primary",
-                )}
-              >{String(m).padStart(2,"0")}</button>
-            ))}
+          {/* 스크롤 가능한 항목 리스트 */}
+          <div className="max-h-48 overflow-y-auto overscroll-contain">
+            {(sliderTarget === "hour"
+              ? [1,2,3,4,5,6,7,8,9,10,11,12]
+              : [0,5,10,15,20,25,30,35,40,45,50,55]
+            ).map((val) => {
+              const isSelected = sliderTarget === "hour" ? hour === val : minute === val;
+              const label = sliderTarget === "hour" ? `${val}시` : `${String(val).padStart(2,"0")}분`;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => {
+                    if (sliderTarget === "hour") setHour(val); else setMinute(val);
+                    setSliderTarget(null);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between px-4 py-3 text-left transition-colors",
+                    isSelected
+                      ? "bg-primary/10 font-extrabold text-primary"
+                      : "text-text-primary hover:bg-gray-50",
+                  )}
+                >
+                  <span className="text-[15px]">{label}</span>
+                  {isSelected && (
+                    <span className="text-[13px] font-bold text-primary">✓</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
