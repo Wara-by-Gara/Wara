@@ -7,6 +7,8 @@ interface CreateInvitationPayload {
   templateId?: string;
   eventStartAt?: string;
   isMissionEnabled?: boolean;
+  bgColor?: string;
+  font?: string;
 }
 
 export type MainImageFrame = 'default' | 'upload' | 'ai';
@@ -35,7 +37,7 @@ export interface Invitation {
   id: string;
   userId: string;
   templateId: string | null;
-  status: string;
+  status: "active" | "closed";
   title: string;
   description: string;
   mainImageKey: string;
@@ -46,10 +48,13 @@ export interface Invitation {
   templatePreviewUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
+  bgColor: string;
+  font: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+  myRole?: "HOST" | "GUEST";
 }
 
 export interface EventLocation {
