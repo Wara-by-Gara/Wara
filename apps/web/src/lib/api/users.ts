@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPatch } from "./client";
+import { apiDelete, apiGet, apiPatch, apiPost } from "./client";
 
 export interface Me {
   id: string;
@@ -15,7 +15,16 @@ export interface UpdateMeInput {
   birthYear?: number;
   nickname?: string;
   gender?: "male" | "female";
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
+}
+
+type ProfileImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
+
+export function getProfileImagePresignedUrl(
+  fileName: string,
+  contentType: ProfileImageContentType,
+): Promise<{ presignedUrl: string; key: string }> {
+  return apiPost<{ presignedUrl: string; key: string }>("/users/me/presigned-url", { fileName, contentType });
 }
 
 export function getMe(): Promise<Me> {

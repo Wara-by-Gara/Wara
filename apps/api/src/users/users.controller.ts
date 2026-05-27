@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Delete,
   Param,
@@ -16,10 +17,19 @@ import { UpdateUserSchema, UpdateUserDto } from './dto/update-user.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { SocialProviderSchema } from '../common/types/social-provider.type';
 import type { SocialProvider } from '../common/types/social-provider.type';
+import { ProfileImagePresignedUrlSchema, type ProfileImagePresignedUrlDto } from './dto/profile-image-presigned-url.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Post('me/presigned-url')
+  generatePresignedUrl(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(ProfileImagePresignedUrlSchema)) dto: ProfileImagePresignedUrlDto,
+  ) {
+    return this.usersService.generatePresignedUrl(user.id, dto);
+  }
 
   @Get('me')
   getMe(@CurrentUser() user: JwtPayload) {
