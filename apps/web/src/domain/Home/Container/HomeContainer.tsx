@@ -182,8 +182,8 @@ export default function HomeContainer() {
                       date={formatDate(inv.eventStartAt)}
                       location={inv.eventLocation?.placeName ?? ""}
                       imageUrl={inv.mainImageUrl ?? undefined}
-                      variant={inv.myRole === "HOST" ? "createdByMe" : "upcoming"}
-                      ddayLabel={inv.myRole !== "HOST" ? getDdayLabel(inv.eventStartAt) : undefined}
+                      variant="upcoming"
+                      ddayLabel={getDdayLabel(inv.eventStartAt)}
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
                     />
                   ))}
