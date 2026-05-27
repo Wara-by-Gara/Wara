@@ -13,8 +13,8 @@ import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSh
 import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
-import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { StickyCTA } from "@/components/layout/StickyCTA";
+import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import {
   getMyParticipant,
   getParticipants,
@@ -53,12 +53,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
   const isLoggedIn = !!me;
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
   const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
-  const eventDate = invitation.eventStartAt
-    ? new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
-    : "미정";
-  const eventTime = invitation.eventStartAt
-    ? new Date(invitation.eventStartAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
-    : undefined;
 
   const attendingParticipants = participantsData?.participants.filter(
     ({ participant }) => participant.rsvpStatus === "attending",
@@ -120,12 +114,7 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
         ) : null}
 
         <div className="flex flex-col gap-3">
-          <InvitationInfoCard variant="datetime" title={eventDate} time={eventTime} />
-          <InvitationInfoCard
-            variant="location"
-            title={invitation.eventLocation?.placeName ?? "미정"}
-            description={invitation.eventLocation?.address}
-          />
+          <InformationsContainer invitation={invitation} isHost={false} invitationId={invitationId} />
 
           {isLoggedIn && participantsData && participantsData.participants.length > 0 && (
             <section className="rounded-3xl border border-border bg-surface p-4">
