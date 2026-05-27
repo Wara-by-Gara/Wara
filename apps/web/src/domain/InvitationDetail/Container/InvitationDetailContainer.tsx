@@ -355,10 +355,10 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         <header className="flex flex-col items-start gap-2">
           <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
           {me && (
-            <p className="flex items-center gap-2 text-[13px] text-text-tertiary">
+            <div className="flex items-center gap-2 text-[13px] text-text-tertiary">
               <Avatar src={me.profileImageUrl ?? undefined} alt={me.nickname ?? ""} size="xs" />
               <span>{me.nickname}</span>
-            </p>
+            </div>
           )}
         </header>
 
