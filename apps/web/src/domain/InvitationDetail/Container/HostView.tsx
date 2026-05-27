@@ -12,8 +12,8 @@ import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
-import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummaryCard";
+import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { updateInvitationStatus, deleteInvitation } from "@/lib/api/invitations";
 import type { getInvitation } from "@/lib/api/invitations";
@@ -42,12 +42,6 @@ export default function HostView({ invitationId, invitation, participantsData }:
 
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
   const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
-  const eventDate = invitation.eventStartAt
-    ? new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
-    : "미정";
-  const eventTime = invitation.eventStartAt
-    ? new Date(invitation.eventStartAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
-    : undefined;
 
   const summary = participantsData?.summary;
   const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];
@@ -122,12 +116,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
           />
         )}
 
-        <InvitationInfoCard variant="datetime" title={eventDate} time={eventTime} />
-        <InvitationInfoCard
-          variant="location"
-          title={invitation.eventLocation?.placeName ?? "미정"}
-          description={invitation.eventLocation?.address}
-        />
+        <InformationsContainer invitation={invitation} isHost invitationId={invitationId} />
 
         {recentParticipants.length > 0 ? (
           <section className="rounded-3xl border border-border bg-surface p-4">

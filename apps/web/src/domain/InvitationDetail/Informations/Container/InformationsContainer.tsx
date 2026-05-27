@@ -1,16 +1,16 @@
-import LocationWithDate from "../LocationWithDate/LoactionWithDate";
-import MissionWithNote from "../MissionWithNote/MissionWithNote";
+import type { getInvitation } from "@/lib/api/invitations";
+import LocationWithDate from "../LocationWithDate/LocationWithDate";
 
-interface InformationsContainerProps {
+type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
+
+type Props = {
+  invitation: Invitation;
+  isHost: boolean;
   invitationId: string;
-}
+};
 
-export default function InformationsContainer({ invitationId }: InformationsContainerProps) {
+export default function InformationsContainer({ invitation, isHost, invitationId }: Props) {
   return (
-    <div>
-      <LocationWithDate invitationId={invitationId} />
-      <MissionWithNote />
-      <div>rsvp</div>
-    </div>
+    <LocationWithDate invitation={invitation} isHost={isHost} invitationId={invitationId} />
   );
 }
