@@ -329,9 +329,9 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
                 type="button"
                 aria-label="사진 업로드"
                 onClick={onPhotoUpload}
-                className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-white transition-opacity active:opacity-70"
+                className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-white transition-opacity active:opacity-70"
               >
-                <Icon name="camera" size="xs" color="currentColor" decorative />
+                <Icon name="camera" size="sm" color="currentColor" decorative />
               </button>
             </div>
             {state === "albumPreviewEmpty" && !isPublicDetail ? (
