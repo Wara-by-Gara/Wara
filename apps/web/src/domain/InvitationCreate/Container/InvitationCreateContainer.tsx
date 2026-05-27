@@ -7,6 +7,7 @@ import type { Place } from "@/lib/api/locations";
 import { Chip } from "@/components/primitives/Chip";
 import { Switch } from "@/components/primitives/Switch";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
@@ -146,6 +147,9 @@ function toEventStartAt(date: string, time: string): string | undefined {
 
 export default function InvitationCreateContainer() {
   const router = useRouter();
+  const { isLoggedIn, hydrate, login } = useAuthStore();
+
+  useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("start");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -195,6 +199,8 @@ export default function InvitationCreateContainer() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth_success") !== "1") return;
+
+    login();
 
     // 다른 페이지에서 로그인 후 이 페이지에 착지한 경우 → 원래 페이지로 복귀
     const returnTo = sessionStorage.getItem("wara_oauth_return");
@@ -849,13 +855,9 @@ export default function InvitationCreateContainer() {
       <div className="relative z-10 shrink-0">
         <StickyCTA
           primary={{
-            label: (() => {
-              const loggedIn = typeof document !== "undefined" && document.cookie.split("; ").some((r) => r.startsWith("is_logged_in="));
-              return loggedIn ? "초대장 만들기" : "로그인하고 공유하기";
-            })(),
+            label: isLoggedIn ? "초대장 만들기" : "로그인하고 공유하기",
             onClick: () => {
-              const loggedIn = document.cookie.split("; ").some((r) => r.startsWith("is_logged_in="));
-              if (!loggedIn) {
+              if (!isLoggedIn) {
                 localStorage.setItem("wara_invite_pending", JSON.stringify({
                   form, designBgColor, designFont,
                   missionEnabled, selectedMissions,
