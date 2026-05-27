@@ -304,7 +304,7 @@ export default function ParticipantsContainer() {
         )}
 
         <div className="flex gap-1.5 overflow-x-auto">
-          {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+          {(Object.keys(TAB_LABELS) as Tab[]).filter((t) => t !== "memo" || isHost).map((t) => (
             <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
               {TAB_LABELS[t]}
             </Chip>
