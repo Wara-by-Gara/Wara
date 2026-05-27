@@ -37,7 +37,7 @@ export class PhotosService {
 
   //업로드용 presigned URL 을 발급 (업로드, 만료시간 15분)
   async generatePresignedUrl(invitationId: string, dto: PresignedUrlDto) {
-    const key = `public/photos/${invitationId}/${ulid()}/${dto.fileName}`;
+    const key = `photos/${invitationId}/${ulid()}/${dto.fileName}`;
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
