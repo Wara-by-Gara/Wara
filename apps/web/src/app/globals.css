@@ -155,6 +155,15 @@ body {
   font-family: var(--font-sans);
 }
 
+/* react-remove-scroll-bar이 모달 오픈 시 body에 margin-left:0 / margin-right:[gap]px를
+   !important로 주입해 mx-auto 센터링을 깨뜨리는 문제 방지 */
+@layer base {
+  html body[data-scroll-locked] {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
 button:not(:disabled),
 [role="button"]:not(:disabled),
 a {

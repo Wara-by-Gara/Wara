@@ -26,6 +26,8 @@ export const invitations = pgTable('invitations', {
   mainImageKey: text('main_image_key').notNull(),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
+  bgColor: varchar('bg_color', { length: 50 }).notNull().default('bg-white'),
+  font: varchar('font', { length: 50 }).notNull().default('default'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
