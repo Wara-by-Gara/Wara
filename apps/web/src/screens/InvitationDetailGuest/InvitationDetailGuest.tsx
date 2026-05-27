@@ -28,6 +28,7 @@ import {
   mockAlbumPreviewSrcs,
   mockAlbumPreviewBirthdaySrcs,
   mockAlbumPreviewOverflow,
+  mockRemindPhotos,
 } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
@@ -68,12 +69,15 @@ export type InvitationDetailGuestState =
   | "closedRsvp"
   | "fullCapacity"
   | "loginRequiredForRsvp"
-  | "alreadyRespondedProfileOpen";
+  | "alreadyRespondedProfileOpen"
+  | "publicMomentLog";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
   onBack?: () => void;
   onRsvp?: () => void;
+  onPhotoUpload?: () => void;
+  onMomentLog?: () => void;
 }
 
 function ParticipantAvatarStrip() {
@@ -93,7 +97,7 @@ function ParticipantAvatarStrip() {
   );
 }
 
-export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: InvitationDetailGuestProps) => {
+export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhotoUpload, onMomentLog }: InvitationDetailGuestProps) => {
   const [rsvpOpen, setRsvpOpen] = useState(state === "rsvpBottomSheetOpen");
   const [cancelOpen, setCancelOpen] = useState(state === "cancelRsvpModal");
   const [profileModalOpen, setProfileModalOpen] = useState(state === "alreadyRespondedProfileOpen");
@@ -180,7 +184,8 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
   if (state === "fullCapacity") ctaLabel = "정원이 가득 찼어요";
   if (state === "loggedOut" || state === "loginRequiredForRsvp") ctaLabel = "로그인하고 참석하기";
   const ctaDisabled = state === "closedRsvp" || state === "fullCapacity";
-  const isPublicDetail = state === "public";
+  const isPublicDetail = state === "public" || state === "publicMomentLog";
+  const showMomentLog = state === "publicMomentLog";
   const commentPreviewLimit = isPublicDetail ? 15 : 2;
   const showCommentMore = isPublicDetail || state !== "commentPreviewEmpty";
 
@@ -287,8 +292,54 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp }: Invi
             </section>
           ) : null}
 
+          {/* 모먼트로그 버튼 — publicMomentLog 상태에서 앨범 위에 표시 */}
+          {showMomentLog ? (
+            <button
+              type="button"
+              onClick={onMomentLog}
+              className="group w-full overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 to-rose-400 p-4 text-left shadow-md transition-opacity active:opacity-80"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/70">
+                    이번 모임의 베스트 사진
+                  </p>
+                  <p className="text-[18px] font-extrabold text-white">모먼트로그</p>
+                  <p className="text-[12px] text-white/80">
+                    {mockRemindPhotos.length}장의 추억이 선정됐어요 →
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  {mockRemindPhotos.slice(0, 3).map((p) => (
+                    <div
+                      key={p.id}
+                      className="size-14 overflow-hidden rounded-xl ring-2 ring-white/40"
+                    >
+                      {p.src ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.src} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full bg-white/20" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </button>
+          ) : null}
+
           <section className="rounded-3xl border border-border bg-surface p-4">
-            <h3 className="mb-2 text-[15px] font-bold text-text-primary">앨범</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-text-primary">앨범</h3>
+              <button
+                type="button"
+                aria-label="사진 업로드"
+                onClick={onPhotoUpload}
+                className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-white transition-opacity active:opacity-70"
+              >
+                <Icon name="plus" size="xs" color="currentColor" decorative />
+              </button>
+            </div>
             {state === "albumPreviewEmpty" && !isPublicDetail ? (
               <p className="py-4 text-center text-[13px] text-text-tertiary">아직 사진이 없어요</p>
             ) : isPublicDetail ? (
