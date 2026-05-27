@@ -50,6 +50,20 @@
       "when": 1779859944216,
       "tag": "0006_strong_carlie_cooper",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779864680065,
+      "tag": "0007_cuddly_ezekiel",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779869827713,
+      "tag": "0008_fantastic_firedrake",
+      "breakpoints": true
     }
   ]
 }

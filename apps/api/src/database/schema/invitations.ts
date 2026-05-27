@@ -11,6 +11,9 @@ export const invitationTemplates = pgTable('invitation_templates', {
   theme: varchar('theme', { length: 50 }).notNull(),
   font: varchar('font', { length: 50 }).notNull(),
   effect: varchar('effect', { length: 50 }),
+  prompt: text('prompt').default(
+    '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. 배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.',
+  ),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

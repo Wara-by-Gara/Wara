@@ -90,9 +90,28 @@ export function getMainImagePresignedUrl(
 export function applyAiToMainImage(
   invitationId: string,
   imageKey: string,
-): Promise<{ key: string; url: string }> {
-  return apiPost<{ key: string; url: string }>(
+): Promise<{ jobId: string }> {
+  return apiPost<{ jobId: string }>(
     `/invitations/${invitationId}/main-image/ai`,
     { imageKey },
+  );
+}
+
+export interface AiJobStatusResponse {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  resultKey: string | null;
+  resultUrl: string | null;
+  errorCode: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export function getAiJobStatus(
+  invitationId: string,
+  jobId: string,
+): Promise<AiJobStatusResponse> {
+  return apiGet<AiJobStatusResponse>(
+    `/invitations/${invitationId}/main-image/ai/jobs/${jobId}`,
   );
 }

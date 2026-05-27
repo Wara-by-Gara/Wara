@@ -2,10 +2,15 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  InternalServerErrorException,
+  HttpException,
+  HttpStatus,
+  ServiceUnavailableException,
   Inject,
+  GatewayTimeoutException,
+  Logger,
 } from '@nestjs/common';
 import { InvitationsRepository } from './invitations.repository';
+import { AiImageJobsRepository } from './ai-image-jobs.repository';
 import { TemplatesRepository } from '../templates/templates.repository';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
@@ -23,32 +28,39 @@ import { ulid } from 'ulid';
 import { S3_CLIENT } from '../s3/s3.module';
 import { ConfigService } from '@nestjs/config';
 import { AiService } from '../ai/ai.service';
+import { AiMonitoringService } from '../ai/ai-monitoring.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const MAX_AI_RESULT_BYTES = 10 * 1024 * 1024; // 10MB
+const AI_DAILY_LIMIT = 3;
 
 @Injectable()
 export class InvitationsService {
+  private readonly logger = new Logger(InvitationsService.name);
   private readonly bucket: string;
   /** 템플릿 이미지 인메모리 캐시 (key: templateId) */
   private readonly templateCache = new Map<string, Buffer>();
 
   constructor(
     private readonly repository: InvitationsRepository,
+    private readonly aiJobsRepository: AiImageJobsRepository,
     private readonly templatesRepository: TemplatesRepository,
     @Inject(S3_CLIENT) private readonly s3: S3Client,
     private readonly config: ConfigService,
     private readonly aiService: AiService,
+    private readonly aiMonitoringService: AiMonitoringService,
+    private readonly notificationsService: NotificationsService,
   ) {
     this.bucket = this.config.getOrThrow('AWS_S3_BUCKET');
   }
 
-  //view Url(24시간)
+  // view URL(24시간)
   private async getViewUrl(key: string): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.s3, command, { expiresIn: 86400 });
   }
 
-  //Upload Url 발급
+  // Upload URL 발급
   async generatePresignedUrl(dto: InvitationPresignedUrlDto) {
     const key = `invitation-images/${ulid()}/${dto.fileName}`;
     const command = new PutObjectCommand({
@@ -80,17 +92,18 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    const [mainImageUrl, templatePreviewUrl, uploadedImageUrl] = await Promise.all([
-      this.getViewUrl(invitation.mainImageKey),
-      invitation.templateId
-        ? this.templatesRepository
-            .findById(invitation.templateId)
-            .then((t) => (t ? this.getViewUrl(t.previewImageKey) : null))
-        : Promise.resolve(null),
-      invitation.uploadedImageKey
-        ? this.getViewUrl(invitation.uploadedImageKey)
-        : Promise.resolve(null),
-    ]);
+    const [mainImageUrl, templatePreviewUrl, uploadedImageUrl] =
+      await Promise.all([
+        this.getViewUrl(invitation.mainImageKey),
+        invitation.templateId
+          ? this.templatesRepository
+              .findById(invitation.templateId)
+              .then((t) => (t ? this.getViewUrl(t.previewImageKey) : null))
+          : Promise.resolve(null),
+        invitation.uploadedImageKey
+          ? this.getViewUrl(invitation.uploadedImageKey)
+          : Promise.resolve(null),
+      ]);
     return { ...invitation, mainImageUrl, templatePreviewUrl, uploadedImageUrl };
   }
 
@@ -144,73 +157,183 @@ export class InvitationsService {
   }
 
   /**
-   * 사용자 업로드 사진 + 초대장 템플릿 이미지를 AI로 합성
-   * 결과를 S3에 업로드하고 key와 presigned view URL을 반환
+   * AI 합성 잡을 생성하고 백그라운드에서 처리.
+   * 즉시 { jobId }를 반환하며, 완료 시 WebSocket 알림 전송.
    */
-  async applyAiToMainImage(invitationId: string, dto: ApplyAiImageDto) {
-    // 이슈 1: imageKey가 이 초대장 소유의 경로인지 검증 (path traversal 방지)
+  async applyAiToMainImage(
+    invitationId: string,
+    dto: ApplyAiImageDto,
+    userId: string,
+  ) {
+    // path traversal 방지
     if (!dto.imageKey.startsWith(`invitation-images/${invitationId}/`)) {
       throw new ForbiddenException(ErrorCode.INSUFFICIENT_ROLE);
     }
 
+    // 서킷 브레이커
+    if (this.aiMonitoringService.isCircuitOpen) {
+      throw new ServiceUnavailableException(ErrorCode.AI_SERVICE_UNAVAILABLE);
+    }
+
+    // 하루 3회 제한
+    const todayCount = await this.aiJobsRepository.countTodayByUser(userId);
+    if (todayCount >= AI_DAILY_LIMIT) {
+      throw new HttpException(ErrorCode.AI_DAILY_LIMIT_EXCEEDED, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    // 초대장 유효성 검사
     const invitation = await this.repository.findById(invitationId);
     if (!invitation) {
-      throw new NotFoundException({
-        code: ErrorCode.INVITATION_NOT_FOUND,
-        message: '초대장을 찾을 수 없습니다.',
-      });
+      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
     }
-
     if (!invitation.templateId) {
-      throw new NotFoundException({
-        code: ErrorCode.AI_TEMPLATE_NOT_FOUND,
-        message: 'AI 합성을 위한 템플릿이 설정되지 않았습니다.',
+      throw new NotFoundException(ErrorCode.AI_TEMPLATE_NOT_FOUND);
+    }
+
+    // 잡 생성
+    const job = await this.aiJobsRepository.create({
+      userId,
+      invitationId,
+      uploadedImageKey: dto.imageKey,
+    });
+
+    // 백그라운드 처리 (응답 후 실행)
+    setImmediate(() => {
+      void this.processAiJobAsync(
+        job.id,
+        invitationId,
+        userId,
+        dto.imageKey,
+        invitation.templateId!,
+      );
+    });
+
+    return { jobId: job.id };
+  }
+
+  /** AI 잡 상태 조회 */
+  async getAiJobStatus(invitationId: string, jobId: string) {
+    const job = await this.aiJobsRepository.findById(jobId);
+    if (!job || job.invitationId !== invitationId) {
+      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+    }
+
+    const resultUrl =
+      job.resultKey && job.status === 'completed'
+        ? await this.getViewUrl(job.resultKey)
+        : null;
+
+    return {
+      id: job.id,
+      status: job.status,
+      resultKey: job.resultKey ?? null,
+      resultUrl,
+      errorCode: job.errorCode ?? null,
+      createdAt: job.createdAt,
+      completedAt: job.completedAt ?? null,
+    };
+  }
+
+  /** 백그라운드 AI 처리 — setImmediate로 호출됨 */
+  private async processAiJobAsync(
+    jobId: string,
+    invitationId: string,
+    userId: string,
+    uploadedImageKey: string,
+    templateId: string,
+  ): Promise<void> {
+    try {
+      await this.aiJobsRepository.updateStatus(jobId, 'processing');
+
+      // 템플릿 버퍼 (캐시 우선)
+      const template = await this.templatesRepository.findById(templateId);
+      if (!template) {
+        await this.aiJobsRepository.updateStatus(jobId, 'failed', {
+          errorCode: ErrorCode.AI_TEMPLATE_NOT_FOUND,
+        });
+        await this.sendAiNotification(userId, invitationId, jobId, null, null);
+        return;
+      }
+
+      let templateBuffer = this.templateCache.get(template.id);
+      if (!templateBuffer) {
+        templateBuffer = await getObject(this.s3, this.bucket, template.previewImageKey);
+        this.templateCache.set(template.id, templateBuffer);
+      }
+
+      const userBuffer = await getObject(this.s3, this.bucket, uploadedImageKey);
+
+      const DEFAULT_PROMPT =
+        '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. ' +
+        '배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.';
+      const prompt = template.prompt ?? DEFAULT_PROMPT;
+
+      const resultBuffer = await this.aiService.compositeImages(
+        userBuffer,
+        templateBuffer,
+        prompt,
+      );
+
+      if (resultBuffer.length > MAX_AI_RESULT_BYTES) {
+        await this.aiJobsRepository.updateStatus(jobId, 'failed', {
+          errorCode: ErrorCode.AI_PROCESSING_FAILED,
+        });
+        await this.sendAiNotification(userId, invitationId, jobId, null, null);
+        return;
+      }
+
+      const aiKey = `invitation-images/${invitationId}/ai/${ulid()}.png`;
+      await this.s3.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: aiKey,
+          Body: resultBuffer,
+          ContentType: 'image/png',
+        }),
+      );
+
+      const url = await this.getViewUrl(aiKey);
+      await this.aiJobsRepository.updateStatus(jobId, 'completed', {
+        resultKey: aiKey,
       });
+
+      await this.sendAiNotification(userId, invitationId, jobId, aiKey, url);
+    } catch (err) {
+      const errorCode =
+        err instanceof GatewayTimeoutException
+          ? ErrorCode.AI_TIMEOUT
+          : ErrorCode.AI_PROCESSING_FAILED;
+
+      await this.aiJobsRepository
+        .updateStatus(jobId, 'failed', { errorCode })
+        .catch((e) => this.logger.error('잡 상태 실패 업데이트 오류', e));
+
+      await this.sendAiNotification(userId, invitationId, jobId, null, null).catch(
+        (e) => this.logger.error('AI 실패 알림 전송 오류', e),
+      );
     }
+  }
 
-    const template = await this.templatesRepository.findById(invitation.templateId);
-    if (!template) {
-      throw new NotFoundException({
-        code: ErrorCode.AI_TEMPLATE_NOT_FOUND,
-        message: '템플릿을 찾을 수 없습니다.',
-      });
-    }
-
-    // 이슈 8: 템플릿 이미지 인메모리 캐시 (같은 템플릿 재요청 시 S3 다운로드 생략)
-    let templateBuffer = this.templateCache.get(template.id);
-    if (!templateBuffer) {
-      templateBuffer = await getObject(this.s3, this.bucket, template.previewImageKey);
-      this.templateCache.set(template.id, templateBuffer);
-    }
-
-    const userBuffer = await getObject(this.s3, this.bucket, dto.imageKey);
-
-    const prompt =
-      '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. ' +
-      '배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.';
-
-    const resultBuffer = await this.aiService.compositeImages(
-      userBuffer,
-      templateBuffer,
-      prompt,
-    );
-
-    // 이슈 6: AI 결과 이미지 크기 상한 검증 (10MB)
-    if (resultBuffer.length > MAX_AI_RESULT_BYTES) {
-      throw new InternalServerErrorException(ErrorCode.AI_PROCESSING_FAILED);
-    }
-
-    const aiKey = `invitation-images/${invitationId}/ai/${ulid()}.png`;
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: aiKey,
-        Body: resultBuffer,
-        ContentType: 'image/png',
-      }),
-    );
-
-    const url = await this.getViewUrl(aiKey);
-    return { key: aiKey, url };
+  private async sendAiNotification(
+    userId: string,
+    invitationId: string,
+    jobId: string,
+    resultKey: string | null,
+    resultUrl: string | null,
+  ): Promise<void> {
+    const content = JSON.stringify({
+      jobId,
+      invitationId,
+      key: resultKey,
+      url: resultUrl,
+      success: !!resultKey,
+    });
+    await this.notificationsService.notify({
+      userId,
+      type: 'ai_complete',
+      content,
+      targetType: 'invitation',
+      targetId: invitationId,
+    });
   }
 }
