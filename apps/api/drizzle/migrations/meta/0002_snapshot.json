@@ -1,5 +1,5 @@
 {
-  "id": "b5d88147-f57b-4962-bcb5-5be121b71dcc",
+  "id": "3518cd7f-c3b5-4f63-8065-9aaf173154af",
   "prevId": "57f64710-8c69-4293-8e81-1e27dbb14798",
   "version": "7",
   "dialect": "postgresql",
@@ -889,20 +889,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
-        },
-        "bg_color": {
-          "name": "bg_color",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'bg-pink-200'"
-        },
-        "font": {
-          "name": "font",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'default'"
         },
         "created_at": {
           "name": "created_at",
@@ -2264,6 +2250,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "is_public": {
+          "name": "is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
         "answer": {
           "name": "answer",
           "type": "text",
@@ -2446,7 +2439,8 @@
         "eventLocations",
         "feedback",
         "invitation_date",
-        "photo"
+        "photo",
+        "arrived"
       ]
     },
     "public.rsvp_status": {
@@ -2466,7 +2460,8 @@
         "kakao",
         "sms",
         "email",
-        "dm"
+        "dm",
+        "instagram"
       ]
     },
     "public.social_provider": {

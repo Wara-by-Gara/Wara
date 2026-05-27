@@ -1,1 +1,0 @@
-ALTER TABLE "invitations" ALTER COLUMN "bg_color" SET DEFAULT 'bg-white';

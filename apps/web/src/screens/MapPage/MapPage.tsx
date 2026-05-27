@@ -10,7 +10,6 @@ import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { mockInvitation } from "@/lib/mockData";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
@@ -78,6 +77,10 @@ export interface MapPageProps {
   /** 위치 권한 */
   onRequestPermission?: () => void;
   onOpenSettings?: () => void;
+
+  /** HOST 여부 — noLocation 상태에서 장소 설정 버튼 표시 */
+  isHost?: boolean;
+  onSetLocation?: () => void;
 }
 
 const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
@@ -108,9 +111,11 @@ export const MapPage = ({
   onCloseDirections,
   onRequestPermission,
   onOpenSettings,
+  isHost,
+  onSetLocation,
 }: MapPageProps) => {
-  const placeName = eventLocation?.placeName ?? mockInvitation.location;
-  const address = eventLocation?.address ?? mockInvitation.address;
+  const placeName = eventLocation?.placeName ?? '';
+  const address = eventLocation?.address ?? '';
 
   // ── previewInInvitation ──────────────────────────────────────────────
   if (state === "previewInInvitation") {
@@ -165,7 +170,18 @@ export const MapPage = ({
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="px-5 py-4">
           {state === "noLocation" ? (
-            <LocationCard variant="unknown" />
+            <>
+              <LocationCard variant="unknown" />
+              {isHost && (
+                <button
+                  type="button"
+                  onClick={onSetLocation}
+                  className="mt-2 block w-full text-center text-[13px] text-primary"
+                >
+                  장소 설정하기 →
+                </button>
+              )}
+            </>
           ) : (
             <LocationCard
               variant="online"
@@ -217,7 +233,6 @@ export const MapPage = ({
 
   // ── search states ────────────────────────────────────────────────────
   if (state.startsWith("search")) {
-    const mockResults = ["와라 카페 (마포)", "와라 키친 (성수)", "와라 스튜디오 (강남)"];
 
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -245,26 +260,19 @@ export const MapPage = ({
             />
           ) : state === "searchResults" ? (
             <ul className="divide-y divide-border">
-              {(searchResults ?? []).length > 0
-                ? (searchResults ?? []).map((r) => (
-                    <li
-                      key={r.placeId}
-                      className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-gray-50"
-                      onClick={() => onSelectPlace?.(r)}
-                    >
-                      <Icon name="map-pin" size="sm" color="inactive" decorative />
-                      <div className="min-w-0">
-                        <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
-                        <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
-                      </div>
-                    </li>
-                  ))
-                : mockResults.map((p) => (
-                    <li key={p} className="flex items-center gap-3 px-3 py-3">
-                      <Icon name="map-pin" size="sm" color="inactive" decorative />
-                      <span className="text-[14px] text-text-primary">{p}</span>
-                    </li>
-                  ))}
+              {(searchResults ?? []).map((r) => (
+                <li
+                  key={r.placeId}
+                  className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-gray-50"
+                  onClick={() => onSelectPlace?.(r)}
+                >
+                  <Icon name="map-pin" size="sm" color="inactive" decorative />
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
+                    <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
+                  </div>
+                </li>
+              ))}
             </ul>
           ) : (
             <p className="px-3 py-6 text-center text-[13px] text-text-tertiary">
@@ -318,7 +326,7 @@ export const MapPage = ({
         {/* 도착 배너 */}
         {isArrived && (
           <div className="absolute inset-x-0 top-0 bg-success px-4 py-2 text-center text-[13px] font-semibold text-white">
-            모임 장소에 도착했어요!
+            모임 장소 근처에 도착했어요. 위치 공유를 종료합니다.
           </div>
         )}
 

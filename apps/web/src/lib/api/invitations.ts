@@ -35,6 +35,9 @@ interface CreateInvitationPayload {
 export interface CreatedInvitation {
   id: string;
   title: string;
+  description: string;
+  mainImageUrl: string;
+  eventStartAt: string | null;
 }
 
 export interface Invitation {

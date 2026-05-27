@@ -8,10 +8,11 @@ import { KakaoMap, type ParticipantPin } from "@/components/molecules/KakaoMap/K
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocket";
+import { useMe } from "@/hooks/useUsers";
 import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
 
-const ARRIVAL_THRESHOLD_METERS = 50;
+const ARRIVAL_THRESHOLD_METERS = 10;
 const GPS_INTERVAL_MS = 5000;
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -61,6 +62,13 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const { data: participantsData } = useParticipants(invitationId);
   const { data: initialLocations } = useParticipantLocations(invitationId);
   const { mutate: saveLocation } = useSetEventLocation(invitationId);
+  const { data: me } = useMe();
+
+  const isHost =
+    !!me &&
+    participantsData?.participants.some(
+      (p) => p.user.id === me.id && p.participant.memberRole === "HOST",
+    ) === true;
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
   const [participantLocations, setParticipantLocations] = useState<
@@ -99,6 +107,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         return next;
       });
     }, []),
+    onArrived: useCallback(({ participantId }: { participantId: string }) => {
+      setParticipantLocations((prev) => {
+        const loc = prev.get(participantId);
+        if (!loc) return prev;
+        const next = new Map(prev);
+        next.set(participantId, { ...loc, isArrived: true });
+        return next;
+      });
+      setIsArrived((prev) => prev || participantId === me?.id);
+    }, [me?.id]),
   });
 
   // ── 페이지 상태 결정 ──────────────────────────────────────────────────
@@ -337,6 +355,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           );
         }}
         onOpenSettings={() => window.open("app-settings:", "_self")}
+        isHost={isHost}
+        onSetLocation={() => setPageState("searchInitial")}
       />
     </>
   );
