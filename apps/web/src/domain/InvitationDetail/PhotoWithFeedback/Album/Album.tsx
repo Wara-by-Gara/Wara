@@ -48,6 +48,7 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
 
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
 
   const preview = photos.slice(0, 5);
@@ -62,7 +63,9 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
     const files = Array.from(e.target.files ?? []).filter((f) => resolveContentType(f) !== null);
     e.target.value = '';
     if (files.length === 0) return;
+    const urls = files.map((f) => URL.createObjectURL(f)).filter((u) => u.startsWith('blob:'));
     setSelectedFiles(files);
+    setPreviewUrls(urls);
     setUploadState('previewing');
   };
 
@@ -96,14 +99,18 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
     }
 
     setTimeout(() => {
+      previewUrls.forEach((u) => URL.revokeObjectURL(u));
       setUploadState('idle');
       setSelectedFiles([]);
+      setPreviewUrls([]);
     }, 2000);
   };
 
   const handleCancelUpload = () => {
+    previewUrls.forEach((u) => URL.revokeObjectURL(u));
     setUploadState('idle');
     setSelectedFiles([]);
+    setPreviewUrls([]);
   };
 
   return (
@@ -151,10 +158,10 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
       {uploadState === 'previewing' && (
         <div className="mt-2 rounded-2xl border border-border bg-surface p-4">
           <div className="mb-3 flex gap-1.5 overflow-x-auto">
-            {selectedFiles.map((f, i) => (
+            {selectedFiles.map((_, i) => (
               <div key={i} className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={URL.createObjectURL(f)} alt="" className="size-full object-cover" />
+                <img src={previewUrls[i]} alt="" className="size-full object-cover" />
               </div>
             ))}
           </div>
