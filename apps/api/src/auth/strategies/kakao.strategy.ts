@@ -39,6 +39,7 @@ export class KakaoStrategy implements SocialStrategy {
         new URLSearchParams({
           grant_type: 'authorization_code',
           client_id: this.configService.getOrThrow<string>('KAKAO_CLIENT_ID'),
+          client_secret: this.configService.get<string>('KAKAO_CLIENT_SECRET') ?? '',
           redirect_uri: this.configService.getOrThrow<string>('KAKAO_REDIRECT_URI'),
           code: params.code,
         }),
