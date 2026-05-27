@@ -3,7 +3,6 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import {
   getEventLocation,
   setEventLocation,
-  deleteEventLocation,
   getParticipantLocations,
   searchPlaces,
   type SetEventLocationPayload,
@@ -24,16 +23,6 @@ export function useSetEventLocation(invitationId: string) {
       setEventLocation(invitationId, payload),
     onSuccess: (data) => {
       queryClient.setQueryData(QUERY_KEYS.invitations.location(invitationId), data);
-    },
-  });
-}
-
-export function useDeleteEventLocation(invitationId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => deleteEventLocation(invitationId),
-    onSuccess: () => {
-      queryClient.removeQueries({ queryKey: QUERY_KEYS.invitations.location(invitationId) });
     },
   });
 }
