@@ -59,6 +59,29 @@ export function getAllDownloadUrls(
   );
 }
 
+export interface PresignedUrlResponse {
+  presignedUrl: string;
+  key: string;
+}
+
+export function getPresignedUrl(
+  invitationId: string,
+  fileName: string,
+  contentType: string,
+): Promise<PresignedUrlResponse> {
+  return apiPost<PresignedUrlResponse>(
+    `/invitations/${invitationId}/photos/presigned-url`,
+    { fileName, contentType },
+  );
+}
+
+export function registerPhoto(
+  invitationId: string,
+  imageKey: string,
+): Promise<Photo> {
+  return apiPost<Photo>(`/invitations/${invitationId}/photos`, { imageKey });
+}
+
 export function togglePhotoLike(
   invitationId: string,
   photoId: string,
