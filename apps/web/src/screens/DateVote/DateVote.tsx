@@ -57,14 +57,8 @@ const VOTE_CFG = {
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
 
-// ── Calendar constants ─────────────────────────────────────────────────────
+// ── Calendar / time constants ──────────────────────────────────────────────
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
-
-const TIME_PRESETS = [
-  "오전 9시", "오전 10시", "오전 11시",
-  "오후 12시", "오후 1시", "오후 2시", "오후 3시",
-  "오후 4시", "오후 5시", "오후 6시", "오후 7시", "오후 8시", "오후 9시",
-];
 
 function getDayLabel(dateKey: string): string {
   const d = new Date(dateKey);
@@ -202,6 +196,93 @@ function ResultCard({ slot, showNames, isConfirmed, isTop }: { slot: DateSlot; s
           {slot.voters.map((v) => <VoterChip key={`${slot.id}-${v.name}`} voter={v} />)}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Time Picker ────────────────────────────────────────────────────────────
+function formatTimeLabel(ampm: "오전" | "오후", hour: number, minute: number): string {
+  const minStr = minute === 0 ? "" : ` ${minute}분`;
+  return `${ampm} ${hour}시${minStr}`;
+}
+
+interface TimePickerProps {
+  onAdd: (time: string) => void;
+  disabled?: boolean;
+}
+
+function TimePicker({ onAdd, disabled }: TimePickerProps) {
+  const [ampm, setAmpm] = useState<"오전" | "오후">("오후");
+  const [hour, setHour] = useState(2);
+  const [minute, setMinute] = useState(0);
+
+  const stepHour = (delta: number) => setHour((h) => ((h - 1 + delta + 12) % 12) + 1);
+  const stepMinute = (delta: number) => setMinute((m) => (m + delta * 5 + 60) % 60);
+
+  const preview = formatTimeLabel(ampm, hour, minute);
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+      {/* Row: 오전/오후 | 시 spinner | 분 spinner */}
+      <div className="flex items-center gap-2">
+        {/* AM/PM toggle */}
+        <div className="flex overflow-hidden rounded-xl border border-border">
+          {(["오전", "오후"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setAmpm(v)}
+              className={cn(
+                "px-3.5 py-2 text-[13px] font-bold transition-colors",
+                ampm === v ? "bg-primary text-white" : "bg-white text-text-secondary hover:bg-gray-50",
+              )}
+            >{v}</button>
+          ))}
+        </div>
+
+        {/* 시 spinner */}
+        <div className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-white px-2 py-1.5">
+          <button type="button" onClick={() => stepHour(-1)}
+            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
+            <Icon name="chevron-left" size="xs" color="currentColor" decorative />
+          </button>
+          <span className="w-8 text-center text-[18px] font-extrabold text-text-primary tabular-nums">{hour}</span>
+          <button type="button" onClick={() => stepHour(1)}
+            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
+            <Icon name="chevron-right" size="xs" color="currentColor" decorative />
+          </button>
+          <span className="ml-0.5 text-[13px] font-bold text-text-tertiary">시</span>
+        </div>
+
+        {/* 분 spinner */}
+        <div className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-white px-2 py-1.5">
+          <button type="button" onClick={() => stepMinute(-1)}
+            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
+            <Icon name="chevron-left" size="xs" color="currentColor" decorative />
+          </button>
+          <span className="w-8 text-center text-[18px] font-extrabold text-text-primary tabular-nums">
+            {String(minute).padStart(2, "0")}
+          </span>
+          <button type="button" onClick={() => stepMinute(1)}
+            className="flex size-7 items-center justify-center rounded-lg text-text-secondary hover:bg-gray-100">
+            <Icon name="chevron-right" size="xs" color="currentColor" decorative />
+          </button>
+          <span className="ml-0.5 text-[13px] font-bold text-text-tertiary">분</span>
+        </div>
+      </div>
+
+      {/* Add button */}
+      <Button
+        fullWidth
+        variant="outline"
+        size="md"
+        disabled={disabled}
+        onClick={() => onAdd(preview)}
+        className="gap-2"
+      >
+        <Icon name="plus" size="xs" color="currentColor" decorative />
+        <span className="font-bold text-primary">{preview}</span> 추가
+      </Button>
     </div>
   );
 }
@@ -448,30 +529,14 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
 
         {/* Time picker for focused date */}
         {focusedDate && (
-          <div className="rounded-2xl border border-border bg-surface p-4">
-            <p className="mb-3 text-[13px] font-bold text-text-primary">
-              {formatDateLabel(focusedDate)} — 시간 선택
+          <div className="flex flex-col gap-2">
+            <p className="px-1 text-[13px] font-bold text-text-secondary">
+              {formatDateLabel(focusedDate)} — 시간 추가
             </p>
-            <div className="flex flex-wrap gap-2">
-              {TIME_PRESETS.map((time) => {
-                const already = focusedTimes.includes(time);
-                return (
-                  <button
-                    key={time}
-                    type="button"
-                    onClick={() => addTime(time)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all",
-                      already
-                        ? "border-primary bg-primary text-white"
-                        : "border-border bg-white text-text-secondary hover:bg-gray-50",
-                    )}
-                  >
-                    {time}
-                  </button>
-                );
-              })}
-            </div>
+            <TimePicker
+              disabled={slots.length >= 30}
+              onAdd={(time) => addTime(time)}
+            />
           </div>
         )}
 
