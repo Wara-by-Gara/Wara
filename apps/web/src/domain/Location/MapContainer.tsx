@@ -12,7 +12,7 @@ import { useMe } from "@/hooks/useUsers";
 import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
 
-const ARRIVAL_THRESHOLD_METERS = 50;
+const ARRIVAL_THRESHOLD_METERS = 10;
 const GPS_INTERVAL_MS = 5000;
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -107,6 +107,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         return next;
       });
     }, []),
+    onArrived: useCallback(({ participantId }: { participantId: string }) => {
+      setParticipantLocations((prev) => {
+        const loc = prev.get(participantId);
+        if (!loc) return prev;
+        const next = new Map(prev);
+        next.set(participantId, { ...loc, isArrived: true });
+        return next;
+      });
+      setIsArrived((prev) => prev || participantId === me?.id);
+    }, [me?.id]),
   });
 
   // ── 페이지 상태 결정 ──────────────────────────────────────────────────
