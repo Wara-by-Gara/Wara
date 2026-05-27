@@ -51,11 +51,14 @@ export class PhotosController {
 
   //사진 다운로드(선택,단일)
   @Get(':invitationId/photos/download')
-  getDownloadUrls(@Query('ids') ids?: string) {
+  getDownloadUrls(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Query('ids') ids?: string,
+  ) {
     if (!ids) {
       throw new BadRequestException('ids 쿼리 파라미터가 필요합니다.');
     }
-    return this.photosService.getDownloadUrls(ids.split(','));
+    return this.photosService.getDownloadUrls(ids.split(','), invitationId);
   }
 
   //사진 다운로드 (전체)
@@ -75,10 +78,11 @@ export class PhotosController {
   //사진 상세
   @Get(':invitationId/photos/:id')
   getPhoto(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
     @CurrentParticipant() participant: Participant,
   ) {
-    return this.photosService.getPhoto(id, participant.id);
+    return this.photosService.getPhoto(id, participant.id, invitationId);
   }
 
   //사진 업로드
@@ -95,19 +99,21 @@ export class PhotosController {
   @Delete(':invitationId/photos/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deletePhoto(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('id', ParseUlidPipe) id: string,
     @CurrentParticipant() participant: Participant,
   ) {
-    return this.photosService.deletePhoto(id, participant.id);
+    return this.photosService.deletePhoto(id, participant.id, invitationId);
   }
 
   //사진 좋아요 토글
   @Post(':invitationId/photos/:photoId/likes')
   @HttpCode(HttpStatus.OK)
   toggleLike(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('photoId', ParseUlidPipe) photoId: string,
     @CurrentParticipant() participant: Participant,
   ) {
-    return this.photosService.toggleLike(photoId, participant.id);
+    return this.photosService.toggleLike(photoId, participant.id, invitationId);
   }
 }

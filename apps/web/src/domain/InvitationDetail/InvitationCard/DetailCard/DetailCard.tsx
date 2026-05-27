@@ -16,14 +16,14 @@ export default function DetailCard({ invitation }: Props) {
       <header className="flex flex-col items-start gap-2 px-1 text-left">
         <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
         {invitation.host && (
-          <p className="flex items-center gap-2 text-[13px] text-text-tertiary">
+          <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
             <Avatar
               src={invitation.host.profileImageUrl ?? undefined}
               alt={invitation.host.nickname ?? '호스트'}
               size="xs"
             />
             <span>{invitation.host.nickname ?? '호스트'}</span>
-          </p>
+          </span>
         )}
         {invitation.description && (
           <p className="whitespace-pre-line text-left text-[15px] leading-relaxed text-text-primary">{invitation.description}</p>
