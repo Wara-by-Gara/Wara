@@ -160,6 +160,10 @@ body {
 html body[data-scroll-locked] {
   margin-left: auto !important;
   margin-right: auto !important;
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a {
+  cursor: pointer;
 }
 
 @utility font-pixel {

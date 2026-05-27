@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { cn } from "@/lib/cn";
 
 // Minimal Kakao Maps type declarations
@@ -64,6 +64,10 @@ export interface ParticipantPin {
   isArrived: boolean;
 }
 
+export interface KakaoMapHandle {
+  centerOn: (lat: number, lng: number) => void;
+}
+
 export interface KakaoMapProps {
   ready?: boolean;
   eventLocation?: {
@@ -73,6 +77,8 @@ export interface KakaoMapProps {
   };
   participants?: ParticipantPin[];
   className?: string;
+  /** 내 현재 위치 — 파란 점으로 표시 */
+  myLocation?: { lat: number; lng: number };
 }
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 }; // 서울 시청
@@ -197,12 +203,24 @@ function createEventMarkerContent(placeName: string): HTMLElement {
   return wrapper;
 }
 
-export function KakaoMap({ ready, eventLocation, participants = [], className }: KakaoMapProps) {
+export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
+  { ready, eventLocation, participants = [], className, myLocation },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
   const eventOverlayRef = useRef<KakaoCustomOverlay | null>(null);
   const participantOverlaysRef = useRef<Map<string, KakaoCustomOverlay>>(new Map());
+  const myLocationOverlayRef = useRef<KakaoCustomOverlay | null>(null);
   const initializedRef = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    centerOn(lat: number, lng: number) {
+      if (!mapRef.current || !window.kakao?.maps) return;
+      const pos = new window.kakao.maps.LatLng(lat, lng);
+      mapRef.current.setCenter(pos);
+    },
+  }));
 
   // Map 초기화
   useEffect(() => {
@@ -295,6 +313,39 @@ export function KakaoMap({ ready, eventLocation, participants = [], className }:
     fitBounds();
   }, [participants]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 내 위치 파란 점 갱신
+  useEffect(() => {
+    if (!mapRef.current || !window.kakao?.maps) return;
+    const { maps } = window.kakao;
+
+    if (myLocationOverlayRef.current) {
+      myLocationOverlayRef.current.setMap(null);
+      myLocationOverlayRef.current = null;
+    }
+
+    if (!myLocation) return;
+
+    const dot = document.createElement("div");
+    dot.style.cssText = `
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 3px solid white;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.3), 0 2px 6px rgba(0,0,0,0.2);
+    `;
+
+    const pos = new maps.LatLng(myLocation.lat, myLocation.lng);
+    myLocationOverlayRef.current = new maps.CustomOverlay({
+      position: pos,
+      content: dot,
+      map: mapRef.current,
+      yAnchor: 0.5,
+      xAnchor: 0.5,
+      zIndex: 20,
+    });
+  }, [myLocation]);
+
   function fitBounds() {
     if (!mapRef.current || !window.kakao?.maps) return;
     const { maps } = window.kakao;
@@ -320,4 +371,4 @@ export function KakaoMap({ ready, eventLocation, participants = [], className }:
       className={cn("w-full h-full bg-gray-100", className)}
     />
   );
-}
+});
