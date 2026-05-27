@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { getParticipants, getMyParticipant, joinInvitation } from "@/lib/api/participants";
+import { getParticipants, getMyParticipant, joinInvitation, updateRsvp } from "@/lib/api/participants";
 import type { RsvpStatus } from "@/lib/api/participants";
 
 export function useParticipants(invitationId: string) {
@@ -13,11 +13,23 @@ export function useParticipants(invitationId: string) {
   });
 }
 
-export function useMyParticipant(invitationId: string) {
+export function useMyParticipant(invitationId: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: QUERY_KEYS.invitations.myParticipant(invitationId),
     queryFn: () => getMyParticipant(invitationId),
-    enabled: !!invitationId,
+    enabled: (options?.enabled ?? true) && !!invitationId,
+  });
+}
+
+export function useUpdateRsvp(invitationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ participantId, rsvpStatus }: { participantId: string; rsvpStatus: RsvpStatus }) =>
+      updateRsvp(invitationId, participantId, rsvpStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myParticipant(invitationId) });
+    },
   });
 }
 
