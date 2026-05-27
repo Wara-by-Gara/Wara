@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { LocationsRepository } from './locations.repository';
 import { KakaoLocalService } from './kakao-local.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
 const mockRepo = {
@@ -10,9 +11,11 @@ const mockRepo = {
   upsertEventLocation: jest.fn(),
   deleteEventLocation: jest.fn(),
   findAllParticipantLocations: jest.fn(),
-  findParticipant: jest.fn(),
+  findParticipantWithUser: jest.fn(),
   upsertParticipantLocation: jest.fn(),
 };
+
+const mockNotifications = { notify: jest.fn() };
 
 const mockKakao = {
   searchByKeyword: jest.fn(),
@@ -27,6 +30,7 @@ describe('LocationsService', () => {
         LocationsService,
         { provide: LocationsRepository, useValue: mockRepo },
         { provide: KakaoLocalService, useValue: mockKakao },
+        { provide: NotificationsService, useValue: mockNotifications },
       ],
     }).compile();
 
@@ -98,15 +102,16 @@ describe('LocationsService', () => {
     it('participant 존재 → upsertParticipantLocation 호출', async () => {
       const participant = { id: 'p1' };
       const saved = { id: 'loc1' };
-      mockRepo.findParticipant.mockResolvedValue(participant);
+      mockRepo.findParticipantWithUser.mockResolvedValue(participant);
       mockRepo.upsertParticipantLocation.mockResolvedValue(saved);
 
-      expect(await service.updateMyLocation('inv1', 'u1', dto)).toBe(saved);
+      const result = await service.updateMyLocation('inv1', 'u1', dto);
+      expect(result.location).toBe(saved);
       expect(mockRepo.upsertParticipantLocation).toHaveBeenCalledWith('inv1', 'p1', dto);
     });
 
     it('participant 없음 → ForbiddenException(PARTICIPANT_NOT_FOUND)', async () => {
-      mockRepo.findParticipant.mockResolvedValue(null);
+      mockRepo.findParticipantWithUser.mockResolvedValue(null);
 
       await expect(service.updateMyLocation('inv1', 'u1', dto)).rejects.toThrow(
         new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND),
