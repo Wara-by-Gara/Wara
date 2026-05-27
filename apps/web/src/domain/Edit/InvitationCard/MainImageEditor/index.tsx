@@ -209,14 +209,14 @@ export default function MainImageEditor({
     }
 
     const keyByFrame: Record<MainImageFrame, string | null> = {
-      default: null,
+      default: initialMainImageKey, // 초기 키(= 템플릿 키)로 복원
       upload: uploadedKey,
       ai: aiKey,
     };
 
     const targetKey = keyByFrame[frame];
-    if (frame === 'default' || targetKey) {
-      onSave({ mainImageKey: targetKey ?? '', mainImageFrame: frame, uploadedImageKey: uploadedKey });
+    if (targetKey) {
+      onSave({ mainImageKey: targetKey, mainImageFrame: frame, uploadedImageKey: uploadedKey });
     }
   }, [uploadedKey, aiKey, handleApplyAi, isApplyingAi, onSave]);
 

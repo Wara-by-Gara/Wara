@@ -28,12 +28,13 @@ export class AiService {
     userImageBuffer: Buffer,
     templateBuffer: Buffer,
     prompt: string,
+    userImageMime: string = 'image/webp',
   ): Promise<Buffer> {
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        return await this.doCompositeImages(userImageBuffer, templateBuffer, prompt);
+        return await this.doCompositeImages(userImageBuffer, templateBuffer, prompt, userImageMime);
       } catch (err) {
         lastError = err;
 
@@ -68,13 +69,15 @@ export class AiService {
     userImageBuffer: Buffer,
     templateBuffer: Buffer,
     prompt: string,
+    userImageMime: string,
   ): Promise<Buffer> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
     try {
+      const ext = userImageMime.split('/')[1] ?? 'webp';
       const [userFile, templateFile] = await Promise.all([
-        toFile(userImageBuffer, 'user-photo.png', { type: 'image/png' }),
+        toFile(userImageBuffer, `user-photo.${ext}`, { type: userImageMime }),
         toFile(templateBuffer, 'template.png', { type: 'image/png' }),
       ]);
 
