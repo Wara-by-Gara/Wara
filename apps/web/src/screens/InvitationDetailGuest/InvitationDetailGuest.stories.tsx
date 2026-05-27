@@ -12,6 +12,9 @@ type Story = StoryObj<typeof InvitationDetailGuest>;
 
 // Access
 export const Public: Story = { args: { state: "public" } };
+export const PublicMomentLog: Story = {
+  args: { state: "publicMomentLog", onMomentLog: () => alert("모먼트로그로 이동") },
+};
 export const LoggedOut: Story = { args: { state: "loggedOut" } };
 export const LoggedIn: Story = { args: { state: "loggedIn" } };
 export const PasswordRequired: Story = { args: { state: "passwordRequired" } };
