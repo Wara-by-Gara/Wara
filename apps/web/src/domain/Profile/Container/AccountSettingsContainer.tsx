@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLogout } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/stores/authStore';
 import { useDeleteMe, useDeleteMySocial, useGetMySocials } from '@/hooks/useUsers';
 import { AccountSettings, type AccountScreen } from '@/screens/AccountSettings';
 import { ROUTES } from '@/constants/routes';
@@ -12,17 +13,18 @@ export default function AccountSettingsContainer() {
   const [screen, setScreen] = useState<AccountScreen>('connectedSocial');
   const [pendingProvider, setPendingProvider] = useState<string | null>(null);
 
-  const { mutate: logout } = useLogout();
+  const { logout } = useAuthStore();
+  const queryClient = useQueryClient();
   const { mutate: deleteMe, isPending: isWithdrawing } = useDeleteMe();
   const { data: socials } = useGetMySocials();
   const { mutate: deleteSocial, isPending: isDisconnecting } = useDeleteMySocial();
 
   const connectedProviders = socials?.map((s) => s.provider) ?? [];
 
-  const handleLogout = () => {
-    logout(undefined, {
-      onSettled: () => setScreen('logoutComplete'),
-    });
+  const handleLogout = async () => {
+    await logout();
+    queryClient.clear();
+    setScreen('logoutComplete');
   };
 
   const handleWithdrawContinue = () => {
