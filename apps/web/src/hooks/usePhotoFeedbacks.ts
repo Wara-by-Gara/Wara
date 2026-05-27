@@ -20,19 +20,24 @@ export function usePhotoFeedback(
     enabled: !!invitationId && !!photoId,
   });
 
+  const invitationFeedbackKey = ['invitations', invitationId, 'feedbacks'];
+
   const submitComment = async (text: string) => {
     await createPhotoFeedback(invitationId, photoId, text);
     queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: invitationFeedbackKey });
   };
 
   const updateComment = async (feedbackId: string, content: string) => {
     await updateFeedback(invitationId, feedbackId, content);
     queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: invitationFeedbackKey });
   };
 
   const deleteComment = async (feedbackId: string) => {
     await deleteFeedback(invitationId, feedbackId);
     queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: invitationFeedbackKey });
   };
 
   return { ...query, submitComment, updateComment, deleteComment };
