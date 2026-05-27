@@ -15,18 +15,8 @@
 | 스타일 | Tailwind CSS v4 | CSS-native config (`globals.css` `@theme inline`) |
 | 타입 | TypeScript | `@wara/tsconfig` 공유 설정, 별칭 `@/*` → `./src/*` |
 | Lint | ESLint | `@wara/eslint-config` + `eslint-config-next` |
-| 전역 UI 상태 | Zustand v5 | `authStore`, `notificationStore` 사용 중 |
-| 폼 관리 | react-hook-form | `@hookform/resolvers`와 함께 사용 |
-| 스키마 검증 | Zod v4 | react-hook-form과 함께 폼 유효성 검사에 사용 |
-| 클래스 유틸 | `class-variance-authority`, `clsx`, `tailwind-merge` | `cn()` 유틸로 래핑됨 (`lib/utils.ts`) |
 
-**워크스페이스 패키지:**
-- `@wara/ui` — 공유 UI 컴포넌트
-- `@wara/types` — 공유 타입 정의
-- `@wara/tsconfig` — TypeScript 설정
-- `@wara/eslint-config` — ESLint 규칙
-
-**미설치 (도입 전 팀 논의 필요):** OpenAPI codegen
+**미설치 (도입 전 팀 논의 필요):** `zod`, `react-hook-form`, `zustand`, OpenAPI codegen
 
 ---
 
@@ -35,97 +25,44 @@
 ```
 src/
   app/
-    layout.tsx                     # 루트 레이아웃 (전역 Provider 주입)
-    (not-header)/                  # 레이아웃 그룹 — 헤더 없음, URL 미포함
-      layout.tsx
+    layout.tsx          # 루트 레이아웃 (전역 Provider 주입)
+    page.tsx            # 루트 페이지 (/)
+    inquiries/          # /inquiries
+      page.tsx
+      [id]/             # /inquiries/:id (동적 세그먼트)
+        page.tsx
+    admin/              # /admin
+      inquiries/
+        page.tsx
+    (auth)/             # route group — URL에 포함되지 않음, 레이아웃 분리용
       login/
         page.tsx
-    (with-header)/                 # 레이아웃 그룹 — 헤더 있음, URL 미포함
-      layout.tsx
-      page.tsx                     # 홈 페이지 (/)
-      admin/
-        page.tsx
-      edit/
-        page.tsx
-      invitations/
-        page.tsx                   # 초대장 목록
-        [invitationId]/
-          page.tsx                 # 초대장 상세
-      profile/
-        page.tsx
-  domain/                          # 도메인별 UI 컴포넌트 (PascalCase)
-    Auth/
-      Login/                       # 로그인 UI 컴포넌트
-    Home/
-      Container.tsx                # HomeContainer — 홈 페이지 로직 + UI
-    Edit/
-      Container.tsx                # EditContainer
-      Informations/
-      InvitationCard/
-    InvitationDetail/
-      Container.tsx                # InvitationDetailContainer
-      Informations/
-      InvitationCard/
-      PhotoWithFeedback/
-    InvitationList/
-      Container.tsx                # InvitationListContainer
-      InvitationCards/
-    Profile/                       # 프로필 관련 UI 컴포넌트
-  hooks/                           # React Query hooks & 커스텀 훅
-    use[Domain].ts                 # e.g. useInvitations.ts, useParticipants.ts
+    # loading.tsx, error.tsx — 현재 미사용. 도입 전 팀 논의
+  features/             # 도메인별 로직
+    [domain]/
+      types.ts          # 타입 + 공유 상수 (label map 등)
+      api.ts            # apiClient 호출 함수 모음
+      hooks.ts          # React Query hooks
   lib/
-    api/
-      client.ts                    # HTTP 클라이언트 (모든 fetch는 여기서)
-      auth.ts                      # 인증 API
-      users.ts                     # 사용자 API
-      invitations.ts               # 초대장 API
-      participants.ts              # 참가자 API
-      photos.ts                    # 사진 API
-      feedbacks.ts                 # 피드백 API
-      missions.ts                  # 미션 API
-      notifications.ts             # 알림 API
-      templates.ts                 # 템플릿 API
-      locations.ts                 # 위치 API
-    utils.ts                       # cn() — clsx + tailwind-merge
-  constants/
-    queryKeys.ts                   # QUERY_KEYS 중앙집중 팩토리
-    routes.ts                      # ROUTES 상수
-  stores/                          # Zustand 전역 상태
-    authStore.ts                   # 인증 상태
-    notificationStore.ts           # 알림 카운트 등
-  providers/
-    index.tsx                      # QueryClientProvider 래퍼
-  components/                      # 공유 컴포넌트 (최소화, 주로 @wara/ui 사용)
-    notifications/                 # 알림 관련 UI 컴포넌트
+    api-client.ts       # HTTP 클라이언트 (모든 fetch는 여기서)
+    jwt.ts              # JWT 디코딩 / 쿠키 읽기
+    query-client.ts     # QueryClient 팩토리
+    providers.tsx       # QueryClientProvider 래퍼
+  types/                # 도메인 횡단 공통 타입
+    common.ts           # PaginationMeta, ApiError, 공통 enum 등
 ```
 
 **규칙:**
-- **API 함수**: `src/lib/api/[domain].ts` (lowercase, 파일 하나당 도메인 하나)
-  ```ts
-  // ✅ src/lib/api/invitations.ts
-  export function getInvitation(id: string) { ... }
-  export function createInvitation(payload) { ... }
-  ```
-- **Hooks**: `src/hooks/use[Domain].ts` (PascalCase Domain)
-  ```ts
-  // ✅ src/hooks/useInvitations.ts
-  export function useInvitation(id) { ... }
-  ```
-- **Query Keys**: `QUERY_KEYS` from `src/constants/queryKeys.ts` import해서 사용 — 별도 per-domain factory 생성 금지
-  ```ts
-  // ✅
-  import { QUERY_KEYS } from '@/constants/queryKeys';
-  queryKey: QUERY_KEYS.invitations.detail(id)
-  ```
-- **라우트**: `ROUTES` from `src/constants/routes.ts` import해서 사용 — 문자열 하드코딩 금지
-  ```ts
-  // ✅
-  import { ROUTES } from '@/constants/routes';
-  router.push(ROUTES.INVITATIONS.DETAIL(id))
-  ```
-- **공통 타입**: `@wara/types` 워크스페이스 패키지 — `src/types/` 폴더 생성 금지
-- **공유 UI 컴포넌트**: `@wara/ui` 워크스페이스 패키지 우선 사용
-- 인라인 서브 컴포넌트는 해당 페이지 파일 하단 정의 허용 — 단 **페이지 파일 전체가 200줄을 넘으면** 별도 파일로 분리 검토
+- 동일한 상수(label map 등)는 `features/[domain]/types.ts`에 한 번만 정의하고 import해서 사용 — 여러 파일에 복붙 금지
+- **도메인 횡단 공통 타입** (여러 feature에서 공유하는 `PaginationMeta`, `ApiError` 등)은 `src/types/common.ts`에 정의
+- Query Key Factory(`domainKeys`)는 `features/[domain]/hooks.ts` 상단에 정의
+- 인라인 서브 컴포넌트는 해당 페이지 파일 하단 정의 허용 — 단 **페이지 파일 전체가 200줄을 넘으면** 서브 컴포넌트를 별도 파일로 분리 검토
+- `src/components/` 공유 컴포넌트 폴더는 3개 이상의 페이지에서 재사용될 때만 만들 것
+
+**모노레포 공유 패키지** (`packages/` 또는 workspace 루트):
+- `@wara/tsconfig` — TypeScript 설정 공유
+- `@wara/eslint-config` — ESLint 규칙 공유
+- 패키지 추가·변경은 루트 `pnpm-workspace.yaml` 확인 후 팀 논의
 
 ---
 
@@ -199,80 +136,50 @@ process.env.API_SECRET
 
 **항상 `apiClient`를 통해 호출한다. 컴포넌트·훅에서 raw `fetch` 직접 사용 금지.**
 
-### API 함수 및 Hook 구조
-
 ```ts
-// ✅ src/lib/api/invitations.ts
-import { apiGet, apiPost } from './client';
+// ✅ features/[domain]/api.ts
+export const domainApi = {
+  getList: () => apiClient.get<ListResponse>('/path'),
+  create: (body: CreateInput) => apiClient.post<Item>('/path', body),
+};
 
-export function getInvitation(id: string) {
-  return apiGet<Invitation>(`/invitations/${id}`);
+// ✅ features/[domain]/hooks.ts
+export function useDomainList() {
+  return useQuery({ queryKey: domainKeys.list(), queryFn: domainApi.getList });
 }
 
-export function createInvitation(payload: CreateInvitationInput) {
-  return apiPost<CreatedInvitation>('/invitations', payload);
-}
-
-// ✅ src/hooks/useInvitations.ts
-import { QUERY_KEYS } from '@/constants/queryKeys';
-import { getInvitation, createInvitation } from '@/lib/api/invitations';
-
-export function useInvitation(id: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.invitations.detail(id),
-    queryFn: () => getInvitation(id),
-  });
-}
-
-export function useCreateInvitation() {
+export function useCreateDomain() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createInvitation,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.all() }),
+    mutationFn: domainApi.create,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: domainKeys.list() }),
   });
 }
 ```
 
-### Query Key 사용
-
+**Query Key Factory 패턴 — 모든 도메인에 동일하게 적용 (`hooks.ts` 상단에 정의):**
 ```ts
-// ✅ 중앙집중 QUERY_KEYS 사용 (src/constants/queryKeys.ts에서 정의)
-import { QUERY_KEYS } from '@/constants/queryKeys';
-queryKey: QUERY_KEYS.invitations.all()
-queryKey: QUERY_KEYS.invitations.detail(id)
-
-// ❌ per-domain factory 직접 정의 금지
-const invitationKeys = { all: ['invitations'] as const, ... }
+export const domainKeys = {
+  all: ['domain'] as const,
+  list: () => [...domainKeys.all, 'list'] as const,
+  detail: (id: string) => [...domainKeys.all, id] as const,
+};
 ```
 
-### 라우트 상수
-
-```ts
-// ✅ ROUTES 상수 사용
-import { ROUTES } from '@/constants/routes';
-router.push(ROUTES.INVITATIONS.DETAIL(id));
-
-// ❌ 문자열 하드코딩 금지
-router.push(`/invitations/${id}`);
-```
-
-### `apiClient` 내부 동작
-
-`src/lib/api/client.ts`의 `apiGet`, `apiPost`, `apiPatch`, `apiDelete` 함수:
+**`apiClient` 내부 동작:**
 - `baseURL`: `NEXT_PUBLIC_API_URL` (없으면 `http://localhost:3002/api/v1`)
 - 기본 헤더: `Content-Type: application/json`
-- 인증: `localStorage`에서 `access_token` 읽기 → `Authorization: Bearer {token}` 주입
-  - **클라이언트 전용** — 서버 컴포넌트에서 `apiClient` 직접 호출 금지
+- 인증: 매 요청마다 `document.cookie`에서 `accessToken` 파싱 → `Authorization: Bearer {token}` 주입
+  - **클라이언트 전용** — 서버 컴포넌트에서 `apiClient` 직접 호출 금지 (토큰 없이 요청이 나가 조용히 실패함. 필요 시 팀 논의)
+  - ⚠️ **보안 리스크:** `accessToken`이 JS로 읽을 수 있는 쿠키에 저장되어 XSS 시 탈취 가능. 장기적으로 백엔드와 협의해 `HttpOnly; Secure; SameSite=Strict` 쿠키로 전환 필요
 - 응답 envelope: `{ success: true, data: T }` → `T` 반환, `{ success: false, error }` → throw
-- 401 TOKEN_EXPIRED 시 자동 갱신 — 최대 1회만 재시도
 
-**응답 계약:**
+**`apiClient` 반환 계약:**
 - 성공 시 `Promise<T>` 직접 반환 — `{ data, error }` 래퍼 없음
-- 실패 시 `throw` — `error.message`가 에러 코드 문자열 (`@docs/conventions/error-codes.md` 참고)
+- 실패 시 `throw new Error(errorCode)` — `error.message`가 에러 코드 문자열 (`@docs/conventions/error-codes.md` 참고)
 - `204 No Content`는 `undefined` 반환
 
-### 뮤테이션 후 캐시 전략
-
+**뮤테이션 후 캐시 전략:**
 - 기본: `invalidateQueries` — 목록 전체 재요청
 - 응답 바디에 업데이트된 객체가 포함된 경우: `setQueryData`로 상세 캐시 즉시 갱신 허용
 - 낙관적 업데이트(onMutate + rollback)는 UX상 꼭 필요한 경우에만 사용
@@ -281,55 +188,9 @@ router.push(`/invitations/${id}`);
 
 ## 상태 관리
 
-### 계층별 상태 저장소
-
-| 계층 | 기술 | 용도 | 예시 |
-|---|---|---|---|
-| **서버 상태** | React Query | API 데이터 캐싱 | 초대장 목록, 프로필 정보 |
-| **전역 UI 상태** | Zustand | 여러 페이지에서 필요한 상태 | `isLoggedIn`, 알림 카운트 |
-| **로컬 UI 상태** | `useState` | 단일 컴포넌트 내 상태 | 모달 열림/닫힘, 폼 입력값 |
-
-**규칙:**
-- 서버 상태와 클라이언트 상태 혼합 금지 — React Query 캐시를 `useState`나 Zustand에 복사하지 말 것
-- Zustand store는 `src/stores/[name]Store.ts` 파일로 생성
-- Store 간 직접 참조 금지
-
-### Zustand 사용 예시
-
-```ts
-// ✅ src/stores/authStore.ts
-"use client";
-import { create } from "zustand";
-
-interface AuthState {
-  isLoggedIn: boolean;
-  hydrated: boolean;
-  hydrate: () => void;
-  login: () => void;
-  logout: () => Promise<void>;
-}
-
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: false,
-  hydrated: false,
-  hydrate: () => {
-    const hasRole = typeof window !== "undefined" &&
-      document.cookie.split("; ").some((row) => row.startsWith("userRole="));
-    set({ isLoggedIn: hasRole, hydrated: true });
-  },
-  login: () => set({ isLoggedIn: true }),
-  logout: async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-    set({ isLoggedIn: false });
-  },
-}));
-
-// ✅ 컴포넌트에서 사용
-const { isLoggedIn } = useAuthStore();
-```
+- **서버 상태** → React Query (`useQuery`, `useMutation`)
+- **UI 상태** → `useState` (열림/닫힘, 폼 입력값, 선택된 항목 등)
+- 서버 상태와 클라이언트 상태 혼합 금지 — React Query 캐시를 직접 `useState`에 복사하지 말 것
 
 ---
 
@@ -370,34 +231,44 @@ const { isLoggedIn } = useAuthStore();
 
 **`isFetching` (백그라운드 재요청):** 별도 UI 처리 없이 무시한다. 데이터가 교체될 때 React가 자동으로 리렌더링한다.
 
-### 폼 상태 관리 · 유효성 검사
+### 폼 상태 관리
 
-**`react-hook-form` + `zod`를 사용한다.** 필드별 `useState` 여러 개 선언 금지.
+**단일 객체 `useState`를 사용한다.** 필드별 `useState` 여러 개 선언 금지.
 
 ```tsx
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+const [form, setForm] = useState({ title: '', content: '' });
 
-const schema = z.object({
-  title: z.string().min(1, '제목을 입력해주세요'),
-  content: z.string().min(10, '내용을 10자 이상 입력해주세요'),
-});
-type FormValues = z.infer<typeof schema>;
+// input/textarea/select 공통 핸들러
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
-  resolver: zodResolver(schema),
-});
+// input에 name 속성 필수
+<input name="title" value={form.title} onChange={handleChange} />
+```
 
-function onSubmit(data: FormValues) {
-  mutate(data);
+### 폼 유효성 검사
+
+zod 미설치 — 현재 기준: **submit 시점에 `errors` 객체로 검증, 필드별 에러 표시.**
+
+```tsx
+const [errors, setErrors] = useState<Record<string, string>>({});
+
+function validate() {
+  const next: Record<string, string> = {};
+  if (!form.title.trim()) next.title = '제목을 입력해주세요';
+  if (form.content.length < 10) next.content = '내용을 10자 이상 입력해주세요';
+  setErrors(next);
+  return Object.keys(next).length === 0;
 }
 
-// JSX
-<form onSubmit={handleSubmit(onSubmit)}>
-  <input {...register('title')} disabled={isPending} />
-  {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
-</form>
+function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (!validate()) return;
+  mutate(form);
+}
+
+// 필드 아래에 에러 렌더링
+{errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
 ```
 
 ### 확인 모달
@@ -489,16 +360,23 @@ toast 라이브러리 미설치. 현재 기준:
 | 실패 | `onError`에서 인라인 에러 텍스트 렌더링 |
 
 ```tsx
-// e.message는 내부 에러 코드(UNAUTHORIZED, DB_CONNECTION_FAILED 등) — 사용자에게 그대로 노출 금지
-// 에러 코드 → 메시지 변환은 lib/error-messages.ts에서 일괄 관리
-import { getErrorMessage } from '@/lib/error-messages';
-
 const [submitError, setSubmitError] = useState('');
+
+// e.message는 내부 에러 코드(UNAUTHORIZED, DB_CONNECTION_FAILED 등) — 사용자에게 그대로 노출 금지
+// error-codes.md의 코드를 사람이 읽을 수 있는 메시지로 변환해서 표시
+const ERROR_MESSAGES: Record<string, string> = {
+  UNAUTHORIZED: '로그인이 필요합니다',
+  INQUIRY_NOT_FOUND: '문의를 찾을 수 없습니다',
+  // 필요한 코드 추가
+};
 
 useMutation({
   mutationFn: ...,
   onSuccess: () => router.push('/list'),
-  onError: (e) => setSubmitError(getErrorMessage(e)),
+  onError: (e) => {
+    const code = e instanceof Error ? e.message : '';
+    setSubmitError(ERROR_MESSAGES[code] ?? '오류가 발생했습니다');
+  },
 });
 
 // 렌더링
@@ -531,14 +409,9 @@ router.push('/path')
 
 ## Never
 
-- 새 컴포넌트를 임의로 생성 — `@wara/ui`, `src/components/`, `src/domain/` 안에 이미 존재하는 컴포넌트만 사용할 것
 - raw `fetch` 직접 사용 (`apiClient` 사용)
-- 라우트 문자열 하드코딩 (`ROUTES` 상수 import해서 사용)
-- Query Key 직접 정의 (`QUERY_KEYS` from `constants/queryKeys.ts` 사용)
-- 동일 상수(label map, status map)를 여러 파일에 복붙 (import해서 사용)
-- API 호출을 hooks 외 곳에서 수행 (컴포넌트, store, util 등)
-- `src/types/` 폴더 생성 (`@wara/types` 워크스페이스 패키지 사용)
-- Redux 사용 (zustand 사용)
+- 동일 상수(label map, status map)를 여러 파일에 복붙
+- Redux 사용
 - 컴포넌트에서 직접 API 호출 (훅 경유)
 - 컴포넌트에 비즈니스 로직 작성 (커스텀 훅으로 분리)
 - 환경변수 하드코딩
@@ -547,10 +420,9 @@ router.push('/path')
 - localStorage에 개인정보·인증 관련 데이터 저장 (토큰, 이메일, 사용자 ID 등 — XSS 시 탈취 가능)
 - 서버 컴포넌트에서 `apiClient` 직접 호출 (토큰 없이 요청이 나감)
 - 검증 에러를 한 곳에 뭉쳐서 표시 (필드별로 표시)
-- 폼을 `useState`로 직접 관리 (`react-hook-form` + `zod` 사용)
+- 폼 필드를 필드별 `useState` 여러 개로 관리 (단일 객체 `useState` 사용)
 - `isPending` 중 버튼·폼 필드 `disabled` 누락 (submit 중복 호출 방지)
 - 정적 링크가 아닌 곳에 `<Link>` 사용 (뮤테이션 후 이동은 `router.push()` 사용)
-- React Query 캐시를 zustand/useState에 복사 (캐시 불일치 방지)
 
 **V1.1+ 미구현 기능 (기획 확정 전 UI 구현 금지):** DM / AI 추천 / 날짜 투표 / 이모지 피커
 
@@ -579,6 +451,7 @@ v4는 `tailwind.config.ts` 없이 `src/app/globals.css`의 `@theme inline` 블�
 
 - 이미지는 `next/image`의 `<Image>` 컴포넌트 사용 — `<img>` 태그 직접 사용 금지
 - 외부 이미지 도메인은 `next.config.ts`의 `images.remotePatterns`에 등록 후 사용
+- SVG 아이콘은 인라인 JSX 또는 파일 import — 외부 아이콘 라이브러리 도입 전 팀 논의
 
 **`<Image>` 필수 props:**
 - `alt` 필수 — 순수 장식 이미지는 `alt=""`

@@ -89,17 +89,19 @@ export class AuthController {
     }
 
     try {
-      const { accessToken, refreshToken } = await this.authService.socialLogin({
-        provider,
-        platform: Platform.WEB,
-        code,
-        state,
-      });
+      const { accessToken, refreshToken, needsProfileCompletion } =
+        await this.authService.socialLogin({
+          provider,
+          platform: Platform.WEB,
+          code,
+          state,
+        });
       this.setAuthCookies(res, accessToken, refreshToken);
-      return res.redirect(`${frontendUrl}/invitations/create?auth_success=1`);
+      const redirectPath = needsProfileCompletion ? '/signup' : '/';
+      return res.redirect(`${frontendUrl}${redirectPath}`);
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
-      return res.redirect(`${frontendUrl}/invitations/create?auth_error=1`);
+      return res.redirect(`${frontendUrl}/login?auth_error=1`);
     }
   }
 

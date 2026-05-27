@@ -37,7 +37,9 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
 
   if (res.status === 401) {
     const err: ApiError = await res.clone().json();
-    if (err.error?.code === "TOKEN_EXPIRED") {
+    const code = err.error?.code;
+    // TOKEN_EXPIRED: 토큰 만료 / TOKEN_INVALID: 쿠키 소멸(만료 후 브라우저 삭제) — 둘 다 refresh 시도
+    if (code === "TOKEN_EXPIRED" || code === "TOKEN_INVALID") {
       const refreshed = await tryRefresh();
       if (refreshed) {
         res = await fetchFn();
