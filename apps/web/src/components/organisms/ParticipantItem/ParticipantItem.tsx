@@ -90,7 +90,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
         </div>
         {rightSlot ??
           (onMore ? (
-            <IconButton icon="more-horizontal" variant="ghost" size="sm" aria-label="더보기" onClick={onMore} />
+            <IconButton icon="more-horizontal" variant="ghost" size="sm" aria-label="더보기" onClick={(e) => { e.stopPropagation(); onMore?.(); }} />
           ) : null)}
       </div>
     );
