@@ -301,13 +301,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/70">
-                    이번 모임의 베스트 사진
-                  </p>
                   <p className="text-[18px] font-extrabold text-white">모먼트로그</p>
-                  <p className="text-[12px] text-white/80">
-                    {mockRemindPhotos.length}장의 추억이 선정됐어요 →
-                  </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
                   {mockRemindPhotos.slice(0, 3).map((p) => (
