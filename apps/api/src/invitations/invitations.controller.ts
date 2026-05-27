@@ -31,6 +31,7 @@ import {
   InvitationPresignedUrlDto,
   InvitationPresignedUrlSchema,
 } from './dto/invitation-presigned-url.dto';
+import { ApplyAiImageDto, ApplyAiImageSchema } from './dto/apply-ai-image.dto';
 
 @Controller('invitations')
 export class InvitationsController {
@@ -81,5 +82,15 @@ export class InvitationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('invitationId', ParseUlidPipe) id: string) {
     return this.invitationsService.remove(id);
+  }
+
+  @RequireMemberRole(MemberRole.HOST)
+  @UseGuards(HostGuard)
+  @Post(':invitationId/main-image/ai')
+  applyAiToMainImage(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Body(new ZodValidationPipe(ApplyAiImageSchema)) dto: ApplyAiImageDto,
+  ) {
+    return this.invitationsService.applyAiToMainImage(invitationId, dto);
   }
 }

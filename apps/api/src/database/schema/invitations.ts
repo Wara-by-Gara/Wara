@@ -24,6 +24,8 @@ export const invitations = pgTable('invitations', {
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description').notNull(),
   mainImageKey: text('main_image_key').notNull(),
+  mainImageFrame: varchar('main_image_frame', { length: 10 }).notNull().default('default'),
+  uploadedImageKey: text('uploaded_image_key'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

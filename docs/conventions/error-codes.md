@@ -105,6 +105,14 @@
 |------|:--------:|------|
 | `ANALYTICS_PERIOD_TOO_LONG` | 400 | 분석 기간이 366일 초과 (admin/analytics/shares/*) |
 
+## AI
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `AI_PROCESSING_FAILED` | 500 | OpenAI 이미지 합성 실패 |
+| `AI_TIMEOUT` | 504 | OpenAI 응답 시간 초과 (60초) |
+| `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
+
 ---
 
 ## 규칙

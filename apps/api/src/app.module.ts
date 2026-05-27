@@ -23,6 +23,7 @@ import { InquiriesModule } from './inquiries/inquiries.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 import { AdminModule } from './admin/admin.module';
 import { FaqModule } from './faq/faq.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { FaqModule } from './faq/faq.module';
     BlocklistModule,
     AdminModule,
     FaqModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [

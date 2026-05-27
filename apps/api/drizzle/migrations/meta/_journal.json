@@ -43,6 +43,13 @@
       "when": 1779845544522,
       "tag": "0005_legal_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779859944216,
+      "tag": "0006_strong_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }
