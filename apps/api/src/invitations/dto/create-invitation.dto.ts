@@ -11,6 +11,8 @@ export const CreateInvitationSchema = z.object({
   templateId: z.string().optional(),
   eventStartAt: z.coerce.date().optional(),
   isMissionEnabled: z.boolean().optional(),
+  bgColor: z.string().max(50).optional(),
+  font: z.string().max(50).optional(),
 });
 
 export type CreateInvitationDto = z.infer<typeof CreateInvitationSchema>;

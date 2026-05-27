@@ -93,8 +93,8 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
           );
 
           return renderItem ? (
-            <span key={item.key} className="flex flex-1">
-              {renderItem(item, wrapper)}
+            <span key={item.key} className={cn("flex flex-1 transition-colors", colorClass, !item.disabled && "hover:bg-gray-50")}>
+              {renderItem(item, content)}
             </span>
           ) : (
             wrapper
