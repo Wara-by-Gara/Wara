@@ -5,7 +5,6 @@ import { Chip } from '@/components/primitives/Chip';
 import { Button } from '@/components/primitives/Button';
 import { Switch } from '@/components/primitives/Switch';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import {
@@ -15,7 +14,6 @@ import {
 import { NotificationListSkeleton } from '@/components/organisms/Skeleton';
 import { EmptyState } from '@/components/organisms/EmptyState';
 import { ErrorState } from '@/components/organisms/ErrorState';
-import { mockNotifications } from '@/lib/mockData';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';
@@ -55,7 +53,7 @@ export interface NotificationsProps {
 
 export const Notifications = ({
   state = 'default',
-  items = mockNotifications,
+  items = [],
   onBack,
   onMarkAllAsRead,
   onMarkAsRead,
@@ -102,7 +100,6 @@ export const Notifications = ({
             </div>
           </section>
         </main>
-        <MainBottomNav activeKey="notifications" />
       </div>
     );
   }
@@ -131,7 +128,6 @@ export const Notifications = ({
             }
           />
         </main>
-        <MainBottomNav activeKey="notifications" />
       </div>
     );
   }
@@ -264,7 +260,6 @@ export const Notifications = ({
           setMarkAllReadModalOpen(false);
         }}
       />
-      <MainBottomNav activeKey="notifications" />
     </div>
   );
 };

@@ -184,7 +184,8 @@ export class AuthService {
       this.issueRefreshToken(user.id),
     ]);
 
-    return { accessToken, refreshToken, isNew };
+    const needsProfileCompletion = !user.name || !user.email || !user.birthYear;
+    return { accessToken, refreshToken, isNew, needsProfileCompletion };
   }
 
   async logout(rawRefreshToken: string): Promise<void> {

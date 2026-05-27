@@ -41,6 +41,7 @@ export const CommentPreviewFilled: Story = { args: { state: "commentPreviewFille
 export const BeforeRsvp: Story = { args: { state: "beforeRsvp" } };
 export const RsvpBottomSheetOpen: Story = { args: { state: "rsvpBottomSheetOpen" } };
 export const AlreadyResponded: Story = { args: { state: "alreadyResponded" } };
+export const AlreadyRespondedProfileOpen: Story = { args: { state: "alreadyRespondedProfileOpen" } };
 export const EditRsvp: Story = { args: { state: "editRsvp" } };
 export const CancelRsvpModal: Story = { args: { state: "cancelRsvpModal" } };
 export const ClosedRsvp: Story = { args: { state: "closedRsvp" } };

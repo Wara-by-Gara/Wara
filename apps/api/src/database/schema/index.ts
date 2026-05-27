@@ -8,4 +8,5 @@ export * from './photos';
 export * from './feedbacks';
 export * from './notifications';
 export * from './inquiries';
+export * from './faq';
 export * from './relations';

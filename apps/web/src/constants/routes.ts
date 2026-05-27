@@ -1,5 +1,6 @@
 export const ROUTES = {
   HOME: "/",
+  SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {
     LIST: "/invitations",
@@ -28,5 +29,17 @@ export const ROUTES = {
     EDIT: "/profile/edit",
     SETTINGS: "/profile/settings",
     ACCOUNT: "/profile/account",
+  },
+  ADMIN: {
+    INQUIRIES: '/admin/inquiries',
+    INQUIRY_DETAIL: (id: string) => `/admin/inquiries/${id}`,
+    FAQ: '/admin/faq',
+  },
+  INQUIRIES: {
+    HOME: "/inquiries",
+    WRITE: "/inquiries/write",
+    LIST: "/inquiries/list",
+    ME: "/inquiries/me",
+    DETAIL: (id: string) => `/inquiries/${id}`,
   },
 } as const;

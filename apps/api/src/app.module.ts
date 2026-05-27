@@ -19,9 +19,9 @@ import { ParticipantsExampleModule } from './participants_example/participants-e
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
-import { DevAuthModule } from './dev/dev-auth.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 import { AdminModule } from './admin/admin.module';
+import { FaqModule } from './faq/faq.module';
 
 @Module({
   imports: [
@@ -43,12 +43,12 @@ import { AdminModule } from './admin/admin.module';
     NotificationsModule,
     InquiriesModule,
     S3Module,
-    DevAuthModule,
     ParticipantsExampleModule,
     SendLogsModule,
     S3Module,
     BlocklistModule,
     AdminModule,
+    FaqModule,
   ],
   controllers: [AppController],
   providers: [

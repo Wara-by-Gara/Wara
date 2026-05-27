@@ -13,7 +13,7 @@ export default function ProfileEditContainer() {
   if (isLoading || !me) return null;
 
   const handleSave = (nickname: string) => {
-    updateMe(nickname, {
+    updateMe({ nickname }, {
       onSuccess: () => router.push(ROUTES.PROFILE.ME),
     });
   };

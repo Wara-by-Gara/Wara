@@ -47,6 +47,7 @@ export class AuthRepository {
           )
           .limit(1);
 
+        // 1. 동일 소셜 계정이 이미 존재하면 바로 반환
         if (existingAccount.length > 0 && existingAccount[0]) {
           const userId = existingAccount[0].userId;
 
@@ -86,16 +87,50 @@ export class AuthRepository {
           return { userId, isNew: false };
         }
 
+        // 2. 이메일이 있으면 기존 유저와 계정 통합 시도
+        if (email) {
+          const existingUser = await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(and(eq(users.email, email), isNull(users.deletedAt)))
+            .limit(1);
+
+          if (existingUser.length > 0 && existingUser[0]) {
+            const userId = existingUser[0].id;
+
+            // 이 유저가 동일 provider를 아직 연결하지 않은 경우에만 통합
+            const existingProviderLink = await tx
+              .select({ id: socialAccounts.id })
+              .from(socialAccounts)
+              .where(
+                and(
+                  eq(socialAccounts.userId, userId),
+                  eq(socialAccounts.provider, provider),
+                ),
+              )
+              .limit(1);
+
+            if (existingProviderLink.length === 0) {
+              await tx.insert(socialAccounts).values({
+                userId,
+                provider,
+                providerAccountId,
+              });
+              await tx
+                .update(users)
+                .set({ lastLoginAt: new Date() })
+                .where(eq(users.id, userId));
+
+              return { userId, isNew: false };
+            }
+          }
+        }
+
+        // 3. 신규 유저 생성
         const inserted = await tx
           .insert(users)
-          .values({
-            email,
-            name,
-            profileImageUrl,
-          })
-          .returning({
-            id: users.id,
-          });
+          .values({ email, name, profileImageUrl })
+          .returning({ id: users.id });
 
         const newUserId = inserted[0]!.id;
 
@@ -105,10 +140,7 @@ export class AuthRepository {
           providerAccountId,
         });
 
-        return {
-          userId: newUserId,
-          isNew: true,
-        };
+        return { userId: newUserId, isNew: true };
       });
     } catch {
       throw new InternalServerErrorException({
