@@ -18,6 +18,15 @@ const ALLOWED_CONTENT_TYPES: Record<string, string> = {
   'image/heif': 'image/heif',
 };
 
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function resolveContentType(file: File): string | null {
   if (ALLOWED_CONTENT_TYPES[file.type]) return file.type;
   const ext = file.name.split('.').pop()?.toLowerCase();
@@ -59,11 +68,11 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
     setLikeCountMap((prev) => new Map(prev).set(photoId, likeCount));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []).filter((f) => resolveContentType(f) !== null);
     e.target.value = '';
     if (files.length === 0) return;
-    const urls = files.map((f) => URL.createObjectURL(f)).filter((u) => u.startsWith('blob:'));
+    const urls = await Promise.all(files.map(readAsDataUrl));
     setSelectedFiles(files);
     setPreviewUrls(urls);
     setUploadState('previewing');
@@ -99,7 +108,6 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
     }
 
     setTimeout(() => {
-      previewUrls.forEach((u) => URL.revokeObjectURL(u));
       setUploadState('idle');
       setSelectedFiles([]);
       setPreviewUrls([]);
@@ -107,7 +115,6 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   };
 
   const handleCancelUpload = () => {
-    previewUrls.forEach((u) => URL.revokeObjectURL(u));
     setUploadState('idle');
     setSelectedFiles([]);
     setPreviewUrls([]);
