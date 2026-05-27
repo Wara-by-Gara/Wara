@@ -85,14 +85,28 @@ export class InvitationsController {
     return this.invitationsService.remove(id);
   }
 
+  /** AI 합성 잡 생성 — 즉시 { jobId } 반환 (202), 백그라운드 처리 */
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // 1분에 3회 제한 (AI 비용 보호)
   @RequireMemberRole(MemberRole.HOST)
   @UseGuards(HostGuard)
   @Post(':invitationId/main-image/ai')
+  @HttpCode(HttpStatus.ACCEPTED)
   applyAiToMainImage(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Body(new ZodValidationPipe(ApplyAiImageSchema)) dto: ApplyAiImageDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.invitationsService.applyAiToMainImage(invitationId, dto);
+    return this.invitationsService.applyAiToMainImage(invitationId, dto, user.id);
+  }
+
+  /** AI 잡 상태 조회 (폴링 fallback 또는 재방문 시 상태 복구용) */
+  @RequireMemberRole(MemberRole.HOST)
+  @UseGuards(HostGuard)
+  @Get(':invitationId/main-image/ai/jobs/:jobId')
+  getAiJobStatus(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('jobId', ParseUlidPipe) jobId: string,
+  ) {
+    return this.invitationsService.getAiJobStatus(invitationId, jobId);
   }
 }

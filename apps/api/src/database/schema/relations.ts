@@ -9,6 +9,7 @@ import {
   invitationLinkEvents,
   invitationBlocklists,
 } from './invitations';
+import { aiImageJobs } from './ai-image-jobs';
 import { eventLocations, participantLocations } from './locations';
 import { photos, photoLikes } from './photos';
 import { missions, missionAssignments } from './missions';
@@ -47,6 +48,7 @@ export const invitationsRelations = relations(invitations, ({ one, many }) => ({
   sendLogs: many(invitationSendLogs),
   participantLocations: many(participantLocations),
   blocklists: many(invitationBlocklists),
+  aiImageJobs: many(aiImageJobs),
 }));
 
 export const invitationBlocklistsRelations = relations(invitationBlocklists, ({ one }) => ({
@@ -112,4 +114,9 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 
 export const remindLogsRelations = relations(remindLogs, ({ one }) => ({
   invitation: one(invitations, { fields: [remindLogs.invitationId], references: [invitations.id] }),
+}));
+
+export const aiImageJobsRelations = relations(aiImageJobs, ({ one }) => ({
+  user: one(users, { fields: [aiImageJobs.userId], references: [users.id] }),
+  invitation: one(invitations, { fields: [aiImageJobs.invitationId], references: [invitations.id] }),
 }));

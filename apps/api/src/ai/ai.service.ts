@@ -5,6 +5,10 @@ import { toFile } from 'openai';
 import { ErrorCode } from '../common/constants/error-codes';
 
 const AI_TIMEOUT_MS = 60_000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 1_000;
+/** 일시적 오류로 재시도 가능한 HTTP 상태 코드 */
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
 @Injectable()
 export class AiService {
@@ -17,13 +21,50 @@ export class AiService {
   }
 
   /**
-   * 사용자 사진 + 템플릿 이미지를 OpenAI gpt-image-1 edit API로 합성
-   * @param userImageBuffer  사용자가 업로드한 원본 사진 Buffer
-   * @param templateBuffer   초대장 템플릿 배경 이미지 Buffer
-   * @param prompt           합성 방향 프롬프트
-   * @returns 합성된 이미지 Buffer (PNG)
+   * 사용자 사진 + 템플릿 이미지를 OpenAI gpt-image-1 edit API로 합성.
+   * 일시적 에러(429, 5xx, 네트워크)에 대해 최대 2회 지수 백오프 재시도.
    */
   async compositeImages(
+    userImageBuffer: Buffer,
+    templateBuffer: Buffer,
+    prompt: string,
+  ): Promise<Buffer> {
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await this.doCompositeImages(userImageBuffer, templateBuffer, prompt);
+      } catch (err) {
+        lastError = err;
+
+        // GatewayTimeoutException(AbortError) 또는 이미 분류된 예외는 재시도 없이 즉시 throw
+        if (
+          err instanceof GatewayTimeoutException ||
+          err instanceof InternalServerErrorException
+        ) {
+          // AI_TIMEOUT은 재시도 불필요. AI_PROCESSING_FAILED는 bad request 등 — 재시도 불필요
+          throw err;
+        }
+
+        const isRetryable =
+          (err instanceof OpenAI.APIError && RETRYABLE_STATUS_CODES.has(err.status ?? 0)) ||
+          err instanceof OpenAI.APIConnectionError ||
+          err instanceof OpenAI.APIConnectionTimeoutError;
+
+        if (!isRetryable || attempt === MAX_RETRIES) break;
+
+        // 지수 백오프: 1초, 2초
+        const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    // 최종 에러 분류
+    if (lastError instanceof GatewayTimeoutException) throw lastError;
+    throw new InternalServerErrorException(ErrorCode.AI_PROCESSING_FAILED);
+  }
+
+  private async doCompositeImages(
     userImageBuffer: Buffer,
     templateBuffer: Buffer,
     prompt: string,
@@ -64,7 +105,8 @@ export class AiService {
       ) {
         throw err;
       }
-      throw new InternalServerErrorException(ErrorCode.AI_PROCESSING_FAILED);
+      // OpenAI SDK 에러 또는 기타 — 상위 withRetry 루프에서 재시도 여부 결정
+      throw err;
     } finally {
       clearTimeout(timer);
     }

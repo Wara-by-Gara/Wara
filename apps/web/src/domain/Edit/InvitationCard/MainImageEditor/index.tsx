@@ -8,6 +8,7 @@ import {
   getMainImagePresignedUrl,
   applyAiToMainImage,
 } from '@/lib/api/invitations';
+import type { AiCompleteEventDetail } from '@/hooks/useNotifications';
 import ImageCropEditor from './ImageCropEditor';
 import FrameSelector from './FrameSelector';
 import { getCroppedBlob } from './cropUtils';
@@ -18,7 +19,7 @@ interface Props {
   initialFrame: MainImageFrame;
   initialMainImageKey: string;
   initialUploadedImageKey: string | null;
-  initialUploadedImageUrl: string | null; // 이슈 9: 서버에서 받은 presigned URL
+  initialUploadedImageUrl: string | null;
   onSave: (data: {
     mainImageKey: string;
     mainImageFrame: MainImageFrame;
@@ -56,14 +57,20 @@ export default function MainImageEditor({
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-  // 로딩 / 에러
+  // 로딩 / 에러 / AI 비동기 상태
   const [isUploading, setIsUploading] = useState(false);
   const [isApplyingAi, setIsApplyingAi] = useState(false);
+  const [pendingJobId, setPendingJobId] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  // AI 완료 팝업
+  const [showAiCompletePopup, setShowAiCompletePopup] = useState(false);
+  // AI 일일 한도 초과 팝업
+  const [showLimitPopup, setShowLimitPopup] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 이슈 3: SSR-safe localStorage 읽기 (마운트 후에만 접근)
+  // SSR-safe localStorage 읽기 (마운트 후에만 접근)
   useEffect(() => {
     if (!initialUploadedImageKey) {
       const saved = localStorage.getItem(TEMP_KEY(invitationId));
@@ -71,14 +78,14 @@ export default function MainImageEditor({
     }
   }, [invitationId, initialUploadedImageKey]);
 
-  // 이슈 4: cropSrc Object URL 메모리 해제
+  // cropSrc Object URL 메모리 해제
   useEffect(() => {
     return () => {
       if (cropSrc) URL.revokeObjectURL(cropSrc);
     };
   }, [cropSrc]);
 
-  // 이슈 4: uploadedPreviewUrl Object URL 메모리 해제 (서버 presigned URL은 revoke 불필요하므로 blob: 로 시작할 때만)
+  // uploadedPreviewUrl Object URL 메모리 해제 (blob: URL만)
   useEffect(() => {
     return () => {
       if (uploadedPreviewUrl?.startsWith('blob:')) {
@@ -87,13 +94,34 @@ export default function MainImageEditor({
     };
   }, [uploadedPreviewUrl]);
 
+  // AI 완료 WebSocket 이벤트 수신 (window 커스텀 이벤트)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<AiCompleteEventDetail>).detail;
+      if (detail.invitationId !== invitationId) return;
+
+      setPendingJobId(null);
+      setIsApplyingAi(false);
+
+      if (detail.success && detail.key && detail.url) {
+        setAiKey(detail.key);
+        setAiPreviewUrl(detail.url);
+        setShowAiCompletePopup(true);
+      } else {
+        setError('AI 처리에 실패했습니다. 다시 시도해주세요.');
+      }
+    };
+
+    window.addEventListener('ai:complete', handler);
+    return () => window.removeEventListener('ai:complete', handler);
+  }, [invitationId]);
+
   // 파일 선택 → 압축 → 크롭 에디터 열기
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setError('');
 
-    // 이슈 5: 압축 에러 처리
     try {
       const compressed = await imageCompression(file, {
         maxSizeMB: 1,
@@ -106,7 +134,6 @@ export default function MainImageEditor({
     } catch {
       setError('이미지 처리에 실패했습니다. 다시 시도해주세요.');
     } finally {
-      // input 초기화 (같은 파일 재선택 허용)
       e.target.value = '';
     }
   }, []);
@@ -129,7 +156,6 @@ export default function MainImageEditor({
         headers: { 'Content-Type': UPLOAD_CONTENT_TYPE },
       });
 
-      // 기존 임시저장 교체 (localStorage 1개 유지)
       localStorage.setItem(TEMP_KEY(invitationId), key);
 
       const previewUrl = URL.createObjectURL(blob);
@@ -146,7 +172,7 @@ export default function MainImageEditor({
     }
   }, [cropSrc, croppedAreaPixels, invitationId, onSave]);
 
-  // AI 적용
+  // AI 적용 요청 (비동기 — jobId 반환 후 WebSocket 완료 대기)
   const handleApplyAi = useCallback(async () => {
     if (!uploadedKey) {
       setError('AI 적용 전에 사진을 먼저 업로드해주세요.');
@@ -156,25 +182,28 @@ export default function MainImageEditor({
     setError('');
 
     try {
-      const { key, url } = await applyAiToMainImage(invitationId, uploadedKey);
-      setAiKey(key);
-      setAiPreviewUrl(url);
-      setSelectedFrame('ai');
-      onSave({ mainImageKey: key, mainImageFrame: 'ai', uploadedImageKey: uploadedKey });
-    } catch {
-      setError('AI 적용에 실패했습니다. 다시 시도해주세요.');
-    } finally {
+      const { jobId } = await applyAiToMainImage(invitationId, uploadedKey);
+      setPendingJobId(jobId);
+      // isApplyingAi는 WebSocket ai:complete 이벤트 수신 시 해제됨
+    } catch (err) {
+      const code = (err as { error?: { code?: string } })?.error?.code ?? '';
+      if (code === 'AI_DAILY_LIMIT_EXCEEDED') {
+        setShowLimitPopup(true);
+      } else if (code === 'AI_SERVICE_UNAVAILABLE') {
+        setError('AI 서비스가 일시적으로 이용 불가합니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        setError('AI 적용 요청에 실패했습니다. 다시 시도해주세요.');
+      }
       setIsApplyingAi(false);
     }
-  }, [uploadedKey, invitationId, onSave]);
+  }, [uploadedKey, invitationId]);
 
   // 프레임 전환
   const handleFrameChange = useCallback((frame: MainImageFrame) => {
     setSelectedFrame(frame);
     setError('');
 
-    if (frame === 'ai' && !aiKey && uploadedKey) {
-      // AI 결과가 없으면 자동 적용 시작
+    if (frame === 'ai' && !aiKey && uploadedKey && !isApplyingAi) {
       handleApplyAi();
       return;
     }
@@ -189,7 +218,7 @@ export default function MainImageEditor({
     if (frame === 'default' || targetKey) {
       onSave({ mainImageKey: targetKey ?? '', mainImageFrame: frame, uploadedImageKey: uploadedKey });
     }
-  }, [uploadedKey, aiKey, handleApplyAi, onSave]);
+  }, [uploadedKey, aiKey, handleApplyAi, isApplyingAi, onSave]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -229,8 +258,16 @@ export default function MainImageEditor({
             </button>
           </div>
         </div>
+      ) : isApplyingAi && pendingJobId ? (
+        /* AI 백그라운드 처리 중 */
+        <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
+          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          <p className="text-sm text-gray-600">
+            AI가 사진을 만들고 있어요. 다른 작업을 계속하셔도 됩니다.
+          </p>
+        </div>
       ) : (
-        /* 업로드 버튼 */
+        /* 업로드 / AI 버튼 */
         <div className="flex gap-2">
           <button
             type="button"
@@ -247,7 +284,7 @@ export default function MainImageEditor({
               disabled={isApplyingAi || isUploading}
               className="flex-1 px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
-              {isApplyingAi ? 'AI 적용 중...' : 'AI 재적용'}
+              AI 재적용
             </button>
           )}
         </div>
@@ -262,6 +299,77 @@ export default function MainImageEditor({
       />
 
       {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {/* AI 일일 한도 초과 팝업 */}
+      {showLimitPopup && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-limit-title"
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+        >
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+            <p id="ai-limit-title" className="text-lg font-semibold mb-1">
+              오늘의 AI 사용 횟수를 모두 썼어요
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              하루 3회까지 사용할 수 있어요. 내일 다시 시도해주세요.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowLimitPopup(false)}
+              className="w-full px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI 완료 팝업 */}
+      {showAiCompletePopup && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-complete-title"
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+        >
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+            <p id="ai-complete-title" className="text-lg font-semibold mb-1">
+              AI 사진이 완성됐어요! 🎉
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              AI 탭을 확인하고 마음에 들면 적용해보세요.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAiCompletePopup(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                나중에
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAiCompletePopup(false);
+                  setSelectedFrame('ai');
+                  if (aiKey) {
+                    onSave({
+                      mainImageKey: aiKey,
+                      mainImageFrame: 'ai',
+                      uploadedImageKey: uploadedKey,
+                    });
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                AI 사진 적용하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
