@@ -10,6 +10,9 @@ const meta: Meta<typeof DateVote> = {
 export default meta;
 type Story = StoryObj<typeof DateVote>;
 
+/** 호스트 — 캘린더에서 날짜 선택 후 시간 후보 등록, 투표 설정까지 2단계 */
+export const HostCreating: Story = { args: { state: "hostCreating" } };
+
 /** 투표 전 — 날짜·시간 슬롯에 ○△× 응답 선택 가능 */
 export const GuestVoting: Story = { args: { state: "guestVoting" } };
 
