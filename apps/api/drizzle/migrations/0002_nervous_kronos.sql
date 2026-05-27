@@ -1,0 +1,1 @@
+ALTER TABLE "inquiries" ADD COLUMN "is_public" boolean DEFAULT true NOT NULL;

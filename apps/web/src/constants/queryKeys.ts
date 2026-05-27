@@ -3,6 +3,7 @@ export const QUERY_KEYS = {
     all: () => ["invitations"] as const,
     detail: (id: string) => ["invitations", id] as const,
     participants: (id: string) => ["invitations", id, "participants"] as const,
+    myParticipant: (id: string) => ["invitations", id, "participants", "me"] as const,
     missions: (id: string) => ["invitations", id, "missions"] as const,
     photos: (id: string) => ["invitations", id, "photos"] as const,
     photoBest9: (id: string) => ["invitations", id, "photos", "best9"] as const,
@@ -21,5 +22,16 @@ export const QUERY_KEYS = {
   templates: {
     all: () => ["templates"] as const,
     detail: (id: string) => ["templates", id] as const,
+  },
+  faq: {
+    active: () => ["faq", "active"] as const,
+    adminAll: () => ["faq", "admin"] as const,
+  },
+  inquiries: {
+    myList: () => ["inquiries", "me"] as const,
+    publicList: () => ["inquiries", "public"] as const,
+    detail: (id: string) => ["inquiries", id] as const,
+    adminList: () => ["inquiries", "admin"] as const,
+    adminDetail: (id: string) => ["inquiries", "admin", id] as const,
   },
 } as const;

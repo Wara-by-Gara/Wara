@@ -17,11 +17,8 @@ export class UsersRepository {
         email: true,
         nickname: true,
         name: true,
-        //birthYear: true,
-        //gender: true,
+        birthYear: true,
         profileImageUrl: true,
-        //createdAt: true,
-        //updatedAt: true,
       },
     });
   }
@@ -36,11 +33,8 @@ export class UsersRepository {
         email: users.email,
         nickname: users.nickname,
         name: users.name,
-        //birthYear: users.birthYear,
-        //gender: users.gender,
+        birthYear: users.birthYear,
         profileImageUrl: users.profileImageUrl,
-        //createdAt: users.createdAt,
-        //updatedAt: users.updatedAt,
       });
     return updated;
   }
