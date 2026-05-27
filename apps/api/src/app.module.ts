@@ -47,7 +47,6 @@ import { FaqModule } from './faq/faq.module';
     S3Module,
     ParticipantsExampleModule,
     SendLogsModule,
-    S3Module,
     BlocklistModule,
     AdminModule,
     FaqModule,

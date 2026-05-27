@@ -4,10 +4,9 @@ import { TemplatesModule } from '../templates/templates.module';
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
 import { InvitationsRepository } from './invitations.repository';
-import { S3Module } from '../s3/s3.module';
 
 @Module({
-  imports: [AuthModule, TemplatesModule, S3Module],
+  imports: [AuthModule, TemplatesModule],
   controllers: [InvitationsController],
   providers: [InvitationsService, InvitationsRepository],
 })

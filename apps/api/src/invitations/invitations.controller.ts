@@ -37,7 +37,7 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: JwtPayload) {
+  findAll(@CurrentUser() user: JwtPayload) {
     return this.invitationsService.findAll(user.id);
   }
 
