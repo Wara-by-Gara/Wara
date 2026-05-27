@@ -78,6 +78,10 @@ export interface MapPageProps {
   /** 위치 권한 */
   onRequestPermission?: () => void;
   onOpenSettings?: () => void;
+
+  /** HOST 여부 — noLocation 상태에서 장소 설정 버튼 표시 */
+  isHost?: boolean;
+  onSetLocation?: () => void;
 }
 
 const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
@@ -108,6 +112,8 @@ export const MapPage = ({
   onCloseDirections,
   onRequestPermission,
   onOpenSettings,
+  isHost,
+  onSetLocation,
 }: MapPageProps) => {
   const placeName = eventLocation?.placeName ?? mockInvitation.location;
   const address = eventLocation?.address ?? mockInvitation.address;
@@ -165,7 +171,18 @@ export const MapPage = ({
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="px-5 py-4">
           {state === "noLocation" ? (
-            <LocationCard variant="unknown" />
+            <>
+              <LocationCard variant="unknown" />
+              {isHost && (
+                <button
+                  type="button"
+                  onClick={onSetLocation}
+                  className="mt-2 block w-full text-center text-[13px] text-primary"
+                >
+                  장소 설정하기 →
+                </button>
+              )}
+            </>
           ) : (
             <LocationCard
               variant="online"

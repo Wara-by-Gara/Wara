@@ -14,6 +14,7 @@ import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
+import { NotificationBellContainer } from "@/domain/Notifications/NotificationBell/NotificationBellContainer";
 import { mockInvitation, mockMe, mockTemplateSlides, type MockInvitation, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
@@ -73,10 +74,7 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
         brandLogo
         rightSlot={
           <>
-            <button type="button" aria-label="알림" className="relative inline-flex size-11 items-center justify-center text-text-secondary">
-              <Icon name="bell" size="lg" color="currentColor" decorative />
-              <span aria-hidden className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary ring-2 ring-surface" />
-            </button>
+            <NotificationBellContainer />
             <Avatar size="sm" src={me.avatarUrl} alt={me.nickname} initial={me.nickname[0]} />
           </>
         }

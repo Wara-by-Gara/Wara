@@ -98,11 +98,12 @@ describe('AuthController', () => {
       );
     });
 
-    it('성공 → 쿠키 설정 후 auth_success=1 URL로 redirect', async () => {
+    it('성공 (프로필 완성) → 쿠키 설정 후 홈(/)으로 redirect', async () => {
       mockService.socialLogin.mockResolvedValue({
         accessToken: 'acc',
         refreshToken: 'ref',
         isNew: false,
+        needsProfileCompletion: false,
       });
 
       await controller.oauthCallback(
@@ -115,12 +116,31 @@ describe('AuthController', () => {
 
       expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'acc', expect.any(Object));
       expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'ref', expect.any(Object));
-      expect(mockRes.redirect).toHaveBeenCalledWith(
-        'http://localhost:3000/invitations/create?auth_success=1',
-      );
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/');
     });
 
-    it('service 에러 → 에러 URL로 redirect', async () => {
+    it('성공 (프로필 미완성) → 쿠키 설정 후 /signup으로 redirect', async () => {
+      mockService.socialLogin.mockResolvedValue({
+        accessToken: 'acc',
+        refreshToken: 'ref',
+        isNew: true,
+        needsProfileCompletion: true,
+      });
+
+      await controller.oauthCallback(
+        { provider: Provider.NAVER },
+        'code123',
+        'state123',
+        '',
+        mockRes as unknown as Response,
+      );
+
+      expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'acc', expect.any(Object));
+      expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'ref', expect.any(Object));
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/signup');
+    });
+
+    it('service 에러 → /login?auth_error=1 로 redirect', async () => {
       mockService.socialLogin.mockRejectedValue(new Error('auth failed'));
 
       await controller.oauthCallback(
@@ -132,7 +152,7 @@ describe('AuthController', () => {
       );
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
-        'http://localhost:3000/invitations/create?auth_error=1',
+        'http://localhost:3000/login?auth_error=1',
       );
     });
   });

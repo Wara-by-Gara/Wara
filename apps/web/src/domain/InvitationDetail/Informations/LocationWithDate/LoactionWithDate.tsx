@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
 import { useInvitation } from "@/hooks/useInvitations";
+import { useMe } from "@/hooks/useUsers";
 import { ROUTES } from "@/constants/routes";
 
 interface LocationWithDateProps {
@@ -12,10 +13,12 @@ interface LocationWithDateProps {
 
 export default function LocationWithDate({ invitationId }: LocationWithDateProps) {
   const { data: invitation, isLoading } = useInvitation(invitationId);
+  const { data: me } = useMe();
 
   if (isLoading) return null;
 
   const eventLocation = invitation?.eventLocation ?? null;
+  const isHost = !!me && !!invitation && me.id === invitation.userId;
 
   return (
     <div className="flex flex-col gap-3">
@@ -69,7 +72,17 @@ export default function LocationWithDate({ invitationId }: LocationWithDateProps
             </Link>
           </>
         ) : (
-          <LocationCard variant="unknown" />
+          <>
+            <LocationCard variant="unknown" />
+            {isHost && (
+              <Link
+                href={ROUTES.INVITATIONS.LOCATION(invitationId)}
+                className="mt-2 block text-center text-[13px] text-primary"
+              >
+                장소 설정하기 →
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>
