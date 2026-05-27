@@ -145,7 +145,8 @@ export class InvitationsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const invitation = await this.repository.findById(id);
+    if (!invitation) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
     const guestCount = await this.repository.countGuests(id);
     if (guestCount > 0) {
       throw new ForbiddenException({
@@ -268,10 +269,13 @@ export class InvitationsService {
         '배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.';
       const prompt = template.prompt ?? DEFAULT_PROMPT;
 
+      // S3 key 확장자로 MIME type 추정 (업로드 시 항상 webp로 저장)
+      const userMime = uploadedImageKey.endsWith('.webp') ? 'image/webp' : 'image/png';
       const resultBuffer = await this.aiService.compositeImages(
         userBuffer,
         templateBuffer,
         prompt,
+        userMime,
       );
 
       if (resultBuffer.length > MAX_AI_RESULT_BYTES) {
