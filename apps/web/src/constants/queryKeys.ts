@@ -23,4 +23,15 @@ export const QUERY_KEYS = {
     all: () => ["templates"] as const,
     detail: (id: string) => ["templates", id] as const,
   },
+  faq: {
+    active: () => ["faq", "active"] as const,
+    adminAll: () => ["faq", "admin"] as const,
+  },
+  inquiries: {
+    myList: () => ["inquiries", "me"] as const,
+    publicList: () => ["inquiries", "public"] as const,
+    detail: (id: string) => ["inquiries", id] as const,
+    adminList: () => ["inquiries", "admin"] as const,
+    adminDetail: (id: string) => ["inquiries", "admin", id] as const,
+  },
 } as const;
