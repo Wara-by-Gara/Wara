@@ -4,6 +4,8 @@ import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { NotificationsRepository } from './notifications.repository';
 import { NotificationsGateway } from './notifications.gateway';
+import { RemindSchedulerService } from './remind-scheduler.service';
+import { RemindSchedulerRepository } from './remind-scheduler.repository';
 
 @Module({
   imports: [AuthModule],
@@ -12,6 +14,8 @@ import { NotificationsGateway } from './notifications.gateway';
     NotificationsService,
     NotificationsRepository,
     NotificationsGateway,
+    RemindSchedulerService,
+    RemindSchedulerRepository,
   ],
   exports: [NotificationsService],
 })
