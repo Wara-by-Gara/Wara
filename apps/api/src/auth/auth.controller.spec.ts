@@ -116,7 +116,7 @@ describe('AuthController', () => {
 
       expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'acc', expect.any(Object));
       expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'ref', expect.any(Object));
-      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/');
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/?auth_success=1');
     });
 
     it('성공 (프로필 미완성) → 쿠키 설정 후 /signup으로 redirect', async () => {

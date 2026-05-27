@@ -13,8 +13,8 @@ export default function ProfileContainer() {
 
   const stats = invitations
     ? {
-        created: invitations.filter((i) => i.role === 'HOST').length,
-        joined: invitations.filter((i) => i.role === 'GUEST').length,
+        created: invitations.filter((i) => i.myRole === 'HOST').length,
+        joined: invitations.filter((i) => i.myRole === 'GUEST').length,
       }
     : undefined;
 
@@ -23,7 +23,7 @@ export default function ProfileContainer() {
     title: inv.title,
     date: inv.eventStartAt ?? '',
     imageUrl: inv.mainImageUrl,
-    variant: inv.role === 'HOST' ? ('createdByMe' as const) : undefined,
+    variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
 
   if (isLoading) return <MyPage state="loading" />;

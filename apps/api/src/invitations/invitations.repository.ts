@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, desc, eq, getTableColumns, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq, isNull, ne } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { invitations, participants } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -11,23 +11,22 @@ import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 export class InvitationsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  // participants 기준 조회: 내가 만든(HOST) + 참여한(GUEST) 초대장 모두 반환, role 필드 포함
-  findAllByUserId(userId: string) {
-    return this.db
+  async findAllByUserId(userId: string) {
+    const rows = await this.db
       .select({
-        ...getTableColumns(invitations),
-        role: participants.memberRole,
+        invitation: invitations,
+        myRole: participants.memberRole,
       })
       .from(participants)
-      .innerJoin(
-        invitations,
+      .innerJoin(invitations, eq(participants.invitationId, invitations.id))
+      .where(
         and(
-          eq(participants.invitationId, invitations.id),
+          eq(participants.userId, userId),
           isNull(invitations.deletedAt),
         ),
       )
-      .where(eq(participants.userId, userId))
       .orderBy(desc(invitations.createdAt));
+    return rows.map((r) => ({ ...r.invitation, myRole: r.myRole }));
   }
 
   findById(id: string) {
