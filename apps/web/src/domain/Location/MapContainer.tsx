@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { MapPage, type MapPageState, type SearchResult } from "@/screens/MapPage/MapPage";
-import { KakaoMap, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
+import { KakaoMap, type KakaoMapHandle, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocket";
@@ -88,6 +88,13 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const watchIdRef = useRef<number | null>(null);
   const gpsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPositionRef = useRef<GeolocationPosition | null>(null);
+  const kakaoMapRef = useRef<KakaoMapHandle>(null);
+
+  // ── 내 위치 ────────────────────────────────────────────────────────────
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
+
+  // ── 주소 복사 피드백 ────────────────────────────────────────────────────
+  const [isCopied, setIsCopied] = useState(false);
 
   // ── WebSocket ─────────────────────────────────────────────────────────
   const { sendLocation } = useLocationSocket({
@@ -186,6 +193,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         (pos) => {
           lastPositionRef.current = pos;
           setGpsPermission("granted");
+          setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
         () => setGpsPermission("denied"),
         { enableHighAccuracy: true, maximumAge: 0 },
@@ -252,7 +260,30 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   // ── 핸들러 ───────────────────────────────────────────────────────────
   const handleCopyAddress = () => {
     if (eventLocation?.address) {
-      navigator.clipboard.writeText(eventLocation.address).catch(() => {});
+      navigator.clipboard
+        .writeText(eventLocation.address)
+        .then(() => {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 1500);
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleLocate = () => {
+    const pos = lastPositionRef.current;
+    if (pos) {
+      kakaoMapRef.current?.centerOn(pos.coords.latitude, pos.coords.longitude);
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          setGpsPermission("granted");
+          setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
+          kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
+        },
+        () => setGpsPermission("denied"),
+        { enableHighAccuracy: true },
+      );
     }
   };
 
@@ -311,6 +342,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   const mapSlot = (
     <KakaoMap
+      ref={kakaoMapRef}
       ready={mapSdkReady}
       eventLocation={
         eventLocation
@@ -318,6 +350,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           : undefined
       }
       participants={participantPins}
+      myLocation={myLocation}
       className="absolute inset-0"
     />
   );
@@ -357,6 +390,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         onOpenSettings={() => window.open("app-settings:", "_self")}
         isHost={isHost}
         onSetLocation={() => setPageState("searchInitial")}
+        addressCopied={isCopied}
+        onLocate={handleLocate}
       />
     </>
   );
