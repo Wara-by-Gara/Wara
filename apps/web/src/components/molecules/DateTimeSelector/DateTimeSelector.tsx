@@ -66,26 +66,65 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
         ) : null}
 
         <div className={cn("flex items-center gap-2", isUnknown && "opacity-40")}>
-          <input
-            id={id}
-            type={inputType}
-            value={value ?? ""}
-            onChange={(e) => onChange?.(e.target.value)}
-            disabled={disabled || isUnknown}
-            className={inputClass}
-          />
-          {isRange ? (
+          {inputType === "time" ? (
             <>
-              <span className="text-text-tertiary">~</span>
+              <select
+                id={id}
+                value={value ?? ""}
+                onChange={(e) => onChange?.(e.target.value)}
+                disabled={disabled || isUnknown}
+                className={cn(inputClass, "cursor-pointer")}
+              >
+                <option value="">시간 선택</option>
+                {Array.from({ length: 48 }, (_, i) => {
+                  const h = String(Math.floor(i / 2)).padStart(2, "0");
+                  const m = i % 2 === 0 ? "00" : "30";
+                  return <option key={i} value={`${h}:${m}`}>{`${h}:${m}`}</option>;
+                })}
+              </select>
+              {isRange ? (
+                <>
+                  <span className="text-text-tertiary">~</span>
+                  <select
+                    value={endValue ?? ""}
+                    onChange={(e) => onEndChange?.(e.target.value)}
+                    disabled={disabled || isUnknown}
+                    className={cn(inputClass, "cursor-pointer")}
+                  >
+                    <option value="">시간 선택</option>
+                    {Array.from({ length: 48 }, (_, i) => {
+                      const h = String(Math.floor(i / 2)).padStart(2, "0");
+                      const m = i % 2 === 0 ? "00" : "30";
+                      return <option key={i} value={`${h}:${m}`}>{`${h}:${m}`}</option>;
+                    })}
+                  </select>
+                </>
+              ) : null}
+            </>
+          ) : (
+            <>
               <input
-                type={inputType}
-                value={endValue ?? ""}
-                onChange={(e) => onEndChange?.(e.target.value)}
+                id={id}
+                type="date"
+                value={value ?? ""}
+                onChange={(e) => onChange?.(e.target.value)}
                 disabled={disabled || isUnknown}
                 className={inputClass}
               />
+              {isRange ? (
+                <>
+                  <span className="text-text-tertiary">~</span>
+                  <input
+                    type="date"
+                    value={endValue ?? ""}
+                    onChange={(e) => onEndChange?.(e.target.value)}
+                    disabled={disabled || isUnknown}
+                    className={inputClass}
+                  />
+                </>
+              ) : null}
             </>
-          ) : null}
+          )}
         </div>
 
         {unknownToggle ? (
