@@ -14,7 +14,7 @@ interface Props {
 export default function ShareBottomSheet({ invitationId, open, onOpenChange }: Props) {
   const { data: invitation } = useInvitation(invitationId);
   const { copyLink, shareViaKakao, shareViaSms, shareViaInstagram, copied } =
-    useShareInvitation(invitationId, invitation?.title, invitation?.description);
+    useShareInvitation(invitationId, invitation?.title, invitation?.description, invitation?.mainImageUrl);
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
