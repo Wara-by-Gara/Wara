@@ -15,6 +15,20 @@
       "when": 1779181808317,
       "tag": "0001_remarkable_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779775906757,
+      "tag": "0002_aberrant_frightful_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779781083955,
+      "tag": "0003_cool_zombie",
+      "breakpoints": true
     }
   ]
 }

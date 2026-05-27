@@ -12,9 +12,7 @@ type Story = StoryObj<typeof InvitationList>;
 
 export const All: Story = { args: { tab: "all" } };
 export const CreatedByMe: Story = { args: { tab: "createdByMe" } };
-export const Invited: Story = { args: { tab: "invited" } };
 export const Joined: Story = { args: { tab: "joined" } };
-export const Draft: Story = { args: { tab: "draft" } };
 export const Ended: Story = { args: { tab: "ended" } };
 export const Empty: Story = { args: { state: "empty" } };
 export const Loading: Story = { args: { state: "loading" } };

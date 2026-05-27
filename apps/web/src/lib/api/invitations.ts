@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "./client";
+import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 
 type ImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
 
@@ -28,6 +28,8 @@ interface CreateInvitationPayload {
   templateId?: string;
   eventStartAt?: string;
   isMissionEnabled?: boolean;
+  bgColor?: string;
+  font?: string;
 }
 
 export interface CreatedInvitation {
@@ -39,17 +41,20 @@ export interface Invitation {
   id: string;
   userId: string;
   templateId: string | null;
-  status: string;
+  status: "active" | "closed";
   title: string;
   description: string;
   mainImageKey: string;
   mainImageUrl: string;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
+  bgColor: string;
+  font: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+  myRole?: "HOST" | "GUEST";
 }
 
 export interface EventLocation {
@@ -75,4 +80,12 @@ export function getInvitation(id: string): Promise<Invitation> {
 
 export function getMyInvitations(): Promise<Invitation[]> {
   return apiGet<Invitation[]>("/invitations");
+}
+
+export function updateInvitationStatus(id: string, status: "active" | "closed"): Promise<Invitation> {
+  return apiPatch<Invitation>(`/invitations/${id}`, { status });
+}
+
+export function deleteInvitation(id: string): Promise<void> {
+  return apiDelete(`/invitations/${id}`);
 }
