@@ -8,7 +8,7 @@ import { ROUTES } from '@/constants/routes';
 export default function ProfileEditContainer() {
   const router = useRouter();
   const { data: me, isLoading } = useMe();
-  const { mutate: updateMe, isPending, isError } = useUpdateMe();
+  const { mutate: updateMe, isPending, isError, reset } = useUpdateMe();
 
   if (isLoading || !me) return null;
 
@@ -24,6 +24,7 @@ export default function ProfileEditContainer() {
       defaultNickname={me.nickname ?? ''}
       onBack={() => router.back()}
       onSave={handleSave}
+      onRetry={reset}
     />
   );
 }

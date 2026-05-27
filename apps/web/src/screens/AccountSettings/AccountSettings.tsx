@@ -54,14 +54,19 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           <div className="divide-y divide-border bg-surface">
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const isConnected = connectedProviders?.includes(provider);
+              const isLastConnected = isConnected && (connectedProviders?.length ?? 0) === 1;
               const label = { kakao: "카카오", naver: "네이버", google: "Google" }[provider];
               const icon = { kakao: "kakao-logo", naver: "naver-logo", google: "google-logo" }[provider] as "kakao-logo" | "naver-logo" | "google-logo";
               return (
                 <MenuItem
                   key={provider}
                   leftIcon={icon}
-                  onClick={isConnected ? () => onDisconnectRequest?.(provider) : undefined}
-                  rightSlot={<span className="text-[13px] text-text-tertiary">{isConnected ? "연결됨" : "미연결"}</span>}
+                  onClick={isConnected && !isLastConnected ? () => onDisconnectRequest?.(provider) : undefined}
+                  rightSlot={
+                    isLastConnected
+                      ? <span className="text-[13px] text-text-tertiary">최소 1개 필요</span>
+                      : <span className="text-[13px] text-text-tertiary">{isConnected ? "연결됨" : "미연결"}</span>
+                  }
                 >
                   {label}
                 </MenuItem>
@@ -80,7 +85,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
         <ConfirmModal
           open={screen === "disconnectModal" ? true : modalOpen}
-          onOpenChange={setModalOpen}
+          onOpenChange={(open) => { if (!open) { if (screen === "disconnectModal") onBack?.(); else setModalOpen(false); } }}
           title={screen === "disconnectModal" ? "연결 해제할까요?" : "로그아웃 할까요?"}
           description={
             screen === "disconnectModal"
@@ -137,7 +142,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           <ul className="mt-4 flex flex-col gap-3 text-[14px] text-text-secondary">
             <li>• 내가 만든 초대장과 참석자 데이터가 모두 삭제돼요</li>
             <li>• 함께 올린 사진·댓글이 사라져요</li>
-            <li>• 30일 동안 같은 계정으로 다시 가입할 수 없어요</li>
+            <li>• 탈퇴 후 가입했던 데이터는 복구할 수 없어요</li>
           </ul>
         </main>
         <div className="relative z-10 shrink-0">

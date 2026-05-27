@@ -28,9 +28,10 @@ export interface ProfileEditProps {
   avatarUrl?: string;
   onBack?: () => void;
   onSave?: (nickname: string) => void;
+  onRetry?: () => void;
 }
 
-export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", avatarUrl, onBack, onSave }: ProfileEditProps) => {
+export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", avatarUrl, onBack, onSave, onRetry }: ProfileEditProps) => {
   const [modalOpen, setModalOpen] = useState(state === "imageDeleteModal");
   const [nickname, setNickname] = useState(defaultNickname);
 
@@ -71,7 +72,7 @@ export const ProfileEdit = ({ state = "default", defaultNickname = "김와라", 
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
-          <Button variant="outline">다시 시도</Button>
+          <Button variant="outline" onClick={onRetry}>다시 시도</Button>
         </main>
       <MainBottomNav activeKey="me" />
       </div>
