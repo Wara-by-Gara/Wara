@@ -54,6 +54,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
@@ -92,13 +93,21 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const { mutate: submitDelete, isPending: isDeletePending } = useMutation({
     mutationFn: () => deleteInvitation(invitationId),
     onSuccess: () => router.replace(ROUTES.INVITATIONS.LIST),
+    onError: (e) => {
+      const code = e instanceof Error ? e.message : "";
+      setDeleteError(
+        code === "INVITATION_HAS_PARTICIPANTS"
+          ? "참석자가 있는 초대장은 삭제할 수 없어요"
+          : "삭제 중 오류가 발생했어요",
+      );
+    },
   });
 
   const { mutate: submitRsvp, isPending: isRsvpPending } = useMutation({
     mutationFn: (status: RsvpStatus) =>
       myParticipant
         ? updateRsvp(invitationId, myParticipant.id, status)
-        : joinInvitation(invitationId, status),
+        : joinInvitation(invitationId, { rsvpStatus: status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myParticipant", invitationId] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
@@ -156,6 +165,9 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   const summary = participantsData?.summary;
   const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];
+  const attendingParticipants = participantsData?.participants.filter(
+    ({ participant }) => participant.rsvpStatus === "attending",
+  ) ?? [];
 
   // ── 호스트 뷰 ─────────────────────────────────────────────────
   if (isHost) {
@@ -293,9 +305,12 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
           </BottomSheetContent>
         </BottomSheet>
 
-        <BottomSheet open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <BottomSheet open={deleteConfirmOpen} onOpenChange={(open) => { setDeleteConfirmOpen(open); if (!open) setDeleteError(""); }}>
           <BottomSheetContent title="초대장 삭제" description="삭제하면 복구할 수 없어요. 정말 삭제할까요?">
             <div className="flex flex-col gap-2 pt-2">
+              {deleteError && (
+                <p className="text-center text-[13px] text-danger">{deleteError}</p>
+              )}
               <Button fullWidth variant="danger" size="lg" disabled={isDeletePending} onClick={() => submitDelete()}>
                 {isDeletePending ? "삭제 중..." : "삭제하기"}
               </Button>
@@ -363,7 +378,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
           {isLoggedIn && participantsData && participantsData.participants.length > 0 && (
             <section className="rounded-3xl border border-border bg-surface p-4">
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-text-primary">
                   참석 {participantsData.summary.attendingCount}명
                 </h3>
@@ -375,17 +390,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
                   전체보기
                 </button>
               </div>
-              <div className="divide-y divide-border">
-                {participantsData.participants.slice(0, 3).map(({ participant, user }) => (
-                  <ParticipantItem
-                    key={participant.id}
-                    name={user.nickname ?? "익명"}
-                    avatarUrl={user.profileImageUrl ?? undefined}
-                    status={participant.rsvpStatus === "attending" ? "attending" : participant.rsvpStatus === "undecided" ? "maybe" : "declined"}
-                    isHost={participant.memberRole === "HOST"}
-                  />
-                ))}
-              </div>
+              <ParticipantAvatarRow participants={attendingParticipants} />
             </section>
           )}
         </div>
@@ -476,6 +481,36 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
           </div>
         </BottomSheetContent>
       </BottomSheet>
+    </div>
+  );
+}
+
+const MAX_VISIBLE = 6;
+
+function ParticipantAvatarRow({
+  participants,
+}: {
+  participants: { participant: { id: string }; user: { nickname: string | null; profileImageUrl: string | null } }[];
+}) {
+  const visible = participants.slice(0, MAX_VISIBLE);
+  const overflow = participants.length - MAX_VISIBLE;
+
+  return (
+    <div className="flex items-center gap-2">
+      {visible.map(({ participant, user }) => (
+        <Avatar
+          key={participant.id}
+          src={user.profileImageUrl ?? undefined}
+          alt={user.nickname ?? ""}
+          size="md"
+          initial={user.nickname?.[0]}
+        />
+      ))}
+      {overflow > 0 && (
+        <div className="flex size-10 items-center justify-center rounded-full bg-gray-100 text-[13px] font-semibold text-text-secondary">
+          +{overflow}
+        </div>
+      )}
     </div>
   );
 }

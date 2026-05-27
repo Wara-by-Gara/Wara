@@ -91,20 +91,6 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
             >
               검색
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                clearUnknown();
-                setInternalMode("manual");
-                onModeChange?.("manual");
-              }}
-              className={cn(
-                "rounded-full px-2.5 py-1 text-[12px]",
-                mode === "manual" ? "bg-primary-soft text-primary" : "text-text-tertiary",
-              )}
-            >
-              직접 입력
-            </button>
           </div>
         </div>
 
