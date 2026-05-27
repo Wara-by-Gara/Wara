@@ -219,12 +219,10 @@ function WheelColumn({
   items,
   value,
   onChange,
-  label,
 }: {
   items: number[];
   value: number;
   onChange: (v: number) => void;
-  label: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
@@ -314,10 +312,6 @@ function WheelColumn({
         <div style={{ height: ITEM_H * 2 }} />
       </div>
 
-      {/* 단위 레이블 */}
-      <span className="absolute right-2 text-[12px] font-bold text-text-tertiary" style={{ top: ITEM_H * 2 + 13 }}>
-        {label}
-      </span>
     </div>
   );
 }
@@ -355,9 +349,9 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
 
       {/* 시 · 분 휠 */}
       <div className="flex items-center gap-0 rounded-xl border border-border bg-white px-2">
-        <WheelColumn items={HOURS} value={hour} onChange={setHour} label="시" />
+        <WheelColumn items={HOURS} value={hour} onChange={setHour} />
         <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
-        <WheelColumn items={MINUTES} value={minute} onChange={setMinute} label="분" />
+        <WheelColumn items={MINUTES} value={minute} onChange={setMinute} />
       </div>
 
       {/* 추가 버튼 */}
