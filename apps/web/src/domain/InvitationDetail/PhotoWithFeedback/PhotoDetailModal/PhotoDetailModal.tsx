@@ -206,7 +206,7 @@ function InlineCommentEditor({
         value={value}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
+          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
           if (e.key === 'Escape') onCancel();
         }}
         className="w-full rounded-lg bg-white/10 px-3 py-1.5 text-[14px] text-white placeholder:text-white/50 outline-none"

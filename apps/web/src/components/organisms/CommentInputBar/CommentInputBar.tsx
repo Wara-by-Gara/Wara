@@ -1,23 +1,17 @@
 "use client";
 
-import { forwardRef, useState, type ChangeEvent } from "react";
+import { forwardRef, useRef, useState, type ChangeEvent } from "react";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { cn } from "@/lib/cn";
 
 export interface CommentInputBarProps {
-  /** 본인 아바타 URL */
   avatarUrl?: string;
   authorName?: string;
-  /** 비활성 모드 */
   state?: "default" | "disabled" | "loginRequired" | "submitting" | "error";
-  /** 제출 콜백 */
-  onSubmit?: (text: string) => void;
-  /** 비제어 placeholder */
+  onSubmit?: (text: string) => void | Promise<void>;
   placeholder?: string;
-  /** 초기 입력값 (수정 모드 pre-fill용) */
   initialValue?: string;
-  /** 상단(헤더 아래) / 하단 고정 */
   placement?: "top" | "bottom";
   className?: string;
 }
@@ -37,6 +31,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
     ref,
   ) {
     const [value, setValue] = useState(initialValue ?? "");
+    const isSubmittingRef = useRef(false); // ← 핵심
     const isTop = placement === "top";
     const edgeBorder = isTop ? "border-b border-border" : "border-t border-border";
 
@@ -56,12 +51,15 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       );
     }
 
-    const handleSubmit = () => {
-      const trimmed = value.trim();
-      if (!trimmed) return;
-      onSubmit?.(trimmed);
-      setValue("");
-    };
+const handleSubmit = async () => {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  if (isSubmittingRef.current) return;
+  isSubmittingRef.current = true;
+  setValue("");
+  await onSubmit?.(trimmed);
+  isSubmittingRef.current = false;
+};
 
     const disabled = state === "disabled" || state === "submitting";
 
@@ -89,8 +87,9 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
             onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
             placeholder={placeholder}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
+                e.stopPropagation();
                 handleSubmit();
               }
             }}
