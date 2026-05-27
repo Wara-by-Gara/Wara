@@ -54,6 +54,9 @@ export class UsersService {
   async updateMe(userId: string, data: UpdateUserDto) {
     const updated = await this.repository.updateUser(userId, data);
     if (!updated) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (updated.profileImageUrl && this.isS3Key(updated.profileImageUrl)) {
+      return { ...updated, profileImageUrl: await this.getViewUrl(updated.profileImageUrl) };
+    }
     return updated;
   }
 
@@ -80,6 +83,9 @@ export class UsersService {
   async getUserById(targetId: string) {
     const user = await this.repository.findPublicById(targetId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
+      return { ...user, profileImageUrl: await this.getViewUrl(user.profileImageUrl) };
+    }
     return user;
   }
 }
