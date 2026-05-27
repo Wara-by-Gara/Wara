@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import Image from "next/image";
 import { Photo } from "@/lib/api/photos";
 import AlbumModal from "../AlbumModal/AlbumModal";
 
@@ -31,13 +32,18 @@ export default function Album({ photos, fetchNextPage, hasNextPage, isFetchingNe
       {/* 4열 프리뷰 */}
       <div className="grid grid-cols-4 gap-1">
         {preview.map((photo) => (
-          <img
+          <div
             key={photo.id}
-            src={photo.url}
-            alt=""
-            className="w-full aspect-square object-cover rounded-lg cursor-pointer"
+            className="relative aspect-square cursor-pointer"
             onClick={() => setShowModal(true)}
-          />
+          >
+            <Image
+              src={photo.url}
+              alt=""
+              fill
+              className="object-cover rounded-lg"
+            />
+          </div>
         ))}
       </div>
 

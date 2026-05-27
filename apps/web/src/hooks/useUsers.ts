@@ -1,13 +1,17 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteMe, deleteMySocial, getMe, getMySocials, updateMe, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export function useMe() {
-  const isLoggedIn = typeof window !== 'undefined'
-    ? document.cookie.includes('is_logged_in=1')
-    : false;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(document.cookie.includes('is_logged_in=1'));
+  }, []);
+
   return useQuery({
     queryKey: QUERY_KEYS.users.me(),
     queryFn: () => getMe(),
