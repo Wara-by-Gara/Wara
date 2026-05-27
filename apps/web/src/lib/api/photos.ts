@@ -91,3 +91,11 @@ export function togglePhotoLike(
     {},
   );
 }
+
+export interface Best9Photo extends Photo {
+  score: number;
+}
+
+export function getBest9(invitationId: string): Promise<Best9Photo[]> {
+  return apiGet<Best9Photo[]>(`/invitations/${invitationId}/photos/best9`);
+}
