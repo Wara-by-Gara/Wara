@@ -81,8 +81,9 @@ export function markAllAsRead() {
   return apiClient<void>('/notifications/readAll', { method: 'PATCH' });
 }
 
-export function fetchNotificationSettings() {
-  return apiClient<NotificationSettings | null>('/notifications/settings');
+export async function fetchNotificationSettings(): Promise<NotificationSettings | null> {
+  const result = await apiClient<NotificationSettings | null>('/notifications/settings');
+  return result ?? null;
 }
 
 export function updateNotificationSettings(dto: UpdateNotificationSettingsDto) {
