@@ -51,6 +51,34 @@ export class AuthRepository {
         if (existingAccount.length > 0 && existingAccount[0]) {
           const userId = existingAccount[0].userId;
 
+          const existingUser = await tx
+            .select({ deletedAt: users.deletedAt })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+          if (existingUser[0]?.deletedAt) {
+            // 탈퇴한 유저 → 새 유저 생성 후 소셜 계정 재연결
+            const inserted = await tx
+              .insert(users)
+              .values({ email, name, profileImageUrl })
+              .returning({ id: users.id });
+
+            const newUserId = inserted[0]!.id;
+
+            await tx
+              .update(socialAccounts)
+              .set({ userId: newUserId })
+              .where(
+                and(
+                  eq(socialAccounts.provider, provider),
+                  eq(socialAccounts.providerAccountId, providerAccountId),
+                ),
+              );
+
+            return { userId: newUserId, isNew: true };
+          }
+
           await tx
             .update(users)
             .set({ lastLoginAt: new Date() })
@@ -101,8 +129,15 @@ export class AuthRepository {
         // 3. 신규 유저 생성
         const inserted = await tx
           .insert(users)
-          .values({ email, name, profileImageUrl })
-          .returning({ id: users.id });
+          .values({
+            email,
+            name,
+            nickname: name,
+            profileImageUrl,
+          })
+          .returning({
+            id: users.id,
+          });
 
         const newUserId = inserted[0]!.id;
 
