@@ -21,12 +21,12 @@ import { useParticipants, useMyParticipant } from "@/hooks/useParticipants";
 import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import type { IconName } from "@/components/icons";
-import type { ParticipantsResponse, RsvpStatus } from "@/lib/api/participants";
+import type { RsvpStatus } from "@/lib/api/participants";
+import { ParticipantProfilePanel, type ParticipantRow } from "./ParticipantProfilePanel";
 
 type Tab = "all" | RsvpStatus | "memo";
 type SortKey = "joined-asc" | "joined-desc" | "name-asc";
 type SheetMode = "action" | "memo" | "rsvp" | "kick" | null;
-type ParticipantRow = ParticipantsResponse["participants"][number];
 
 const TAB_LABELS: Record<Tab, string> = {
   all: "전체",
@@ -89,6 +89,8 @@ export default function ParticipantsContainer() {
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<ParticipantRow | null>(null);
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
+  const [profileRow, setProfileRow] = useState<ParticipantRow | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [memoInput, setMemoInput] = useState("");
 
   const { data, isLoading, isError, refetch } = useParticipants(invitationId);
@@ -132,12 +134,18 @@ export default function ParticipantsContainer() {
     });
   }
 
+  function openProfile(row: ParticipantRow) {
+    setProfileRow(row);
+    setProfileOpen(true);
+  }
+
   function openActionSheet(row: ParticipantRow) {
     setSelectedRow(row);
     setSheetMode("action");
   }
 
   return (
+    <>
     <div className="flex min-h-screen flex-col bg-background-soft">
       <TopAppBar
         title="참석자"
@@ -329,7 +337,9 @@ export default function ParticipantsContainer() {
                   isHost={participant.memberRole === "HOST"}
                   requestPreview={participant.note ?? undefined}
                   memo={isHost ? (participant.hostMemo ?? undefined) : undefined}
+                  onClick={() => openProfile({ participant, user })}
                   onMore={isHost && participant.memberRole !== "HOST" ? () => openActionSheet({ participant, user }) : undefined}
+                  className="cursor-pointer rounded-xl transition-colors hover:bg-gray-50 active:bg-gray-100"
                 />
               ))}
             </div>
@@ -337,5 +347,12 @@ export default function ParticipantsContainer() {
         )}
       </div>
     </div>
+
+    <ParticipantProfilePanel
+      row={profileRow}
+      open={profileOpen}
+      onOpenChange={setProfileOpen}
+    />
+    </>
   );
 }
