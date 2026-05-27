@@ -23,11 +23,18 @@ export class JwtAuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    const request = context.switchToHttp().getRequest<Request>();
+
     if (isPublic) {
+      const token = this.extractToken(request);
+      if (token) {
+        try {
+          const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+          if (this.isValidPayload(payload)) request.user = payload;
+        } catch { /* 유효하지 않은 토큰은 무시 */ }
+      }
       return true;
     }
-
-    const request = context.switchToHttp().getRequest<Request>();
 
     const token = this.extractToken(request);
 

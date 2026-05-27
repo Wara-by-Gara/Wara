@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { eventLocations, participantLocations } from '../database/schema';
 import type { SetEventLocationDto } from './dto/set-event-location.dto';
 import type { UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
@@ -38,6 +38,36 @@ export class LocationsRepository {
       where: (t, { eq, and }) =>
         and(eq(t.userId, userId), eq(t.invitationId, invitationId)),
     });
+  }
+
+  async findParticipantWithUser(userId: string, invitationId: string) {
+    return this.db.query.participants.findFirst({
+      where: (t, { eq, and }) =>
+        and(eq(t.userId, userId), eq(t.invitationId, invitationId)),
+      with: { user: true },
+    });
+  }
+
+  async findHostByInvitation(invitationId: string) {
+    return this.db.query.participants.findFirst({
+      where: (t, { eq, and }) =>
+        and(eq(t.invitationId, invitationId), eq(t.memberRole, 'HOST')),
+    });
+  }
+
+  async setArrivedIfNotYet(participantId: string, invitationId: string): Promise<boolean> {
+    const result = await this.db
+      .update(participantLocations)
+      .set({ isArrived: true, updatedAt: new Date() })
+      .where(
+        and(
+          eq(participantLocations.participantId, participantId),
+          eq(participantLocations.invitationId, invitationId),
+          eq(participantLocations.isArrived, false),
+        ),
+      )
+      .returning({ id: participantLocations.id });
+    return result.length > 0;
   }
 
   async findAllParticipantLocations(invitationId: string) {
