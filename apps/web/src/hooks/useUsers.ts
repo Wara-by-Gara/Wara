@@ -1,21 +1,25 @@
+"use client";
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteMe, deleteMySocial, getMe, getMySocials, updateMe } from '@/lib/api/users';
+import { deleteMe, deleteMySocial, getMe, getMySocials, updateMe, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export function useMe() {
+  const isLoggedIn = typeof window !== 'undefined'
+    ? document.cookie.includes('is_logged_in=1')
+    : false;
   return useQuery({
     queryKey: QUERY_KEYS.users.me(),
     queryFn: () => getMe(),
+    enabled: isLoggedIn,
   });
 }
 
 export function useUpdateMe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (nickname: string) => updateMe({ nickname }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() });
-    },
+    mutationFn: (data: UpdateMeInput) => updateMe(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() }),
   });
 }
 

@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL?.replace(/\/$/, ''),
     credentials: true,
   });
 
