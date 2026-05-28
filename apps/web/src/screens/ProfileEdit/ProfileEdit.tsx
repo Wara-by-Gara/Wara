@@ -169,12 +169,12 @@ export const ProfileEdit = ({
           label="닉네임"
           required
           error={state === "nicknameDuplicateError" ? "이미 사용 중인 닉네임이에요" : undefined}
-          counter={{ current: (nickname ?? '').length, max: 8 }}
+          counter={{ current: (nickname ?? '').length, max: 20 }}
         >
           <TextInput
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            maxLength={8}
+            maxLength={20}
             autoFocus={state === "nicknameFocus"}
             error={state === "nicknameDuplicateError" ? "dup" : undefined}
           />
