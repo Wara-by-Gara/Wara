@@ -50,6 +50,13 @@
       "when": 1779860000000,
       "tag": "0006_invitations_design_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779870000000,
+      "tag": "0007_users_nickname_varchar20",
+      "breakpoints": true
     }
   ]
 }
