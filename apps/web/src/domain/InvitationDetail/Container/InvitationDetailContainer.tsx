@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -27,7 +26,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" onBack={() => router.back()} />
         <div className="px-5 py-4"><InvitationDetailSkeleton /></div>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -41,7 +39,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
           <p className="text-[18px] font-bold text-text-primary">초대장을 불러오지 못했어요</p>
           <Button variant="outline" onClick={() => router.back()}>돌아가기</Button>
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -49,7 +46,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const isHost = isLoggedIn && me?.id === invitation.userId;
 
   if (isHost) {
-    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} />;
+    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} me={me} />;
   }
 
   return (

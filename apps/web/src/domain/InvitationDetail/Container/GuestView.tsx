@@ -8,7 +8,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
@@ -99,10 +98,16 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
 
         <header className="flex flex-col items-start gap-2">
           <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
-          {me && (
+          {invitation.host && (
             <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
-              <Avatar src={me.profileImageUrl ?? undefined} alt={me.nickname ?? ""} size="xs" />
-              <span>{me.nickname}</span>
+              <Avatar
+                src={invitation.host.profileImageUrl ?? undefined}
+                alt={invitation.host.name ?? invitation.host.nickname ?? ""}
+                size="xs"
+              />
+              <span>
+                {invitation.host.name}{invitation.host.nickname ? <span className="ml-1 text-text-tertiary">@{invitation.host.nickname}</span> : null}
+              </span>
             </span>
           )}
         </header>
@@ -130,11 +135,20 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
                   전체보기
                 </button>
               </div>
-              <ParticipantAvatarRow participants={attendingParticipants} />
+              <ParticipantAvatarRow
+                participants={attendingParticipants}
+                currentUserId={me?.id ?? null}
+                currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+              />
             </section>
           )}
         </div>
-        <PhotoWithFeedbackContainer invitationId={invitationId} />
+        <PhotoWithFeedbackContainer
+          invitationId={invitationId}
+          currentUserId={me?.id ?? null}
+          currentUserNickname={me?.nickname ?? null}
+          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+        />
       </main>
 
       {!isLoggedIn && (
@@ -155,7 +169,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
         />
       </div>
 
-      <MainBottomNav activeKey="invitations" />
 
       <BottomSheet open={rsvpOpen} onOpenChange={setRsvpOpen}>
         <BottomSheetContent contained title="참석 여부" description="원하는 응답을 선택해주세요">

@@ -8,7 +8,6 @@ import { Radio, RadioGroup } from "@/components/primitives/Radio";
 import { TextInput } from "@/components/primitives/TextInput";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
@@ -46,6 +45,7 @@ export type CreateStep =
   | "dateTimeSelected"
   | "dateUnknownToggleOn"
   | "timeUnknownToggleOn"
+  | "dateVotePropose"
   | "rsvpDeadlineSelect"
   | "pastDateError"
   | "dateRequiredError"
@@ -138,7 +138,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
             <Button variant="outline" size="lg" fullWidth>빈 화면에서 시작</Button>
           </div>
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -153,7 +152,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
             <Button key={c} variant="outline" size="lg" fullWidth>{c}</Button>
           ))}
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -198,7 +196,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: step === "templateSelected" ? "이 템플릿으로 시작" : "다음", disabled: step === "templateList", onClick: onNext }} />
       </div>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -258,16 +255,16 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
       <StickyCTA primary={{ label: "다음", disabled: step === "basicInfoEmpty" || step === "basicInfoError", onClick: onNext }} />
       </div>
         <ConfirmModal contained open={step === "coverImageDeleteModal"} onOpenChange={() => {}} title="이미지를 삭제할까요?" confirmLabel="삭제" confirmVariant="danger" />
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
 
   // Date/Time
   if (step.startsWith("date") || step.startsWith("time") || step === "rsvpDeadlineSelect") {
-    const dateUnknown = step === "dateUnknownToggleOn";
+    const dateUnknown = step === "dateUnknownToggleOn" || step === "dateVotePropose";
     const timeUnknown = step === "timeUnknownToggleOn";
     const filled = step === "dateTimeSelected" || step === "rsvpDeadlineSelect";
+    const showVotePropose = step === "dateVotePropose";
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="날짜·시간" onBack={onBack} />
@@ -298,11 +295,44 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           ) : (
             <Button variant="outline" size="md">응답 마감일 설정</Button>
           )}
+
+          {/* 날짜 미정 시 날짜 투표 제안 배너 */}
+          {showVotePropose && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                  <Icon name="calendar" size="md" color="primary" decorative />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
+                  <p className="text-[13px] leading-relaxed text-text-secondary">
+                    여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">○ △ × 로 간편 응답, 결과 자동 집계</span>
+              </div>
+              <Button
+                variant="primary"
+                size="md"
+                fullWidth
+                onClick={onNext}
+                className="mt-1"
+              >
+                날짜 투표 만들기
+              </Button>
+            </div>
+          )}
         </main>
         <div className="relative z-10 shrink-0">
-      <StickyCTA primary={{ label: "다음", disabled: !filled && !dateUnknown && !timeUnknown, onClick: onNext }} />
-      </div>
-      <MainBottomNav activeKey="create" />
+          <StickyCTA primary={{ label: "다음", disabled: !filled && !dateUnknown && !timeUnknown, onClick: onNext }} />
+        </div>
       </div>
     );
   }
@@ -350,7 +380,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: "다음", onClick: onNext }} />
       </div>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -407,7 +436,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
       <StickyCTA primary={{ label: "다음", onClick: onNext }} />
       </div>
         <ConfirmModal contained open={step === "questionDeleteModal"} onOpenChange={() => {}} title="질문을 삭제할까요?" confirmLabel="삭제" confirmVariant="danger" />
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -456,7 +484,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{ label: "다음", onClick: onNext }} />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -484,7 +511,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: step === "preview" || step === "fullscreenPreview" ? "초대장 만들기" : "미리보기", onClick: onNext }} secondary={{ label: "임시저장" }} />
       </div>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -498,7 +524,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
           <p className="text-[14px] text-text-secondary">{step === "savingLoading" ? "저장 중..." : "만드는 중..."}</p>
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -513,7 +538,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
           <Button size="lg" fullWidth className="mt-4 max-w-xs">공유하기</Button>
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -528,7 +552,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           </div>
           <Button variant="outline" size="md">이미지로 저장</Button>
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -542,7 +565,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           <p className="text-[18px] font-bold text-text-primary">이미지가 저장됐어요</p>
           <p className="text-[13px] text-text-secondary">Instagram 스토리에 올려보세요</p>
         </main>
-      <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -566,7 +588,6 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           <ShareOptionItem icon="badge-check" title="확인" />
         </BottomSheetContent>
       </BottomSheet>
-      <MainBottomNav activeKey="create" />
     </div>
   );
 };

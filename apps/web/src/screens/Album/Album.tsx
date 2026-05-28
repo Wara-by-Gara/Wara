@@ -4,7 +4,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Chip } from "@/components/primitives/Chip";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
 import { ConfirmModal } from "@/components/molecules/Modal";
@@ -138,7 +137,6 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
           confirmLabel="신고"
           confirmVariant="danger"
         />
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -293,7 +291,6 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       ) : null}
 
       <Chip className="sr-only">noop</Chip>
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };

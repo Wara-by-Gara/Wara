@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { usePublicInquiries } from '@/hooks/useInquiries';
 import { ROUTES } from '@/constants/routes';
 import type { InquiryType, InquiryStatus, PublicInquiry } from '@/lib/api/inquiries';
@@ -94,7 +93,6 @@ export default function InquiryListPage() {
         </Section>
       </main>
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

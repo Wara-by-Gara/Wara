@@ -11,6 +11,7 @@ import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
+  authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
   content: string;
@@ -30,6 +31,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       className,
       variant = "default",
       authorName,
+      authorHandle,
       authorAvatarUrl,
       createdAt,
       content,
@@ -91,7 +93,12 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <p className="text-[14px] font-semibold text-text-primary">{authorName}</p>
+                  <p className="text-[14px] font-semibold text-text-primary">
+                    {authorName}
+                    {authorHandle ? (
+                      <span className="ml-1 font-normal text-text-tertiary">@{authorHandle}</span>
+                    ) : null}
+                  </p>
                   {variant === "host" ? (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
                       <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트

@@ -60,8 +60,16 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
 
-  const preview = photos.slice(0, 5);
-  const remaining = total - 5;
+  const previewLimit = 5;
+  const preview = photos.slice(0, previewLimit);
+  // 미리보기 그리드: 첫 5장 + (총 장수 − 5). 아직 더 불러올 때는 API total, 전부 로드됐으면 실제 개수.
+  const totalForOverflow = !hasNextPage
+    ? photos.length
+    : total > 0
+      ? total
+      : photos.length;
+  const remaining = Math.max(totalForOverflow - preview.length, 0);
+  const overflowLabel = `+${remaining}`;
 
   const handleLikeChange = (photoId: string, liked: boolean, likeCount: number) => {
     setLikedMap((prev) => new Map(prev).set(photoId, liked));
@@ -155,7 +163,7 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
           ))}
           {remaining > 0 && (
             <PhotoGridItem
-              overflowLabel={`+${remaining}`}
+              overflowLabel={overflowLabel}
               onClick={() => setShowModal(true)}
             />
           )}

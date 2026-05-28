@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Divider } from '@/components/primitives/Divider';
 import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
@@ -147,7 +146,6 @@ export default function InquiryDetailPage() {
         )}
       </main>
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

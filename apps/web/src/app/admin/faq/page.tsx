@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { IconButton } from '@/components/primitives/IconButton';
 import { Icon } from '@/components/icons';
@@ -138,7 +137,6 @@ export default function AdminFaqPage() {
         }}
       />
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

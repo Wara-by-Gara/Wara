@@ -21,6 +21,7 @@ export interface ParticipantProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   name: string;
+  handle?: string;
   avatarUrl?: string;
   status: ParticipantRsvp;
   isHost?: boolean;
@@ -40,6 +41,7 @@ export const ParticipantProfileModal = ({
   open,
   onOpenChange,
   name,
+  handle,
   avatarUrl,
   status,
   isHost = false,
@@ -88,6 +90,9 @@ export const ParticipantProfileModal = ({
           <div className="mt-3 flex flex-col items-center gap-1.5">
             <ModalPrimitive.Title className="text-[20px] font-bold text-text-primary">
               {name}
+              {handle ? (
+                <span className="ml-1.5 text-[14px] font-normal text-text-tertiary">@{handle}</span>
+              ) : null}
             </ModalPrimitive.Title>
             <div className="flex items-center gap-1.5">
               {isHost ? (

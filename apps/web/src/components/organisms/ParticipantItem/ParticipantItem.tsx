@@ -18,6 +18,7 @@ const RSVP_LABEL: Record<ParticipantRsvp, { label: string; variant: BadgeProps["
 
 export interface ParticipantItemProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
+  handle?: string;
   avatarUrl?: string;
   /** RSVP 상태 */
   status: ParticipantRsvp;
@@ -40,6 +41,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
     {
       className,
       name,
+      handle,
       avatarUrl,
       status,
       isHost,
@@ -59,10 +61,15 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
         className={cn("flex items-start gap-3 py-3", className)}
         {...props}
       >
-        <Avatar src={avatarUrl} alt={name} size="md" initial={name?.[0]} />
+        <Avatar src={avatarUrl} alt={name} size="md" initial={name?.[0]} host={isHost} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="truncate text-[15px] font-semibold text-text-primary">{name}</p>
+            <p className="truncate text-[15px] font-semibold text-text-primary">
+              {name}
+              {handle ? (
+                <span className="ml-1 font-normal text-text-tertiary">@{handle}</span>
+              ) : null}
+            </p>
             {isHost ? (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
                 <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
