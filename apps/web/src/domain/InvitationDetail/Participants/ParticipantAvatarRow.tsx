@@ -4,12 +4,18 @@ const MAX_VISIBLE = 6;
 
 type Props = {
   participants: {
-    participant: { id: string };
+    participant: { id: string; userId: string; memberRole?: "HOST" | "GUEST" };
     user: { nickname: string | null; profileImageUrl: string | null };
   }[];
+  currentUserId?: string | null;
+  currentUserProfileImageUrl?: string | null;
 };
 
-export default function ParticipantAvatarRow({ participants }: Props) {
+export default function ParticipantAvatarRow({
+  participants,
+  currentUserId,
+  currentUserProfileImageUrl,
+}: Props) {
   const visible = participants.slice(0, MAX_VISIBLE);
   const overflow = participants.length - MAX_VISIBLE;
 
@@ -18,10 +24,15 @@ export default function ParticipantAvatarRow({ participants }: Props) {
       {visible.map(({ participant, user }) => (
         <Avatar
           key={participant.id}
-          src={user.profileImageUrl ?? undefined}
+          src={
+            participant.userId === currentUserId
+              ? (currentUserProfileImageUrl ?? undefined)
+              : (user.profileImageUrl ?? undefined)
+          }
           alt={user.nickname ?? ""}
           size="md"
           initial={user.nickname?.[0]}
+          host={participant.memberRole === "HOST"}
         />
       ))}
       {overflow > 0 && (
