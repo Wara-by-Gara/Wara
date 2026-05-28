@@ -10,6 +10,9 @@ import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { usePoll, useCreatePoll } from "@/hooks/useDateVote";
+import { useMyParticipant } from "@/hooks/useParticipants";
+import type { DateVotePoll, DateVoteResponse } from "@/lib/api/dateVote";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type VoteResponse = "circle" | "triangle" | "cross";
@@ -44,8 +47,48 @@ export type DateVoteState =
   | "confirmed";
 
 export interface DateVoteProps {
-  state?: DateVoteState;
+  invitationId?: string;  // 실제 페이지에서 사용 (API 연결)
+  state?: DateVoteState;  // Storybook override (invitationId 없을 때 폴백)
   onBack?: () => void;
+}
+
+// ── API ↔ 컴포넌트 응답값 매핑 ───────────────────────────────────────────────
+export const RESPONSE_RMAP: Record<'good' | 'maybe' | 'bad', VoteResponse> = {
+  good: 'circle',
+  maybe: 'triangle',
+  bad: 'cross',
+};
+
+export function formatApiTime(hhmm: string): string {
+  const [hStr, mStr] = hhmm.split(':');
+  const h = Number(hStr);
+  const m = Number(mStr ?? '0');
+  const ampm = h < 12 ? '오전' : '오후';
+  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const minStr = m === 0 ? '' : ` ${m}분`;
+  return `${ampm} ${hour}시${minStr}`;
+}
+
+// TODO(human): 아래 함수를 구현해줘.
+// poll 상태 + 내 응답 + 멤버 역할을 받아 어떤 UI state를 보여줄지 결정하는 핵심 로직.
+//
+// 고려할 조건:
+// - poll이 null이고 HOST → 'hostCreating'
+// - poll.status === 'open' && memberRole === 'HOST' → 'hostView'
+// - poll.status === 'open' && myResponses.length > 0 → 'guestVoted'
+// - poll.status === 'open' → 'guestVoting'
+// - poll.status === 'closed' && !poll.isAnonymous → 'resultsPublic'
+// - poll.status === 'closed' && poll.isAnonymous → 'resultsPrivate'
+// - poll.status === 'confirmed' → 'confirmed'
+function deriveVoteState(
+  _poll: DateVotePoll | null,
+  _myResponses: DateVoteResponse[],
+  _memberRole: 'HOST' | 'GUEST',
+): DateVoteState {
+  // TODO(human): 여기에 상태 도출 로직을 구현해줘.
+  // 힌트: 위 주석의 조건 순서 중 일부는 바꿔야 더 자연스러울 수 있어.
+  // 예: HOST도 투표는 할 수 있지만 관리 패널은 항상 보여야 함.
+  return 'guestVoting';
 }
 
 // ── Vote constants ─────────────────────────────────────────────────────────
@@ -443,7 +486,7 @@ function CalendarPicker({
 }
 
 // ── Host Creating View ─────────────────────────────────────────────────────
-function HostCreatingView({ onBack }: { onBack?: () => void }) {
+function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invitationId?: string }) {
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth() + 1);
@@ -454,6 +497,16 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
   const [slots, setSlots] = useState<DraftSlot[]>(INITIAL_DRAFT);
   const [isPublic, setIsPublic] = useState(true);
   const [step, setStep] = useState<"date" | "settings">("date");
+  const createPollMutation = useCreatePoll(invitationId ?? '');
+
+  // 투표 마감 옵션 (행사 시작일 기준 preset)
+  const DEADLINE_OPTIONS = [
+    { label: '행사 1일 전 오후 11:59', offsetDays: 1 },
+    { label: '행사 3일 전 오후 11:59', offsetDays: 3 },
+    { label: '행사 7일 전 오후 11:59', offsetDays: 7 },
+  ] as const;
+  const [deadlineOffset, setDeadlineOffset] = useState<number>(1);
+  const closesAt = new Date(Date.now() + deadlineOffset * 24 * 60 * 60 * 1000).toISOString();
 
   const toggleDate = (key: string) => {
     setSelectedDates((prev) => {
@@ -521,10 +574,16 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
           {/* Deadline */}
           <div className="rounded-2xl border border-border bg-surface p-4">
             <p className="mb-3 text-[13px] font-bold text-text-primary">투표 마감 시간</p>
-            {["행사 1일 전 오후 11:59", "행사 3일 전 오후 11:59", "행사 7일 전 오후 11:59", "직접 설정"].map((label) => (
+            {DEADLINE_OPTIONS.map(({ label, offsetDays }) => (
               <label key={label} className="flex cursor-pointer items-center gap-3 py-2">
-                <div className="flex size-5 items-center justify-center rounded-full border-2 border-primary bg-primary">
-                  <div className="size-2 rounded-full bg-white" />
+                <div
+                  onClick={() => setDeadlineOffset(offsetDays)}
+                  className={cn(
+                    "flex size-5 items-center justify-center rounded-full border-2 transition-colors",
+                    deadlineOffset === offsetDays ? "border-primary bg-primary" : "border-border bg-white",
+                  )}
+                >
+                  {deadlineOffset === offsetDays && <div className="size-2 rounded-full bg-white" />}
                 </div>
                 <span className="text-[14px] text-text-primary">{label}</span>
               </label>
@@ -553,7 +612,22 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
           </div>
         </main>
         <div className="relative z-10 shrink-0">
-          <StickyCTA primary={{ label: "투표 만들기", onClick: () => {} }} />
+          <StickyCTA primary={{
+            label: createPollMutation.isPending ? "생성 중..." : "투표 만들기",
+            disabled: createPollMutation.isPending || slots.length === 0,
+            onClick: () => {
+              if (!invitationId) return;
+              createPollMutation.mutate({
+                closesAt,
+                isAnonymous: !isPublic,
+                slots: slots.map((s, i) => ({
+                  date: s.dateKey,
+                  startTime: undefined, // TODO: TimePicker에서 HH:MM 역변환 필요
+                  sortOrder: i,
+                })),
+              });
+            },
+          }} />
         </div>
         <MainBottomNav activeKey="invitations" />
       </div>
@@ -666,13 +740,29 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
-export const DateVote = ({ state = "guestVoting", onBack }: DateVoteProps) => {
-  const [myVotes, setMyVotes] = useState<MyVotes>(
-    state === "guestVoted" || state === "hostView" ? INITIAL_VOTES : {},
-  );
+export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVoteProps) => {
+  // ── 실제 데이터 (invitationId 있을 때만 fetch) ─────────────────────────────
+  const { data: pollData } = usePoll(invitationId ?? '', { enabled: !!invitationId });
+  const { data: myParticipant } = useMyParticipant(invitationId ?? '', { enabled: !!invitationId });
+
+  const poll = pollData?.poll ?? null;
+  const myResponses = pollData?.myResponses ?? [];
+  const memberRole = myParticipant?.memberRole ?? 'GUEST';
+
+  // ── 상태 도출: API 데이터 있으면 derive, 없으면 Storybook prop 사용 ────────
+  const state: DateVoteState = invitationId
+    ? deriveVoteState(poll, myResponses, memberRole)
+    : (stateProp ?? 'guestVoting');
+
+  // ── 내 투표: API 응답에서 초기화 ───────────────────────────────────────────
+  const initialVotes: MyVotes = invitationId
+    ? Object.fromEntries(myResponses.map((r) => [r.slotId, RESPONSE_RMAP[r.response]]))
+    : (stateProp === "guestVoted" || stateProp === "hostView" ? INITIAL_VOTES : {});
+
+  const [myVotes, setMyVotes] = useState<MyVotes>(initialVotes);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
 
-  if (state === "hostCreating") return <HostCreatingView onBack={onBack} />;
+  if (state === "hostCreating") return <HostCreatingView invitationId={invitationId} onBack={onBack} />;
 
   const handleVote = (id: string, type: VoteResponse) =>
     setMyVotes((prev) => ({ ...prev, [id]: prev[id] === type ? null : type }));
