@@ -99,10 +99,16 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
 
         <header className="flex flex-col items-start gap-2">
           <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
-          {me && (
+          {invitation.host && (
             <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
-              <Avatar src={me.profileImageUrl ?? undefined} alt={me.nickname ?? ""} size="xs" />
-              <span>{me.nickname}</span>
+              <Avatar
+                src={invitation.host.profileImageUrl ?? undefined}
+                alt={invitation.host.name ?? invitation.host.nickname ?? ""}
+                size="xs"
+              />
+              <span>
+                {invitation.host.name}{invitation.host.nickname ? <span className="ml-1 text-text-tertiary">@{invitation.host.nickname}</span> : null}
+              </span>
             </span>
           )}
         </header>
@@ -130,11 +136,20 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
                   전체보기
                 </button>
               </div>
-              <ParticipantAvatarRow participants={attendingParticipants} />
+              <ParticipantAvatarRow
+                participants={attendingParticipants}
+                currentUserId={me?.id ?? null}
+                currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+              />
             </section>
           )}
         </div>
-        <PhotoWithFeedbackContainer invitationId={invitationId} />
+        <PhotoWithFeedbackContainer
+          invitationId={invitationId}
+          currentUserId={me?.id ?? null}
+          currentUserNickname={me?.nickname ?? null}
+          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+        />
       </main>
 
       {!isLoggedIn && (
