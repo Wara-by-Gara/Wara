@@ -40,7 +40,7 @@ const templatePreviewUrl = (seedKey: string) =>
 const HOST_COUNT = 40;
 const GUEST_COUNT = 160;
 const INVITATION_COUNT = 100;
-const PHOTOS_PER_INVITATION = 15;
+const PHOTO_COUNT_VARIANTS = [5, 6, 8, 12, 15, 20, 25, 30] as const;
 const INQUIRY_COUNT = 80;
 const MISSION_TEMPLATE_COUNT = 30;
 
@@ -635,7 +635,7 @@ function buildSeeds() {
     };
   });
 
-  // 13. Photos (PHOTOS_PER_INVITATION per invitation) + photo_likes
+  // 13. Photos (count cycles through PHOTO_COUNT_VARIANTS per invitation) + photo_likes
   const photos: Array<{
     id: string; participantId: string; invitationId: string;
     imageKey: string; exifMetadata: Record<string, unknown>;
@@ -648,15 +648,17 @@ function buildSeeds() {
     const pIds = userKeys.map((uk) => partIdByKey[invKey]![uk]!);
     photoIdsByInv[invKey] = [];
 
-    for (let i = 0; i < PHOTOS_PER_INVITATION; i++) {
+    const invIdx = INV_DEFS.findIndex((d) => d.key === invKey);
+    const photoCount = PHOTO_COUNT_VARIANTS[invIdx % PHOTO_COUNT_VARIANTS.length]!;
+
+    for (let i = 0; i < photoCount; i++) {
       const photoId = id(`photo:${invKey}:${i}`);
       photoIdsByInv[invKey]!.push(photoId);
 
       const uploaderId = pIds[i % pIds.length]!;
-      const invIdx = INV_DEFS.findIndex((d) => d.key === invKey);
-      const isSoftDeleted = invIdx % 25 === 0 && i === PHOTOS_PER_INVITATION - 1; // 약 4% soft-deleted
+      const isSoftDeleted = invIdx % 25 === 0 && i === photoCount - 1; // 약 4% soft-deleted
       const others = pIds.filter((p) => p !== uploaderId);
-      const likerCount = isSoftDeleted ? 0 : Math.min(PHOTO_LIKE_PATTERN[i]!, others.length);
+      const likerCount = isSoftDeleted ? 0 : Math.min(PHOTO_LIKE_PATTERN[i % PHOTO_LIKE_PATTERN.length]!, others.length);
       const startIdx = others.length > 0 ? i % others.length : 0;
       const likers = [...others.slice(startIdx), ...others.slice(0, startIdx)].slice(0, likerCount);
 
