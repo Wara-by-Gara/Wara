@@ -1,4 +1,4 @@
-ALTER TYPE "public"."notification_type" ADD VALUE 'arrived';--> statement-breakpoint
+ALTER TYPE "public"."notification_type" ADD VALUE IF NOT EXISTS 'arrived';--> statement-breakpoint
 CREATE TABLE "faq_items" (
 	"id" text PRIMARY KEY NOT NULL,
 	"question" text NOT NULL,
