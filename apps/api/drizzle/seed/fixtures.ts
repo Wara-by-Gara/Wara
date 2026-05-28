@@ -100,6 +100,41 @@ const TEMPLATE_DEFS = [
   { key: 'tmpl4', name: '다크',     theme: 'dark',    font: 'display', effect: null,       isActive: false },
 ] as const;
 
+// ── 실재하는 한국 모임 장소 데이터셋 ──────────────────────────────────────────
+// 잘 알려진 랜드마크/거리 중심으로 큐레이션. 위경도는 대표 좌표(±수십 m 오차 가능).
+const REAL_EVENT_LOCATIONS = [
+  { placeName: '롯데월드타워 서울스카이', address: '서울특별시 송파구 올림픽로 300', detailAddress: '117층 전망대 라운지', lat: 37.5125, lng: 127.1025 },
+  { placeName: '코엑스 별마당도서관', address: '서울특별시 강남구 영동대로 513', detailAddress: 'B1 별마당도서관', lat: 37.5126, lng: 127.0589 },
+  { placeName: '동대문디자인플라자(DDP)', address: '서울특별시 중구 을지로 281', detailAddress: '아트홀 2층', lat: 37.5673, lng: 127.0094 },
+  { placeName: 'N서울타워', address: '서울특별시 용산구 남산공원길 105', detailAddress: '전망대 2층', lat: 37.5512, lng: 126.9882 },
+  { placeName: '경복궁', address: '서울특별시 종로구 사직로 161', detailAddress: '광화문 앞 광장', lat: 37.5796, lng: 126.9770 },
+  { placeName: '북촌 한옥마을', address: '서울특별시 종로구 계동길 37', detailAddress: '북촌로11길 일대', lat: 37.5826, lng: 126.9831 },
+  { placeName: '익선동 한옥거리', address: '서울특별시 종로구 익선동', detailAddress: '익선동 166-39', lat: 37.5736, lng: 126.9899 },
+  { placeName: '성수동 카페거리', address: '서울특별시 성동구 연무장길 53', detailAddress: '성수동2가 일대', lat: 37.5444, lng: 127.0557 },
+  { placeName: '연남동 경의선숲길', address: '서울특별시 마포구 연남동 동진시장', detailAddress: '연남동 일대', lat: 37.5612, lng: 126.9244 },
+  { placeName: '홍대 걷고싶은거리', address: '서울특별시 마포구 어울마당로 35', detailAddress: '홍익광장 인근', lat: 37.5510, lng: 126.9220 },
+  { placeName: '이태원 해방촌', address: '서울특별시 용산구 신흥로 99', detailAddress: '신흥로 99', lat: 37.5453, lng: 126.9893 },
+  { placeName: '한강공원 반포지구', address: '서울특별시 서초구 신반포로11길 40', detailAddress: '달빛광장', lat: 37.5108, lng: 126.9956 },
+  { placeName: '여의도 한강공원', address: '서울특별시 영등포구 여의동로 330', detailAddress: '물빛광장', lat: 37.5285, lng: 126.9326 },
+  { placeName: '잠실 롯데월드몰', address: '서울특별시 송파구 올림픽로 240', detailAddress: '6층 푸드코트', lat: 37.5135, lng: 127.1028 },
+  { placeName: '가로수길', address: '서울특별시 강남구 신사동 가로수길', detailAddress: '강남구 도산대로13길', lat: 37.5203, lng: 127.0231 },
+  { placeName: '수원 화성행궁', address: '경기도 수원시 팔달구 정조로 825', detailAddress: '신풍루 앞 광장', lat: 37.2877, lng: 127.0125 },
+  { placeName: '가평 남이섬', address: '강원특별자치도 춘천시 남산면 남이섬길 1', detailAddress: '메타세쿼이아길', lat: 37.7905, lng: 127.5258 },
+  { placeName: '인천 송도 센트럴파크', address: '인천광역시 연수구 컨벤시아대로 160', detailAddress: '동측 야외광장', lat: 37.3922, lng: 126.6406 },
+  { placeName: '강릉 안목해변 커피거리', address: '강원특별자치도 강릉시 창해로14번길', detailAddress: '안목해변 카페거리', lat: 37.7758, lng: 128.9479 },
+  { placeName: '춘천 명동 닭갈비골목', address: '강원특별자치도 춘천시 금강로62번길', detailAddress: '명동 닭갈비골목', lat: 37.8813, lng: 127.7298 },
+  { placeName: '부산 해운대해수욕장', address: '부산광역시 해운대구 해운대해변로 264', detailAddress: '구남로 일대', lat: 35.1587, lng: 129.1604 },
+  { placeName: '부산 광안리해수욕장', address: '부산광역시 수영구 광안해변로 219', detailAddress: '광안해변 무대', lat: 35.1531, lng: 129.1187 },
+  { placeName: '대구 김광석 다시그리기길', address: '대구광역시 중구 달구벌대로 2238', detailAddress: '벽화골목 입구', lat: 35.8627, lng: 128.6005 },
+  { placeName: '전주 한옥마을', address: '전북특별자치도 전주시 완산구 기린대로 99', detailAddress: '경기전 앞 마당', lat: 35.8142, lng: 127.1535 },
+  { placeName: '광주 양림동 카페거리', address: '광주광역시 남구 서서평길', detailAddress: '펭귄마을 인근', lat: 35.1411, lng: 126.9152 },
+  { placeName: '여수 낭만포차거리', address: '전라남도 여수시 종화동', detailAddress: '낭만포차거리 11번', lat: 34.7457, lng: 127.7440 },
+  { placeName: '제주 성산일출봉', address: '제주특별자치도 서귀포시 성산읍 일출로 284-12', detailAddress: '주차장 앞 광장', lat: 33.4583, lng: 126.9425 },
+  { placeName: '제주 협재해수욕장', address: '제주특별자치도 제주시 한림읍 협재리', detailAddress: '협재해변 입구', lat: 33.3946, lng: 126.2398 },
+  { placeName: '경주 황리단길', address: '경상북도 경주시 포석로', detailAddress: '황리단길 중앙', lat: 35.8347, lng: 129.2104 },
+  { placeName: '안동 하회마을', address: '경상북도 안동시 풍천면 하회종가길 40', detailAddress: '충효당 앞', lat: 36.5391, lng: 128.5180 },
+] as const;
+
 // ── 유틸 ────────────────────────────────────────────────────────────────────
 function pick<T>(arr: readonly T[], i: number): T {
   return arr[i % arr.length]!;
@@ -444,19 +479,17 @@ function buildSeeds() {
   }
 
   // 8. Event locations (75% of invitations)
+  // 실재하는 한국 장소를 invitation별로 순환 배정 (REAL_EVENT_LOCATIONS 풀 사용)
   const eventLocations = INV_DEFS.filter((inv) => inv.hasLocation).map((inv, locIdx) => {
-    const city = faker.location.city();
-    const street = faker.location.streetAddress();
-    const lat = 35 + ((locIdx * 0.03) % 4); // 35~39 (한국 위도 범위)
-    const lng = 126 + ((locIdx * 0.04) % 3); // 126~129 (한국 경도 범위)
+    const place = REAL_EVENT_LOCATIONS[locIdx % REAL_EVENT_LOCATIONS.length]!;
     return {
       id: id(`eventloc:${inv.key}`),
       invitationId: invIdByKey[inv.key]!,
-      address: `${city} ${street}`,
-      placeName: `${city} ${pick(['파티룸', '카페', '레스토랑', '루프탑', '펜션', '리조트', '바'], locIdx)}`,
-      detailAddress: `${street} ${(locIdx % 9) + 1}층`,
-      lat,
-      lng,
+      address: place.address,
+      placeName: place.placeName,
+      detailAddress: place.detailAddress,
+      lat: place.lat,
+      lng: place.lng,
       placeId: `place-${inv.key}`,
     };
   });
