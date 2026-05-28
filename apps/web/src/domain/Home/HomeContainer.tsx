@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { AutoSlide } from "@/components/molecules/AutoSlide";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { InvitationCard } from "@/components/organisms/InvitationCard";
 import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
@@ -15,6 +14,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { getMyInvitations } from "@/lib/api/invitations";
 import { mockTemplateSlides } from "@/lib/mockData";
 import { ROUTES } from "@/constants/routes";
+import { TopAppBar } from "@/components/molecules/TopAppBar";
 
 function isToday(dateStr: string | null): boolean {
   if (!dateStr) return false;
@@ -80,6 +80,7 @@ export default function HomeContainer() {
   if (!isLoggedIn) {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background">
+        <TopAppBar brandLogo title="WARA" />
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <Icon name="pixel-heart" size="xl" color="primary" decorative />
           <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
@@ -88,7 +89,6 @@ export default function HomeContainer() {
             시작하기
           </Button>
         </div>
-        <MainBottomNav activeKey="home" />
       </div>
     );
   }
@@ -96,11 +96,11 @@ export default function HomeContainer() {
   if (isLoading) {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+        <TopAppBar brandLogo title="WARA" />
         <div className="flex flex-col gap-3 px-5 py-4">
           <InvitationCardSkeleton />
           <InvitationCardSkeleton />
         </div>
-        <MainBottomNav activeKey="home" />
       </div>
     );
   }
@@ -108,10 +108,10 @@ export default function HomeContainer() {
   if (isError) {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+        <TopAppBar brandLogo title="WARA" />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
           <ErrorState className="py-8" title="네트워크에 연결되지 않았어요" onRetry={() => {}} />
         </div>
-        <MainBottomNav activeKey="home" />
       </div>
     );
   }
@@ -125,6 +125,7 @@ export default function HomeContainer() {
   if (active.length === 0) {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+        <TopAppBar brandLogo title="WARA" />
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
           <EmptyState
             className="py-8"
@@ -136,13 +137,13 @@ export default function HomeContainer() {
             }
           />
         </div>
-        <MainBottomNav activeKey="home" />
       </div>
     );
   }
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <TopAppBar brandLogo title="WARA" />
       <main className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-5 pb-6">
           <AutoSlide
@@ -193,7 +194,6 @@ export default function HomeContainer() {
           </div>
         </div>
       </main>
-      <MainBottomNav activeKey="home" />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { Icon } from '@/components/icons';
 import { Divider } from '@/components/primitives/Divider';
@@ -133,7 +132,6 @@ export default function CustomerSupportPage() {
         )}
       </main>
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

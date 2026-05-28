@@ -6,7 +6,6 @@ import { Switch } from '@/components/primitives/Switch';
 import { Divider } from '@/components/primitives/Divider';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { Radio, RadioGroup } from '@/components/primitives/Radio';
 import { Textarea } from '@/components/primitives/Textarea';
@@ -236,7 +235,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           </Section>
           <div className="h-6" />
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -273,7 +271,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             />
           </Section>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -309,7 +306,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             시스템 설정 열기
           </Button>
         </footer>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -348,7 +344,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             ))}
           </RadioGroup>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -375,7 +370,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             ))}
           </RadioGroup>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -397,7 +391,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
         <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6 text-[13px] leading-relaxed text-text-secondary">
           (본문 발췌) 본 약관은 …
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -411,7 +404,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           <p className="text-[18px] font-bold text-text-primary">Wara v0.1.0</p>
           <p className="text-[13px] text-text-tertiary">최신 버전이에요</p>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -475,7 +467,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
           </Section>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -516,7 +507,6 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
         onConfirm={() => setInquiryDone(false)}
       />
       <Divider />
-      <MainBottomNav activeKey="me" />
     </div>
   );
 };

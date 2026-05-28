@@ -5,7 +5,6 @@ import { Chip } from "@/components/primitives/Chip";
 import { Button } from "@/components/primitives/Button";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
@@ -63,7 +62,6 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
         <main className={mobileMainCenter}>
           <EmptyState icon="lock" title="로그인이 필요해요" description="참석자 명단은 로그인한 사용자만 볼 수 있어요" action={<Button>로그인</Button>} />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -193,7 +191,6 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
       </BottomSheet>
 
       <ConfirmModal contained open={state === "removeModal"} onOpenChange={() => {}} title="참석자를 명단에서 빼시겠어요?" description="다시 추가하려면 초대 링크가 필요해요" confirmLabel="내보내기" confirmVariant="danger" />
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };
