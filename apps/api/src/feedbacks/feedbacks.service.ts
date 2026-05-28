@@ -9,12 +9,34 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 import { Participant } from '../database/schema';
+import { S3Service } from '../s3/s3.service';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
 @Injectable()
 export class FeedbacksService {
-  constructor(private readonly repository: FeedbacksRepository) {}
+  constructor(
+    private readonly repository: FeedbacksRepository,
+    private readonly s3Service: S3Service,
+  ) {}
+
+  // photo 첨부가 있는 댓글에 presigned URL 주입
+  private async attachPhotoUrls<
+    T extends { photo?: { imageKey: string } | null },
+  >(rows: T[]) {
+    return Promise.all(
+      rows.map(async (f) => {
+        if (!f.photo) return f;
+        return {
+          ...f,
+          photo: {
+            ...f.photo,
+            url: await this.s3Service.getViewPresignedUrl(f.photo.imageKey),
+          },
+        };
+      }),
+    );
+  }
 
   //삭제된 댓글 내용 placeholder로 바꾸는 private 헬퍼 메소드
   private applyDeletedPlaceholder<
@@ -39,7 +61,7 @@ export class FeedbacksService {
       dto,
     );
     return {
-      rows: this.applyDeletedPlaceholder(rows),
+      rows: await this.attachPhotoUrls(this.applyDeletedPlaceholder(rows)),
       nextCursor,
     };
   }
@@ -61,7 +83,9 @@ export class FeedbacksService {
 
     const feedbacks = await this.repository.findAllByPhoto(photoId, dto);
     return {
-      rows: this.applyDeletedPlaceholder(feedbacks.rows),
+      rows: await this.attachPhotoUrls(
+        this.applyDeletedPlaceholder(feedbacks.rows),
+      ),
       nextCursor: feedbacks.nextCursor,
     };
   }
