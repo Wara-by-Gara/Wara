@@ -82,18 +82,29 @@ export interface InvitationDetailGuestProps {
 }
 
 function ParticipantAvatarStrip() {
+  const attendingParticipants = mockParticipants.filter((p) => p.status === "attending");
+  const visibleParticipants = attendingParticipants.slice(0, 5);
+  const overflowCount = Math.max(attendingParticipants.length - visibleParticipants.length, 0);
+
   return (
     <AvatarGroup variant="separated" scrollable>
-      <Avatar size="lg" alt="김현제" initial="김" host />
-      <Avatar size="lg" alt="윤숙희" initial="윤" />
-      <Avatar size="lg" alt="최우진" initial="최" />
-      <Avatar size="lg" alt="김민성" initial="김" />
-      <Avatar size="lg" alt="박수훈" initial="박" />
-      <Avatar
-        size="lg"
-        initial="+12"
-        className="bg-pink-100 text-[11px] font-bold text-pink-600"
-      />
+      {visibleParticipants.map((participant) => (
+        <Avatar
+          key={participant.id}
+          size="lg"
+          src={participant.avatarUrl}
+          alt={participant.name}
+          initial={participant.name[0]}
+          host={participant.isHost}
+        />
+      ))}
+      {overflowCount > 0 ? (
+        <Avatar
+          size="lg"
+          initial={`+${overflowCount}`}
+          className="bg-pink-100 text-[11px] font-bold text-pink-600"
+        />
+      ) : null}
     </AvatarGroup>
   );
 }
