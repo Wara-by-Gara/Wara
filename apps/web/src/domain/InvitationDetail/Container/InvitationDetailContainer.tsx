@@ -49,7 +49,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const isHost = isLoggedIn && me?.id === invitation.userId;
 
   if (isHost) {
-    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} />;
+    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} me={me} />;
   }
 
   return (
