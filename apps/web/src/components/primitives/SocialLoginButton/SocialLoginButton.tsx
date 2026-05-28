@@ -25,7 +25,7 @@ export function SocialLoginButton({
       aria-busy={loading}
       disabled={isDisabled}
       className={[
-        'relative flex h-[52px] w-full items-center justify-center',
+        'relative flex h-13 w-full items-center justify-center',
         'rounded-[14px] text-[15px] font-semibold leading-none',
         'transition duration-150 active:scale-[0.985]',
         'outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
@@ -42,7 +42,7 @@ export function SocialLoginButton({
         aria-hidden="true"
       >
         {loading ? (
-          <span className="block h-[18px] w-[18px] animate-spin rounded-full border-2 border-current border-r-transparent" />
+          <span className="block h-4.5 w-4.5 animate-spin rounded-full border-2 border-current border-r-transparent" />
         ) : (
           <Icon className="h-full w-full" />
         )}
