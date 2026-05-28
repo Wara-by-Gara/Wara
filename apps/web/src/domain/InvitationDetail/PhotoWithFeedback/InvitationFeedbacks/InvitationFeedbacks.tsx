@@ -57,7 +57,11 @@ export default function InvitationFeedbacks({
 
   return (
     <div className="mt-4">
-      <div className="flex flex-col">
+      <div className="rounded-3xl border border-border bg-surface p-4">
+        <h3 className="mb-3 text-[15px] font-bold text-text-primary">
+          댓글 {allRows.length}
+        </h3>
+        <div className="flex flex-col">
         {allRows.map((f) => (
           <div key={f.id}>
             <CommentItem
@@ -182,7 +186,7 @@ export default function InvitationFeedbacks({
             />
           </div>
         ))}
-        {hasNextPage && (
+        {hasNextPage && (data?.pages.at(-1)?.rows.length ?? 0) >= 10 && (
           <button
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
@@ -191,6 +195,7 @@ export default function InvitationFeedbacks({
             {isFetchingNextPage ? '불러오는 중...' : '더 보기'}
           </button>
         )}
+        </div>
       </div>
       {replyingTo && (
         <div className="flex items-center justify-between border-t border-border bg-primary-soft px-4 py-1.5">
