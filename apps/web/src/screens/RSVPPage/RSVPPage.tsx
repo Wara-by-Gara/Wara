@@ -6,7 +6,6 @@ import { Radio, RadioGroup } from "@/components/primitives/Radio";
 import { TextInput } from "@/components/primitives/TextInput";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { FormField } from "@/components/molecules/FormField";
 import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 import { ConfirmModal } from "@/components/molecules/Modal";
@@ -64,7 +63,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         <main className={mobileMainCenter}>
           <EmptyState icon="user-round-cog" title="로그인이 필요해요" description="로그인하면 응답할 수 있어요" action={<Button>로그인</Button>} />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -76,7 +74,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         <main className={mobileMainCenter}>
           <EmptyState icon="clock" title="응답이 마감되었어요" description="호스트가 응답 마감을 설정했어요" />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -88,7 +85,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         <main className={mobileMainCenter}>
           <EmptyState icon="users" title="정원이 가득 찼어요" description="미정 / 불참은 선택할 수 있어요" />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -100,7 +96,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         <main className={mobileMainCenter}>
           <ErrorState title="응답을 보낼 수 없어요" description="네트워크 상태를 확인해주세요" onRetry={() => {}} />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -112,7 +107,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         <main className={mobileMainCenter}>
           <EmptyState icon="badge-check" title="이미 응답하셨어요" description="응답을 수정할 수 있어요" action={<Button>수정하기</Button>} />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -125,7 +119,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
           <p className="text-[14px] text-text-secondary">응답을 보내는 중...</p>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -142,7 +135,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
           <p className="text-[14px] text-text-secondary">곧 봬요!</p>
           <Button variant="outline" size="md" className="mt-4">초대장 보기</Button>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -214,7 +206,6 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
         confirmLabel="취소"
         confirmVariant="danger"
       />
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };
