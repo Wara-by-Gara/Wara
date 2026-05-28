@@ -118,7 +118,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "logoutComplete") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="계정 관리" />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="log-out" size="xl" color="primary" decorative />
