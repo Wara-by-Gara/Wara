@@ -36,14 +36,14 @@ export interface MainBottomNavProps {
 
 export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) {
   const pathname = usePathname();
-
-  if (HIDDEN_PATHS.includes(pathname) || pathname.startsWith("/i/")) return null;
-
-  const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
+  if (HIDDEN_PATHS.includes(pathname) || pathname.startsWith("/i/")) return null;
+
+  const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
+
 
   const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
     item.key === "me" && hydrated && !isLoggedIn
