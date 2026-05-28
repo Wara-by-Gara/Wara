@@ -10,6 +10,7 @@ export const UpdateTemplateSchema = z.object({
   theme: z.string().min(1).max(50).optional(),
   font: z.string().min(1).max(50).optional(),
   effect: z.string().max(50).optional(),
+  prompt: z.string().min(1).optional(),
   isActive: z.boolean().optional(),
 });
 
