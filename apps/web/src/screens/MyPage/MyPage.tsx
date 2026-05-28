@@ -19,18 +19,18 @@ export interface MyPageProps {
   user?: MockUser;
   /** 최근/내가 만든/참여한 — props로 주입 */
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
-  onSettings?: () => void;
   onProfileEdit?: () => void;
   onAccount?: () => void;
+  onSupport?: () => void;
 }
 
 export const MyPage = ({
   state = "default",
   user = mockMe,
   recentInvitations = [],
-  onSettings,
   onProfileEdit,
   onAccount,
+  onSupport,
 }: MyPageProps) => {
   if (state === "loggedOut") {
     return (
@@ -72,19 +72,7 @@ export const MyPage = ({
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar className="shrink-0"
-        title="마이페이지"
-        rightSlot={
-          <button
-            type="button"
-            aria-label="설정"
-            onClick={onSettings}
-            className="inline-flex size-11 items-center justify-center text-text-secondary"
-          >
-            <Icon name="settings" size="lg" color="currentColor" decorative />
-          </button>
-        }
-      />
+      <TopAppBar className="shrink-0" title="마이페이지" />
       <main className="min-h-0 flex-1 overflow-y-auto">
       <section className="flex flex-col items-center gap-3 bg-surface py-8">
         <Avatar
@@ -94,12 +82,12 @@ export const MyPage = ({
           initial={(user.name ?? user.nickname)[0]}
           className="size-20"
         />
-        <p className="text-[18px] font-bold text-text-primary">
-          {user.name ?? user.nickname}
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-[18px] font-bold text-text-primary">{user.name ?? user.nickname}</p>
           {user.name && user.nickname ? (
-            <span className="ml-1.5 text-[14px] font-normal text-text-tertiary">@{user.nickname}</span>
+            <p className="text-[14px] font-normal text-text-tertiary">@{user.nickname}</p>
           ) : null}
-        </p>
+        </div>
         <Button variant="outline" size="sm" onClick={onProfileEdit}>프로필 수정</Button>
         {user.stats ? (
           <div className="mt-3 grid w-full grid-cols-2 border-t border-border pt-4">
@@ -141,9 +129,8 @@ export const MyPage = ({
 
       <section className="py-2">
         <div className="divide-y divide-border bg-surface">
-          <MenuItem leftIcon="ticket" rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>내가 만든 초대장</MenuItem>
-          <MenuItem leftIcon="user-check" rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>참여한 초대장</MenuItem>
           <MenuItem leftIcon="user-round-cog" onClick={onAccount} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>계정 관리</MenuItem>
+          <MenuItem leftIcon="help-circle" onClick={onSupport} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>고객센터</MenuItem>
         </div>
       </section>
       </main>

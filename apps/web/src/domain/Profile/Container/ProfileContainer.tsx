@@ -50,8 +50,8 @@ export default function ProfileContainer() {
       }}
       recentInvitations={recentInvitations}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
-      onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
+      onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
     />
   );
 }
