@@ -1,6 +1,8 @@
 import type { Preview } from "@storybook/react";
 import React from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { MobileDeviceFrame } from "../src/components/layout/MobileDeviceFrame";
+import { getQueryClient } from "../src/lib/query-client";
 import { pageStoryParameters } from "./pageStoryParameters";
 import "../src/app/globals.css";
 
@@ -93,6 +95,11 @@ const preview: Preview = {
     },
   },
   decorators: [
+    (Story) => (
+      <QueryClientProvider client={getQueryClient()}>
+        <Story />
+      </QueryClientProvider>
+    ),
     (Story, context) => {
       const isPage = context.title?.startsWith("Pages/");
       const disableFrame = context.parameters?.mobileFrame === false;
