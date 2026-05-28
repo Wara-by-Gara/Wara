@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { usePhotos } from '@/hooks/usePhotos';
-import { useMe } from '@/hooks/useUsers';
 import { useInvitation } from '@/hooks/useInvitations';
 import { useBest9 } from '@/hooks/useBest9';
 import { InvitationDetailProps } from '../../types';
@@ -19,10 +18,10 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
 
 export default function PhotoWithFeedbackContainer({
   invitationId,
+  currentUserId,
+  currentUserNickname,
+  currentUserProfileImageUrl,
 }: InvitationDetailProps) {
-  const { data: me } = useMe();
-  const currentUserId = me?.id ?? null;
-
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;
@@ -64,6 +63,8 @@ export default function PhotoWithFeedbackContainer({
       <InvitationFeedbacks
         invitationId={invitationId}
         currentUserId={currentUserId}
+        currentUserNickname={currentUserNickname}
+        currentUserProfileImageUrl={currentUserProfileImageUrl}
       />
       {showMomentLogModal && (
         <BestNineModal

@@ -19,28 +19,27 @@ export default function LocationWithDate({ invitation, isHost, invitationId }: P
 
   return (
     <div className="flex flex-col gap-3">
-      {invitation.eventStartAt && (
-        <InvitationInfoCard
-          variant="datetime"
-          title={
-            <time suppressHydrationWarning>
-              {new Date(invitation.eventStartAt!).toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-          }
-          time={
-            <time suppressHydrationWarning>
-              {new Date(invitation.eventStartAt!).toLocaleTimeString("ko-KR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </time>
-          }
-        />
-      )}
+      {invitation.eventStartAt && (() => {
+        const d = new Date(invitation.eventStartAt);
+        const dateLabel = d.toLocaleDateString("ko-KR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          weekday: "long",
+        });
+        const h = d.getHours();
+        const m = d.getMinutes();
+        const ampm = h < 12 ? "오전" : "오후";
+        const h12 = h % 12 || 12;
+        const timeLabel = m === 0 ? `${ampm} ${h12}시` : `${ampm} ${h12}시 ${m}분`;
+        return (
+          <InvitationInfoCard
+            variant="datetime"
+            title={<time suppressHydrationWarning>{dateLabel}</time>}
+            time={<time suppressHydrationWarning>{timeLabel}</time>}
+          />
+        );
+      })()}
 
       <div>
         {eventLocation ? (
