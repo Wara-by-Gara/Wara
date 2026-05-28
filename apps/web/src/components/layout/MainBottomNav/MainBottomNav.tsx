@@ -74,6 +74,7 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
 
   return (
     <>
+      <div aria-hidden="true" className="h-16 shrink-0" />
       <div className="fixed bottom-0 left-0 right-0 z-10">
         <BottomNavigation
           items={items}

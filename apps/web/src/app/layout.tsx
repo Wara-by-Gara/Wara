@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
         <OAuthCallbackHandler />
         <Providers>
-          <div className="pb-16">{children}</div>
+          {children}
           <MainBottomNav />
         </Providers>
       </body>
