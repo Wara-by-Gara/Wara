@@ -1,7 +1,6 @@
 import type { Preview } from "@storybook/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { MobileDeviceFrame } from "../src/components/layout/MobileDeviceFrame";
 import { getQueryClient } from "../src/lib/query-client";
 import { pageStoryParameters } from "./pageStoryParameters";
