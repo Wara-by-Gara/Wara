@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { IconButton } from '@/components/primitives/IconButton';
 import { useMyInquiries, useDeleteInquiry } from '@/hooks/useInquiries';
@@ -96,7 +95,6 @@ export default function MyInquiriesPage() {
         }}
       />
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

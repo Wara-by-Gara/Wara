@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { FormField } from '@/components/molecules/FormField';
 import { TextInput } from '@/components/primitives/TextInput';
 import { Textarea } from '@/components/primitives/Textarea';
@@ -149,7 +148,6 @@ export default function InquiryWritePage() {
         }}
       />
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

@@ -8,7 +8,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
@@ -170,7 +169,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
         />
       </div>
 
-      <MainBottomNav activeKey="invitations" />
 
       <BottomSheet open={rsvpOpen} onOpenChange={setRsvpOpen}>
         <BottomSheetContent contained title="참석 여부" description="원하는 응답을 선택해주세요">

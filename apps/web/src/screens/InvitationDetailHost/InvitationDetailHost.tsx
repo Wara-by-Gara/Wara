@@ -4,7 +4,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Badge } from "@/components/primitives/Badge";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { MenuItem } from "@/components/molecules/MenuItem";
 import { ConfirmModal } from "@/components/molecules/Modal";
@@ -57,7 +56,6 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
           <p className="text-[14px] text-text-secondary">이 QR로 초대장을 공유할 수 있어요</p>
           <Button variant="outline" size="md">이미지로 저장</Button>
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -85,7 +83,6 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
           confirmLabel="재생성"
           confirmVariant="danger"
         />
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -221,7 +218,6 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
       <ConfirmModal contained open={state === "deleteInvitationModal"} onOpenChange={() => {}} title="초대장을 삭제할까요?" description="모든 응답과 댓글이 사라져요" confirmLabel="삭제" confirmVariant="danger" />
       <ConfirmModal contained open={state === "duplicateInvitationModal"} onOpenChange={() => {}} title="이 초대장을 복제할까요?" confirmLabel="복제" />
       <ConfirmModal contained open={state === "makePrivateModal"} onOpenChange={() => {}} title="비공개로 바꿀까요?" description="링크를 가진 사람만 볼 수 있어요" confirmLabel="비공개" />
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };

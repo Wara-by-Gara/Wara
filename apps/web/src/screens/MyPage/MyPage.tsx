@@ -9,7 +9,6 @@ import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { MenuItem } from "@/components/molecules/MenuItem";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { mockMe, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 
@@ -45,7 +44,6 @@ export const MyPage = ({
             action={<Button>로그인</Button>}
           />
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -57,7 +55,6 @@ export const MyPage = ({
         <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
           <ProfileSkeleton />
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -69,7 +66,6 @@ export const MyPage = ({
         <main className={mobileMainCenter}>
           <ErrorState title="프로필을 불러오지 못했어요" onRetry={() => {}} />
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -151,7 +147,6 @@ export const MyPage = ({
         </div>
       </section>
       </main>
-      <MainBottomNav activeKey="me" />
     </div>
   );
 };
