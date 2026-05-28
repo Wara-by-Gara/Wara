@@ -24,7 +24,8 @@ export function ParticipantProfilePanel({ row, open, onOpenChange }: Props) {
     <ParticipantProfileModal
       open={open}
       onOpenChange={onOpenChange}
-      name={row.participant.displayName ?? row.user.nickname ?? "이름 없음"}
+      name={row.participant.displayName ?? row.user.name ?? row.user.nickname ?? "이름 없음"}
+      handle={row.user.nickname ?? undefined}
       avatarUrl={row.user.profileImageUrl ?? undefined}
       status={RSVP_TO_PARTICIPANT[row.participant.rsvpStatus]}
       isHost={row.participant.memberRole === "HOST"}

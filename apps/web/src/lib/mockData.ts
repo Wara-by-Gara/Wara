@@ -33,7 +33,7 @@ export const mockInvitation: MockInvitation = {
   address: "전북 전주시 완산구 기린대로 99",
   coverImageUrl: "/invitation-cover-cake.png",
   ddayLabel: "D-3",
-  host: { name: "김와라", avatarUrl: "https://i.pravatar.cc/80?img=18", handle: "@wara_kim" },
+  host: { name: "김와라", avatarUrl: mockMeAvatarUrl, handle: "@wara_kim" },
   rsvp: { current: 12, capacity: 20 },
   status: "published",
 };
@@ -59,7 +59,7 @@ export interface MockParticipant {
 }
 
 export const mockParticipants: MockParticipant[] = [
-  { id: "p1", name: "김와라", avatarUrl: "https://i.pravatar.cc/80?img=18", status: "attending", isHost: true },
+  { id: "p1", name: "김와라", avatarUrl: mockMeAvatarUrl, status: "attending", isHost: true },
   { id: "p2", name: "박미라", avatarUrl: "https://i.pravatar.cc/80?img=21", status: "attending", companionCount: 1, requestPreview: "참석 가능하지만 조금 늦을수도 있어요" },
   { id: "p3", name: "이지은", avatarUrl: "https://i.pravatar.cc/80?img=24", status: "attending" },
   { id: "p4", name: "최하나", avatarUrl: "https://i.pravatar.cc/80?img=44", status: "attending" },
@@ -124,7 +124,7 @@ export const mockComments: MockComment[] = [
     ],
   },
   { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전" },
-  { id: "c3", authorName: "김와라", authorAvatarUrl: "https://i.pravatar.cc/80?img=18", content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host" },
+  { id: "c3", authorName: "김와라", authorAvatarUrl: mockMeAvatarUrl, content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host" },
   {
     id: "c4",
     authorName: "최하나",
@@ -271,6 +271,7 @@ export const mockTemplates: MockTemplate[] = [
 
 export interface MockUser {
   id: string;
+  name?: string;
   nickname: string;
   avatarUrl?: string;
   socialProvider?: "kakao" | "naver" | "apple";
@@ -279,7 +280,8 @@ export interface MockUser {
 
 export const mockMe: MockUser = {
   id: "u_me",
-  nickname: "김와라",
+  name: "김와라",
+  nickname: "wara_kim",
   avatarUrl: mockMeAvatarUrl,
   socialProvider: "kakao",
   stats: { created: 4, joined: 12 },

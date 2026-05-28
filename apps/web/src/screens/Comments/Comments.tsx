@@ -95,7 +95,8 @@ export const Comments = ({ invitationId }: Props) => {
                 <CommentItem
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
-                  authorName={f.participant.user.nickname}
+                  authorName={f.participant.user.name ?? f.participant.user.nickname}
+                  authorHandle={f.participant.user.nickname}
                   onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
@@ -106,7 +107,8 @@ export const Comments = ({ invitationId }: Props) => {
                     const isReplyEditing = editingComment?.id === r.id;
                     return {
                       id: r.id,
-                      authorName: r.participant.user.nickname,
+                      authorName: r.participant.user.name ?? r.participant.user.nickname,
+                      authorHandle: r.participant.user.nickname,
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
                       createdAt: timeAgo(r.createdAt),
                       content: r.content,
