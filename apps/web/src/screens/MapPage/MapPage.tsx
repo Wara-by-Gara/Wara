@@ -292,7 +292,7 @@ export const MapPage = ({
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="relative flex-1">
           {mapSlot ?? <MapPlaceholder />}
-          <div className="absolute inset-x-0 bottom-0 z-30 p-4">
+          <div className="absolute inset-x-0 bottom-16 z-30 p-4">
             <LocationCard
               variant="preview"
               placeName={placeName}
@@ -338,7 +338,7 @@ export const MapPage = ({
         </button>
 
         {/* 하단 장소 카드 */}
-        <div className="absolute inset-x-0 bottom-0 z-30 p-4">
+        <div className="absolute inset-x-0 bottom-16 z-30 p-4">
           <LocationCard
             variant="preview"
             placeName={placeName}
