@@ -20,7 +20,7 @@ const NAV_ROUTES: Record<MainBottomNavKey, string> = {
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
-const HIDDEN_PATHS = ["/login", "/signup", "/edit"];
+const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create"];
 
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";
