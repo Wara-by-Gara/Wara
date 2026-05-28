@@ -7,7 +7,6 @@ import { Chip } from "@/components/primitives/Chip";
 import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { InvitationCard, type InvitationCardVariant } from "@/components/organisms/InvitationCard";
 import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
@@ -55,7 +54,6 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
           <p className="text-[14px] text-text-secondary">로그인하고 첫 초대장을 만들어보세요</p>
           <Button variant="primary" size="lg" className="mt-2">시작하기</Button>
         </section>
-        <MainBottomNav activeKey="home" />
       </div>
     );
   }
@@ -176,7 +174,6 @@ export const Home = ({ state = "loggedInFilled", me = mockMe, invitations = [] }
         </div>
       ) : null}
 
-      <MainBottomNav activeKey="home" />
 
       <BottomSheet open={filterOpen} onOpenChange={setFilterOpen} modal={false} noBodyStyles>
         <BottomSheetContent contained title="필터" description="원하는 종류를 선택해주세요">

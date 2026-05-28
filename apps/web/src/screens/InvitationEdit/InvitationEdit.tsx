@@ -6,7 +6,6 @@ import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
@@ -61,7 +60,6 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <p className="text-[14px] text-text-secondary">저장 중...</p>
         </main>
         <div className="mt-auto shrink-0">
-          <MainBottomNav activeKey="create" />
         </div>
       </div>
     );
@@ -76,7 +74,6 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <p className="text-[18px] font-bold text-text-primary">변경 사항이 저장됐어요</p>
         </main>
         <div className="mt-auto shrink-0">
-          <MainBottomNav activeKey="create" />
         </div>
       </div>
     );
@@ -92,7 +89,6 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           <Button variant="outline">다시 시도</Button>
         </main>
         <div className="mt-auto shrink-0">
-          <MainBottomNav activeKey="create" />
         </div>
       </div>
     );
@@ -173,7 +169,6 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
 
       <div className="relative z-10 mt-auto shrink-0">
         <StickyCTA primary={{ label: "저장" }} secondary={{ label: "취소" }} />
-        <MainBottomNav activeKey="create" />
       </div>
 
       <ConfirmModal contained open={step === "unsavedChangesModal"} onOpenChange={() => {}} title="저장하지 않고 나갈까요?" description="변경 내용이 사라져요" confirmLabel="나가기" confirmVariant="danger" />
