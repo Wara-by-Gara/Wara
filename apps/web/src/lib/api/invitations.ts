@@ -57,7 +57,7 @@ export interface Invitation {
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
-  host?: { nickname: string | null; profileImageUrl: string | null } | null;
+  host?: { name: string | null; nickname: string | null; profileImageUrl: string | null } | null;
   myRole?: "HOST" | "GUEST";
 }
 

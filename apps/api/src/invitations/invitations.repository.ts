@@ -37,6 +37,7 @@ export class InvitationsRepository {
         eventLocation: true,
         host: {
           columns: {
+            name: true,
             nickname: true,
             profileImageUrl: true,
           },

@@ -146,7 +146,7 @@ export default function ParticipantsContainer() {
 
   return (
     <>
-    <div className="flex min-h-screen flex-col bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <TopAppBar
         title="참석자"
         onBack={() => router.back()}
@@ -331,7 +331,8 @@ export default function ParticipantsContainer() {
               {filtered.map(({ participant, user }) => (
                 <ParticipantItem
                   key={participant.id}
-                  name={participant.displayName ?? user.nickname ?? "이름 없음"}
+                  name={participant.displayName ?? user.name ?? user.nickname ?? "이름 없음"}
+                  handle={user.nickname ?? undefined}
                   avatarUrl={user.profileImageUrl ?? undefined}
                   status={RSVP_TO_PARTICIPANT[participant.rsvpStatus]}
                   isHost={participant.memberRole === "HOST"}

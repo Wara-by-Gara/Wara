@@ -2,6 +2,9 @@ import type { RsvpStatus } from "@/lib/api/participants";
 
 export interface InvitationDetailProps {
   invitationId: string;
+  currentUserId: string | null;
+  currentUserNickname?: string | null;
+  currentUserProfileImageUrl?: string | null;
 }
 
 export const FONT_CLASS: Record<string, string> = {
