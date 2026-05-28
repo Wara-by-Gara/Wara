@@ -3,31 +3,28 @@
 import Link from "next/link";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
-import { useInvitation } from "@/hooks/useInvitations";
-import { useMe } from "@/hooks/useUsers";
 import { ROUTES } from "@/constants/routes";
+import type { getInvitation } from "@/lib/api/invitations";
 
-interface LocationWithDateProps {
+type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
+
+type Props = {
+  invitation: Invitation;
+  isHost: boolean;
   invitationId: string;
-}
+};
 
-export default function LocationWithDate({ invitationId }: LocationWithDateProps) {
-  const { data: invitation, isLoading } = useInvitation(invitationId);
-  const { data: me } = useMe();
-
-  if (isLoading) return null;
-
-  const eventLocation = invitation?.eventLocation ?? null;
-  const isHost = !!me && !!invitation && me.id === invitation.userId;
+export default function LocationWithDate({ invitation, isHost, invitationId }: Props) {
+  const eventLocation = invitation.eventLocation ?? null;
 
   return (
     <div className="flex flex-col gap-3">
-      {invitation?.eventStartAt && (
+      {invitation.eventStartAt && (
         <InvitationInfoCard
           variant="datetime"
           title={
             <time suppressHydrationWarning>
-              {new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", {
+              {new Date(invitation.eventStartAt!).toLocaleDateString("ko-KR", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -36,7 +33,7 @@ export default function LocationWithDate({ invitationId }: LocationWithDateProps
           }
           time={
             <time suppressHydrationWarning>
-              {new Date(invitation.eventStartAt).toLocaleTimeString("ko-KR", {
+              {new Date(invitation.eventStartAt!).toLocaleTimeString("ko-KR", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
