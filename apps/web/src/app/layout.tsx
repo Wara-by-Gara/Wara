@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Be_Vietnam_Pro, Noto_Serif } from 'next/font/google';
 import Providers from '@/providers';
+import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
+import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -31,7 +33,11 @@ export default function RootLayout({
       className={`${beVietnamPro.variable} ${notoSerif.variable} h-full antialiased`}
     >
       <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
-        <Providers>{children}</Providers>
+        <OAuthCallbackHandler />
+        <Providers>
+          {children}
+          <MainBottomNav />
+        </Providers>
       </body>
     </html>
   );

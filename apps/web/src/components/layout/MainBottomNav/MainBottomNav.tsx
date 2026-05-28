@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BottomNavigation, type BottomNavItem } from "@/components/molecules/BottomNavigation";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNav";
@@ -19,15 +20,30 @@ const NAV_ROUTES: Record<MainBottomNavKey, string> = {
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
-export interface MainBottomNavProps {
-  activeKey: MainBottomNavKey;
+const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create"];
+
+function resolveActiveKey(pathname: string): MainBottomNavKey {
+  if (pathname === "/") return "home";
+  if (pathname.startsWith("/invitations/create")) return "create";
+  if (pathname.startsWith("/invitations")) return "invitations";
+  if (pathname.startsWith("/notifications")) return "notifications";
+  return "me";
 }
 
-export function MainBottomNav({ activeKey }: MainBottomNavProps) {
+export interface MainBottomNavProps {
+  activeKey?: MainBottomNavKey;
+}
+
+export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) {
+  const pathname = usePathname();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
+  if (HIDDEN_PATHS.includes(pathname) || pathname.startsWith("/i/")) return null;
+
+  const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
+
 
   const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
     item.key === "me" && hydrated && !isLoggedIn
@@ -58,7 +74,8 @@ export function MainBottomNav({ activeKey }: MainBottomNavProps) {
 
   return (
     <>
-      <div className="relative z-10 shrink-0">
+      <div aria-hidden="true" className="h-16 shrink-0" />
+      <div className="fixed bottom-0 left-0 right-0 z-10">
         <BottomNavigation
           items={items}
           activeKey={activeKey}

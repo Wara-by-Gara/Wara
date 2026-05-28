@@ -14,7 +14,6 @@ import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
@@ -339,7 +338,6 @@ export default function InvitationCreateContainer() {
             </Button>
           </div>
         </main>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -359,7 +357,6 @@ export default function InvitationCreateContainer() {
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{ label: "다음", onClick: () => setStep("basicInfo") }} />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -383,7 +380,6 @@ export default function InvitationCreateContainer() {
             </Button>
           ))}
         </main>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -416,7 +412,6 @@ export default function InvitationCreateContainer() {
             }}
           />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -450,7 +445,6 @@ export default function InvitationCreateContainer() {
             }}
           />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -539,7 +533,6 @@ export default function InvitationCreateContainer() {
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{ label: "다음", onClick: handleNext }} />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -723,7 +716,6 @@ export default function InvitationCreateContainer() {
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{ label: "다음", onClick: handleNext }} />
         </div>
-        <MainBottomNav activeKey="create" />
       </div>
     );
   }
@@ -771,7 +763,6 @@ export default function InvitationCreateContainer() {
             </Button>
           </div>
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -878,7 +869,6 @@ export default function InvitationCreateContainer() {
           }}
         />
       </div>
-      <MainBottomNav activeKey="create" />
       <ConfirmModal
         open={showPublishConfirm}
         onOpenChange={(v) => { if (!isPending) setShowPublishConfirm(v); }}

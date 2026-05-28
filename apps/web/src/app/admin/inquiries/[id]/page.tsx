@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Divider } from '@/components/primitives/Divider';
 import { Button } from '@/components/primitives/Button';
 import { useAdminInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
@@ -130,7 +129,6 @@ export default function AdminInquiryDetailPage() {
         )}
       </main>
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

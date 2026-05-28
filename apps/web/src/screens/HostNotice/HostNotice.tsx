@@ -6,7 +6,6 @@ import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { Textarea } from "@/components/primitives/Textarea";
 import { TextInput } from "@/components/primitives/TextInput";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { FormField } from "@/components/molecules/FormField";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { StickyCTA } from "@/components/layout/StickyCTA";
@@ -57,7 +56,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
             ))}
           </div>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -74,7 +72,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
           action={<Button>공지 작성</Button>}
         />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -94,7 +91,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
             건물 지하 1층 무료 주차 가능합니다.{"\n"}만차일 경우 인근 공영주차장을 이용해주세요.
           </p>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -117,7 +113,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: "보내기", disabled: !filled }} />
       </div>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -133,7 +128,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
           description="참석자 12명에게 푸시 알림이 발송됩니다"
           confirmLabel="보내기"
         />
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -146,7 +140,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
           <p className="text-[14px] text-text-secondary">보내는 중...</p>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -161,7 +154,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
           <p className="text-[14px] text-text-secondary">12명에게 알림이 도착했어요</p>
           <Button variant="outline" size="md">목록으로</Button>
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -180,7 +172,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
             confirmVariant="danger"
           />
         </main>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -198,7 +189,6 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
           </article>
         ))}
       </main>
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };
