@@ -40,6 +40,9 @@ export const AlbumPreviewFilled: Story = { args: { state: "albumPreviewFilled" }
 export const CommentPreviewEmpty: Story = { args: { state: "commentPreviewEmpty" } };
 export const CommentPreviewFilled: Story = { args: { state: "commentPreviewFilled" } };
 
+// Date Vote
+export const DateVotePending: Story = { args: { state: "dateVotePending" } };
+
 // RSVP
 export const BeforeRsvp: Story = { args: { state: "beforeRsvp" } };
 export const RsvpBottomSheetOpen: Story = { args: { state: "rsvpBottomSheetOpen" } };

@@ -1,5 +1,6 @@
 CREATE TYPE "public"."date_vote_poll_status" AS ENUM('open', 'closed', 'confirmed');--> statement-breakpoint
 CREATE TYPE "public"."date_vote_response" AS ENUM('good', 'maybe', 'bad');--> statement-breakpoint
+ALTER TYPE "public"."notification_type" ADD VALUE 'nudge';--> statement-breakpoint
 ALTER TYPE "public"."notification_type" ADD VALUE 'vote_reminder';--> statement-breakpoint
 ALTER TYPE "public"."notification_type" ADD VALUE 'vote_confirmed';--> statement-breakpoint
 ALTER TYPE "public"."notification_type" ADD VALUE 'vote_tied';--> statement-breakpoint

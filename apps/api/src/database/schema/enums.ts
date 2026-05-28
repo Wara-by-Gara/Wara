@@ -42,10 +42,13 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'invitation_date',
   'photo',
   'arrived',
+  'nudge',
   'vote_reminder',
   'vote_confirmed',
   'vote_tied',
 ]);
+
+export const remindTypeEnum = pgEnum('remind_type', ['D+7', 'D+30', 'D+365']);
 export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'photo',
   'feedback',

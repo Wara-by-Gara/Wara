@@ -97,8 +97,10 @@ export class AuthController {
           state,
         });
       this.setAuthCookies(res, accessToken, refreshToken);
-      const redirectPath = needsProfileCompletion ? '/signup' : '/';
-      return res.redirect(`${frontendUrl}${redirectPath}`);
+      if (needsProfileCompletion) {
+        return res.redirect(`${frontendUrl}/signup`);
+      }
+      return res.redirect(`${frontendUrl}/?auth_success=1`);
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
       return res.redirect(`${frontendUrl}/login?auth_error=1`);

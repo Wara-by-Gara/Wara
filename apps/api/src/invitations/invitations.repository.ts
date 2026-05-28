@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq, isNull, ne } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { invitations, participants } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -11,12 +11,22 @@ import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 export class InvitationsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  findAllByUserId(userId: string) {
-    return this.db.query.invitations.findMany({
-      where: (inv, { eq, isNull, and }) =>
-        and(eq(inv.userId, userId), isNull(inv.deletedAt)),
-      orderBy: (inv, { desc }) => desc(inv.createdAt),
-    });
+  async findAllByUserId(userId: string) {
+    const rows = await this.db
+      .select({
+        invitation: invitations,
+        myRole: participants.memberRole,
+      })
+      .from(participants)
+      .innerJoin(invitations, eq(participants.invitationId, invitations.id))
+      .where(
+        and(
+          eq(participants.userId, userId),
+          isNull(invitations.deletedAt),
+        ),
+      )
+      .orderBy(desc(invitations.createdAt));
+    return rows.map((r) => ({ ...r.invitation, myRole: r.myRole }));
   }
 
   findById(id: string) {
@@ -25,6 +35,12 @@ export class InvitationsRepository {
         and(eq(inv.id, id), isNull(inv.deletedAt)),
       with: {
         eventLocation: true,
+        host: {
+          columns: {
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
       },
     });
   }

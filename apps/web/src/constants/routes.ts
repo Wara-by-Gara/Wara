@@ -18,7 +18,7 @@ export const ROUTES = {
     SETTINGS: (id: string) => `/invitations/${id}/settings`,
   },
   PUBLIC: {
-    INVITATION: (id: string) => `/i/${id}`,
+    INVITATION: (id: string) => `/invitations/${id}`,
   },
   NOTIFICATIONS: {
     LIST: "/notifications",
@@ -27,6 +27,8 @@ export const ROUTES = {
   PROFILE: {
     ME: "/profile",
     EDIT: "/profile/edit",
+    SETTINGS: "/profile/settings",
+    ACCOUNT: "/profile/account",
   },
   ADMIN: {
     INQUIRIES: '/admin/inquiries',

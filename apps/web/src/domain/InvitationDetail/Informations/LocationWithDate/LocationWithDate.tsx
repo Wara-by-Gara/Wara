@@ -2,44 +2,47 @@
 
 import Link from "next/link";
 import { LocationCard } from "@/components/organisms/LocationCard";
-import { useInvitation } from "@/hooks/useInvitations";
-import { useMe } from "@/hooks/useUsers";
+import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
 import { ROUTES } from "@/constants/routes";
+import type { getInvitation } from "@/lib/api/invitations";
 
-interface LocationWithDateProps {
+type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
+
+type Props = {
+  invitation: Invitation;
+  isHost: boolean;
   invitationId: string;
-}
+};
 
-export default function LocationWithDate({ invitationId }: LocationWithDateProps) {
-  const { data: invitation, isLoading } = useInvitation(invitationId);
-  const { data: me } = useMe();
-
-  if (isLoading) return null;
-
-  const eventLocation = invitation?.eventLocation ?? null;
-  const isHost = !!me && !!invitation && me.id === invitation.userId;
+export default function LocationWithDate({ invitation, isHost, invitationId }: Props) {
+  const eventLocation = invitation.eventLocation ?? null;
 
   return (
     <div className="flex flex-col gap-3">
-      {invitation?.eventStartAt && (
-        <div>
-          <p className="text-[12px] font-medium uppercase text-text-tertiary">일시</p>
-          <p className="text-[15px] text-text-primary">
+      {invitation.eventStartAt && (
+        <InvitationInfoCard
+          variant="datetime"
+          title={
             <time suppressHydrationWarning>
-              {new Date(invitation.eventStartAt).toLocaleDateString("ko-KR", {
+              {new Date(invitation.eventStartAt!).toLocaleDateString("ko-KR", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+              })}
+            </time>
+          }
+          time={
+            <time suppressHydrationWarning>
+              {new Date(invitation.eventStartAt!).toLocaleTimeString("ko-KR", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </time>
-          </p>
-        </div>
+          }
+        />
       )}
 
       <div>
-        <p className="mb-2 text-[12px] font-medium uppercase text-text-tertiary">장소</p>
         {eventLocation ? (
           <>
             <LocationCard

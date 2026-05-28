@@ -47,8 +47,15 @@
     {
       "idx": 6,
       "version": "7",
+      "when": 1779860000000,
+      "tag": "0006_invitations_design_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
       "when": 1779860087866,
-      "tag": "0006_nostalgic_virginia_dare",
+      "tag": "0007_nostalgic_virginia_dare",
       "breakpoints": true
     }
   ]

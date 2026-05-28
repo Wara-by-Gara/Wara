@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
-import { useJoinInvitation } from "@/hooks/useParticipants";
+import { useJoinInvitation, useMyParticipant, useUpdateRsvp } from "@/hooks/useParticipants";
 import { getMe } from "@/lib/api/users";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
@@ -16,6 +16,8 @@ import { TextInput } from "@/components/primitives/TextInput";
 import { Textarea } from "@/components/primitives/Textarea";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
+import { EmptyState } from "@/components/organisms/EmptyState";
+import { Button } from "@/components/primitives/Button";
 import type { Invitation } from "@/lib/api/invitations";
 import type { RsvpStatus } from "@/lib/api/participants";
 
@@ -41,8 +43,17 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
-  const { mutate: join, isPending } = useJoinInvitation(invitation.id);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeclined, setIsDeclined] = useState(false);
+  const { mutate: join, isPending: isJoining } = useJoinInvitation(invitation.id);
+  const { mutate: updateMyRsvp, isPending: isUpdatingRsvp } = useUpdateRsvp(invitation.id);
+  const isPending = isJoining || isUpdatingRsvp;
   const prefilled = useRef(false);
+
+  const { data: myParticipant, isLoading: isCheckingParticipant } = useMyParticipant(
+    invitation.id,
+    { enabled: hydrated && isLoggedIn },
+  );
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -63,6 +74,13 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   }, [hydrate, invitation.id, rsvp, setValue]);
 
   useEffect(() => {
+    if (!hydrated || !isLoggedIn || isCheckingParticipant) return;
+    if (myParticipant && myParticipant.rsvpStatus !== "absent") {
+      router.replace(ROUTES.INVITATIONS.DETAIL(invitation.id));
+    }
+  }, [hydrated, isLoggedIn, isCheckingParticipant, myParticipant, invitation.id, router]);
+
+  useEffect(() => {
     if (!hydrated || !isLoggedIn || prefilled.current) return;
     getMe().then((me) => {
       if (!prefilled.current) {
@@ -72,15 +90,56 @@ export default function PublicInvitationContainer({ invitation }: Props) {
     });
   }, [hydrated, isLoggedIn, setValue]);
 
+  if (!hydrated) return null;
+  if (isLoggedIn && (isCheckingParticipant || (myParticipant && myParticipant.rsvpStatus !== "absent"))) return null;
+
+  if ((myParticipant?.rsvpStatus === "absent" || isDeclined) && !isEditing) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <TopAppBar title="응답하기" />
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
+          <EmptyState
+            icon="badge-check"
+            title="다음에 만나요"
+            description="응답을 수정할 수 있어요"
+            action={<Button onClick={() => { setIsEditing(true); setIsDeclined(false); }}>수정하기</Button>}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const noteValue = watch("note") ?? "";
 
   const onSubmit = (data: FormValues) => {
+    if (rsvp === "declined" && !myParticipant) {
+      setIsDeclined(true);
+      return;
+    }
+
     if (hydrated && !isLoggedIn) {
       sessionStorage.setItem("returnUrl", ROUTES.PUBLIC.INVITATION(invitation.id));
       sessionStorage.setItem(FORM_STORAGE_KEY(invitation.id), JSON.stringify({ ...data, rsvp }));
       router.push(ROUTES.LOGIN);
       return;
     }
+
+    if (myParticipant) {
+      updateMyRsvp(
+        { participantId: myParticipant.id, rsvpStatus: RSVP_MAP[rsvp] },
+        {
+          onSuccess: () => {
+            if (rsvp === "declined") {
+              setIsEditing(false);
+            } else {
+              router.push(ROUTES.INVITATIONS.DETAIL(invitation.id));
+            }
+          },
+        },
+      );
+      return;
+    }
+
     join(
       { rsvpStatus: RSVP_MAP[rsvp], displayName: data.displayName, note: data.note || undefined },
       {
@@ -115,25 +174,29 @@ export default function PublicInvitationContainer({ invitation }: Props) {
           <RSVPButtonGroup value={rsvp} onValueChange={setRsvp} disabled={isPending} />
         </div>
 
-        <FormField label="이름" required error={errors.displayName?.message}>
-          <TextInput
-            placeholder="이름을 입력해주세요"
-            disabled={isPending}
-            {...register("displayName")}
-          />
-        </FormField>
+        {rsvp !== "declined" && (
+          <>
+            <FormField label="이름" required error={errors.displayName?.message}>
+              <TextInput
+                placeholder="이름을 입력해주세요"
+                disabled={isPending}
+                {...register("displayName")}
+              />
+            </FormField>
 
-        <FormField
-          label="요청사항"
-          helper="호스트에게 전달할 내용을 입력해주세요"
-          counter={{ current: noteValue.length, max: 200 }}
-        >
-          <Textarea
-            placeholder="요청사항을 입력해주세요"
-            disabled={isPending}
-            {...register("note")}
-          />
-        </FormField>
+            <FormField
+              label="요청사항"
+              helper="호스트에게 전달할 내용을 입력해주세요"
+              counter={{ current: noteValue.length, max: 200 }}
+            >
+              <Textarea
+                placeholder="요청사항을 입력해주세요"
+                disabled={isPending}
+                {...register("note")}
+              />
+            </FormField>
+          </>
+        )}
       </form>
 
       <StickyCTA
