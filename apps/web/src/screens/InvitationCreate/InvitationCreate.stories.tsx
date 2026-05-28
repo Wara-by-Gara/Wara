@@ -40,6 +40,13 @@ export const TimePickerOpen: Story = { args: { step: "timePickerOpen" } };
 export const DateTimeSelected: Story = { args: { step: "dateTimeSelected" } };
 export const DateUnknownToggleOn: Story = { args: { step: "dateUnknownToggleOn" } };
 export const TimeUnknownToggleOn: Story = { args: { step: "timeUnknownToggleOn" } };
+export const DateVotePropose: Story = {
+  args: { step: "dateVotePropose" },
+  parameters: {
+    ...pageStoryParameters,
+    docs: { description: { story: "날짜 미정(미정 토글 ON) 상태에서 날짜 투표 기능을 제안하는 배너 UI" } },
+  },
+};
 export const RsvpDeadlineSelect: Story = { args: { step: "rsvpDeadlineSelect" } };
 export const PastDateError: Story = { args: { step: "pastDateError" } };
 export const DateRequiredError: Story = { args: { step: "dateRequiredError" } };
