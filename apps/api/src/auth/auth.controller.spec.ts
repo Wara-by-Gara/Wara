@@ -13,6 +13,7 @@ const mockService = {
   socialLogin: jest.fn(),
   refresh: jest.fn(),
   logout: jest.fn(),
+  verifyState: jest.fn().mockReturnValue({ nonce: 'n', platform: Platform.WEB }),
 };
 
 const mockConfig = {
