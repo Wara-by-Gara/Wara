@@ -5,7 +5,6 @@ import { Button } from "@/components/primitives/Button";
 import { Avatar, AvatarGroup } from "@/components/primitives/Avatar";
 import { TextInput } from "@/components/primitives/TextInput";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
@@ -116,7 +115,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" onBack={onBack} />
         <div className="px-5"><InvitationDetailSkeleton /></div>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -128,7 +126,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
         <main className={mobileMainCenter}>
           <ErrorState title="초대장을 불러오지 못했어요" onRetry={() => {}} />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -167,7 +164,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
         <main className={mobileMainCenter}>
           <EmptyState icon={info.icon} title={info.title} description={info.description} />
         </main>
-      <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -442,7 +438,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
           로그인하면 참석 응답·댓글·앨범 사진을 남길 수 있어요
         </div>
       ) : null}
-      <MainBottomNav activeKey="invitations" />
 
       {/* 참석자 프로필 모달 */}
       {selectedParticipant ? (

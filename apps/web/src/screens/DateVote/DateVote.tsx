@@ -6,7 +6,6 @@ import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Badge } from "@/components/primitives/Badge";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
@@ -555,7 +554,6 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{ label: "투표 만들기", onClick: () => {} }} />
         </div>
-        <MainBottomNav activeKey="invitations" />
       </div>
     );
   }
@@ -660,7 +658,6 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
           }}
         />
       </div>
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 }
@@ -785,7 +782,6 @@ export const DateVote = ({ state = "guestVoting", onBack }: DateVoteProps) => {
         </div>
       )}
 
-      <MainBottomNav activeKey="invitations" />
 
       <ConfirmModal contained open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}
         title="투표를 지금 종료할까요?"

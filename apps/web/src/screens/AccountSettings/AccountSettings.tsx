@@ -6,7 +6,6 @@ import { Radio, RadioGroup } from "@/components/primitives/Radio";
 import { Textarea } from "@/components/primitives/Textarea";
 import { MenuItem } from "@/components/molecules/MenuItem";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { useState } from "react";
@@ -97,7 +96,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           onConfirm={screen === "disconnectModal" ? onDisconnectConfirm : onLogout}
           loading={screen === "disconnectModal" ? isDisconnecting : undefined}
         />
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -114,7 +112,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           confirmLabel="로그아웃"
           confirmVariant="danger"
         />
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -128,7 +125,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           <p className="text-[18px] font-bold text-text-primary">로그아웃 됐어요</p>
           <Button variant="primary" size="md" onClick={onLoginAgain}>다시 로그인하기</Button>
         </main>
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -148,7 +144,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: "계속 진행", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
       </div>
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -177,7 +172,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: "계속", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
       </div>
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -196,7 +190,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           onConfirm={onWithdrawConfirm}
           loading={isWithdrawing}
         />
-      <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -211,7 +204,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <p className="text-[14px] text-text-secondary">언젠가 다시 만나길 바라요</p>
         <Button variant="outline" size="md" onClick={onWithdrawComplete}>홈으로</Button>
       </main>
-      <MainBottomNav activeKey="me" />
     </div>
   );
 };
