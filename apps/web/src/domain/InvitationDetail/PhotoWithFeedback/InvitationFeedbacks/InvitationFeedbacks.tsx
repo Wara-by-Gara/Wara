@@ -11,11 +11,15 @@ import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 interface Props {
   invitationId: string;
   currentUserId: string | null;
+  currentUserNickname?: string | null;
+  currentUserProfileImageUrl?: string | null;
 }
 
 export default function InvitationFeedbacks({
   invitationId,
   currentUserId,
+  currentUserNickname,
+  currentUserProfileImageUrl,
 }: Props) {
   const {
     data,
@@ -57,15 +61,19 @@ export default function InvitationFeedbacks({
         {allRows.map((f) => (
           <div key={f.id}>
             <CommentItem
-              authorName={f.participant.user?.nickname ?? f.participant.userId}
-              authorAvatarUrl={f.participant.user?.profileImageUrl ?? undefined}
+              authorName={
+                f.participant.userId === currentUserId
+                  ? (currentUserNickname ?? f.participant.user?.nickname ?? f.participant.userId)
+                  : (f.participant.user?.nickname ?? f.participant.userId)
+              }
+              authorAvatarUrl={
+                f.participant.userId === currentUserId
+                  ? (currentUserProfileImageUrl ?? undefined)
+                  : (f.participant.user?.profileImageUrl ?? undefined)
+              }
               content={f.deletedAt ? '' : f.content}
               createdAt={timeAgo(f.createdAt)}
-              imageUrl={
-                f.photo?.imageKey
-                  ? `https://demmy.s3.ap-northeast-2.amazonaws.com/${f.photo.imageKey}`
-                  : undefined
-              }
+              imageUrl={f.photo?.url ?? undefined}
               onImageClick={f.photo ? () => handlePhotoClick(f.photo!.id) : undefined}
               onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
@@ -129,6 +137,10 @@ export default function InvitationFeedbacks({
                 return {
                   id: r.id,
                   authorName: r.participant.user?.nickname ?? r.participant.userId,
+                  authorAvatarUrl:
+                    r.participant.userId === currentUserId
+                      ? (currentUserProfileImageUrl ?? undefined)
+                      : (r.participant.user?.profileImageUrl ?? undefined),
                   content: r.deletedAt ? '' : r.content,
                   createdAt: timeAgo(r.createdAt),
                   variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
@@ -187,6 +199,8 @@ export default function InvitationFeedbacks({
         </div>
       )}
       <CommentInputBar
+        avatarUrl={currentUserProfileImageUrl ?? undefined}
+        authorName={currentUserNickname ?? undefined}
         placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
         onSubmit={async (text) => {
           await submitComment(text, replyingTo?.id);
