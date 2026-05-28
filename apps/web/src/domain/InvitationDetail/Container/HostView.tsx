@@ -8,7 +8,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Badge } from "@/components/primitives/Badge";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
@@ -158,7 +157,6 @@ export default function HostView({ invitationId, invitation, participantsData, m
           currentUserProfileImageUrl={me?.profileImageUrl ?? null}
         />
       </main>
-      <MainBottomNav activeKey="invitations" />
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 

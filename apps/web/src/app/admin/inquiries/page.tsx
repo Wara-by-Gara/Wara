@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { Icon } from '@/components/icons';
 import { useAdminInquiries } from '@/hooks/useInquiries';
@@ -83,7 +82,6 @@ export default function AdminInquiriesPage() {
         </Section>
       </main>
 
-      <MainBottomNav activeKey="me" />
     </div>
   );
 }

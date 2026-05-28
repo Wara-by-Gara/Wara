@@ -7,7 +7,6 @@ import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
 import { FormField } from "@/components/molecules/FormField";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { useState, useRef, useCallback } from "react";
@@ -103,7 +102,6 @@ export const ProfileEdit = ({
             맞췄어요
           </Button>
         </footer>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -116,7 +114,6 @@ export const ProfileEdit = ({
           <Icon name="badge-check" size="xl" color="success" decorative />
           <p className="text-[18px] font-bold text-text-primary">프로필이 저장됐어요</p>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -130,7 +127,6 @@ export const ProfileEdit = ({
           <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
           <Button variant="outline" onClick={onRetry}>다시 시도</Button>
         </main>
-        <MainBottomNav activeKey="me" />
       </div>
     );
   }
@@ -200,7 +196,6 @@ export const ProfileEdit = ({
         confirmVariant="danger"
         onConfirm={() => { onImageDelete?.(); setModalOpen(false); }}
       />
-      <MainBottomNav activeKey="me" />
     </div>
   );
 };

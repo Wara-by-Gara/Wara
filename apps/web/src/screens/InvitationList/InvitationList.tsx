@@ -4,7 +4,6 @@ import { Icon } from "@/components/icons";
 import { Chip } from "@/components/primitives/Chip";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MainBottomNav } from "@/components/layout/MainBottomNav";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { MenuItem } from "@/components/molecules/MenuItem";
@@ -174,7 +173,6 @@ export const InvitationList = ({
         description="설정값은 그대로, 참석자는 비어있어요"
         confirmLabel="복제"
       />
-      <MainBottomNav activeKey="invitations" />
     </div>
   );
 };
