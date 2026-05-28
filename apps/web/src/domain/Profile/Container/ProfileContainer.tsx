@@ -43,6 +43,7 @@ export default function ProfileContainer() {
     <MyPage
       user={{
         id: me.id,
+        name: me.name ?? undefined,
         nickname: me.nickname ?? '이름 없음',
         avatarUrl: me.profileImageUrl ?? undefined,
         stats,

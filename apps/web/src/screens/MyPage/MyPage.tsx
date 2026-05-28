@@ -94,11 +94,16 @@ export const MyPage = ({
         <Avatar
           size="xl"
           src={state === "noProfile" ? undefined : user.avatarUrl}
-          alt={user.nickname}
-          initial={user.nickname[0]}
+          alt={user.name ?? user.nickname}
+          initial={(user.name ?? user.nickname)[0]}
           className="size-20"
         />
-        <p className="text-[18px] font-bold text-text-primary">{user.nickname}</p>
+        <p className="text-[18px] font-bold text-text-primary">
+          {user.name ?? user.nickname}
+          {user.name && user.nickname ? (
+            <span className="ml-1.5 text-[14px] font-normal text-text-tertiary">@{user.nickname}</span>
+          ) : null}
+        </p>
         <Button variant="outline" size="sm" onClick={onProfileEdit}>프로필 수정</Button>
         {user.stats ? (
           <div className="mt-3 grid w-full grid-cols-2 border-t border-border pt-4">

@@ -11,6 +11,7 @@ export class BlocklistsRepository {
     return this.db
       .select({
         userId: users.id,
+        name: users.name,
         nickname: users.nickname,
         profileImageUrl: users.profileImageUrl,
         blockedAt: invitationBlocklists.createdAt,
