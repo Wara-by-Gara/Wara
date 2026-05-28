@@ -7,7 +7,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }),
   profileImageUrl: text('profile_image_url'),
   name: varchar('name', { length: 100 }),
-  nickname: varchar('nickname', { length: 8 }),
+  nickname: varchar('nickname', { length: 20 }),
   birthYear: integer('birth_year'),
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('member'),

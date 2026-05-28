@@ -21,8 +21,13 @@ export class S3Service {
     this.region = this.config.getOrThrow('AWS_REGION');
   }
 
+  private isExternalUrl(key: string): boolean {
+    return key.startsWith('http://') || key.startsWith('https://');
+  }
+
   // public 파일 고정 URL (만료 없음)
   getPublicUrl(key: string): string {
+    if (this.isExternalUrl(key)) return key;
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
   }
 
@@ -41,6 +46,7 @@ export class S3Service {
 
   // 조회용 presigned URL (GET, private 파일용)
   async getViewPresignedUrl(key: string): Promise<string> {
+    if (this.isExternalUrl(key)) return key;
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
   }

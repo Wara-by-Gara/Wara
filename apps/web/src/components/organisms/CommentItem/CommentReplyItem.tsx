@@ -13,6 +13,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   id?: string;
   variant?: CommentReplyVariant;
   authorName: string;
+  authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
   content: string;
@@ -33,6 +34,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       className,
       variant = "default",
       authorName,
+      authorHandle,
       authorAvatarUrl,
       createdAt,
       content,
@@ -83,7 +85,12 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1">
-                <p className="text-[13px] font-semibold text-text-primary">{authorName}</p>
+                <p className="text-[13px] font-semibold text-text-primary">
+                  {authorName}
+                  {authorHandle ? (
+                    <span className="ml-1 font-normal text-text-tertiary">@{authorHandle}</span>
+                  ) : null}
+                </p>
                 {variant === "host" ? (
                   <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[10px] font-bold text-yellow-400">
                     <Icon name="crown" size="xs" color="currentColor" decorative />

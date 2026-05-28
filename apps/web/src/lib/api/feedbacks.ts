@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from './client';
 export interface FeedbackPhoto {
   id: string;
   imageKey: string;
+  url?: string;
 }
 
 export interface FeedbackParticipant {
@@ -10,6 +11,7 @@ export interface FeedbackParticipant {
   userId: string;
   memberRole: string;
   user: {
+    name: string | null;
     nickname: string;
     profileImageUrl: string | null;
   };

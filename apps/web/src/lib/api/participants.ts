@@ -17,6 +17,7 @@ export interface Participant {
   hostMemo: string | null;
   user?: {
     id: string;
+    name: string | null;
     nickname: string | null;
     profileImageUrl: string | null;
   };
@@ -31,7 +32,7 @@ export interface ParticipantsResponse {
   };
   participants: {
     participant: Participant;
-    user: { id: string; nickname: string | null; profileImageUrl: string | null };
+    user: { id: string; name: string | null; nickname: string | null; profileImageUrl: string | null };
   }[];
 }
 

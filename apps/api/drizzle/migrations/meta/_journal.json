@@ -71,6 +71,13 @@
       "when": 1779869827713,
       "tag": "0009_fantastic_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1779870000000,
+      "tag": "0010_users_nickname_varchar20",
+      "breakpoints": true
     }
   ]
 }
