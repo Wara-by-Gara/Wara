@@ -23,18 +23,18 @@ export class AuthService {
     private readonly oauthPolicyService: OauthPolicyService,
   ) {}
 
-  generateState(): string {
+  generateState(platform: Platform): string {
     return this.jwtService.sign(
-      { nonce: randomUUID() },
+      { nonce: randomUUID(), platform },
       { secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'), expiresIn: '10m' },
     );
   }
 
-  verifyState(state: string): void {
+  verifyState(state: string): { nonce: string; platform?: Platform } {
     try {
-      this.jwtService.verify(state, {
+      return this.jwtService.verify(state, {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
-      });
+      }) as { nonce: string; platform?: Platform };
     } catch {
       throw new UnauthorizedException({
         code: ErrorCode.AUTH_INVALID_STATE,
@@ -48,7 +48,7 @@ export class AuthService {
     platform: Platform,
   ): { url: string; state: string } {
     const strategy = this.socialAuthFactory.getStrategy(provider);
-    const state = this.generateState();
+    const state = this.generateState(platform);
     const url = strategy.getAuthorizationUrl(platform, state);
     return { url, state };
   }

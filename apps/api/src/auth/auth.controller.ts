@@ -88,14 +88,31 @@ export class AuthController {
       return res.redirect(`${frontendUrl}/invitations/create?auth_error=1`);
     }
 
+    // state JWT에서 platform 추출 — mobile이면 wara:// deep link로 redirect
+    let statePlatform: Platform = Platform.WEB;
+    if (state) {
+      try {
+        const decoded = this.authService.verifyState(state);
+        if (decoded.platform) statePlatform = decoded.platform;
+      } catch {
+        return res.redirect(`${frontendUrl}/login?auth_error=1`);
+      }
+    }
+
     try {
       const { accessToken, refreshToken, needsProfileCompletion } =
         await this.authService.socialLogin({
           provider,
-          platform: Platform.WEB,
+          platform: statePlatform,
           code,
           state,
         });
+
+      if (statePlatform === Platform.MOBILE) {
+        const params = new URLSearchParams({ accessToken, refreshToken });
+        return res.redirect(`wara://auth/callback?${params.toString()}`);
+      }
+
       this.setAuthCookies(res, accessToken, refreshToken);
       if (needsProfileCompletion) {
         return res.redirect(`${frontendUrl}/signup`);
@@ -103,6 +120,9 @@ export class AuthController {
       return res.redirect(`${frontendUrl}/?auth_success=1`);
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
+      if (statePlatform === Platform.MOBILE) {
+        return res.redirect(`wara://auth/callback?auth_error=1`);
+      }
       return res.redirect(`${frontendUrl}/login?auth_error=1`);
     }
   }
@@ -131,12 +151,23 @@ export class AuthController {
     @Req() req: Request,
     @Body() body: { refreshToken?: string },
     @Res({ passthrough: true }) res: Response,
+    @Query('platform') platform?: Platform,
   ) {
     const rawRefreshToken = (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE] ?? body?.refreshToken;
     if (!rawRefreshToken) {
       throw new UnauthorizedException({ code: ErrorCode.TOKEN_INVALID, message: '유효하지 않은 refresh token입니다.' });
     }
     const result = await this.authService.refresh(rawRefreshToken);
+
+    if (platform === Platform.MOBILE) {
+      // 모바일: SecureStore 저장을 위해 토큰을 body로 반환 (cookie 미사용)
+      return {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        refreshExpiresIn: result.refreshExpiresIn,
+      };
+    }
+
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
     return { refreshExpiresIn: result.refreshExpiresIn };
   }

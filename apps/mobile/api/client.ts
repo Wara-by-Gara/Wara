@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-import { getAccessToken } from './auth-storage';
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './auth-storage';
 import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
 
 // API base URL — app.config.ts의 expo.extra.apiUrl에서 옴.
@@ -31,6 +31,36 @@ type RequestOptions = {
   timeoutMs?: number;
 };
 
+// TOKEN_EXPIRED 시 동시 다발 refresh 방지용 single-flight promise.
+// 여러 요청이 동시에 401을 받아도 refresh는 1번만 실행됨.
+let inflightRefresh: Promise<void> | null = null;
+
+// auth.ts에서 apiFetch를 import하면 순환 참조 발생.
+// refresh는 auth-storage + 직접 fetch로 구현하여 순환 참조 회피.
+async function doRefresh(): Promise<void> {
+  const rt = await getRefreshToken();
+  if (!rt) {
+    await clearTokens();
+    throw new WaraApiError({
+      code: 'TOKEN_INVALID',
+      type: 'authentication',
+      message: 'TOKEN_INVALID',
+      status: 401,
+    });
+  }
+  // apiFetchCore 직접 호출 (retry=true → TOKEN_EXPIRED 재진입 방지)
+  const result = await apiFetchCore<{
+    accessToken: string;
+    refreshToken: string;
+    refreshExpiresIn: number;
+  }>(
+    '/auth/refresh?platform=mobile',
+    { method: 'POST', body: { refreshToken: rt }, authenticated: false },
+    true,
+  );
+  await setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
+}
+
 /**
  * 와라 API fetcher.
  *
@@ -41,6 +71,7 @@ type RequestOptions = {
  * - 4xx/5xx envelope는 `WaraApiError`로 throw — UI는 `error.code`로 분기
  * - 네트워크 실패는 `WaraNetworkError`로 throw — 재시도/오프라인 표시 대상
  * - 인증 헤더(`Authorization: Bearer ...`) SecureStore 토큰으로 자동
+ * - TOKEN_EXPIRED 401: refresh token으로 자동 갱신 후 원 요청 1회 재시도
  *
  * 사용 예:
  *   const me = await apiFetch<UserDto>('/users/me');
@@ -49,9 +80,10 @@ type RequestOptions = {
  *     body: { title, ... },
  *   });
  */
-export async function apiFetch<T>(
+async function apiFetchCore<T>(
   path: string,
-  options: RequestOptions = {},
+  options: RequestOptions,
+  retry: boolean,
 ): Promise<T> {
   const {
     method = 'GET',
@@ -142,10 +174,35 @@ export async function apiFetch<T>(
     return json.data;
   }
 
-  // 실패 envelope → 도메인 에러
-  // TODO(auth-kakao PR): code === 'TOKEN_EXPIRED' && status === 401일 때
-  //   refresh token으로 access token 자동 갱신 후 원 요청 재시도.
-  //   현재는 UI 레이어에서 catch 후 로그인 화면으로 리다이렉트하는 것이 fallback.
+  // TOKEN_EXPIRED + 첫 시도: refresh 후 원 요청 1회 재시도.
+  // retry=true(refresh 자체 or 재시도 요청)이면 재진입하지 않고 바로 throw.
+  if (res.status === 401 && json.error?.code === 'TOKEN_EXPIRED' && !retry) {
+    if (!inflightRefresh) {
+      inflightRefresh = doRefresh().finally(() => {
+        inflightRefresh = null;
+      });
+    }
+    try {
+      await inflightRefresh;
+    } catch {
+      // refresh 실패 → clearTokens는 doRefresh 내부에서 처리됨
+      throw new WaraApiError({
+        code: json.error.code,
+        type: json.error.type,
+        message: json.error.message,
+        status: res.status,
+        details: json.error.details,
+        requestId: json.meta?.requestId,
+      });
+    }
+    return apiFetchCore<T>(path, options, true);
+  }
+
+  // refresh 자체 실패 또는 재시도에서도 401 → 로그아웃 처리
+  if (res.status === 401) {
+    await clearTokens();
+  }
+
   throw new WaraApiError({
     code: json.error.code,
     type: json.error.type,
@@ -154,4 +211,8 @@ export async function apiFetch<T>(
     details: json.error.details,
     requestId: json.meta?.requestId,
   });
+}
+
+export function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return apiFetchCore<T>(path, options, false);
 }
