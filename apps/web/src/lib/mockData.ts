@@ -3,6 +3,9 @@
  * 실제 API 응답을 흉내내며 V1.0 시나리오를 cover.
  */
 
+/** 로그인 사용자 프로필 사진 (Storybook·마이페이지·홈 헤더) */
+export const mockMeAvatarUrl = "/profile-me.png";
+
 export interface MockInvitation {
   id: string;
   title: string;
@@ -72,9 +75,6 @@ export const mockParticipants: MockParticipant[] = [
   { id: "p11", name: "송태형", avatarUrl: "https://i.pravatar.cc/80?img=65", status: "declined" },
   { id: "p12", name: "전유진", avatarUrl: "https://i.pravatar.cc/80?img=68", status: "noResponse" },
 ];
-
-/** 로그인 사용자 프로필 사진 (Storybook·마이페이지·홈 헤더) */
-export const mockMeAvatarUrl = "/profile-me.png";
 
 export interface MockCommentReply {
   id: string;
