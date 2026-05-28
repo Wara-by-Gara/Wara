@@ -1,6 +1,9 @@
-import { InvitationCover } from '@/components/organisms/InvitationCover/InvitationCover';
-import { Avatar } from '@/components/primitives/Avatar';
-import { Invitation } from '@/lib/api/invitations';
+import { InvitationCover } from "@/components/organisms";
+import { Avatar } from "@/components/primitives";
+import { Invitation } from "@/lib/api/invitations";
+
+
+
 
 interface Props {
   invitation: Invitation;
