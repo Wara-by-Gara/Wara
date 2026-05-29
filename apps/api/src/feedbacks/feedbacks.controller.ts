@@ -43,8 +43,9 @@ export class FeedbacksController {
   listAll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Query(new ZodValidationPipe(ListFeedbacksSchema)) dto: ListFeedbacksDto,
+    @CurrentParticipant() participant: Participant,
   ) {
-    return this.feedbacksService.listAll(invitationId, dto);
+    return this.feedbacksService.listAll(invitationId, dto, participant.id);
   }
 
   //초대장 댓글 생성
@@ -69,11 +70,13 @@ export class FeedbacksController {
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('photoId', ParseUlidPipe) photoId: string,
     @Query(new ZodValidationPipe(ListFeedbacksSchema)) dto: ListFeedbacksDto,
+    @CurrentParticipant() participant: Participant,
   ) {
     return this.feedbacksService.listByPhoto(
       invitationId,
       photoId,
       dto,
+      participant.id,
     );
   }
 

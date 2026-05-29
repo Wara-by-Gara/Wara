@@ -24,6 +24,9 @@ export interface PhotoViewerComment {
   editingSlot?: React.ReactNode;
   onReply?: () => void;
   replies?: CommentReplyItemProps[];
+  likeCount?: number;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -285,6 +288,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
                           replies={c.replies}
+                          likeCount={c.likeCount}
+                          liked={c.liked}
+                          onLike={c.onLike}
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span:not(.mention-highlight)]:text-white/70"
                         />
                       </li>

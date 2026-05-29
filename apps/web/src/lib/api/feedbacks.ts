@@ -24,6 +24,7 @@ export interface Feedback {
   parentId: string | null;
   content: string;
   likeCount: number;
+  likedByMe?: boolean;
   deletedAt: string | null;
   createdAt: string;
   participant: FeedbackParticipant;
@@ -105,4 +106,11 @@ export function deleteFeedback(
   feedbackId: string,
 ): Promise<void> {
   return apiDelete(`/invitations/${invitationId}/feedbacks/${feedbackId}`);
+}
+
+export function toggleFeedbackLike(
+  invitationId: string,
+  feedbackId: string,
+): Promise<{ liked: boolean }> {
+  return apiPost<{ liked: boolean }>(`/invitations/${invitationId}/feedbacks/${feedbackId}/likes`, {});
 }

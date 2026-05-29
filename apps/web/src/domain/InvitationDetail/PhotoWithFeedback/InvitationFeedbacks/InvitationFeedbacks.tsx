@@ -34,7 +34,10 @@ export default function InvitationFeedbacks({
     isFetchingNextPage,
     removeComment,
     editComment,
-    isSubmitting
+    isSubmitting,
+    toggleLike,
+    getLiked,
+    getLikeCount,
   } = useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -123,6 +126,9 @@ export default function InvitationFeedbacks({
               createdAt={timeAgo(f.createdAt)}
               imageUrl={(f.attachedPhoto?.url ?? f.photo?.url) ?? undefined}
               onImageClick={(f.attachedPhoto || f.photo) ? () => handlePhotoClick((f.attachedPhoto ?? f.photo)!.id) : undefined}
+              likeCount={!f.deletedAt ? getLikeCount(f.id, f.likeCount) : undefined}
+              liked={!f.deletedAt ? getLiked(f.id, f.likedByMe ?? false) : undefined}
+              onLike={!f.deletedAt ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined}
               onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
                 f.deletedAt
@@ -192,6 +198,9 @@ export default function InvitationFeedbacks({
                   content: r.deletedAt ? '' : r.content,
                   createdAt: timeAgo(r.createdAt),
                   variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
+                  likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
+                  liked: !isReplyDeleted ? getLiked(r.id, r.likedByMe ?? false) : undefined,
+                  onLike: !isReplyDeleted ? () => toggleLike(r.id, getLiked(r.id, r.likedByMe ?? false), getLikeCount(r.id, r.likeCount)) : undefined,
                   moreMenuItems: isReplyMine ? [
                     {
                       label: '수정',

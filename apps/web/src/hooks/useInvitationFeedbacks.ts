@@ -1,4 +1,4 @@
-import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, updateFeedback } from '@/lib/api/feedbacks';
+import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, toggleFeedbackLike, updateFeedback } from '@/lib/api/feedbacks';
 import { getPresignedUrl, registerPhoto } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +24,8 @@ export function useInvitationFeedback(invitationId: string) {
   const queryClient = useQueryClient();
   const queryKey = ['invitations', invitationId, 'feedbacks'];
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
+  const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
 
   const query = useInfiniteQuery({
     queryKey,
@@ -75,5 +77,23 @@ export function useInvitationFeedback(invitationId: string) {
     }
   };
 
-  return { ...query, submitComment, removeComment, editComment, isSubmitting };
+  const toggleLike = async (feedbackId: string, currentLiked: boolean, currentCount: number) => {
+    const newLiked = !currentLiked;
+    setLikedMap(prev => new Map(prev).set(feedbackId, newLiked));
+    setLikeCountMap(prev => new Map(prev).set(feedbackId, newLiked ? currentCount + 1 : currentCount - 1));
+    try {
+      await toggleFeedbackLike(invitationId, feedbackId);
+      setLikedMap(prev => { const m = new Map(prev); m.delete(feedbackId); return m; });
+      setLikeCountMap(prev => { const m = new Map(prev); m.delete(feedbackId); return m; });
+      queryClient.invalidateQueries({ queryKey });
+    } catch {
+      setLikedMap(prev => new Map(prev).set(feedbackId, currentLiked));
+      setLikeCountMap(prev => new Map(prev).set(feedbackId, currentCount));
+    }
+  };
+
+  const getLiked = (id: string, serverVal: boolean) => likedMap.has(id) ? likedMap.get(id)! : serverVal;
+  const getLikeCount = (id: string, serverVal: number) => likeCountMap.has(id) ? likeCountMap.get(id)! : serverVal;
+
+  return { ...query, submitComment, removeComment, editComment, isSubmitting, toggleLike, getLiked, getLikeCount };
 }

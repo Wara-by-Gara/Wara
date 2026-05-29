@@ -70,10 +70,11 @@ export class FeedbacksService {
   }
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
-  async listAll(invitationId: string, dto: ListFeedbacksDto) {
+  async listAll(invitationId: string, dto: ListFeedbacksDto, participantId?: string) {
     const { rows, nextCursor } = await this.repository.findAllByInvitation(
       invitationId,
       dto,
+      participantId,
     );
     return {
       rows: await this.attachPhotoUrls(this.applyDeletedPlaceholder(rows)),
@@ -86,6 +87,7 @@ export class FeedbacksService {
     invitationId: string,
     photoId: string,
     dto: ListFeedbacksDto,
+    participantId?: string,
   ) {
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
@@ -96,7 +98,7 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    const feedbacks = await this.repository.findAllByPhoto(photoId, dto);
+    const feedbacks = await this.repository.findAllByPhoto(photoId, dto, participantId);
     return {
       rows: await this.attachPhotoUrls(
         this.applyDeletedPlaceholder(feedbacks.rows),

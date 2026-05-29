@@ -70,7 +70,7 @@ export default function PhotoDetailModal({
     setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
   };
 
-  const { data: feedbackData, submitComment, updateComment, deleteComment } = usePhotoFeedback(
+  const { data: feedbackData, submitComment, updateComment, deleteComment, toggleLike, getLiked, getLikeCount } = usePhotoFeedback(
     photo?.invitationId ?? '',
     photo?.id ?? '',
   );
@@ -151,6 +151,9 @@ export default function PhotoDetailModal({
       content: f.content,
       createdAt: timeAgo(f.createdAt),
       variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
+      likeCount: !isDeleted ? getLikeCount(f.id, f.likeCount) : undefined,
+      liked: !isDeleted ? getLiked(f.id, f.likedByMe ?? false) : undefined,
+      onLike: !isDeleted ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined,
       moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
       editingSlot,
       onReply: !isDeleted ? () => {
@@ -175,6 +178,9 @@ export default function PhotoDetailModal({
           content: isReplyDeleted ? '' : r.content,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
+          likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
+          liked: !isReplyDeleted ? getLiked(r.id, r.likedByMe ?? false) : undefined,
+          onLike: !isReplyDeleted ? () => toggleLike(r.id, getLiked(r.id, r.likedByMe ?? false), getLikeCount(r.id, r.likeCount)) : undefined,
           moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
           editingSlot: replyEditingSlot,
         };
