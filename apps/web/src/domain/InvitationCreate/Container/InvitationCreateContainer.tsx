@@ -17,7 +17,6 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
-import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { TemplateCard } from "@/components/organisms/TemplateCard";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
@@ -33,7 +32,6 @@ type Step =
   | "start"
   | "templateCategory"
   | "templateList"
-  | "templatePreview"
   | "blankTemplate"
   | "basicInfo"
   | "scheduleAndMission"
@@ -155,8 +153,8 @@ export default function InvitationCreateContainer() {
   useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("start");
+  useEffect(() => { window.scrollTo(0, 0); }, [step]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [previewTemplateId, setPreviewTemplateId] = useState<string>("");
   const [titleError, setTitleError] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -398,7 +396,13 @@ export default function InvitationCreateContainer() {
                 name={t.name}
                 imageUrl={t.previewImageKey}
                 variant={form.templateId === t.id ? "selected" : "basic"}
-                onClick={() => { setPreviewTemplateId(t.id); setStep("templatePreview"); }}
+                onClick={() => {
+                  if (form.templateId === t.id) {
+                    set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
+                  } else {
+                    set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
+                  }
+                }}
               />
             ))}
           </div>
@@ -409,39 +413,6 @@ export default function InvitationCreateContainer() {
               label: form.templateId ? "이 템플릿으로 시작" : "다음",
               disabled: !form.templateId,
               onClick: () => setStep("basicInfo"),
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // templatePreview
-  if (step === "templatePreview") {
-    const previewTemplate = templates.find((t) => t.id === previewTemplateId);
-    const slides = previewTemplate?.previewImageKey
-      ? [{ src: previewTemplate.previewImageKey, alt: previewTemplate.name }]
-      : [];
-    return (
-      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="템플릿" onBack={() => setStep("templateList")} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
-          <AutoSlide slides={slides} intervalMs={4000} />
-          {previewTemplate && (
-            <p className="text-center text-[13px] text-text-tertiary">{previewTemplate.name}</p>
-          )}
-        </main>
-        <div className="relative z-10 shrink-0">
-          <StickyCTA
-            primary={{
-              label: "선택",
-              onClick: () => {
-                set({
-                  templateId: previewTemplateId,
-                  mainImageKey: previewTemplate?.previewImageKey ?? DEFAULT_COVER_KEY,
-                });
-                setStep("templateList");
-              },
             }}
           />
         </div>
@@ -460,7 +431,10 @@ export default function InvitationCreateContainer() {
     };
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="기본 정보" onBack={() => setStep(form.templateId ? "templateList" : "start")} />
+        <TopAppBar className="shrink-0" title="어떤 모임인가요?" onBack={() => setStep(form.templateId ? "templateList" : "start")} />
+        <div className="h-1 w-full shrink-0 bg-border">
+          <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "33%" }} />
+        </div>
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
           <FormField label="대표 이미지">
             {form.templateId ? (
@@ -513,7 +487,7 @@ export default function InvitationCreateContainer() {
               </>
             )}
           </FormField>
-          <FormField label="제목" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "제목을 입력해주세요" : undefined}>
+          <FormField label="어떤 모임인가요?" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "모임 이름을 입력해주세요" : undefined}>
             <TextInput
               value={form.title}
               onChange={(e) => { set({ title: e.target.value }); if (titleError) setTitleError(false); }}
@@ -521,7 +495,7 @@ export default function InvitationCreateContainer() {
               maxLength={30}
             />
           </FormField>
-          <FormField label="설명" counter={{ current: form.description.length, max: 500 }}>
+          <FormField label="모임 소개" counter={{ current: form.description.length, max: 500 }}>
             <Textarea
               value={form.description}
               onChange={(e) => set({ description: e.target.value })}
@@ -579,7 +553,10 @@ export default function InvitationCreateContainer() {
 
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="날짜·장소·미션" onBack={() => setStep("basicInfo")} />
+        <TopAppBar className="shrink-0" title="언제, 어디서 만날까요?" onBack={() => setStep("basicInfo")} />
+        <div className="h-1 w-full shrink-0 bg-border">
+          <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "66%" }} />
+        </div>
         <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
 
           {/* 날짜·시간 */}
@@ -772,9 +749,12 @@ export default function InvitationCreateContainer() {
     <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", designBgColor)}>
       <TopAppBar
         className="shrink-0"
-        title="디자인"
+        title="어떻게 꾸밀까요?"
         onBack={() => setStep("scheduleAndMission")}
       />
+      <div className="h-1 w-full shrink-0 bg-border">
+        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "100%" }} />
+      </div>
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 미리보기 */}
         <InvitationCover
