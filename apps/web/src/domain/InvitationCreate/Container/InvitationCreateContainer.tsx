@@ -96,13 +96,13 @@ const RSVP_DEFAULT_LABELS: Record<RsvpType, string> = {
 };
 
 const RSVP_PACKS: { id: string; name: string; attending: string; maybe: string; declined: string }[] = [
-  { id: "default",  name: "기본",   attending: "🎉", maybe: "🤔", declined: "😭" },
-  { id: "party",    name: "파티",   attending: "🥳", maybe: "🫧", declined: "😢" },
-  { id: "casual",   name: "캐주얼", attending: "😄", maybe: "😅", declined: "💔" },
-  { id: "love",     name: "러브",   attending: "💖", maybe: "🙏", declined: "🥺" },
-  { id: "fire",     name: "열정",   attending: "🔥", maybe: "⏳", declined: "😞" },
-  { id: "fun",      name: "재미",   attending: "👍", maybe: "🤷", declined: "🙈" },
-  { id: "vibe",     name: "감성",   attending: "🫶", maybe: "💭", declined: "😔" },
+  { id: "default", name: "기본",   attending: "🎉", maybe: "🤔", declined: "😭" },
+  { id: "heart",   name: "하트",   attending: "❤️", maybe: "❤️‍🩹", declined: "💔" },
+  { id: "bloom",   name: "꽃",     attending: "💐", maybe: "🌷", declined: "🥀" },
+  { id: "flirty",  name: "설레임", attending: "😘", maybe: "👄", declined: "🤐" },
+  { id: "weather", name: "날씨",   attending: "☀️", maybe: "⛅", declined: "🌧️" },
+  { id: "hands",   name: "손짓",   attending: "👍", maybe: "🤷", declined: "👎" },
+  { id: "face",    name: "표정",   attending: "😊", maybe: "😶", declined: "😞" },
 ];
 
 type MissionItem =
