@@ -143,12 +143,49 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
             </section>
           )}
         </div>
-        <PhotoWithFeedbackContainer
-          invitationId={invitationId}
-          currentUserId={me?.id ?? null}
-          currentUserNickname={me?.nickname ?? null}
-          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-        />
+        {isLoggedIn ? (
+          <PhotoWithFeedbackContainer
+            invitationId={invitationId}
+            currentUserId={me?.id ?? null}
+            currentUserNickname={me?.nickname ?? null}
+            currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+          />
+        ) : (
+          <div className="relative overflow-hidden rounded-3xl">
+            <div className="pointer-events-none select-none blur-sm">
+              <div className="mb-3 rounded-3xl border border-border bg-surface p-4">
+                <div className="mb-3 h-5 w-16 rounded bg-border" />
+                <div className="grid grid-cols-3 gap-1">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="aspect-square rounded-xl bg-border" />
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-border bg-surface p-4">
+                <div className="mb-3 h-5 w-20 rounded bg-border" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="mb-3 flex gap-2">
+                    <div className="size-8 shrink-0 rounded-full bg-border" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-1/3 rounded bg-border" />
+                      <div className="h-3 w-2/3 rounded bg-border" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/60 backdrop-blur-sm">
+              <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
+              <button
+                type="button"
+                onClick={() => setLoginSheetOpen(true)}
+                className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
+              >
+                로그인하기
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {!isLoggedIn && (
