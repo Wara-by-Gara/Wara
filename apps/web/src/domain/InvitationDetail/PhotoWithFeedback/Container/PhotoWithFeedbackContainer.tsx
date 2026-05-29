@@ -19,7 +19,7 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
 export default function PhotoWithFeedbackContainer({
   invitationId,
   currentUserId,
-  currentUserNickname,
+  currentUserDisplayName,
   currentUserProfileImageUrl,
 }: InvitationDetailProps) {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -63,7 +63,7 @@ export default function PhotoWithFeedbackContainer({
       <InvitationFeedbacks
         invitationId={invitationId}
         currentUserId={currentUserId}
-        currentUserNickname={currentUserNickname}
+        currentUserDisplayName={currentUserDisplayName}
         currentUserProfileImageUrl={currentUserProfileImageUrl}
       />
       {showMomentLogModal && (

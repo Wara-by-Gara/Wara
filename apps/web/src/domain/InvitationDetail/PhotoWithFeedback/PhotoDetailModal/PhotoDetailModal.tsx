@@ -9,6 +9,7 @@ import { useMyParticipant } from '@/hooks/useParticipants';
 import { useDeletePhoto } from '@/hooks/useDeletePhoto';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
+import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   photos: Photo[];
@@ -123,7 +124,10 @@ export default function PhotoDetailModal({
     return [
       {
         id: f.id,
-        authorName: f.participant.user.nickname,
+        authorName:
+          isMine && me
+            ? getCommentAuthorName(me)
+            : getCommentAuthorName(f.participant.user),
         content: f.content,
         createdAt: timeAgo(f.createdAt),
         variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
@@ -131,7 +135,10 @@ export default function PhotoDetailModal({
         editingSlot,
         onReply: !isDeleted ? () => {
           setCommentsOpen(true);
-          setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
+          setReplyingTo({
+            id: f.id,
+            authorName: getCommentAuthorName(f.participant.user),
+          });
         } : undefined,
       },
       ...f.replies.map((r) => {
@@ -147,7 +154,10 @@ export default function PhotoDetailModal({
         ) : undefined;
         return {
           id: r.id,
-          authorName: r.participant.user.nickname,
+          authorName:
+            isReplyMine && me
+              ? getCommentAuthorName(me)
+              : getCommentAuthorName(r.participant.user),
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: `↳ ${r.content}`,
           createdAt: timeAgo(r.createdAt),

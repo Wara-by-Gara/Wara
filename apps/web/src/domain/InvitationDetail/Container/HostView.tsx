@@ -20,7 +20,7 @@ import type { getParticipants } from "@/lib/api/participants";
 import type { getMe } from "@/lib/api/users";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
-import { FONT_CLASS } from "@/domain/InvitationDetail/types";
+import { FONT_CLASS, getParticipantDisplayName } from "@/domain/InvitationDetail/types";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
@@ -110,6 +110,8 @@ export default function HostView({ invitationId, invitation, participantsData, m
           ) : null}
         </header>
 
+        <InformationsContainer invitation={invitation} isHost invitationId={invitationId} />
+        
         {summary && (
           <ParticipantSummaryCard
             variant="host"
@@ -150,7 +152,8 @@ export default function HostView({ invitationId, invitation, participantsData, m
               {recentParticipants.map(({ participant, user }) => (
                 <ParticipantItem
                   key={participant.id}
-                  name={user.nickname ?? "익명"}
+                  name={getParticipantDisplayName(participant, user)}
+                  handle={user.nickname ?? undefined}
                   avatarUrl={user.profileImageUrl ?? undefined}
                   status={participant.rsvpStatus === "attending" ? "attending" : participant.rsvpStatus === "undecided" ? "maybe" : "declined"}
                   isHost={participant.memberRole === "HOST"}
@@ -167,7 +170,7 @@ export default function HostView({ invitationId, invitation, participantsData, m
         <PhotoWithFeedbackContainer
           invitationId={invitationId}
           currentUserId={me?.id ?? null}
-          currentUserNickname={me?.nickname ?? null}
+          currentUserDisplayName={me?.name ?? null}
           currentUserProfileImageUrl={me?.profileImageUrl ?? null}
         />
       </main>
