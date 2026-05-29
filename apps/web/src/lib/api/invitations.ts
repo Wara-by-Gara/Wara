@@ -1,5 +1,7 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
 
+export type MainImageFrame = 'default' | 'upload' | 'ai';
+
 type ImageContentType = "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
 
 export async function getInvitationImagePresignedUrl(
@@ -104,4 +106,14 @@ export function updateInvitationStatus(id: string, status: "active" | "closed"):
 
 export function deleteInvitation(id: string): Promise<void> {
   return apiDelete(`/invitations/${id}`);
+}
+
+export function applyAiToMainImage(
+  invitationId: string,
+  imageKey: string,
+): Promise<{ jobId: string }> {
+  return apiPost<{ jobId: string }>(
+    `/invitations/${invitationId}/main-image/ai`,
+    { imageKey },
+  );
 }

@@ -1,5 +1,13 @@
 'use client';
 
+export interface AiCompleteEventDetail {
+  jobId: string;
+  invitationId: string;
+  key: string | null;
+  url: string | null;
+  success: boolean;
+}
+
 import { useEffect } from 'react';
 import {
   useQuery,
