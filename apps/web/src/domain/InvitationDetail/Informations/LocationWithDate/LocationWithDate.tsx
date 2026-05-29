@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
 import { ROUTES } from "@/constants/routes";
@@ -12,9 +13,11 @@ type Props = {
   invitation: Invitation;
   isHost: boolean;
   invitationId: string;
+  voteResultsHref?: string;
 };
 
-export default function LocationWithDate({ invitation, isHost, invitationId }: Props) {
+export default function LocationWithDate({ invitation, isHost, invitationId, voteResultsHref }: Props) {
+  const router = useRouter();
   const eventLocation = invitation.eventLocation ?? null;
 
   return (
@@ -37,36 +40,33 @@ export default function LocationWithDate({ invitation, isHost, invitationId }: P
             variant="datetime"
             title={<time suppressHydrationWarning>{dateLabel}</time>}
             time={<time suppressHydrationWarning>{timeLabel}</time>}
+            badge={voteResultsHref ? (
+              <Link href={voteResultsHref}
+                className="text-[11px] font-medium text-primary hover:underline transition-colors"
+              >
+                투표 결과
+              </Link>
+            ) : undefined}
           />
         );
       })()}
 
       <div>
         {eventLocation ? (
-          <>
-            <LocationCard
-              variant="preview"
-              placeName={eventLocation.placeName}
-              address={
-                eventLocation.detailAddress
-                  ? `${eventLocation.address} ${eventLocation.detailAddress}`
-                  : eventLocation.address
-              }
-              onCopyAddress={() => {
-                navigator.clipboard.writeText(eventLocation.address).catch(() => {});
-              }}
-              onGetDirections={() => {
-                const url = `https://map.kakao.com/link/to/${encodeURIComponent(eventLocation.placeName)},${eventLocation.lat},${eventLocation.lng}`;
-                window.open(url, "_blank");
-              }}
-            />
-            <Link
-              href={ROUTES.INVITATIONS.LOCATION(invitationId)}
-              className="mt-2 block text-center text-[13px] text-primary"
-            >
-              지도에서 보기 →
-            </Link>
-          </>
+          <LocationCard
+            variant="preview"
+            placeName={eventLocation.placeName}
+            address={
+              eventLocation.detailAddress
+                ? `${eventLocation.address} ${eventLocation.detailAddress}`
+                : eventLocation.address
+            }
+            onViewMap={() => router.push(ROUTES.INVITATIONS.LOCATION(invitationId))}
+            onGetDirections={() => {
+              const url = `https://map.kakao.com/link/to/${encodeURIComponent(eventLocation.placeName)},${eventLocation.lat},${eventLocation.lng}`;
+              window.open(url, "_blank");
+            }}
+          />
         ) : (
           <>
             <LocationCard variant="unknown" />

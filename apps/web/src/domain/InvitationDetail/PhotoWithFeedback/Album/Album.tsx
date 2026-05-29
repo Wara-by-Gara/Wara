@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { type Photo, getPresignedUrl, registerPhoto } from '@/lib/api/photos';
+import { type Photo, getPresignedUrl, registerPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { Icon } from '@/components/icons';
 import AlbumModal from '../AlbumModal/AlbumModal';
@@ -41,12 +41,10 @@ interface Props {
   invitationId: string;
   photos: Photo[];
   total: number;
-  fetchNextPage: () => void;
   hasNextPage: boolean;
-  isFetchingNextPage: boolean;
 }
 
-export default function Album({ invitationId, photos, total, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
+export default function Album({ invitationId, photos, total, hasNextPage }: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,6 +72,22 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   const handleLikeChange = (photoId: string, liked: boolean, likeCount: number) => {
     setLikedMap((prev) => new Map(prev).set(photoId, liked));
     setLikeCountMap((prev) => new Map(prev).set(photoId, likeCount));
+  };
+
+  const handlePhotoLike = async (photoId: string) => {
+    const currentLiked = likedMap.has(photoId) ? likedMap.get(photoId)! : (photos.find((p) => p.id === photoId)?.liked ?? false);
+    const currentCount = likeCountMap.get(photoId) ?? photos.find((p) => p.id === photoId)?.likeCount ?? 0;
+    const newLiked = !currentLiked;
+    setLikedMap((prev) => new Map(prev).set(photoId, newLiked));
+    setLikeCountMap((prev) => new Map(prev).set(photoId, newLiked ? currentCount + 1 : currentCount - 1));
+    try {
+      const result = await togglePhotoLike(invitationId, photoId);
+      setLikedMap((prev) => new Map(prev).set(photoId, result.liked));
+      setLikeCountMap((prev) => new Map(prev).set(photoId, result.likeCount));
+    } catch {
+      setLikedMap((prev) => new Map(prev).set(photoId, currentLiked));
+      setLikeCountMap((prev) => new Map(prev).set(photoId, currentCount));
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,13 +145,16 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   return (
     <>
       <div className="rounded-3xl border border-border bg-surface p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-[15px] font-bold text-text-primary">앨범</span>
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[15px] font-bold text-text-primary">사진 앨범</span>
+            <p className="text-[12px] text-text-secondary">{totalForOverflow}개의 사진</p>
+          </div>
           <button
             type="button"
             aria-label="사진 올리기"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-text-inverse"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-text-inverse"
           >
             <Icon name="camera" size="sm" color="currentColor" decorative />
           </button>
@@ -152,22 +169,36 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
           onChange={handleFileChange}
         />
 
-        <PhotoGrid>
-          {preview.map((photo, idx) => (
-            <PhotoGridItem
-              key={photo.id}
-              src={photo.url}
-              alt=""
-              onClick={() => setSelectedIndex(idx)}
-            />
-          ))}
-          {remaining > 0 && (
-            <PhotoGridItem
-              overflowLabel={overflowLabel}
-              onClick={() => setShowModal(true)}
-            />
-          )}
-        </PhotoGrid>
+        {photos.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="mt-2 w-full rounded-2xl border-2 border-dashed border-border py-8 text-center"
+          >
+            <Icon name="camera" size="md" color="currentColor" decorative className="mx-auto mb-2 text-text-tertiary" />
+            <p className="text-[14px] font-medium text-text-secondary">우리 추억을 업로드 해보세요</p>
+          </button>
+        ) : (
+          <PhotoGrid>
+            {preview.map((photo, idx) => (
+              <PhotoGridItem
+                key={photo.id}
+                src={photo.url}
+                alt=""
+                likeCount={likeCountMap.get(photo.id) ?? photo.likeCount}
+                liked={likedMap.has(photo.id) ? likedMap.get(photo.id)! : (photo.liked ?? false)}
+                onLike={() => handlePhotoLike(photo.id)}
+                onClick={() => setSelectedIndex(idx)}
+              />
+            ))}
+            {remaining > 0 && (
+              <PhotoGridItem
+                overflowLabel={overflowLabel}
+                onClick={() => setShowModal(true)}
+              />
+            )}
+          </PhotoGrid>
+        )}
       </div>
 
       {uploadState === 'previewing' && (
@@ -213,9 +244,9 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
         <AlbumModal
           photos={photos}
           onClose={() => setShowModal(false)}
-          fetchNextPage={fetchNextPage}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
+          initialLikedMap={likedMap}
+          initialLikeCountMap={likeCountMap}
+          onLikeChange={handleLikeChange}
         />
       )}
 

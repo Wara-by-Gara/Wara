@@ -30,64 +30,75 @@ export class PhotosRepository {
   }
 
   //커서 형식으로 모든 사진 가져옴(초대장 사진 목록 무한스크롤용 DB 쿼리)
-async findAllByInvitationId(invitationId: string, dto: ListPhotosDto) {
-  const { cursor, limit, sort, order } = dto;
-  const sortCol = sort === 'takenAt' ? photos.takenAt : photos.createdAt;
-  const orderFn = order === 'asc' ? asc : desc;
+  async findAllByInvitationId(invitationId: string, dto: ListPhotosDto, participantId?: string) {
+    const { cursor, limit, sort, order } = dto;
+    const sortCol = sort === 'takenAt' ? photos.takenAt : photos.createdAt;
+    const orderFn = order === 'asc' ? asc : desc;
 
-  const conditions = [
-    eq(photos.invitationId, invitationId),
-    isNull(photos.deletedAt),
-  ];
+    const conditions = [
+      eq(photos.invitationId, invitationId),
+      isNull(photos.deletedAt),
+    ];
 
-  const [countRow] = await this.db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(photos)
-    .where(and(...conditions));
-
-  const total = countRow?.total ?? 0;
-
-  if (cursor) {
-    // offset 방식으로 cursor 이후 데이터 가져오기
-    const cursorIndex = await this.db
-      .select({ id: photos.id })
+    const [countRow] = await this.db
+      .select({ total: sql<number>`count(*)::int` })
       .from(photos)
-      .where(and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt)))
-      .orderBy(orderFn(sortCol))
-      .then((rows) => rows.findIndex((r) => r.id === cursor));
+      .where(and(...conditions));
 
-    if (cursorIndex !== -1) {
-      const rows = await this.db
-        .select()
+    const total = countRow?.total ?? 0;
+
+    const attachLiked = async <T extends { id: string }>(rows: T[]) => {
+      if (!participantId || rows.length === 0) return rows as (T & { liked?: boolean })[];
+      const photoIds = rows.map((p) => p.id);
+      const likes = await this.db
+        .select({ photoId: photoLikes.photoId })
+        .from(photoLikes)
+        .where(and(inArray(photoLikes.photoId, photoIds), eq(photoLikes.participantId, participantId)));
+      const likedSet = new Set(likes.map((l) => l.photoId));
+      return rows.map((p) => ({ ...p, liked: likedSet.has(p.id) }));
+    };
+
+    if (cursor) {
+      // offset 방식으로 cursor 이후 데이터 가져오기
+      const cursorIndex = await this.db
+        .select({ id: photos.id })
         .from(photos)
-        .where(and(...conditions))
+        .where(and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt)))
         .orderBy(orderFn(sortCol))
-        .offset(cursorIndex + 1)
-        .limit(limit + 1);
+        .then((rows) => rows.findIndex((r) => r.id === cursor));
 
-      const hasNext = rows.length > limit;
-      return {
-        rows: rows.slice(0, limit),
-        nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
-        total,
-      };
+      if (cursorIndex !== -1) {
+        const rows = await this.db
+          .select()
+          .from(photos)
+          .where(and(...conditions))
+          .orderBy(orderFn(sortCol))
+          .offset(cursorIndex + 1)
+          .limit(limit + 1);
+
+        const hasNext = rows.length > limit;
+        return {
+          rows: await attachLiked(rows.slice(0, limit)),
+          nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+          total,
+        };
+      }
     }
+
+    const rows = await this.db
+      .select()
+      .from(photos)
+      .where(and(...conditions))
+      .orderBy(orderFn(sortCol))
+      .limit(limit + 1);
+
+    const hasNext = rows.length > limit;
+    return {
+      rows: await attachLiked(rows.slice(0, limit)),
+      nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+      total,
+    };
   }
-
-  const rows = await this.db
-    .select()
-    .from(photos)
-    .where(and(...conditions))
-    .orderBy(orderFn(sortCol))
-    .limit(limit + 1);
-
-  const hasNext = rows.length > limit;
-  return {
-    rows: rows.slice(0, limit),
-    nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
-    total,
-  };
-}
 
   //다운로드용(낱개, 지정, 전체)
   async findPhotosByIds(ids: string[], invitationId: string) {
@@ -159,19 +170,21 @@ async findAllByInvitationId(invitationId: string, dto: ListPhotosDto) {
   }
 
   //좋아요 up
-  async createLike(photoId: string, participantId: string) {
-    await this.db.transaction(async (tx) => {
+  async createLike(photoId: string, participantId: string): Promise<number> {
+    return this.db.transaction(async (tx) => {
       await tx.insert(photoLikes).values({ photoId, participantId });
-      await tx
+      const [updated] = await tx
         .update(photos)
         .set({ likeCount: sql`${photos.likeCount}+1` })
-        .where(eq(photos.id, photoId));
+        .where(eq(photos.id, photoId))
+        .returning({ likeCount: photos.likeCount });
+      return updated!.likeCount;
     });
   }
 
   //좋아요 취소(삭제)
-  async deleteLike(photoId: string, participantId: string) {
-    await this.db.transaction(async (tx) => {
+  async deleteLike(photoId: string, participantId: string): Promise<number> {
+    return this.db.transaction(async (tx) => {
       await tx
         .delete(photoLikes)
         .where(
@@ -180,11 +193,13 @@ async findAllByInvitationId(invitationId: string, dto: ListPhotosDto) {
             eq(photoLikes.participantId, participantId),
           ),
         );
-      await tx
+      const [updated] = await tx
         .update(photos)
         //likeCount가 -1된 값을 주거나, 0을 반환 (count가 0보다 이하는 되지 않게)
         .set({ likeCount: sql`GREATEST(${photos.likeCount} - 1, 0)` })
-        .where(eq(photos.id, photoId));
+        .where(eq(photos.id, photoId))
+        .returning({ likeCount: photos.likeCount });
+      return updated!.likeCount;
     });
   }
 

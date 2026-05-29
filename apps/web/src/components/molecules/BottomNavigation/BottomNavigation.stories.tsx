@@ -32,16 +32,16 @@ const TABS_3: BottomNavItem[] = [
 
 const TABS_4: BottomNavItem[] = [
   { key: "home", label: "홈", icon: "home" },
-  { key: "invitations", label: "초대장", icon: "invitation" },
-  { key: "notifications", label: "알림", icon: "bell", badge: true },
+  { key: "calendar", label: "캘린더", icon: "calendar" },
+  { key: "friends", label: "친구", icon: "users", badge: true },
   { key: "me", label: "마이페이지", icon: "user" },
 ];
 
 const TABS_5: BottomNavItem[] = [
   { key: "home", label: "홈", icon: "home" },
-  { key: "invitations", label: "초대장", icon: "invitation" },
+  { key: "calendar", label: "캘린더", icon: "calendar" },
   { key: "create", label: "만들기", icon: "plus", fab: true },
-  { key: "notifications", label: "앨범", icon: "image", badge: true },
+  { key: "friends", label: "친구", icon: "users" },
   { key: "me", label: "마이페이지", icon: "user" },
 ];
 
@@ -50,7 +50,7 @@ export const FourTabs: Story = { args: { items: TABS_4, activeKey: "home" } };
 export const FiveTabsWithFab: Story = { args: { items: TABS_5, activeKey: "home" } };
 export const WithDisabled: Story = {
   args: {
-    items: TABS_4.map((t) => (t.key === "notifications" ? { ...t, disabled: true } : t)),
+    items: TABS_4.map((t) => (t.key === "friends" ? { ...t, disabled: true } : t)),
     activeKey: "home",
   },
 };

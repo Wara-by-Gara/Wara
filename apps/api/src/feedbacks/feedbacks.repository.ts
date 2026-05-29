@@ -49,7 +49,7 @@ export class FeedbacksRepository {
   }
 
   //초대장댓글 + 사진 댓글 통합 목록
-async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
+async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participantId?: string) {
   const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
   const photoIds = await this.db
@@ -67,13 +67,14 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     ...cursorConditions,
   ];
 
-  const rows = await this.db.query.feedbacks.findMany({
+  const rawRows = await this.db.query.feedbacks.findMany({
     where: and(...conditions),
     with: {
       participant: {
         with: {
           user: {
             columns: {
+              name: true,
               nickname: true,
               profileImageUrl: true,
             },
@@ -81,18 +82,21 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
         },
       },
       photo: true,
+      attachedPhoto: true,
       replies: {
         with: {
           participant: {
             with: {
               user: {
                 columns: {
+                  name: true,
                   nickname: true,
                   profileImageUrl: true,
                 },
               },
             },
           },
+          attachedPhoto: true,
         },
         orderBy: (t, { asc }) => [asc(t.createdAt)],
       },
@@ -100,20 +104,39 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
     limit: LIMIT + 1,
   });
-  return this.paginate(rows, LIMIT);
+
+  const { rows: paged, nextCursor } = this.paginate(rawRows, LIMIT);
+  if (!participantId || paged.length === 0) return { rows: paged, nextCursor };
+
+  const allIds = paged.flatMap(r => [r.id, ...r.replies.map(rep => rep.id)]);
+  const likes = await this.db
+    .select({ feedbackId: feedbackLikes.feedbackId })
+    .from(feedbackLikes)
+    .where(and(inArray(feedbackLikes.feedbackId, allIds), eq(feedbackLikes.participantId, participantId)));
+  const likedSet = new Set(likes.map(l => l.feedbackId));
+
+  const rows = paged.map(r => ({
+    ...r,
+    likedByMe: likedSet.has(r.id),
+    replies: r.replies.map(rep => ({ ...rep, likedByMe: likedSet.has(rep.id) })),
+  }));
+  return { rows, nextCursor };
 }
 
   //사진 댓글 목록
-  async findAllByPhoto(photoId: string, dto: ListFeedbacksDto) {
+  async findAllByPhoto(photoId: string, dto: ListFeedbacksDto, participantId?: string) {
     const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
     const conditions = [
-      eq(feedbacks.photoId, photoId),
+      or(
+        eq(feedbacks.photoId, photoId),
+        eq(feedbacks.attachedPhotoId, photoId),
+      ) as SQL,
       isNull(feedbacks.parentId),
       ...cursorConditions,
     ];
 
-    const rows = await this.db.query.feedbacks.findMany({
+    const rawRows = await this.db.query.feedbacks.findMany({
       where: and(...conditions),
       with: {
         participant: {
@@ -128,6 +151,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
           },
         },
         photo: true,
+        attachedPhoto: true,
         replies: {
           with: {
             participant: {
@@ -141,6 +165,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
                 },
               },
             },
+            attachedPhoto: true,
           },
           orderBy: (t, { asc }) => [asc(t.createdAt)],
         },
@@ -148,7 +173,23 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
       orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
       limit: LIMIT + 1,
     });
-    return this.paginate(rows, LIMIT);
+
+    const { rows: paged, nextCursor } = this.paginate(rawRows, LIMIT);
+    if (!participantId || paged.length === 0) return { rows: paged, nextCursor };
+
+    const allIds = paged.flatMap(r => [r.id, ...r.replies.map(rep => rep.id)]);
+    const likes = await this.db
+      .select({ feedbackId: feedbackLikes.feedbackId })
+      .from(feedbackLikes)
+      .where(and(inArray(feedbackLikes.feedbackId, allIds), eq(feedbackLikes.participantId, participantId)));
+    const likedSet = new Set(likes.map(l => l.feedbackId));
+
+    const rows = paged.map(r => ({
+      ...r,
+      likedByMe: likedSet.has(r.id),
+      replies: r.replies.map(rep => ({ ...rep, likedByMe: likedSet.has(rep.id) })),
+    }));
+    return { rows, nextCursor };
   }
 
   //댓글 단건 조회
@@ -175,11 +216,20 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     });
   }
 
+  //닉네임 조회 (멘션 알림용)
+  async findUserNickname(userId: string): Promise<string | null> {
+    const user = await this.db.query.users.findFirst({
+      where: (t, { eq }) => eq(t.id, userId),
+      columns: { nickname: true },
+    });
+    return user?.nickname ?? null;
+  }
+
   //댓글 생성
   async create(
     data: Pick<
       NewFeedback,
-      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId'
+      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId' | 'attachedPhotoId'
     >,
   ) {
     return await this.db.transaction(async (tx) => {

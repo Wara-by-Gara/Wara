@@ -23,11 +23,15 @@ export interface PhotoGridItemProps
   overflowLabel?: string;
   /** 좋아요 수 표시 */
   likeCount?: number;
+  /** 좋아요 여부 */
+  liked?: boolean;
+  /** 좋아요 토글 콜백 */
+  onLike?: () => void;
 }
 
 export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
   function PhotoGridItem(
-    { className, src, alt, status = "default", progress = 0, isOwner, hostManageMode, overflowLabel, likeCount, ...props },
+    { className, src, alt, status = "default", progress = 0, isOwner, hostManageMode, overflowLabel, likeCount, liked, onLike, ...props },
     ref,
   ) {
     return (
@@ -82,9 +86,18 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         ) : null}
 
         {/* Like count overlay */}
-        {likeCount !== undefined && likeCount > 0 && !overflowLabel ? (
-          <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-bold text-white">
-            ♥ {likeCount}
+        {(likeCount !== undefined || onLike) && !overflowLabel ? (
+          <span
+            className={cn(
+              "absolute bottom-1 right-1 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-bold",
+              liked ? "text-primary" : "text-white",
+              onLike && "cursor-pointer",
+            )}
+            onClick={onLike ? (e) => { e.stopPropagation(); onLike(); } : undefined}
+            role={onLike ? "button" : undefined}
+            aria-label={onLike ? (liked ? "좋아요 취소" : "좋아요") : undefined}
+          >
+            ♥ {likeCount ?? 0}
           </span>
         ) : null}
 

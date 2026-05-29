@@ -5,10 +5,12 @@ import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/pho
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
-import { useMyParticipant } from '@/hooks/useParticipants';
+import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
 import { useDeletePhoto } from '@/hooks/useDeletePhoto';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
+import { Avatar } from '@/components/primitives/Avatar';
+import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   photos: Photo[];
@@ -32,10 +34,14 @@ export default function PhotoDetailModal({
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [isLiking, setIsLiking] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
   const { data: myParticipant } = useMyParticipant(photo?.invitationId ?? '');
+  const { data: participantsData, isLoading: isParticipantsLoading } = useParticipants(photo?.invitationId ?? '');
+  const allParticipants = participantsData?.participants ?? [];
   const { mutate: deleteMutate, isPending: isDeleting } = useDeletePhoto(photo?.invitationId ?? '', onClose);
   const isOwner = !!myParticipant && !!photo && myParticipant.id === photo.participantId;
 
@@ -46,9 +52,27 @@ export default function PhotoDetailModal({
         onLikeChange(photo.id, result.liked, result.likeCount);
       }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo?.id]);
 
-  const { data: feedbackData, submitComment, updateComment, deleteComment } = usePhotoFeedback(
+  const mentionQuery = (() => {
+    const match = inputValue.match(/@(\S*)$/);
+    return match ? match[1] : null;
+  })();
+
+  const filteredParticipants = mentionQuery !== null
+    ? allParticipants.filter((p) =>
+        (p.user.nickname ?? '').toLowerCase().includes(mentionQuery!.toLowerCase())
+      )
+    : [];
+
+  const handleSelectMention = (userId: string, nickname: string) => {
+    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+    setInputValue(newValue);
+    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+  };
+
+  const { data: feedbackData, submitComment, updateComment, deleteComment, toggleLike, getLiked, getLikeCount } = usePhotoFeedback(
     photo?.invitationId ?? '',
     photo?.id ?? '',
   );
@@ -76,8 +100,7 @@ export default function PhotoDetailModal({
     setIsLiking(true);
     try {
       const result = await togglePhotoLike(photo.invitationId, photo.id);
-      const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
-      onLikeChange(photo.id, result.liked, newCount);
+      onLikeChange(photo.id, result.liked, result.likeCount);
     } finally {
       setIsLiking(false);
     }
@@ -104,12 +127,14 @@ export default function PhotoDetailModal({
       await updateComment(editingComment.id, text);
       setEditingComment(undefined);
     } else {
-      await submitComment(text, replyingTo?.id);
+      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined);
       setReplyingTo(null);
+      setMentionedUserIds([]);
     }
+    setInputValue('');
   };
 
-  const comments = (feedbackData?.rows ?? []).flatMap((f) => {
+  const comments = (feedbackData?.rows ?? []).map((f) => {
     const isDeleted = !!f.deletedAt;
     const isMine = !isDeleted && !!me && f.participant.userId === me.id;
     const isEditing = editingComment?.id === f.id;
@@ -120,21 +145,23 @@ export default function PhotoDetailModal({
         onCancel={() => setEditingComment(undefined)}
       />
     ) : undefined;
-    return [
-      {
-        id: f.id,
-        authorName: f.participant.user.nickname,
-        content: f.content,
-        createdAt: timeAgo(f.createdAt),
-        variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
-        moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
-        editingSlot,
-        onReply: !isDeleted ? () => {
-          setCommentsOpen(true);
-          setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
-        } : undefined,
-      },
-      ...f.replies.map((r) => {
+    return {
+      id: f.id,
+      authorName: getCommentAuthorName(f.participant.user),
+      authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
+      content: f.content,
+      createdAt: timeAgo(f.createdAt),
+      variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
+      likeCount: !isDeleted ? getLikeCount(f.id, f.likeCount) : undefined,
+      liked: !isDeleted ? getLiked(f.id, f.likedByMe ?? false) : undefined,
+      onLike: !isDeleted ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined,
+      moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
+      editingSlot,
+      onReply: !isDeleted ? () => {
+        setCommentsOpen(true);
+        setReplyingTo({ id: f.id, authorName: f.participant.user.nickname ?? '' });
+      } : undefined,
+      replies: f.replies.map((r) => {
         const isReplyDeleted = !!r.deletedAt;
         const isReplyMine = !isReplyDeleted && !!me && r.participant.userId === me.id;
         const isReplyEditing = editingComment?.id === r.id;
@@ -147,16 +174,22 @@ export default function PhotoDetailModal({
         ) : undefined;
         return {
           id: r.id,
-          authorName: r.participant.user.nickname,
+          authorName:
+            isReplyMine && me
+              ? getCommentAuthorName(me)
+              : getCommentAuthorName(r.participant.user),
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
-          content: `↳ ${r.content}`,
+          content: isReplyDeleted ? '' : r.content,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
+          likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
+          liked: !isReplyDeleted ? getLiked(r.id, r.likedByMe ?? false) : undefined,
+          onLike: !isReplyDeleted ? () => toggleLike(r.id, getLiked(r.id, r.likedByMe ?? false), getLikeCount(r.id, r.likeCount)) : undefined,
           moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
           editingSlot: replyEditingSlot,
         };
       }),
-    ];
+    };
   });
 
   return (
@@ -181,13 +214,42 @@ export default function PhotoDetailModal({
       onSave={handleSave}
       src={photo.url}
       likeCount={currentLikeCount}
-      commentCount={feedbackData?.rows.length ?? 0}
+      commentCount={feedbackData?.rows.reduce((acc, f) => acc + 1 + f.replies.length, 0) ?? 0}
       createdAt={timeAgo(photo.createdAt)}
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+      inputValue={inputValue}
+      onInputValueChange={setInputValue}
+      mentionDropdown={mentionQuery !== null ? (
+        <div className="mx-3 mb-1 rounded-2xl border border-white/10 bg-black/80 overflow-hidden">
+          {isParticipantsLoading ? (
+            <p className="px-4 py-3 text-[13px] text-white/50">불러오는 중...</p>
+          ) : filteredParticipants.length === 0 ? (
+            <p className="px-4 py-3 text-[13px] text-white/50">일치하는 참가자 없음</p>
+          ) : (
+            <ul>
+              {filteredParticipants.map((p) => (
+                <li key={p.user.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10"
+                  >
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
+                    <span className="text-[14px] text-white">@{p.user.nickname}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : undefined}
       replyBanner={replyingTo ? (
         <div className="flex items-center justify-between border-t border-white/10 px-4 py-1.5">
           <span className="text-[12px] text-white/60">@{replyingTo.authorName}에게 답글</span>

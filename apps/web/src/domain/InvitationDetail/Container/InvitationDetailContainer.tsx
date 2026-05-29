@@ -18,7 +18,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
-  const { invitation, isLoading, isError, me, myParticipant, participantsData } =
+  const { invitation, isLoading, isError, me, participantsData } =
     useInvitationDetail(invitationId);
 
   if (!hydrated || isLoading) {
@@ -54,7 +54,6 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
       invitationId={invitationId}
       invitation={invitation}
       me={me}
-      myParticipant={myParticipant}
       participantsData={participantsData}
     />
   );

@@ -12,7 +12,7 @@ export interface FeedbackParticipant {
   memberRole: string;
   user: {
     name: string | null;
-    nickname: string;
+    nickname?: string | null;
     profileImageUrl: string | null;
   };
 }
@@ -24,16 +24,21 @@ export interface Feedback {
   parentId: string | null;
   content: string;
   likeCount: number;
+  likedByMe?: boolean;
   deletedAt: string | null;
   createdAt: string;
   participant: FeedbackParticipant;
   photo: FeedbackPhoto | null;
+  attachedPhoto: FeedbackPhoto | null;
   replies: Feedback[];
 }
+
+export const INVITATION_FEEDBACK_PAGE_SIZE = 10;
 
 export interface FeedbackListResponse {
   rows: Feedback[];
   nextCursor: string | null;
+  total?: number;
 }
 
 export function getPhotoFeedbacks(
@@ -50,19 +55,26 @@ export function createPhotoFeedback(
   photoId: string,
   content: string,
   parentId?: string,
+  mentionedUserIds?: string[],
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
-    { content, ...(parentId && { parentId }) },
+    {
+      content,
+      ...(parentId && { parentId }),
+      ...(mentionedUserIds?.length && { mentionedUserIds }),
+    },
   );
 }
 
 export function getInvitationFeedbacks(
   invitationId: string,
   cursor?: string,
+  limit = INVITATION_FEEDBACK_PAGE_SIZE,
 ): Promise<FeedbackListResponse> {
   const params = new URLSearchParams();
   if (cursor) params.set('cursor', cursor);
+  params.set('limit', String(limit));
   return apiGet<FeedbackListResponse>(
     `/invitations/${invitationId}/feedbacks/all?${params}`,
   );
@@ -72,10 +84,14 @@ export function createInvitationFeedback(
   invitationId: string,
   content: string,
   parentId?: string,
+  attachedPhotoId?: string,
+  mentionedUserIds?: string[],
 ): Promise<Feedback> {
   return apiPost<Feedback>(`/invitations/${invitationId}/feedbacks`, {
     content,
     ...(parentId && { parentId }),
+    ...(attachedPhotoId && { attachedPhotoId }),
+    ...(mentionedUserIds?.length && { mentionedUserIds }),
   });
 }
 
@@ -95,4 +111,11 @@ export function deleteFeedback(
   feedbackId: string,
 ): Promise<void> {
   return apiDelete(`/invitations/${invitationId}/feedbacks/${feedbackId}`);
+}
+
+export function toggleFeedbackLike(
+  invitationId: string,
+  feedbackId: string,
+): Promise<{ liked: boolean }> {
+  return apiPost<{ liked: boolean }>(`/invitations/${invitationId}/feedbacks/${feedbackId}/likes`, {});
 }

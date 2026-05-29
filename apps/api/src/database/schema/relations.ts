@@ -9,7 +9,6 @@ import {
   invitationLinkEvents,
   invitationBlocklists,
 } from './invitations';
-import { aiImageJobs } from './ai-image-jobs';
 import { eventLocations, participantLocations } from './locations';
 import { photos, photoLikes } from './photos';
 import { missions, missionAssignments } from './missions';
@@ -48,7 +47,6 @@ export const invitationsRelations = relations(invitations, ({ one, many }) => ({
   sendLogs: many(invitationSendLogs),
   participantLocations: many(participantLocations),
   blocklists: many(invitationBlocklists),
-  aiImageJobs: many(aiImageJobs),
 }));
 
 export const invitationBlocklistsRelations = relations(invitationBlocklists, ({ one }) => ({
@@ -71,14 +69,16 @@ export const participantsRelations = relations(participants, ({ one, many }) => 
 export const photosRelations = relations(photos, ({ one, many }) => ({
   participant: one(participants, { fields: [photos.participantId], references: [participants.id] }),
   invitation: one(invitations, { fields: [photos.invitationId], references: [invitations.id] }),
-  feedbacks: many(feedbacks),
+  feedbacks: many(feedbacks, { relationName: 'feedbacks' }),
+  attachedFeedbacks: many(feedbacks, { relationName: 'attachedFeedbacks' }),
   likes: many(photoLikes),
 }));
 
 export const feedbacksRelations = relations(feedbacks, ({ one, many }) => ({
   participant: one(participants, { fields: [feedbacks.participantId], references: [participants.id] }),
   invitation: one(invitations, { fields: [feedbacks.invitationId], references: [invitations.id] }),
-  photo: one(photos, { fields: [feedbacks.photoId], references: [photos.id] }),
+  photo: one(photos, { fields: [feedbacks.photoId], references: [photos.id], relationName: 'feedbacks' }),
+  attachedPhoto: one(photos, { fields: [feedbacks.attachedPhotoId], references: [photos.id], relationName: 'attachedFeedbacks' }),
   parent: one(feedbacks, { fields: [feedbacks.parentId], references: [feedbacks.id], relationName: 'replies' }),
   replies: many(feedbacks, { relationName: 'replies' }),
   likes: many(feedbackLikes),
@@ -114,9 +114,4 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 
 export const remindLogsRelations = relations(remindLogs, ({ one }) => ({
   invitation: one(invitations, { fields: [remindLogs.invitationId], references: [invitations.id] }),
-}));
-
-export const aiImageJobsRelations = relations(aiImageJobs, ({ one }) => ({
-  user: one(users, { fields: [aiImageJobs.userId], references: [users.id] }),
-  invitation: one(invitations, { fields: [aiImageJobs.invitationId], references: [invitations.id] }),
 }));

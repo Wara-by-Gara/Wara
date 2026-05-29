@@ -23,7 +23,7 @@ import { InquiriesModule } from './inquiries/inquiries.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 import { AdminModule } from './admin/admin.module';
 import { FaqModule } from './faq/faq.module';
-import { AiModule } from './ai/ai.module';
+import { DateVoteModule } from './date-vote/date-vote.module';
 
 @Module({
   imports: [
@@ -51,7 +51,7 @@ import { AiModule } from './ai/ai.module';
     BlocklistModule,
     AdminModule,
     FaqModule,
-    AiModule,
+    DateVoteModule,
   ],
   controllers: [AppController],
   providers: [

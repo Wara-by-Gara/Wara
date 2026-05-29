@@ -13,6 +13,7 @@ import { mobileMainScroll, mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
 import { useMe } from "@/hooks/useUsers";
+import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 import { timeAgo } from "@/utils/timeAge";
 
 interface Props {
@@ -31,6 +32,7 @@ export const Comments = ({ invitationId }: Props) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
 
   const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
+  const totalCount = data?.pages[0]?.total ?? feedbacks.length;
 
   const buildMenuItems = (id: string, content: string) => [
     {
@@ -68,7 +70,7 @@ export const Comments = ({ invitationId }: Props) => {
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar
         className="shrink-0"
-        title={`댓글 ${feedbacks.length}`}
+        title={`댓글 ${totalCount}`}
         onBack={() => router.back()}
       />
 
@@ -95,9 +97,16 @@ export const Comments = ({ invitationId }: Props) => {
                 <CommentItem
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
-                  authorName={f.participant.user.name ?? f.participant.user.nickname}
-                  authorHandle={f.participant.user.nickname}
-                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname }) : undefined}
+                  authorName={getCommentAuthorName(f.participant.user)}
+                  onReply={
+                    !isDeleted
+                      ? () =>
+                          setReplyingTo({
+                            id: f.id,
+                            authorName: getCommentAuthorName(f.participant.user),
+                          })
+                      : undefined
+                  }
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
                   content={f.content}
@@ -107,8 +116,7 @@ export const Comments = ({ invitationId }: Props) => {
                     const isReplyEditing = editingComment?.id === r.id;
                     return {
                       id: r.id,
-                      authorName: r.participant.user.name ?? r.participant.user.nickname,
-                      authorHandle: r.participant.user.nickname,
+                      authorName: getCommentAuthorName(r.participant.user),
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
                       createdAt: timeAgo(r.createdAt),
                       content: r.content,
@@ -147,7 +155,7 @@ export const Comments = ({ invitationId }: Props) => {
         )}
         <CommentInputBar
           avatarUrl={me?.profileImageUrl ?? undefined}
-          authorName={me?.nickname ?? undefined}
+          authorName={me?.name ?? undefined}
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);

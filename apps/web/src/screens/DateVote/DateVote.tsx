@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
-import { Badge } from "@/components/primitives/Badge";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { usePoll, useCreatePoll, useVoteResults, useSubmitResponses, useClosePoll, useConfirmSlot } from "@/hooks/useDateVote";
+import { useMyParticipant, useParticipants } from "@/hooks/useParticipants";
+import { useInvitation } from "@/hooks/useInvitations";
+import type { DateVotePoll, DateVoteResponse, SlotResult } from "@/lib/api/dateVote";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type VoteResponse = "circle" | "triangle" | "cross";
@@ -30,7 +34,14 @@ interface DateSlot {
 interface DraftSlot {
   date: string;       // e.g. "6월 14일 일요일"
   dateKey: string;    // e.g. "2026-06-14"
-  time: string;       // e.g. "오후 2시"
+  time: string;       // e.g. "오후 2시" (표시용)
+  timeKey: string;    // e.g. "14:00" (API용)
+}
+
+export interface VoteDraft {
+  slots: { date: string; startTime: string; sortOrder: number }[];
+  isAnonymous: boolean;
+  closesAt?: string; // undefined = 마감 없음
 }
 
 export type DateVoteState =
@@ -43,15 +54,59 @@ export type DateVoteState =
   | "confirmed";
 
 export interface DateVoteProps {
-  state?: DateVoteState;
+  invitationId?: string;  // 실제 페이지에서 사용 (API 연결)
+  state?: DateVoteState;  // Storybook override (invitationId 없을 때 폴백)
   onBack?: () => void;
+}
+
+// ── API ↔ 컴포넌트 응답값 매핑 ───────────────────────────────────────────────
+export const RESPONSE_RMAP: Record<'good' | 'maybe' | 'bad', VoteResponse> = {
+  good: 'circle',
+  maybe: 'triangle',
+  bad: 'cross',
+};
+
+export function formatApiTime(hhmm: string): string {
+  const [hStr, mStr] = hhmm.split(':');
+  const h = Number(hStr);
+  const m = Number(mStr ?? '0');
+  const ampm = h < 12 ? '오전' : '오후';
+  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const minStr = m === 0 ? '' : ` ${m}분`;
+  return `${ampm} ${hour}시${minStr}`;
+}
+
+function deriveVoteState(
+  poll: DateVotePoll | null,
+  myResponses: DateVoteResponse[],
+  memberRole: 'HOST' | 'GUEST',
+): DateVoteState {
+  if (!poll) return memberRole === 'HOST' ? 'hostCreating' : 'guestVoting';
+  if (poll.status === 'confirmed') return 'confirmed';
+  if (poll.status === 'closed') return poll.isAnonymous ? 'resultsPrivate' : 'resultsPublic';
+  if (memberRole === 'HOST') return 'hostView';
+  if (myResponses.length > 0) return 'guestVoted';
+  return 'guestVoting';
+}
+
+function slotResultToDateSlot(sr: SlotResult): DateSlot {
+  return {
+    id: sr.slot.id,
+    date: formatDateLabel(sr.slot.date),
+    time: sr.slot.startTime ? formatApiTime(sr.slot.startTime) : '시간 미정',
+    votes: { circle: sr.counts.good, triangle: sr.counts.maybe, cross: sr.counts.bad },
+    voters: sr.voters?.map((v) => ({
+      name: v.displayName ?? '익명',
+      vote: RESPONSE_RMAP[v.response],
+    })),
+  };
 }
 
 // ── Vote constants ─────────────────────────────────────────────────────────
 const VOTE_CFG = {
-  circle:   { symbol: "○", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-white text-emerald-500 border-emerald-200 hover:bg-emerald-50", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
-  triangle: { symbol: "△", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-white text-amber-500 border-amber-200 hover:bg-amber-50",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
-  cross:    { symbol: "×", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-white text-rose-400 border-rose-200 hover:bg-rose-50",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
+  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-white text-emerald-500 border-emerald-200 hover:bg-emerald-50", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
+  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-white text-amber-500 border-amber-200 hover:bg-amber-50",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
+  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-white text-rose-400 border-rose-200 hover:bg-rose-50",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
 } as const;
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
@@ -69,6 +124,13 @@ function formatDateLabel(dateKey: string): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${getDayLabel(dateKey)}요일`;
 }
 
+function toHHMM(ampm: "오전" | "오후", hour: number, minute: number): string {
+  let h = hour;
+  if (ampm === "오후" && hour !== 12) h = hour + 12;
+  if (ampm === "오전" && hour === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 // ── Mock data (6월 14일·15일) ───────────────────────────────────────────────
 const MOCK_SLOTS: DateSlot[] = [
   { id: "s1", date: "6월 14일 일요일", time: "오후 2시",  votes: { circle: 7, triangle: 2, cross: 1 }, voters: [{ name: "김현제", vote: "circle" }, { name: "윤숙희", vote: "circle" }, { name: "최우진", vote: "triangle" }, { name: "박수훈", vote: "circle" }] },
@@ -76,13 +138,12 @@ const MOCK_SLOTS: DateSlot[] = [
   { id: "s3", date: "6월 15일 월요일", time: "오후 2시",  votes: { circle: 9, triangle: 1, cross: 0 }, voters: [{ name: "김현제", vote: "circle" }, { name: "윤숙희", vote: "circle" }, { name: "최우진", vote: "circle" }, { name: "박수훈", vote: "circle" }] },
 ];
 
-const CONFIRMED_ID = "s3";
 const INITIAL_VOTES: MyVotes = { s1: "circle", s2: "triangle", s3: "circle" };
 
 const INITIAL_DRAFT: DraftSlot[] = [
-  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 2시" },
-  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 7시" },
-  { date: "6월 15일 월요일", dateKey: "2026-06-15", time: "오후 2시" },
+  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 2시",  timeKey: "14:00" },
+  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 7시",  timeKey: "19:00" },
+  { date: "6월 15일 월요일", dateKey: "2026-06-15", time: "오후 2시",  timeKey: "14:00" },
 ];
 
 function groupByDate(slots: DateSlot[]) {
@@ -115,8 +176,14 @@ function VoterChip({ voter }: { voter: VoterEntry }) {
 }
 
 // ── Vote Table ─────────────────────────────────────────────────────────────
-function VoteTable({ myVotes, onVote }: { myVotes: MyVotes; onVote: (id: string, t: VoteResponse) => void }) {
-  const groups = groupByDate(MOCK_SLOTS);
+function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
+  slots: DateSlot[];
+  myVotes: MyVotes;
+  onVote: (id: string, t: VoteResponse) => void;
+  topSlotIds?: Set<string>;
+  showVoters?: boolean;
+}) {
+  const groups = groupByDate(slots);
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-gray-50 px-4 py-3">
@@ -136,20 +203,27 @@ function VoteTable({ myVotes, onVote }: { myVotes: MyVotes; onVote: (id: string,
           {slots.map((slot) => {
             const total = slot.votes.circle + slot.votes.triangle + slot.votes.cross;
             const myV = myVotes[slot.id];
+            const isTop = topSlotIds?.has(slot.id) ?? false;
             return (
-              <div key={slot.id}
-                className={cn("grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b border-border px-4 py-3 last:border-0 transition-colors", myV ? "bg-gray-50/40" : "bg-white")}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[15px] font-bold text-text-primary">{slot.time}</span>
-                  <span className="text-[11px] text-text-tertiary">응답 {total}명</span>
-                </div>
-                {TYPES.map((t) => (
-                  <div key={t} className="flex flex-col items-center gap-1">
-                    <VoteBtn type={t} active={myV === t} onClick={() => onVote(slot.id, t)} />
-                    <span className={cn("text-[11px] font-semibold", myV === t ? VOTE_CFG[t].col : "text-text-tertiary")}>{slot.votes[t]}</span>
+              <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-gray-50/40" : "bg-white")}>
+                <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 px-4 py-3">
+                  <div className="flex flex-col gap-0.5">
+                    {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ 현재 최다</span>}
+                    <span className="text-[15px] font-bold text-text-primary">{slot.time}</span>
+                    <span className="text-[11px] text-text-tertiary">응답 {total}명</span>
                   </div>
-                ))}
+                  {TYPES.map((t) => (
+                    <div key={t} className="flex flex-col items-center gap-1">
+                      <VoteBtn type={t} active={myV === t} onClick={() => onVote(slot.id, t)} />
+                      <span className={cn("text-[11px] font-semibold", myV === t ? VOTE_CFG[t].col : "text-text-tertiary")}>{slot.votes[t]}</span>
+                    </div>
+                  ))}
+                </div>
+                {showVoters && slot.voters && slot.voters.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 border-t border-border px-4 pb-3 pt-2">
+                    {slot.voters.map((v) => <VoterChip key={`${slot.id}-${v.name}`} voter={v} />)}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -160,7 +234,7 @@ function VoteTable({ myVotes, onVote }: { myVotes: MyVotes; onVote: (id: string,
 }
 
 // ── Result Card ────────────────────────────────────────────────────────────
-function ResultCard({ slot, showNames, isConfirmed, isTop }: { slot: DateSlot; showNames: boolean; isConfirmed: boolean; isTop: boolean }) {
+function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: DateSlot; showNames: boolean; isConfirmed: boolean; isTop: boolean; onConfirm?: () => void }) {
   const total = slot.votes.circle + slot.votes.triangle + slot.votes.cross;
   return (
     <div className={cn("rounded-2xl border p-4", isConfirmed ? "border-primary bg-primary/5 ring-2 ring-primary/20" : isTop ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-surface")}>
@@ -171,7 +245,18 @@ function ResultCard({ slot, showNames, isConfirmed, isTop }: { slot: DateSlot; s
           <p className="text-[15px] font-bold text-text-primary">{slot.date}</p>
           <p className="text-[13px] text-text-secondary">{slot.time}</p>
         </div>
-        <span className="text-[12px] text-text-tertiary">총 {total}명</span>
+        <div className="flex flex-col items-end gap-2">
+          <span className="text-[12px] text-text-tertiary">총 {total}명</span>
+          {onConfirm && (
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover:bg-primary/5 active:scale-95 transition-all"
+            >
+              이 날짜로 확정
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-3 flex gap-3">
         {TYPES.map((t) => {
@@ -206,7 +291,7 @@ function formatTimeLabel(ampm: "오전" | "오후", hour: number, minute: number
 }
 
 interface TimePickerProps {
-  onAdd: (time: string) => void;
+  onAdd: (display: string, hhmm: string) => void;
   disabled?: boolean;
 }
 
@@ -347,7 +432,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       </button>
 
       {/* 시 · 분 휠 */}
-      <div className="flex items-center gap-0 rounded-xl border border-border bg-white px-2">
+      <div className="flex items-center gap-0 rounded-xl border border-border bg-white px-2" style={{ height: 120, overflow: "hidden" }}>
         <WheelColumn items={HOURS} value={hour} onChange={setHour} />
         <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
         <WheelColumn items={MINUTES} value={minute} onChange={setMinute} />
@@ -359,7 +444,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         variant="outline"
         size="md"
         disabled={disabled}
-        onClick={() => onAdd(preview)}
+        onClick={() => onAdd(preview, toHHMM(ampm, hour, minute))}
         className="gap-2"
       >
         <Icon name="plus" size="xs" color="currentColor" decorative />
@@ -442,17 +527,53 @@ function CalendarPicker({
 }
 
 // ── Host Creating View ─────────────────────────────────────────────────────
-function HostCreatingView({ onBack }: { onBack?: () => void }) {
+export function HostCreatingView({ onBack, invitationId, onDraftComplete, initialDraft }: {
+  onBack?: () => void;
+  invitationId?: string;
+  onDraftComplete?: (draft: VoteDraft) => void;
+  initialDraft?: VoteDraft;
+}) {
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth() + 1);
+  const isDraftMode = !!onDraftComplete;
+
+  const restoredSlots: DraftSlot[] = initialDraft
+    ? initialDraft.slots.map((s) => ({
+        date: formatDateLabel(s.date),
+        dateKey: s.date,
+        time: formatApiTime(s.startTime),
+        timeKey: s.startTime,
+      }))
+    : [];
+
   const [selectedDates, setSelectedDates] = useState<Set<string>>(
-    new Set(["2026-06-14", "2026-06-15"]),
+    initialDraft ? new Set(initialDraft.slots.map((s) => s.date))
+    : isDraftMode ? new Set()
+    : new Set(["2026-06-14", "2026-06-15"]),
   );
-  const [focusedDate, setFocusedDate] = useState<string | null>("2026-06-14");
-  const [slots, setSlots] = useState<DraftSlot[]>(INITIAL_DRAFT);
-  const [isPublic, setIsPublic] = useState(true);
+  const [focusedDate, setFocusedDate] = useState<string | null>(
+    initialDraft ? (initialDraft.slots[0]?.date ?? null)
+    : isDraftMode ? null
+    : "2026-06-14",
+  );
+  const [slots, setSlots] = useState<DraftSlot[]>(
+    initialDraft ? restoredSlots
+    : isDraftMode ? []
+    : INITIAL_DRAFT,
+  );
+  const [isPublic, setIsPublic] = useState(initialDraft ? !initialDraft.isAnonymous : true);
   const [step, setStep] = useState<"date" | "settings">("date");
+  const createPollMutation = useCreatePoll(invitationId ?? '');
+
+  // 투표 마감 옵션
+  const [deadlineMode, setDeadlineMode] = useState<"none" | "custom">("none");
+  const [customDeadlineDate, setCustomDeadlineDate] = useState("");
+  const [customDeadlineTime, setCustomDeadlineTime] = useState("23:59");
+  const closesAt = deadlineMode === "custom" && customDeadlineDate
+    ? new Date(`${customDeadlineDate}T${customDeadlineTime}:00`).toISOString()
+    : undefined;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const toggleDate = (key: string) => {
     setSelectedDates((prev) => {
@@ -469,12 +590,12 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
     });
   };
 
-  const addTime = (time: string) => {
+  const addTime = (time: string, hhmm: string) => {
     if (!focusedDate) return;
     if (slots.length >= 30) return;
     if (slots.some((s) => s.dateKey === focusedDate && s.time === time)) return;
     const label = formatDateLabel(focusedDate);
-    setSlots((prev) => [...prev, { date: label, dateKey: focusedDate, time }]);
+    setSlots((prev) => [...prev, { date: label, dateKey: focusedDate, time, timeKey: hhmm }]);
   };
 
   const removeSlot = (idx: number) => setSlots((prev) => prev.filter((_, i) => i !== idx));
@@ -506,11 +627,10 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
             <p className="mb-2 text-[13px] font-bold text-text-primary">선택된 후보 ({slots.length}개)</p>
             <div className="flex flex-col gap-1">
               {Array.from(slotsByDate.entries()).map(([, daySlots]) =>
-                daySlots.map((s, i) => (
-                  <div key={`${s.dateKey}-${s.time}`} className="flex items-center justify-between">
-                    <span className="text-[13px] text-text-secondary">
-                      {i === 0 ? s.date : ""} {s.time}
-                    </span>
+                daySlots.map((s) => (
+                  <div key={`${s.dateKey}-${s.time}`} className="flex items-center gap-2">
+                    <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
+                    <span className="text-[13px] text-text-secondary">{s.date} {s.time}</span>
                   </div>
                 ))
               )}
@@ -520,14 +640,42 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
           {/* Deadline */}
           <div className="rounded-2xl border border-border bg-surface p-4">
             <p className="mb-3 text-[13px] font-bold text-text-primary">투표 마감 시간</p>
-            {["행사 1일 전 오후 11:59", "행사 3일 전 오후 11:59", "행사 7일 전 오후 11:59", "직접 설정"].map((label) => (
-              <label key={label} className="flex cursor-pointer items-center gap-3 py-2">
-                <div className="flex size-5 items-center justify-center rounded-full border-2 border-primary bg-primary">
-                  <div className="size-2 rounded-full bg-white" />
-                </div>
-                <span className="text-[14px] text-text-primary">{label}</span>
-              </label>
-            ))}
+            <div className="flex gap-3">
+              {([
+                { mode: "none" as const, label: "없음", desc: "마감일 없이 진행" },
+                { mode: "custom" as const, label: "직접 설정", desc: "날짜·시간 직접 지정" },
+              ]).map(({ mode, label, desc }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDeadlineMode(mode)}
+                  className={cn(
+                    "flex flex-1 flex-col gap-0.5 rounded-2xl border p-3 text-left transition-all",
+                    deadlineMode === mode ? "border-primary bg-primary/5" : "border-border",
+                  )}
+                >
+                  <span className={cn("text-[14px] font-bold", deadlineMode === mode ? "text-primary" : "text-text-primary")}>{label}</span>
+                  <span className="text-[11px] text-text-secondary">{desc}</span>
+                </button>
+              ))}
+            </div>
+            {deadlineMode === "custom" && (
+              <div className="mt-3 flex gap-2 rounded-xl border border-border bg-gray-50 p-3">
+                <input
+                  type="date"
+                  value={customDeadlineDate}
+                  min={todayStr}
+                  onChange={(e) => setCustomDeadlineDate(e.target.value)}
+                  className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                />
+                <input
+                  type="time"
+                  value={customDeadlineTime}
+                  onChange={(e) => setCustomDeadlineTime(e.target.value)}
+                  className="w-28 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Public/private */}
@@ -552,7 +700,25 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
           </div>
         </main>
         <div className="relative z-10 shrink-0">
-          <StickyCTA primary={{ label: "투표 만들기", onClick: () => {} }} />
+          <StickyCTA primary={{
+            label: onDraftComplete ? "완료" : (createPollMutation.isPending ? "생성 중..." : "투표 만들기"),
+            disabled: (!onDraftComplete && createPollMutation.isPending)
+              || slots.length === 0
+              || (deadlineMode === "custom" && !customDeadlineDate),
+            onClick: () => {
+              const slotsData = slots.map((s, i) => ({
+                date: s.dateKey,
+                startTime: s.timeKey,
+                sortOrder: i,
+              }));
+              if (onDraftComplete) {
+                onDraftComplete({ closesAt, isAnonymous: !isPublic, slots: slotsData });
+                return;
+              }
+              if (!invitationId) return;
+              createPollMutation.mutate({ closesAt, isAnonymous: !isPublic, slots: slotsData });
+            },
+          }} />
         </div>
       </div>
     );
@@ -614,7 +780,7 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
             </p>
             <TimePicker
               disabled={slots.length >= 30}
-              onAdd={(time) => addTime(time)}
+              onAdd={(time, hhmm) => addTime(time, hhmm)}
             />
           </div>
         )}
@@ -629,9 +795,12 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
               {Array.from(slotsByDate.entries()).sort().map(([, daySlots]) =>
                 daySlots.map((s) => (
                   <div key={`${s.dateKey}-${s.time}`} className="flex items-center justify-between py-2.5">
-                    <div>
-                      <p className="text-[13px] font-semibold text-text-primary">{s.date}</p>
-                      <p className="text-[12px] text-text-secondary">{s.time}</p>
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
+                      <div>
+                        <p className="text-[13px] font-semibold text-text-primary">{s.date}</p>
+                        <p className="text-[12px] text-text-secondary">{s.time}</p>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -663,53 +832,147 @@ function HostCreatingView({ onBack }: { onBack?: () => void }) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
-export const DateVote = ({ state = "guestVoting", onBack }: DateVoteProps) => {
-  const [myVotes, setMyVotes] = useState<MyVotes>(
-    state === "guestVoted" || state === "hostView" ? INITIAL_VOTES : {},
+export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVoteProps) => {
+  const router = useRouter();
+  const goBack = onBack ?? (() => router.back());
+
+  const enabled = !!invitationId;
+  const { data: invitation } = useInvitation(invitationId ?? '');
+  const { data: pollData } = usePoll(invitationId ?? '', { enabled });
+  const { data: resultsData } = useVoteResults(invitationId ?? '', { enabled });
+  const { data: myParticipant } = useMyParticipant(invitationId ?? '', { enabled });
+  const { data: participantsData } = useParticipants(invitationId ?? '');
+  const submitMutation = useSubmitResponses(invitationId ?? '');
+  const closePollMutation = useClosePoll(invitationId ?? '');
+  const confirmSlotMutation = useConfirmSlot(invitationId ?? '');
+
+  const poll = pollData?.poll ?? null;
+  const myResponses = pollData?.myResponses ?? [];
+  const memberRole = myParticipant?.memberRole ?? 'GUEST';
+
+  const state: DateVoteState = invitationId
+    ? deriveVoteState(poll, myResponses, memberRole)
+    : (stateProp ?? 'guestVoting');
+
+  // 실 슬롯: voteResults에서 변환 (counts 포함), 없으면 poll slots에서 빈 카운트로
+  const realSlots: DateSlot[] = resultsData?.slotResults
+    ? resultsData.slotResults.map(slotResultToDateSlot)
+    : (pollData?.slots ?? []).map((s) => ({
+        id: s.id,
+        date: formatDateLabel(s.date),
+        time: s.startTime ? formatApiTime(s.startTime) : '시간 미정',
+        votes: { circle: 0, triangle: 0, cross: 0 },
+      }));
+
+  const displaySlots = invitationId ? realSlots : MOCK_SLOTS;
+
+  const initialVotes: MyVotes = Object.fromEntries(
+    myResponses.map((r) => [r.slotId, RESPONSE_RMAP[r.response]])
   );
+  const [myVotes, setMyVotes] = useState<MyVotes>(
+    invitationId ? initialVotes : (stateProp === "guestVoted" || stateProp === "hostView" ? INITIAL_VOTES : {})
+  );
+
+  useEffect(() => {
+    if (invitationId && myResponses.length > 0) {
+      setMyVotes(Object.fromEntries(myResponses.map((r) => [r.slotId, RESPONSE_RMAP[r.response]])));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pollData]);
+
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [confirmSlotId, setConfirmSlotId] = useState<string | null>(null);
 
-  if (state === "hostCreating") return <HostCreatingView onBack={onBack} />;
+  if (state === "hostCreating") return <HostCreatingView invitationId={invitationId} onBack={goBack} />;
 
-  const handleVote = (id: string, type: VoteResponse) =>
+  const handleVote = (id: string, type: VoteResponse) => {
+    setHasInteracted(true);
     setMyVotes((prev) => ({ ...prev, [id]: prev[id] === type ? null : type }));
+  };
+
+  const handleSubmit = () => {
+    if (!invitationId) return;
+    const responses = Object.entries(myVotes)
+      .filter(([, v]) => v !== null)
+      .map(([slotId, v]) => ({
+        slotId,
+        response: v === 'circle' ? 'good' : v === 'triangle' ? 'maybe' : 'bad' as 'good' | 'maybe' | 'bad',
+      }));
+    submitMutation.mutate(responses, {
+      onSuccess: () => setHasInteracted(false),
+    });
+  };
 
   const canVote = state === "guestVoting" || state === "guestVoted" || state === "hostView";
   const isClosed = state === "resultsPublic" || state === "resultsPrivate" || state === "confirmed";
-  const showNames = state === "resultsPublic";
+  const showNames = state === "resultsPublic" || (state === "confirmed" && !poll?.isAnonymous);
   const isConfirmedView = state === "confirmed";
 
-  const topSlot = [...MOCK_SLOTS].sort((a, b) => b.votes.circle - a.votes.circle)[0];
+  const maxCircle = displaySlots.length > 0 ? Math.max(...displaySlots.map((s) => s.votes.circle)) : 0;
+  const topSlotIds = maxCircle > 0
+    ? new Set(displaySlots.filter((s) => s.votes.circle === maxCircle).map((s) => s.id))
+    : new Set<string>();
+
+  // 마감 시간 표시
+  const isNoDeadline = poll?.closesAt && new Date(poll.closesAt).getFullYear() >= 2099;
+  const deadlineText = (() => {
+    if (!poll?.closesAt || isNoDeadline) return null;
+    return new Date(poll.closesAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  })();
+
+  // 확정 슬롯
+  const confirmedSlot = poll?.confirmedSlotId
+    ? displaySlots.find((s) => s.id === poll.confirmedSlotId)
+    : null;
+
+  // 참여 현황
+  const allParticipants = participantsData?.participants ?? [];
+  const totalCount = participantsData?.summary.totalCount ?? 0;
+  const totalVoters = resultsData?.voterCount ?? 0;
+  const nonVoterCount = Math.max(0, totalCount - totalVoters);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-      <TopAppBar className="shrink-0" title="날짜 투표" onBack={onBack ?? (() => {})} />
+      <TopAppBar className="shrink-0" title="일정 투표" onBack={goBack} />
 
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
         {/* 초대장 정보 */}
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Icon name="ticket" size="md" color="primary" decorative />
+        {invitationId && invitation && (
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Icon name="ticket" size="md" color="primary" decorative />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[14px] font-bold text-text-primary">{invitation.title}</p>
+              <p className="text-[12px] text-text-tertiary">
+                호스트 · {invitation.host?.nickname ?? invitation.host?.name ?? '알 수 없음'}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-bold text-text-primary">와라의 생일 파티</p>
-            <p className="text-[12px] text-text-tertiary">호스트 · 김와라</p>
-          </div>
-          <Badge variant="noResponse" size="sm" className="ml-auto shrink-0">날짜 미정</Badge>
-        </div>
+        )}
 
         {/* 상태 배너 */}
         {!isClosed ? (
-          <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <Icon name="clock" size="sm" color="currentColor" decorative className="shrink-0 text-amber-500" />
-            <span className="text-[13px] font-medium text-amber-700">투표 마감 2시간 30분 전 · 6월 10일 오후 11:59</span>
-          </div>
+          deadlineText ? (
+            <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <Icon name="clock" size="sm" color="currentColor" decorative className="shrink-0 text-amber-500" />
+              <span className="text-[13px] font-medium text-amber-700">투표 마감 · {deadlineText}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+              <Icon name="calendar" size="sm" color="inactive" decorative className="shrink-0" />
+              <span className="text-[13px] text-text-secondary">투표 진행 중 · 마감일 없음</span>
+            </div>
+          )
         ) : isConfirmedView ? (
           <div className="flex items-center gap-3 rounded-2xl border border-primary bg-primary/5 px-4 py-3">
             <Icon name="check-circle" size="md" color="primary" decorative className="shrink-0" />
             <div>
               <p className="text-[13px] font-bold text-primary">날짜가 확정됐어요!</p>
-              <p className="text-[12px] text-text-secondary">6월 15일 월요일 오후 2시</p>
+              {confirmedSlot && (
+                <p className="text-[12px] text-text-secondary">{confirmedSlot.date} {confirmedSlot.time}</p>
+              )}
             </div>
           </div>
         ) : (
@@ -723,53 +986,79 @@ export const DateVote = ({ state = "guestVoting", onBack }: DateVoteProps) => {
         {state === "hostView" && (
           <div className="rounded-2xl border border-border bg-surface p-4">
             <p className="mb-2.5 text-[13px] font-bold text-text-primary">호스트 관리</p>
-            <div className="flex items-center gap-2 text-[13px] text-text-secondary">
-              <Icon name="users" size="sm" color="inactive" decorative />
-              미투표자 2명 · <span className="font-medium text-text-primary">박수훈, 이지은</span>
-            </div>
             <div className="mt-2.5 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 gap-1.5">
-                <Icon name="bell" size="xs" color="currentColor" decorative />리마인더 발송
-              </Button>
               <Button variant="outline" size="sm"
                 className="flex-1 gap-1.5 border-rose-200 text-rose-500 hover:bg-rose-50"
+                disabled={closePollMutation.isPending}
                 onClick={() => setCloseConfirmOpen(true)}
               >
-                <Icon name="lock" size="xs" color="currentColor" decorative />투표 조기 종료
+                <Icon name="lock" size="xs" color="currentColor" decorative />
+                {closePollMutation.isPending ? "처리 중..." : "투표 조기 종료"}
               </Button>
             </div>
           </div>
         )}
 
         {/* 참여 현황 */}
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {["김", "윤", "최", "박"].map((initial, i) => (
-                <Avatar key={i} size="xs" initial={initial} className="ring-2 ring-surface" />
-              ))}
+        {invitationId ? (
+          totalCount > 0 && (
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {allParticipants.slice(0, 4).map(({ participant, user }) => (
+                    <Avatar
+                      key={participant.id}
+                      size="xs"
+                      src={user.profileImageUrl ?? undefined}
+                      alt={user.nickname ?? user.name ?? undefined}
+                      initial={user.nickname?.[0] ?? user.name?.[0]}
+                      className="ring-2 ring-surface"
+                    />
+                  ))}
+                </div>
+                <span className="text-[13px] text-text-secondary">
+                  <span className="font-bold text-text-primary">{totalCount}명</span> 중{" "}
+                  <span className="font-bold text-text-primary">{totalVoters}명</span> 참여
+                </span>
+              </div>
+              {nonVoterCount > 0 && (
+                <span className="text-[12px] text-text-tertiary">미투표 {nonVoterCount}명</span>
+              )}
             </div>
-            <span className="text-[13px] text-text-secondary">
-              <span className="font-bold text-text-primary">10명</span> 중{" "}
-              <span className="font-bold text-text-primary">8명</span> 참여
-            </span>
+          )
+        ) : (
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {["김", "윤", "최", "박"].map((initial, i) => (
+                  <Avatar key={i} size="xs" initial={initial} className="ring-2 ring-surface" />
+                ))}
+              </div>
+              <span className="text-[13px] text-text-secondary">
+                <span className="font-bold text-text-primary">10명</span> 중{" "}
+                <span className="font-bold text-text-primary">8명</span> 참여
+              </span>
+            </div>
+            <span className="text-[12px] text-text-tertiary">미투표 2명</span>
           </div>
-          <span className="text-[12px] text-text-tertiary">미투표 2명</span>
-        </div>
+        )}
 
         {canVote && (
           <>
-            <VoteTable myVotes={myVotes} onVote={handleVote} />
+            <VoteTable slots={displaySlots} myVotes={myVotes} onVote={handleVote} topSlotIds={topSlotIds} showVoters={!poll?.isAnonymous} />
             <p className="text-center text-[12px] text-text-tertiary">같은 날짜의 여러 시간대에 동시에 응답할 수 있어요</p>
           </>
         )}
 
         {isClosed && (
           <div className="flex flex-col gap-3">
-            {MOCK_SLOTS.map((slot) => (
+            {displaySlots.map((slot) => (
               <ResultCard key={slot.id} slot={slot} showNames={showNames}
-                isConfirmed={isConfirmedView && slot.id === CONFIRMED_ID}
-                isTop={topSlot?.id === slot.id && !isConfirmedView}
+                isConfirmed={isConfirmedView && slot.id === poll?.confirmedSlotId}
+                isTop={topSlotIds.has(slot.id) && !isConfirmedView}
+                onConfirm={memberRole === 'HOST' && !isConfirmedView && invitationId
+                  ? () => setConfirmSlotId(slot.id)
+                  : undefined}
               />
             ))}
           </div>
@@ -778,15 +1067,34 @@ export const DateVote = ({ state = "guestVoting", onBack }: DateVoteProps) => {
 
       {canVote && (
         <div className="relative z-10 shrink-0">
-          <StickyCTA primary={{ label: state === "guestVoted" || state === "hostView" ? "응답 수정하기" : "투표 제출하기", onClick: () => {} }} />
+          <StickyCTA primary={{
+            label: submitMutation.isPending ? "제출 중..." : (state === "guestVoted" || state === "hostView" ? "응답 수정하기" : "투표 제출하기"),
+            disabled: submitMutation.isPending || !hasInteracted,
+            onClick: invitationId ? handleSubmit : () => {},
+          }} />
         </div>
       )}
-
 
       <ConfirmModal contained open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}
         title="투표를 지금 종료할까요?"
         description="마감 전이지만 결과를 바로 처리할 수 있어요"
         confirmLabel="종료하기" confirmVariant="danger"
+        onConfirm={() => { closePollMutation.mutate(); setCloseConfirmOpen(false); }}
+      />
+
+      <ConfirmModal contained open={!!confirmSlotId} onOpenChange={(o) => { if (!o) setConfirmSlotId(null); }}
+        title="이 날짜로 확정할까요?"
+        description={(() => {
+          const slot = displaySlots.find((s) => s.id === confirmSlotId);
+          return slot ? `${slot.date} ${slot.time}` : '';
+        })()}
+        confirmLabel={confirmSlotMutation.isPending ? "확정 중..." : "확정하기"}
+        onConfirm={() => {
+          if (!confirmSlotId) return;
+          confirmSlotMutation.mutate(confirmSlotId, {
+            onSuccess: () => setConfirmSlotId(null),
+          });
+        }}
       />
     </div>
   );

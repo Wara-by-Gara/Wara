@@ -6,6 +6,7 @@ import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { renderMentions } from "./renderMentions";
 
 export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
@@ -26,12 +27,9 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   onMore?: () => void;
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
-  /** 좋아요 수 */
   likeCount?: number;
-  /** 좋아요 토글 콜백 */
-  onLike?: () => void;
-  /** 내가 좋아요 눌렀는지 여부 */
   liked?: boolean;
+  onLike?: () => void;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -51,8 +49,8 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       moreMenuItems,
       editingSlot,
       likeCount,
+      liked,
       onLike,
-      liked = false,
       ...props
     },
     ref,
@@ -135,21 +133,19 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     <span className="font-semibold text-primary">@{replyToName}</span>{" "}
                   </>
                 ) : null}
-                {content}
+                {renderMentions(content)}
               </p>
             ) : null}
-            {likeCount !== undefined ? (
+            {(onLike || likeCount !== undefined) ? (
               <button
                 type="button"
                 onClick={onLike}
                 className={cn(
-                  "mt-1 flex items-center gap-1 text-[12px] font-semibold transition-colors",
-                  liked ? "text-danger" : "text-text-tertiary hover:text-danger",
+                  "mt-1 text-[13px] font-semibold transition-colors",
+                  liked ? "text-primary" : "text-text-tertiary hover:text-primary",
                 )}
-                aria-label="좋아요"
               >
-                <span>{liked ? "♥" : "♡"}</span>
-                {likeCount > 0 && <span>{likeCount}</span>}
+                ♥ {likeCount ?? 0}
               </button>
             ) : null}
           </div>

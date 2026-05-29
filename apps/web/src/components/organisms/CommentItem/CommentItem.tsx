@@ -7,6 +7,7 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
+import { renderMentions } from "./renderMentions";
 
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
@@ -23,12 +24,9 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 더보기 메뉴 아이템 */
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
-  /** 좋아요 수 */
   likeCount?: number;
-  /** 좋아요 토글 콜백 */
-  onLike?: () => void;
-  /** 내가 좋아요 눌렀는지 여부 */
   liked?: boolean;
+  onLike?: () => void;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -49,8 +47,8 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       moreMenuItems,
       editingSlot,
       likeCount,
+      liked,
       onLike,
-      liked = false,
       ...props
     },
     ref,
@@ -124,7 +122,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                   <>
                     {content ? (
                       <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
-                        {content}
+                        {renderMentions(content)}
                       </p>
                     ) : null}
                   </>
@@ -139,18 +137,16 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       답글 달기
                     </button>
                   ) : null}
-                  {likeCount !== undefined ? (
+                  {(onLike || likeCount !== undefined) ? (
                     <button
                       type="button"
                       onClick={onLike}
                       className={cn(
-                        "flex items-center gap-1 text-[13px] font-semibold transition-colors",
-                        liked ? "text-danger" : "text-text-tertiary hover:text-danger",
+                        "text-[13px] font-semibold transition-colors",
+                        liked ? "text-primary" : "text-text-tertiary hover:text-primary",
                       )}
-                      aria-label="좋아요"
                     >
-                      <span>{liked ? "♥" : "♡"}</span>
-                      {likeCount > 0 && <span>{likeCount}</span>}
+                      ♥ {likeCount ?? 0}
                     </button>
                   ) : null}
                 </div>

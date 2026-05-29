@@ -5,31 +5,17 @@ import { useMe } from '@/hooks/useUsers';
 import { useMyInvitations } from '@/hooks/useInvitations';
 import { MyPage } from '@/screens/MyPage';
 import { ROUTES } from '@/constants/routes';
+import { formatInvitationEventDate } from '@/utils/formatInvitationEventDate';
 
 export default function ProfileContainer() {
   const router = useRouter();
   const { data: me, isLoading, isError, error } = useMe();
   const { data: invitations } = useMyInvitations();
 
-  const stats = invitations
-    ? {
-        created: invitations.filter((i) => i.myRole === 'HOST').length,
-        joined: invitations.filter((i) => i.myRole === 'GUEST').length,
-      }
-    : undefined;
-
   const recentInvitations = (invitations ?? []).slice(0, 10).map((inv) => ({
     id: inv.id,
     title: inv.title,
-    date: inv.eventStartAt
-      ? new Date(inv.eventStartAt).toLocaleDateString("ko-KR", {
-          month: "long",
-          day: "numeric",
-          weekday: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "",
+    date: formatInvitationEventDate(inv.eventStartAt),
     imageUrl: inv.mainImageUrl,
     variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
@@ -54,13 +40,12 @@ export default function ProfileContainer() {
         name: me.name ?? undefined,
         nickname: me.nickname ?? '이름 없음',
         avatarUrl: me.profileImageUrl ?? undefined,
-        stats,
       }}
       recentInvitations={recentInvitations}
-      onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
+      onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
+      onInquiries={() => router.push(ROUTES.INQUIRIES.HOME)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
-      onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
     />
   );
 }

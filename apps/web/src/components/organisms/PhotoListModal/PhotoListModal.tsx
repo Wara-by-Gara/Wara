@@ -147,6 +147,9 @@ export const PhotoListModal = ({
                   alt={photo.alt ?? ""}
                   hostManageMode={selectMode}
                   status={selectedIds.has(photo.id) ? "selected" : "default"}
+                  likeCount={photo.likeCount}
+                  liked={photo.liked}
+                  onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
                   onClick={() => handlePhotoClick(idx, photo.id)}
                 />
               ))}

@@ -84,7 +84,6 @@ export interface MockCommentReply {
   createdAt: string;
   variant?: "default" | "mine" | "host";
   replyToName?: string;
-  likeCount?: number;
 }
 
 export interface MockComment {
@@ -95,7 +94,6 @@ export interface MockComment {
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
   replies?: MockCommentReply[];
-  likeCount?: number;
 }
 
 export const mockComments: MockComment[] = [
@@ -105,7 +103,6 @@ export const mockComments: MockComment[] = [
     authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
     content: "기대돼요! 곧 봬요 ✨",
     createdAt: "3분 전",
-    likeCount: 12,
     replies: [
       {
         id: "c1-r1",
@@ -114,7 +111,6 @@ export const mockComments: MockComment[] = [
         replyToName: "박미라",
         content: "저도 너무 기대돼요!",
         createdAt: "2분 전",
-        likeCount: 4,
       },
       {
         id: "c1-r2",
@@ -124,19 +120,17 @@ export const mockComments: MockComment[] = [
         content: "곧 봬요 💕",
         createdAt: "1분 전",
         variant: "host",
-        likeCount: 7,
       },
     ],
   },
-  { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전", likeCount: 6 },
-  { id: "c3", authorName: "김와라", authorAvatarUrl: mockMeAvatarUrl, content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host", likeCount: 24 },
+  { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전" },
+  { id: "c3", authorName: "김와라", authorAvatarUrl: mockMeAvatarUrl, content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host" },
   {
     id: "c4",
     authorName: "최하나",
     authorAvatarUrl: "https://i.pravatar.cc/80?img=44",
     content: "주차장 위치 알려주실 수 있나요?",
     createdAt: "2시간 전",
-    likeCount: 3,
     replies: [
       {
         id: "c4-r1",
@@ -146,7 +140,6 @@ export const mockComments: MockComment[] = [
         content: "건물 지하 1층 무료 주차 가능해요. 만차면 인근 공영주차장 이용해주세요!",
         createdAt: "1시간 전",
         variant: "host",
-        likeCount: 11,
       },
       {
         id: "c4-r2",
@@ -155,7 +148,6 @@ export const mockComments: MockComment[] = [
         replyToName: "김와라",
         content: "알려주셔서 감사해요!",
         createdAt: "45분 전",
-        likeCount: 2,
       },
       {
         id: "c4-r3",
@@ -164,21 +156,20 @@ export const mockComments: MockComment[] = [
         replyToName: "김와라",
         content: "저도 그쪽으로 갈게요~",
         createdAt: "30분 전",
-        likeCount: 1,
       },
     ],
   },
-  { id: "c5", authorName: "정민지", authorAvatarUrl: "https://i.pravatar.cc/80?img=49", content: "친구 한 명 더 데려가도 될까요?", createdAt: "어제", likeCount: 2 },
-  { id: "c6", authorName: "이상민", authorAvatarUrl: "https://i.pravatar.cc/80?img=51", content: "케이크 너무 기대돼요 🎂", createdAt: "어제", likeCount: 8 },
-  { id: "c7", authorName: "윤지호", authorAvatarUrl: "https://i.pravatar.cc/80?img=53", content: "조금 늦을 수도 있어요!", createdAt: "2일 전", likeCount: 0 },
-  { id: "c8", authorName: "강수연", authorAvatarUrl: "https://i.pravatar.cc/80?img=56", content: "선물 포장 완료했어요", createdAt: "2일 전", likeCount: 5 },
-  { id: "c9", authorName: "오현우", authorAvatarUrl: "https://i.pravatar.cc/80?img=60", content: "사진 많이 찍어주세요 📸", createdAt: "3일 전", likeCount: 9 },
-  { id: "c10", authorName: "한지수", authorAvatarUrl: "https://i.pravatar.cc/80?img=62", content: "너무 설레요, 곧 봐요!", createdAt: "3일 전", likeCount: 3 },
-  { id: "c11", authorName: "송태형", authorAvatarUrl: "https://i.pravatar.cc/80?img=65", content: "드레스코드 있나요?", createdAt: "4일 전", likeCount: 1 },
-  { id: "c12", authorName: "전유진", authorAvatarUrl: "https://i.pravatar.cc/80?img=68", content: "케이크 기대 중이에요 🎂", createdAt: "4일 전", likeCount: 7 },
-  { id: "c13", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "카메라 챙겨갈게요!", createdAt: "5일 전", likeCount: 4 },
-  { id: "c14", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "같이 가는 친구도 데려도 될까요?", createdAt: "5일 전", likeCount: 2 },
-  { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전", likeCount: 6 },
+  { id: "c5", authorName: "정민지", authorAvatarUrl: "https://i.pravatar.cc/80?img=49", content: "친구 한 명 더 데려가도 될까요?", createdAt: "어제" },
+  { id: "c6", authorName: "이상민", authorAvatarUrl: "https://i.pravatar.cc/80?img=51", content: "케이크 너무 기대돼요 🎂", createdAt: "어제" },
+  { id: "c7", authorName: "윤지호", authorAvatarUrl: "https://i.pravatar.cc/80?img=53", content: "조금 늦을 수도 있어요!", createdAt: "2일 전" },
+  { id: "c8", authorName: "강수연", authorAvatarUrl: "https://i.pravatar.cc/80?img=56", content: "선물 포장 완료했어요", createdAt: "2일 전" },
+  { id: "c9", authorName: "오현우", authorAvatarUrl: "https://i.pravatar.cc/80?img=60", content: "사진 많이 찍어주세요 📸", createdAt: "3일 전" },
+  { id: "c10", authorName: "한지수", authorAvatarUrl: "https://i.pravatar.cc/80?img=62", content: "너무 설레요, 곧 봐요!", createdAt: "3일 전" },
+  { id: "c11", authorName: "송태형", authorAvatarUrl: "https://i.pravatar.cc/80?img=65", content: "드레스코드 있나요?", createdAt: "4일 전" },
+  { id: "c12", authorName: "전유진", authorAvatarUrl: "https://i.pravatar.cc/80?img=68", content: "케이크 기대 중이에요 🎂", createdAt: "4일 전" },
+  { id: "c13", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "카메라 챙겨갈게요!", createdAt: "5일 전" },
+  { id: "c14", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "같이 가는 친구도 데려도 될까요?", createdAt: "5일 전" },
+  { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전" },
 ];
 
 /** 초대장 상세·앨범 mock용 로컬 사진 (외부 URL 차단 환경 대비) */

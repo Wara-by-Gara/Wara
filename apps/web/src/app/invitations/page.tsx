@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import InvitationListContainer from '@/domain/InvitationList/Container/InvitationListContainer';
 
 export default function InvitationsPage() {
-  return <InvitationListContainer />;
+  return (
+    <Suspense fallback={null}>
+      <InvitationListContainer />
+    </Suspense>
+  );
 }
