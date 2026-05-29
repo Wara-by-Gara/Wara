@@ -904,7 +904,7 @@ export default function InvitationCreateContainer() {
                 </span>
               </div>
               <span className={cn("transition-transform", packDropdownOpen ? "rotate-180" : "")}>
-                <Icon name="chevron-down" size="sm" color="secondary" decorative />
+                <Icon name="chevron-down" size="sm" color="inactive" decorative />
               </span>
             </button>
 
