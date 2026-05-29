@@ -80,6 +80,35 @@ const DESIGN_FONTS = [
 
 type DesignFont = typeof DESIGN_FONTS[number]["id"];
 
+type RsvpType = "attending" | "maybe" | "declined";
+
+interface RsvpOption {
+  emoji: string;
+  label: string;
+}
+
+const DEFAULT_RSVP: Record<RsvpType, RsvpOption> = {
+  attending: { emoji: "🎉", label: "참석" },
+  maybe:     { emoji: "🤔", label: "미정" },
+  declined:  { emoji: "😭", label: "불참" },
+};
+
+const RSVP_DEFAULT_LABELS: Record<RsvpType, string> = {
+  attending: "참석",
+  maybe: "미정",
+  declined: "불참",
+};
+
+const RSVP_PACKS: { id: string; name: string; attending: string; maybe: string; declined: string }[] = [
+  { id: "default", name: "기본",   attending: "🎉", maybe: "🤔", declined: "😭" },
+  { id: "heart",   name: "하트",   attending: "❤️", maybe: "❤️‍🩹", declined: "💔" },
+  { id: "bloom",   name: "꽃",     attending: "💐", maybe: "🌷", declined: "🥀" },
+  { id: "flirty",  name: "설레임", attending: "😘", maybe: "👄", declined: "🤐" },
+  { id: "weather", name: "날씨",   attending: "☀️", maybe: "⛅", declined: "🌧️" },
+  { id: "hands",   name: "손짓",   attending: "👍", maybe: "🤷", declined: "👎" },
+  { id: "face",    name: "표정",   attending: "😊", maybe: "😶", declined: "😞" },
+];
+
 type MissionItem =
   | { type: "template"; templateId: string; content: string }
   | { type: "custom"; localId: string; content: string };
@@ -186,6 +215,11 @@ export default function InvitationCreateContainer() {
   const [designPanel, setDesignPanel] = useState<"bgColor" | "font">("bgColor");
   const [designBgColor, setDesignBgColor] = useState("bg-white");
   const [designFont, setDesignFont] = useState<DesignFont>("default");
+  // rsvp
+  const [rsvpOptions, setRsvpOptions] = useState<Record<RsvpType, RsvpOption>>(DEFAULT_RSVP);
+  const [selectedPackId, setSelectedPackId] = useState<string>("default");
+  const [packDropdownOpen, setPackDropdownOpen] = useState(false);
+  const [editingRsvp, setEditingRsvp] = useState<RsvpType | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -229,6 +263,7 @@ export default function InvitationCreateContainer() {
         form: FormData; designBgColor: string; designFont: DesignFont;
         missionEnabled: boolean; selectedMissions: MissionItem[];
         dateUnknown: boolean; timeUnknown: boolean; locationUnknown: boolean;
+        rsvpOptions?: Record<RsvpType, RsvpOption>;
       };
       setForm(saved.form);
       setDesignBgColor(saved.designBgColor);
@@ -238,6 +273,15 @@ export default function InvitationCreateContainer() {
       setDateUnknown(saved.dateUnknown);
       setTimeUnknown(saved.timeUnknown);
       setLocationUnknown(saved.locationUnknown);
+      if (saved.rsvpOptions) {
+        setRsvpOptions(saved.rsvpOptions);
+        const matched = RSVP_PACKS.find(
+          (p) => p.attending === saved.rsvpOptions!.attending.emoji &&
+                 p.maybe === saved.rsvpOptions!.maybe.emoji &&
+                 p.declined === saved.rsvpOptions!.declined.emoji,
+        );
+        setSelectedPackId(matched?.id ?? "");
+      }
       setStep("design");
       setShowPublishConfirm(true);
     } catch { /* ignore */ }
@@ -262,6 +306,12 @@ export default function InvitationCreateContainer() {
         bgColor: designBgColor,
         font: designFont,
         isMissionEnabled: missionEnabled,
+        rsvpAttendingEmoji: rsvpOptions.attending.emoji,
+        rsvpAttendingLabel: rsvpOptions.attending.label,
+        rsvpMaybeEmoji: rsvpOptions.maybe.emoji,
+        rsvpMaybeLabel: rsvpOptions.maybe.label,
+        rsvpDeclinedEmoji: rsvpOptions.declined.emoji,
+        rsvpDeclinedLabel: rsvpOptions.declined.label,
       });
       if (!locationUnknown && form.placeName && form.lat !== null && form.lng !== null) {
         await setEventLocation(invitation.id, {
@@ -917,6 +967,100 @@ export default function InvitationCreateContainer() {
           </div>
         )}
 
+        <div className="h-px bg-border" />
+
+        {/* 참석 버튼 꾸미기 */}
+        <div className="flex flex-col gap-3">
+          <p className="text-[14px] font-semibold text-text-primary">참석 버튼 꾸미기</p>
+
+          {/* 팩 선택 드롭다운 */}
+          <div className="relative">
+            {packDropdownOpen && (
+              <div className="fixed inset-0 z-10" onClick={() => setPackDropdownOpen(false)} />
+            )}
+            <button
+              type="button"
+              onClick={() => setPackDropdownOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] leading-none">
+                  {RSVP_PACKS.find((p) => p.id === selectedPackId)?.attending ?? "🎉"}
+                </span>
+                <span className="text-[14px] font-semibold text-text-primary">
+                  {RSVP_PACKS.find((p) => p.id === selectedPackId)?.name ?? "기본"}
+                </span>
+              </div>
+              <span className={cn("transition-transform", packDropdownOpen ? "rotate-180" : "")}>
+                <Icon name="chevron-down" size="sm" color="inactive" decorative />
+              </span>
+            </button>
+
+            {packDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
+                {RSVP_PACKS.map((pack) => (
+                  <button
+                    key={pack.id}
+                    type="button"
+                    onClick={() => {
+                      setRsvpOptions((prev) => ({
+                        attending: { ...prev.attending, emoji: pack.attending },
+                        maybe:     { ...prev.maybe,     emoji: pack.maybe     },
+                        declined:  { ...prev.declined,  emoji: pack.declined  },
+                      }));
+                      setSelectedPackId(pack.id);
+                      setPackDropdownOpen(false);
+                      setEditingRsvp(null);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
+                      selectedPackId === pack.id ? "bg-gray-100" : "hover:bg-gray-50",
+                    )}
+                  >
+                    <span className="text-[20px] leading-none">{pack.attending}</span>
+                    <span className="flex-1 text-[15px] font-semibold text-text-primary">{pack.name}</span>
+                    {selectedPackId === pack.id && (
+                      <Icon name="check" size="sm" color="primary" decorative />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 버튼 미리보기 + 문구 편집 */}
+          <div className="grid grid-cols-3 gap-2">
+            {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setEditingRsvp(editingRsvp === type ? null : type)}
+                className={cn(
+                  "flex flex-col items-center gap-2 rounded-2xl border-2 px-3 py-4 transition-colors",
+                  editingRsvp === type ? "border-primary bg-primary-soft" : "border-border bg-surface",
+                )}
+              >
+                <span className="text-[32px] leading-none">{rsvpOptions[type].emoji}</span>
+                <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-secondary")}>
+                  {rsvpOptions[type].label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {editingRsvp && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+              <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
+              <TextInput
+                value={rsvpOptions[editingRsvp].label}
+                onChange={(e) => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
+                placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
+                maxLength={8}
+              />
+            </div>
+          )}
+        </div>
+
       </main>
       <div className="relative z-10 shrink-0">
         <StickyCTA
@@ -928,6 +1072,7 @@ export default function InvitationCreateContainer() {
                   form, designBgColor, designFont,
                   missionEnabled, selectedMissions,
                   dateUnknown, timeUnknown, locationUnknown,
+                  rsvpOptions,
                 }));
                 setLoginSheetOpen(true);
                 return;

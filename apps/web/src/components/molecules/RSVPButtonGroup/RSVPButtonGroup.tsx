@@ -27,9 +27,17 @@ const groupVariants = cva("w-full", {
   defaultVariants: { layout: "horizontal-3", disabled: false },
 });
 
+export interface RsvpOptionConfig {
+  value: RSVPValue;
+  emoji: string;
+  label: string;
+}
+
 export interface RSVPButtonGroupProps extends VariantProps<typeof groupVariants> {
   value?: RSVPValue;
   onValueChange?: (value: RSVPValue) => void;
+  /** 호스트 커스텀 RSVP 옵션 — 없으면 기본값(참석/미정/불참) 사용 */
+  options?: RsvpOptionConfig[];
   /** 정원 초과 — 참석만 비활성 */
   fullCapacity?: boolean;
   /** 마감됨 — 전체 비활성 */
@@ -46,6 +54,7 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
     {
       value,
       onValueChange,
+      options,
       layout,
       fullCapacity,
       closed,
@@ -64,9 +73,14 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
       onValueChange?.(next);
     };
 
+    type ResolvedOption = { value: RSVPValue; emoji?: string; label: string; activeColor: string };
+    const resolvedOptions: ResolvedOption[] = options
+      ? options.map((o) => ({ ...o, activeColor: OPTIONS.find((d) => d.value === o.value)?.activeColor ?? "" }))
+      : OPTIONS;
+
     return (
       <div ref={ref} className={cn(groupVariants({ layout, disabled: closed || loading }), className)}>
-        {OPTIONS.map((opt) => {
+        {resolvedOptions.map((opt) => {
           const active = current === opt.value;
           const itemDisabled =
             closed || loading || (fullCapacity && opt.value === "attending");
@@ -79,15 +93,16 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
               disabled={itemDisabled}
               onClick={() => handleSelect(opt.value)}
               className={cn(
-                "flex items-center justify-center rounded-2xl border-2 font-bold transition-colors",
-                isHorizontal ? "h-14 text-[14px]" : "h-14 px-5 text-[15px]",
+                "flex flex-col items-center justify-center gap-1 rounded-2xl border-2 font-bold transition-colors",
+                isHorizontal ? "h-16 text-[13px]" : "h-14 px-5 text-[15px]",
                 active
                   ? opt.activeColor
                   : "border-border-strong bg-surface text-text-primary hover:bg-gray-50",
                 "disabled:cursor-not-allowed disabled:opacity-40",
               )}
             >
-              {opt.label}
+              {opt.emoji && <span className="text-[22px] leading-none">{opt.emoji}</span>}
+              <span>{opt.label}</span>
             </button>
           );
         })}
