@@ -373,16 +373,15 @@ export default function InvitationFeedbacks({
             />
           </div>
         ))}
-        {hasNextPage && (
+        {hasNextPage ? (
           <button
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
-            onClick={() => fetchNextPage()}
           >
             {isFetchingNextPage ? '불러오는 중...' : '더보기'}
-          </Button>
+          </button>
         ) : null}
-      </section>
+      </div>
 
       {replyingTo ? (
         <div className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-primary-soft px-4 py-1.5">
@@ -395,7 +394,7 @@ export default function InvitationFeedbacks({
             취소
           </button>
         </div>
-      )}
+      ) : null}
       {pendingPreview && (
         <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
           <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
@@ -472,7 +471,7 @@ export default function InvitationFeedbacks({
           />
         </div>
       </div>
-      {selectedPhoto && (
+      {selectedPhoto ? (
         <PhotoDetailModal
           photos={[selectedPhoto]}
           initialIndex={0}

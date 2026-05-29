@@ -6,17 +6,16 @@ import {
   type RSVPValue,
 } from "@/components/molecules/RSVPButtonGroup";
 
-export interface RsvpSectionProps
-  extends Pick<
-    RSVPButtonGroupProps,
-    | "value"
-    | "onValueChange"
-    | "options"
-    | "fullCapacity"
-    | "closed"
-    | "loading"
-    | "helperText"
-  > {}
+export type RsvpSectionProps = Pick<
+  RSVPButtonGroupProps,
+  | "value"
+  | "onValueChange"
+  | "options"
+  | "fullCapacity"
+  | "closed"
+  | "loading"
+  | "helperText"
+>;
 
 export function RsvpSection({
   value,
