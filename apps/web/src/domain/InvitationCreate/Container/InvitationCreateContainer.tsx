@@ -28,6 +28,8 @@ import { setEventLocation } from "@/lib/api/locations";
 import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
+import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
+import { createPoll } from "@/lib/api/dateVote";
 
 type Step =
   | "start"
@@ -177,6 +179,9 @@ export default function InvitationCreateContainer() {
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareCopied, setShareCopied] = useState(false);
+  // vote draft
+  const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
+  const [voteDraft, setVoteDraft] = useState<VoteDraft | null>(null);
   // design
   const [designPanel, setDesignPanel] = useState<"bgColor" | "font">("bgColor");
   const [designBgColor, setDesignBgColor] = useState("bg-white");
@@ -279,7 +284,13 @@ export default function InvitationCreateContainer() {
       }
       return invitation;
     },
-    onSuccess: (data) => { setCreatedInvitationId(data.id); setStep("publishComplete"); },
+    onSuccess: async (data) => {
+      setCreatedInvitationId(data.id);
+      if (voteDraft) {
+        try { await createPoll(data.id, voteDraft); } catch { /* invitation은 이미 생성됨 */ }
+      }
+      setStep("publishComplete");
+    },
     onError: () => setPublishError(true),
   });
 
@@ -320,6 +331,20 @@ export default function InvitationCreateContainer() {
       }
     }, 400);
   };
+
+  // vote setup subscreen
+  if (subScreen === "dateVoteSetup") {
+    return (
+      <HostCreatingView
+        onBack={() => setSubScreen(null)}
+        initialDraft={voteDraft ?? undefined}
+        onDraftComplete={(draft) => {
+          setVoteDraft(draft);
+          setSubScreen(null);
+        }}
+      />
+    );
+  }
 
   // start
   if (step === "start") {
@@ -590,19 +615,62 @@ export default function InvitationCreateContainer() {
             onChange={(v) => { set({ date: v }); if (dateError) setDateError(false); }}
             unknownToggle
             unknown={dateUnknown}
-            onUnknownChange={(v) => { setDateUnknown(v); if (dateError) setDateError(false); }}
+            onUnknownChange={(v) => {
+              setDateUnknown(v);
+              if (v) { setTimeUnknown(true); set({ date: "", time: "" }); }
+              else setTimeUnknown(false);
+              if (dateError) setDateError(false);
+            }}
             error={dateError ? "날짜를 선택해주세요" : undefined}
           />
-          <DateTimeSelector
-            mode="time"
-            label="시작 시간"
-            value={form.time}
-            onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
-            unknownToggle
-            unknown={timeUnknown}
-            onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
-            error={timeError ? "시간을 선택해주세요" : undefined}
-          />
+          {!dateUnknown && (
+            <DateTimeSelector
+              mode="time"
+              label="시작 시간"
+              value={form.time}
+              onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
+              unknownToggle
+              unknown={timeUnknown}
+              onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
+              error={timeError ? "시간을 선택해주세요" : undefined}
+            />
+          )}
+
+          {/* 날짜 미정 → 투표 제안 배너 */}
+          {dateUnknown && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                  <Icon name="calendar" size="md" color="primary" decorative />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
+                  <p className="text-[13px] leading-relaxed text-text-secondary">
+                    여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
+              </div>
+              {voteDraft ? (
+                <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2.5">
+                  <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
+                  <button type="button" onClick={() => setSubScreen("dateVoteSetup")}
+                    className="text-[12px] text-text-tertiary underline">수정</button>
+                </div>
+              ) : (
+                <Button variant="primary" size="md" fullWidth onClick={() => setSubScreen("dateVoteSetup")} className="mt-1">
+                  날짜 투표 만들기
+                </Button>
+              )}
+            </div>
+          )}
 
           <div className="h-px bg-border" />
 

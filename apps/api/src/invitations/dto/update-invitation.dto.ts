@@ -8,8 +8,6 @@ export const UpdateInvitationSchema = z.object({
   title: z.string().min(1).max(100).optional(),
   description: z.string().min(1).optional(),
   mainImageKey: z.string().min(1).optional(),
-  mainImageFrame: z.enum(['default', 'upload', 'ai']).optional(),
-  uploadedImageKey: z.string().min(1).optional().nullable(),
   templateId: z.string().optional().nullable(),
   eventStartAt: z.coerce.date().optional().nullable(),
   isMissionEnabled: z.boolean().optional(),

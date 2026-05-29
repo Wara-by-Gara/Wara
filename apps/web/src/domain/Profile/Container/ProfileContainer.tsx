@@ -21,15 +21,7 @@ export default function ProfileContainer() {
   const recentInvitations = (invitations ?? []).slice(0, 10).map((inv) => ({
     id: inv.id,
     title: inv.title,
-    date: inv.eventStartAt
-      ? new Date(inv.eventStartAt).toLocaleDateString("ko-KR", {
-          month: "long",
-          day: "numeric",
-          weekday: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "",
+    date: inv.eventStartAt ?? '',
     imageUrl: inv.mainImageUrl,
     variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
@@ -57,10 +49,9 @@ export default function ProfileContainer() {
         stats,
       }}
       recentInvitations={recentInvitations}
-      onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
+      onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
-      onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
     />
   );
 }
