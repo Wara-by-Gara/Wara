@@ -864,7 +864,7 @@ export default function InvitationCreateContainer() {
       />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent title="로그인이 필요해요" description="초대장을 만들려면 먼저 로그인해주세요">
+        <BottomSheetContent title="로그인이 필요해요" description="5초면 충분해요 · 초대장을 바로 만들 수 있어요">
           <div className="flex flex-col gap-2.5 pt-2">
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const config = {
