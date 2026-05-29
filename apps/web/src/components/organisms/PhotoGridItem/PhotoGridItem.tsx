@@ -21,11 +21,13 @@ export interface PhotoGridItemProps
   hostManageMode?: boolean;
   /** 남은 사진 수 등 (+18) */
   overflowLabel?: string;
+  /** 좋아요 수 표시 */
+  likeCount?: number;
 }
 
 export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
   function PhotoGridItem(
-    { className, src, alt, status = "default", progress = 0, isOwner, hostManageMode, overflowLabel, ...props },
+    { className, src, alt, status = "default", progress = 0, isOwner, hostManageMode, overflowLabel, likeCount, ...props },
     ref,
   ) {
     return (
@@ -76,6 +78,13 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {isOwner && !hostManageMode ? (
           <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 text-[10px] font-bold text-text-inverse">
             나
+          </span>
+        ) : null}
+
+        {/* Like count overlay */}
+        {likeCount !== undefined && likeCount > 0 && !overflowLabel ? (
+          <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-bold text-white">
+            ♥ {likeCount}
           </span>
         ) : null}
 
