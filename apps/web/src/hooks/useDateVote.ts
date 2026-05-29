@@ -90,6 +90,7 @@ export function useConfirmSlot(invitationId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.vote(invitationId) });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.voteResults(invitationId) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.detail(invitationId) });
     },
   });
 }

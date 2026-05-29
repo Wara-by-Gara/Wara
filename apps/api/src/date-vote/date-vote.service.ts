@@ -202,13 +202,15 @@ export class DateVoteService {
           ? undefined
           : responses.map((r) => ({
               participantId: r.participantId,
-              displayName:   r.displayName,
+              displayName:   r.displayName ?? r.nickname ?? null,
               response:      r.response,
             })),
       };
     });
 
-    return { poll, slotResults };
+    const voterCount = new Set(allResponses.map((r) => r.participantId)).size;
+
+    return { poll, slotResults, voterCount };
   }
 
   // ── Close / Confirm ─────────────────────────────────────────────────────────

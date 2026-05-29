@@ -337,6 +337,7 @@ export default function InvitationCreateContainer() {
     return (
       <HostCreatingView
         onBack={() => setSubScreen(null)}
+        initialDraft={voteDraft ?? undefined}
         onDraftComplete={(draft) => {
           setVoteDraft(draft);
           setSubScreen(null);
@@ -616,7 +617,7 @@ export default function InvitationCreateContainer() {
             unknown={dateUnknown}
             onUnknownChange={(v) => {
               setDateUnknown(v);
-              if (v) { setTimeUnknown(true); set({ time: "" }); }
+              if (v) { setTimeUnknown(true); set({ date: "", time: "" }); }
               else setTimeUnknown(false);
               if (dateError) setDateError(false);
             }}
@@ -655,7 +656,7 @@ export default function InvitationCreateContainer() {
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
                 <Icon name="check-circle" size="sm" color="primary" decorative />
-                <span className="text-[12px] text-text-secondary">○ △ × 로 간편 응답, 결과 자동 집계</span>
+                <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
               </div>
               {voteDraft ? (
                 <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2.5">

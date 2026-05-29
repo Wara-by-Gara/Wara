@@ -22,6 +22,8 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
+import { usePoll, useVoteResults } from "@/hooks/useDateVote";
+import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
@@ -37,6 +39,9 @@ type Props = {
 export default function HostView({ invitationId, invitation, participantsData, me }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: pollData } = usePoll(invitationId);
+  const hasPoll = !!pollData?.poll;
+  const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -118,7 +123,16 @@ export default function HostView({ invitationId, invitation, participantsData, m
           />
         )}
 
-        <InformationsContainer invitation={invitation} isHost invitationId={invitationId} />
+        {hasPoll && pollData?.poll.status !== 'confirmed' && (
+          <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
+        )}
+
+        <InformationsContainer
+          invitation={invitation}
+          isHost
+          invitationId={invitationId}
+          voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
+        />
 
         {recentParticipants.length > 0 ? (
           <section className="rounded-3xl border border-border bg-surface p-4">

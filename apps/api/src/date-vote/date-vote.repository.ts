@@ -181,9 +181,11 @@ export class DateVoteRepository {
         response:      schema.dateVoteResponses.response,
         displayName:   schema.participants.displayName,
         userId:        schema.participants.userId,
+        nickname:      schema.users.nickname,
       })
       .from(schema.dateVoteResponses)
       .leftJoin(schema.participants, eq(schema.dateVoteResponses.participantId, schema.participants.id))
+      .leftJoin(schema.users, eq(schema.participants.userId, schema.users.id))
       .where(inArray(schema.dateVoteResponses.slotId, slotIds));
   }
 

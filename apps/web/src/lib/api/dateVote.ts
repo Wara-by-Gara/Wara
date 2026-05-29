@@ -55,6 +55,7 @@ export interface GetPollResponse {
 export interface GetResultsResponse {
   poll: DateVotePoll;
   slotResults: SlotResult[];
+  voterCount: number;
 }
 
 // ── Request bodies ───────────────────────────────────────────────────────────
