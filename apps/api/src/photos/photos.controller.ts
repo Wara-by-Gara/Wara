@@ -45,8 +45,9 @@ export class PhotosController {
   listPhotos(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Query(new ZodValidationPipe(ListPhotosSchema)) dto: ListPhotosDto,
+    @CurrentParticipant() participant: Participant,
   ) {
-    return this.photosService.listPhotos(invitationId, dto);
+    return this.photosService.listPhotos(invitationId, dto, participant.id);
   }
 
   //사진 다운로드(선택,단일)

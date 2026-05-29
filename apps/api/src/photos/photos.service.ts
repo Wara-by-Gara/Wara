@@ -27,9 +27,9 @@ export class PhotosService {
   }
 
   // 전체 사진 DB 조회
-  async listPhotos(invitationId: string, dto: ListPhotosDto) {
+  async listPhotos(invitationId: string, dto: ListPhotosDto, participantId?: string) {
     const { rows, nextCursor, total } =
-      await this.repository.findAllByInvitationId(invitationId, dto);
+      await this.repository.findAllByInvitationId(invitationId, dto, participantId);
     const data = await Promise.all(
       rows.map(async (photo) => ({
         ...photo,

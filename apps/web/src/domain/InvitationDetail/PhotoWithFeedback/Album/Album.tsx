@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { type Photo, getPresignedUrl, registerPhoto } from '@/lib/api/photos';
+import { type Photo, getPresignedUrl, registerPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { Icon } from '@/components/icons';
 import AlbumModal from '../AlbumModal/AlbumModal';
@@ -74,6 +74,22 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   const handleLikeChange = (photoId: string, liked: boolean, likeCount: number) => {
     setLikedMap((prev) => new Map(prev).set(photoId, liked));
     setLikeCountMap((prev) => new Map(prev).set(photoId, likeCount));
+  };
+
+  const handlePhotoLike = async (photoId: string) => {
+    const currentLiked = likedMap.has(photoId) ? likedMap.get(photoId)! : (photos.find((p) => p.id === photoId)?.liked ?? false);
+    const currentCount = likeCountMap.get(photoId) ?? photos.find((p) => p.id === photoId)?.likeCount ?? 0;
+    const newLiked = !currentLiked;
+    setLikedMap((prev) => new Map(prev).set(photoId, newLiked));
+    setLikeCountMap((prev) => new Map(prev).set(photoId, newLiked ? currentCount + 1 : currentCount - 1));
+    try {
+      const result = await togglePhotoLike(invitationId, photoId);
+      setLikedMap((prev) => new Map(prev).set(photoId, result.liked));
+      setLikeCountMap((prev) => new Map(prev).set(photoId, result.liked ? currentCount + 1 : currentCount - 1));
+    } catch {
+      setLikedMap((prev) => new Map(prev).set(photoId, currentLiked));
+      setLikeCountMap((prev) => new Map(prev).set(photoId, currentCount));
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +184,9 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
                 key={photo.id}
                 src={photo.url}
                 alt=""
+                likeCount={likeCountMap.get(photo.id) ?? photo.likeCount}
+                liked={likedMap.has(photo.id) ? likedMap.get(photo.id)! : (photo.liked ?? false)}
+                onLike={() => handlePhotoLike(photo.id)}
                 onClick={() => setSelectedIndex(idx)}
               />
             ))}
@@ -227,6 +246,9 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
           fetchNextPage={fetchNextPage}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
+          initialLikedMap={likedMap}
+          initialLikeCountMap={likeCountMap}
+          onLikeChange={handleLikeChange}
         />
       )}
 
