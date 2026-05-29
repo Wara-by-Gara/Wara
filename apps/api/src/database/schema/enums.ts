@@ -43,7 +43,9 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'photo',
   'arrived',
   'nudge',
-  'ai_complete',
+  'vote_reminder',
+  'vote_confirmed',
+  'vote_tied',
 ]);
 
 export const remindTypeEnum = pgEnum('remind_type', ['D+7', 'D+30', 'D+365']);
@@ -53,6 +55,17 @@ export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'invitation',
   'mission',
   'participantLocations',
+]);
+
+export const dateVotePollStatusEnum = pgEnum('date_vote_poll_status', [
+  'open',
+  'closed',
+  'confirmed',
+]);
+export const dateVoteResponseEnum = pgEnum('date_vote_response', [
+  'good',
+  'maybe',
+  'bad',
 ]);
 
 export const inquiryTypeEnum = pgEnum('inquiry_type', [

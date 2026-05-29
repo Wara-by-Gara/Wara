@@ -5,7 +5,7 @@ export const MAIN_BOTTOM_NAV_ITEMS: BottomNavItem[] = [
   { key: "home", label: "홈", icon: "home" },
   { key: "invitations", label: "초대장", icon: "invitation" },
   { key: "create", label: "만들기", icon: "plus", fab: true },
-  { key: "notifications", label: "알림", icon: "bell" },
+  { key: "notifications", label: "알림", icon: "bell", badge: true },
   { key: "me", label: "마이페이지", icon: "user" },
 ];
 
