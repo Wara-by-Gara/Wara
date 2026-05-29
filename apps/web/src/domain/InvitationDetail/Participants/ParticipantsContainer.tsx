@@ -18,6 +18,7 @@ import { ParticipantListSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { useParticipants, useMyParticipant } from "@/hooks/useParticipants";
+import { useInvitation } from "@/hooks/useInvitations";
 import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import type { IconName } from "@/components/icons";
@@ -28,24 +29,10 @@ type Tab = "all" | RsvpStatus | "memo";
 type SortKey = "joined-asc" | "joined-desc" | "name-asc";
 type SheetMode = "action" | "memo" | "rsvp" | "kick" | null;
 
-const TAB_LABELS: Record<Tab, string> = {
-  all: "전체",
-  attending: "참석",
-  undecided: "미정",
-  absent: "불참",
-  memo: "메모",
-};
-
 const RSVP_TO_PARTICIPANT: Record<RsvpStatus, ParticipantRsvp> = {
   attending: "attending",
   undecided: "maybe",
   absent: "declined",
-};
-
-const RSVP_LABELS: Record<RsvpStatus, string> = {
-  attending: "참석",
-  undecided: "미정",
-  absent: "불참",
 };
 
 const RSVP_ICONS: Record<RsvpStatus, IconName> = {
@@ -95,7 +82,19 @@ export default function ParticipantsContainer() {
 
   const { data, isLoading, isError, refetch } = useParticipants(invitationId);
   const { data: myParticipant } = useMyParticipant(invitationId);
+  const { data: invitation } = useInvitation(invitationId);
   const isHost = myParticipant?.memberRole === "HOST";
+
+  const rsvpLabels = {
+    attending: invitation?.rsvpAttendingLabel ?? "참석",
+    maybe: invitation?.rsvpMaybeLabel ?? "미정",
+    declined: invitation?.rsvpDeclinedLabel ?? "불참",
+  };
+
+  const rsvpStatusToLabel = (status: RsvpStatus): string =>
+    status === "attending" ? rsvpLabels.attending :
+    status === "undecided" ? rsvpLabels.maybe :
+    rsvpLabels.declined;
 
   const invalidateParticipants = () =>
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
@@ -180,7 +179,7 @@ export default function ParticipantsContainer() {
       <BottomSheet open={sheetMode === "action"} onOpenChange={(open) => !open && setSheetMode(null)}>
         <BottomSheetContent
           title={selectedRow?.participant.displayName ?? selectedRow?.user.nickname ?? ""}
-          description={selectedRow ? RSVP_LABELS[selectedRow.participant.rsvpStatus] : ""}
+          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           {selectedRow?.participant.note && (
             <p className="mb-4 text-sm text-text-secondary">
@@ -214,7 +213,7 @@ export default function ParticipantsContainer() {
       <BottomSheet open={sheetMode === "memo"} onOpenChange={(open) => !open && setSheetMode("action")}>
         <BottomSheetContent
           title={selectedRow?.participant.displayName ?? selectedRow?.user.nickname ?? ""}
-          description={selectedRow ? RSVP_LABELS[selectedRow.participant.rsvpStatus] : ""}
+          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           <textarea
             className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-sm text-text-primary outline-none"
@@ -246,7 +245,7 @@ export default function ParticipantsContainer() {
       <BottomSheet open={sheetMode === "rsvp"} onOpenChange={(open) => !open && setSheetMode("action")}>
         <BottomSheetContent
           title={selectedRow?.participant.displayName ?? selectedRow?.user.nickname ?? ""}
-          description={selectedRow ? RSVP_LABELS[selectedRow.participant.rsvpStatus] : ""}
+          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           <div className="divide-y divide-border">
             {(["attending", "undecided", "absent"] as RsvpStatus[]).map((status) => (
@@ -290,6 +289,7 @@ export default function ParticipantsContainer() {
             maybe: summary?.undecidedCount ?? 0,
             declined: summary?.absentCount ?? 0,
           }}
+          rsvpLabels={rsvpLabels}
         />
 
         {showSearch && (
@@ -304,11 +304,14 @@ export default function ParticipantsContainer() {
         )}
 
         <div className="flex gap-1.5 overflow-x-auto">
-          {(Object.keys(TAB_LABELS) as Tab[]).filter((t) => t !== "memo" || isHost).map((t) => (
-            <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
-              {TAB_LABELS[t]}
-            </Chip>
-          ))}
+          {(["all", "attending", "undecided", "absent", "memo"] as Tab[]).filter((t) => t !== "memo" || isHost).map((t) => {
+            const label = t === "all" ? "전체" : t === "attending" ? "참석" : t === "undecided" ? "미정" : t === "memo" ? "메모" : "불참";
+            return (
+              <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
+                {label}
+              </Chip>
+            );
+          })}
         </div>
 
         {isLoading ? (

@@ -18,6 +18,8 @@ export interface ParticipantSummaryCardProps
   variant?: "host" | "guest" | "compact";
   /** 통계 수치 */
   summary: ParticipantSummary;
+  /** 커스텀 RSVP 라벨 */
+  rsvpLabels?: { attending?: string; maybe?: string; declined?: string };
 }
 
 const Stat = ({ label, value, color }: { label: string; value: number; color: string }) => (
@@ -30,9 +32,12 @@ const Stat = ({ label, value, color }: { label: string; value: number; color: st
 export const ParticipantSummaryCard = forwardRef<
   HTMLDivElement,
   ParticipantSummaryCardProps
->(function ParticipantSummaryCard({ className, variant = "guest", summary, ...props }, ref) {
+>(function ParticipantSummaryCard({ className, variant = "guest", summary, rsvpLabels, ...props }, ref) {
   const isCompact = variant === "compact";
   const showCapacity = variant === "host" && summary.capacity !== undefined;
+  const attendingLabel = rsvpLabels?.attending ?? "참석";
+  const maybeLabel = rsvpLabels?.maybe ?? "미정";
+  const declinedLabel = rsvpLabels?.declined ?? "불참";
 
   return (
     <div
@@ -55,11 +60,11 @@ export const ParticipantSummaryCard = forwardRef<
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Stat label="참석" value={summary.attending} color="text-primary" />
+        <Stat label={attendingLabel} value={summary.attending} color="text-primary" />
         <span className="h-8 w-px bg-border" />
-        <Stat label="미정" value={summary.maybe} color="text-yellow-400" />
+        <Stat label={maybeLabel} value={summary.maybe} color="text-yellow-400" />
         <span className="h-8 w-px bg-border" />
-        <Stat label="불참" value={summary.declined} color="text-gray-500" />
+        <Stat label={declinedLabel} value={summary.declined} color="text-gray-500" />
         {variant === "host" && summary.noResponse !== undefined ? (
           <>
             <span className="h-8 w-px bg-border" />

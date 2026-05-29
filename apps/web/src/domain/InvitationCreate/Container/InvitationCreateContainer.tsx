@@ -913,7 +913,7 @@ export default function InvitationCreateContainer() {
                 value={rsvpOptions[editingRsvp].label}
                 onChange={(e) => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
                 placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
-                maxLength={10}
+                maxLength={8}
               />
             </div>
           )}
