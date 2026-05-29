@@ -49,7 +49,7 @@ export class DateVoteService {
 
     const poll = await this.repo.createPoll({
       invitationId,
-      closesAt: new Date(dto.closesAt),
+      closesAt: dto.closesAt ? new Date(dto.closesAt) : new Date('2099-12-31T23:59:59Z'),
       isAnonymous: dto.isAnonymous,
     });
 

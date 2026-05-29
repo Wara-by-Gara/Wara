@@ -33,7 +33,14 @@ interface DateSlot {
 interface DraftSlot {
   date: string;       // e.g. "6월 14일 일요일"
   dateKey: string;    // e.g. "2026-06-14"
-  time: string;       // e.g. "오후 2시"
+  time: string;       // e.g. "오후 2시" (표시용)
+  timeKey: string;    // e.g. "14:00" (API용)
+}
+
+export interface VoteDraft {
+  slots: { date: string; startTime: string; sortOrder: number }[];
+  isAnonymous: boolean;
+  closesAt?: string; // undefined = 마감 없음
 }
 
 export type DateVoteState =
@@ -112,6 +119,13 @@ function formatDateLabel(dateKey: string): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${getDayLabel(dateKey)}요일`;
 }
 
+function toHHMM(ampm: "오전" | "오후", hour: number, minute: number): string {
+  let h = hour;
+  if (ampm === "오후" && hour !== 12) h = hour + 12;
+  if (ampm === "오전" && hour === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 // ── Mock data (6월 14일·15일) ───────────────────────────────────────────────
 const MOCK_SLOTS: DateSlot[] = [
   { id: "s1", date: "6월 14일 일요일", time: "오후 2시",  votes: { circle: 7, triangle: 2, cross: 1 }, voters: [{ name: "김현제", vote: "circle" }, { name: "윤숙희", vote: "circle" }, { name: "최우진", vote: "triangle" }, { name: "박수훈", vote: "circle" }] },
@@ -123,9 +137,9 @@ const CONFIRMED_ID = "s3";
 const INITIAL_VOTES: MyVotes = { s1: "circle", s2: "triangle", s3: "circle" };
 
 const INITIAL_DRAFT: DraftSlot[] = [
-  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 2시" },
-  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 7시" },
-  { date: "6월 15일 월요일", dateKey: "2026-06-15", time: "오후 2시" },
+  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 2시",  timeKey: "14:00" },
+  { date: "6월 14일 일요일", dateKey: "2026-06-14", time: "오후 7시",  timeKey: "19:00" },
+  { date: "6월 15일 월요일", dateKey: "2026-06-15", time: "오후 2시",  timeKey: "14:00" },
 ];
 
 function groupByDate(slots: DateSlot[]) {
@@ -249,7 +263,7 @@ function formatTimeLabel(ampm: "오전" | "오후", hour: number, minute: number
 }
 
 interface TimePickerProps {
-  onAdd: (time: string) => void;
+  onAdd: (display: string, hhmm: string) => void;
   disabled?: boolean;
 }
 
@@ -402,7 +416,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         variant="outline"
         size="md"
         disabled={disabled}
-        onClick={() => onAdd(preview)}
+        onClick={() => onAdd(preview, toHHMM(ampm, hour, minute))}
         className="gap-2"
       >
         <Icon name="plus" size="xs" color="currentColor" decorative />
@@ -485,27 +499,32 @@ function CalendarPicker({
 }
 
 // ── Host Creating View ─────────────────────────────────────────────────────
-function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invitationId?: string }) {
+export function HostCreatingView({ onBack, invitationId, onDraftComplete }: {
+  onBack?: () => void;
+  invitationId?: string;
+  onDraftComplete?: (draft: VoteDraft) => void;
+}) {
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth() + 1);
+  const isDraftMode = !!onDraftComplete;
   const [selectedDates, setSelectedDates] = useState<Set<string>>(
-    new Set(["2026-06-14", "2026-06-15"]),
+    isDraftMode ? new Set() : new Set(["2026-06-14", "2026-06-15"]),
   );
-  const [focusedDate, setFocusedDate] = useState<string | null>("2026-06-14");
-  const [slots, setSlots] = useState<DraftSlot[]>(INITIAL_DRAFT);
+  const [focusedDate, setFocusedDate] = useState<string | null>(isDraftMode ? null : "2026-06-14");
+  const [slots, setSlots] = useState<DraftSlot[]>(isDraftMode ? [] : INITIAL_DRAFT);
   const [isPublic, setIsPublic] = useState(true);
   const [step, setStep] = useState<"date" | "settings">("date");
   const createPollMutation = useCreatePoll(invitationId ?? '');
 
-  // 투표 마감 옵션 (행사 시작일 기준 preset)
-  const DEADLINE_OPTIONS = [
-    { label: '행사 1일 전 오후 11:59', offsetDays: 1 },
-    { label: '행사 3일 전 오후 11:59', offsetDays: 3 },
-    { label: '행사 7일 전 오후 11:59', offsetDays: 7 },
-  ] as const;
-  const [deadlineOffset, setDeadlineOffset] = useState<number>(1);
-  const closesAt = new Date(Date.now() + deadlineOffset * 24 * 60 * 60 * 1000).toISOString();
+  // 투표 마감 옵션
+  const [deadlineMode, setDeadlineMode] = useState<"none" | "custom">("none");
+  const [customDeadlineDate, setCustomDeadlineDate] = useState("");
+  const [customDeadlineTime, setCustomDeadlineTime] = useState("23:59");
+  const closesAt = deadlineMode === "custom" && customDeadlineDate
+    ? new Date(`${customDeadlineDate}T${customDeadlineTime}:00`).toISOString()
+    : undefined;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const toggleDate = (key: string) => {
     setSelectedDates((prev) => {
@@ -522,12 +541,12 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
     });
   };
 
-  const addTime = (time: string) => {
+  const addTime = (time: string, hhmm: string) => {
     if (!focusedDate) return;
     if (slots.length >= 30) return;
     if (slots.some((s) => s.dateKey === focusedDate && s.time === time)) return;
     const label = formatDateLabel(focusedDate);
-    setSlots((prev) => [...prev, { date: label, dateKey: focusedDate, time }]);
+    setSlots((prev) => [...prev, { date: label, dateKey: focusedDate, time, timeKey: hhmm }]);
   };
 
   const removeSlot = (idx: number) => setSlots((prev) => prev.filter((_, i) => i !== idx));
@@ -559,11 +578,10 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
             <p className="mb-2 text-[13px] font-bold text-text-primary">선택된 후보 ({slots.length}개)</p>
             <div className="flex flex-col gap-1">
               {Array.from(slotsByDate.entries()).map(([, daySlots]) =>
-                daySlots.map((s, i) => (
-                  <div key={`${s.dateKey}-${s.time}`} className="flex items-center justify-between">
-                    <span className="text-[13px] text-text-secondary">
-                      {i === 0 ? s.date : ""} {s.time}
-                    </span>
+                daySlots.map((s) => (
+                  <div key={`${s.dateKey}-${s.time}`} className="flex items-center gap-2">
+                    <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
+                    <span className="text-[13px] text-text-secondary">{s.date} {s.time}</span>
                   </div>
                 ))
               )}
@@ -573,20 +591,42 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
           {/* Deadline */}
           <div className="rounded-2xl border border-border bg-surface p-4">
             <p className="mb-3 text-[13px] font-bold text-text-primary">투표 마감 시간</p>
-            {DEADLINE_OPTIONS.map(({ label, offsetDays }) => (
-              <label key={label} className="flex cursor-pointer items-center gap-3 py-2">
-                <div
-                  onClick={() => setDeadlineOffset(offsetDays)}
+            <div className="flex gap-3">
+              {([
+                { mode: "none" as const, label: "없음", desc: "마감일 없이 진행" },
+                { mode: "custom" as const, label: "직접 설정", desc: "날짜·시간 직접 지정" },
+              ]).map(({ mode, label, desc }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDeadlineMode(mode)}
                   className={cn(
-                    "flex size-5 items-center justify-center rounded-full border-2 transition-colors",
-                    deadlineOffset === offsetDays ? "border-primary bg-primary" : "border-border bg-white",
+                    "flex flex-1 flex-col gap-0.5 rounded-2xl border p-3 text-left transition-all",
+                    deadlineMode === mode ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
-                  {deadlineOffset === offsetDays && <div className="size-2 rounded-full bg-white" />}
-                </div>
-                <span className="text-[14px] text-text-primary">{label}</span>
-              </label>
-            ))}
+                  <span className={cn("text-[14px] font-bold", deadlineMode === mode ? "text-primary" : "text-text-primary")}>{label}</span>
+                  <span className="text-[11px] text-text-secondary">{desc}</span>
+                </button>
+              ))}
+            </div>
+            {deadlineMode === "custom" && (
+              <div className="mt-3 flex gap-2 rounded-xl border border-border bg-gray-50 p-3">
+                <input
+                  type="date"
+                  value={customDeadlineDate}
+                  min={todayStr}
+                  onChange={(e) => setCustomDeadlineDate(e.target.value)}
+                  className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                />
+                <input
+                  type="time"
+                  value={customDeadlineTime}
+                  onChange={(e) => setCustomDeadlineTime(e.target.value)}
+                  className="w-28 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Public/private */}
@@ -612,19 +652,22 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
         </main>
         <div className="relative z-10 shrink-0">
           <StickyCTA primary={{
-            label: createPollMutation.isPending ? "생성 중..." : "투표 만들기",
-            disabled: createPollMutation.isPending || slots.length === 0,
+            label: onDraftComplete ? "완료" : (createPollMutation.isPending ? "생성 중..." : "투표 만들기"),
+            disabled: (!onDraftComplete && createPollMutation.isPending)
+              || slots.length === 0
+              || (deadlineMode === "custom" && !customDeadlineDate),
             onClick: () => {
+              const slotsData = slots.map((s, i) => ({
+                date: s.dateKey,
+                startTime: s.timeKey,
+                sortOrder: i,
+              }));
+              if (onDraftComplete) {
+                onDraftComplete({ closesAt, isAnonymous: !isPublic, slots: slotsData });
+                return;
+              }
               if (!invitationId) return;
-              createPollMutation.mutate({
-                closesAt,
-                isAnonymous: !isPublic,
-                slots: slots.map((s, i) => ({
-                  date: s.dateKey,
-                  startTime: undefined, // TODO: TimePicker에서 HH:MM 역변환 필요
-                  sortOrder: i,
-                })),
-              });
+              createPollMutation.mutate({ closesAt, isAnonymous: !isPublic, slots: slotsData });
             },
           }} />
         </div>
@@ -688,7 +731,7 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
             </p>
             <TimePicker
               disabled={slots.length >= 30}
-              onAdd={(time) => addTime(time)}
+              onAdd={(time, hhmm) => addTime(time, hhmm)}
             />
           </div>
         )}
@@ -703,9 +746,12 @@ function HostCreatingView({ onBack, invitationId }: { onBack?: () => void; invit
               {Array.from(slotsByDate.entries()).sort().map(([, daySlots]) =>
                 daySlots.map((s) => (
                   <div key={`${s.dateKey}-${s.time}`} className="flex items-center justify-between py-2.5">
-                    <div>
-                      <p className="text-[13px] font-semibold text-text-primary">{s.date}</p>
-                      <p className="text-[12px] text-text-secondary">{s.time}</p>
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
+                      <div>
+                        <p className="text-[13px] font-semibold text-text-primary">{s.date}</p>
+                        <p className="text-[12px] text-text-secondary">{s.time}</p>
+                      </div>
                     </div>
                     <button
                       type="button"

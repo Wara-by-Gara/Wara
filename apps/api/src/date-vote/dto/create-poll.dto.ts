@@ -11,7 +11,8 @@ const slotSchema = z.object({
 export const createPollSchema = z.object({
   closesAt:    z.string()
                 .datetime()
-                .refine((d) => new Date(d) > new Date(), 'closesAt must be in the future'),
+                .refine((d) => new Date(d) > new Date(), 'closesAt must be in the future')
+                .optional(),
   isAnonymous: z.boolean().default(false),
   slots:       z.array(slotSchema).min(1).max(30),
 });

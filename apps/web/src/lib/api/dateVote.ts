@@ -60,7 +60,7 @@ export interface GetResultsResponse {
 // ── Request bodies ───────────────────────────────────────────────────────────
 
 export interface CreatePollBody {
-  closesAt: string; // ISO 8601
+  closesAt?: string; // ISO 8601, 없으면 마감 없음
   isAnonymous: boolean;
   slots: { date: string; startTime?: string; sortOrder?: number }[];
 }
