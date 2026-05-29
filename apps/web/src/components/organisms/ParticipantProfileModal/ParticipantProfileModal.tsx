@@ -84,7 +84,7 @@ export const ParticipantProfileModal = ({
             src={avatarUrl}
             alt={name}
             size="xl"
-            initial={name?.[0]}
+            name={name}
             className={cn("ring-4 ring-surface", isHost && "ring-yellow-200")}
           />
           <div className="mt-3 flex flex-col items-center gap-1.5">

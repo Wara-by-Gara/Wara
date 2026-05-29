@@ -124,6 +124,8 @@ export default function PhotoDetailModal({
       {
         id: f.id,
         authorName: f.participant.user.nickname,
+        authorInitialName: f.participant.user.name ?? undefined,
+        authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
         content: f.content,
         createdAt: timeAgo(f.createdAt),
         variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
@@ -148,6 +150,7 @@ export default function PhotoDetailModal({
         return {
           id: r.id,
           authorName: r.participant.user.nickname,
+          authorInitialName: r.participant.user.name ?? undefined,
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: `↳ ${r.content}`,
           createdAt: timeAgo(r.createdAt),
@@ -186,6 +189,9 @@ export default function PhotoDetailModal({
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
+      currentUserAvatarUrl={me?.profileImageUrl ?? undefined}
+      currentUserInitialName={me?.name ?? undefined}
+      currentUserNickname={me?.nickname ?? undefined}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
       replyBanner={replyingTo ? (

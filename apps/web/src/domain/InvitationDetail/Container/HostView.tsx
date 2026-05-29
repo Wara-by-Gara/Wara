@@ -17,7 +17,6 @@ import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { updateInvitationStatus, deleteInvitation } from "@/lib/api/invitations";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getParticipants } from "@/lib/api/participants";
-import type { getMe } from "@/lib/api/users";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
@@ -25,16 +24,14 @@ import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedb
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
-type Me = Awaited<ReturnType<typeof getMe>>;
 
 type Props = {
   invitationId: string;
   invitation: Invitation;
   participantsData: ParticipantsData | undefined;
-  me: Me | undefined;
 };
 
-export default function HostView({ invitationId, invitation, participantsData, me }: Props) {
+export default function HostView({ invitationId, invitation, participantsData }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
@@ -136,7 +133,7 @@ export default function HostView({ invitationId, invitation, participantsData, m
               {recentParticipants.map(({ participant, user }) => (
                 <ParticipantItem
                   key={participant.id}
-                  name={user.nickname ?? "익명"}
+                  name={participant.displayName ?? user.name ?? user.nickname ?? "익명"}
                   avatarUrl={user.profileImageUrl ?? undefined}
                   status={participant.rsvpStatus === "attending" ? "attending" : participant.rsvpStatus === "undecided" ? "maybe" : "declined"}
                   isHost={participant.memberRole === "HOST"}
@@ -150,12 +147,7 @@ export default function HostView({ invitationId, invitation, participantsData, m
             <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
           </section>
         )}
-        <PhotoWithFeedbackContainer
-          invitationId={invitationId}
-          currentUserId={me?.id ?? null}
-          currentUserNickname={me?.nickname ?? null}
-          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-        />
+        <PhotoWithFeedbackContainer invitationId={invitationId} />
       </main>
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />

@@ -49,6 +49,7 @@ export default function ProfileEditContainer() {
     <ProfileEdit
       state={cropImageSrc ? 'imageCrop' : isError ? 'saveFailed' : 'default'}
       isUploading={isPending}
+      defaultName={me.name ?? undefined}
       defaultNickname={me.nickname ?? ''}
       avatarUrl={me.profileImageUrl ?? undefined}
       cropImageSrc={cropImageSrc ?? undefined}

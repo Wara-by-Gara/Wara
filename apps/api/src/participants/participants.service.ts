@@ -11,6 +11,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
 import { UsersRepository } from '../users/users.repository';
+import { S3Service } from '../s3/s3.service';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
 
@@ -20,22 +21,38 @@ export class ParticipantsService {
     private readonly repository: ParticipantsRepository,
     private readonly blocklistRepository: BlocklistRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly s3Service: S3Service,
   ) {}
+
+  private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
+    if (!url) return null;
+    return this.s3Service.getViewPresignedUrl(url);
+  }
 
   async findAll(invitationId: string, viewer: Participant) {
     const all = await this.repository.findAllByInvitation(invitationId);
 
+    const resolved = await Promise.all(
+      all.map(async (r) => ({
+        ...r,
+        user: {
+          ...r.user,
+          profileImageUrl: await this.resolveProfileImageUrl(r.user.profileImageUrl),
+        },
+      })),
+    );
+
     const summary = {
-      totalCount: all.length,
-      attendingCount: all.filter((r) => r.participant.rsvpStatus === 'attending').length,
-      undecidedCount: all.filter((r) => r.participant.rsvpStatus === 'undecided').length,
-      absentCount: all.filter((r) => r.participant.rsvpStatus === 'absent').length,
+      totalCount: resolved.length,
+      attendingCount: resolved.filter((r) => r.participant.rsvpStatus === 'attending').length,
+      undecidedCount: resolved.filter((r) => r.participant.rsvpStatus === 'undecided').length,
+      absentCount: resolved.filter((r) => r.participant.rsvpStatus === 'absent').length,
     };
 
     const isHost = viewer.memberRole === 'HOST';
     const participants = isHost
-      ? all
-      : all.map((r) => ({ ...r, participant: { ...r.participant, note: null } }));
+      ? resolved
+      : resolved.map((r) => ({ ...r, participant: { ...r.participant, note: null } }));
 
     return { summary, participants };
   }

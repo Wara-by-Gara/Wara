@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 export interface CommentInputBarProps {
   avatarUrl?: string;
   authorName?: string;
+  authorInitialName?: string;
   state?: "default" | "disabled" | "loginRequired" | "submitting" | "error";
   onSubmit?: (text: string) => void | Promise<void>;
   placeholder?: string;
@@ -21,6 +22,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
     {
       avatarUrl,
       authorName,
+      authorInitialName,
       state = "default",
       onSubmit,
       placeholder = "댓글 남기기",
@@ -73,7 +75,7 @@ const handleSubmit = async () => {
           className,
         )}
       >
-        <Avatar src={avatarUrl} alt={authorName ?? ""} size="sm" initial={authorName?.[0]} />
+        <Avatar src={avatarUrl} alt={authorName ?? ""} size="sm" name={authorInitialName ?? authorName} />
         <div
           className={cn(
             "flex flex-1 items-center gap-2 rounded-full bg-gray-100 px-4",

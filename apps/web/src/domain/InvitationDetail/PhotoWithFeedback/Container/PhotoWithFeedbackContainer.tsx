@@ -16,12 +16,7 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
   );
 }
 
-export default function PhotoWithFeedbackContainer({
-  invitationId,
-  currentUserId,
-  currentUserNickname,
-  currentUserProfileImageUrl,
-}: InvitationDetailProps) {
+export default function PhotoWithFeedbackContainer({ invitationId }: InvitationDetailProps) {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;
@@ -60,12 +55,7 @@ export default function PhotoWithFeedbackContainer({
         hasNextPage={!!hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
       />
-      <InvitationFeedbacks
-        invitationId={invitationId}
-        currentUserId={currentUserId}
-        currentUserNickname={currentUserNickname}
-        currentUserProfileImageUrl={currentUserProfileImageUrl}
-      />
+      <InvitationFeedbacks invitationId={invitationId} />
       {showMomentLogModal && (
         <BestNineModal
           invitationId={invitationId}

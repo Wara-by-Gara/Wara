@@ -20,6 +20,45 @@ export class FeedbacksService {
     private readonly s3Service: S3Service,
   ) {}
 
+  private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
+    if (!url) return null;
+    return this.s3Service.getViewPresignedUrl(url);
+  }
+
+  private async attachProfileImageUrls<
+    T extends {
+      participant: { user: { profileImageUrl: string | null } };
+      replies?: Array<{ participant: { user: { profileImageUrl: string | null } } }>;
+    },
+  >(rows: T[]): Promise<T[]> {
+    return Promise.all(
+      rows.map(async (f) => ({
+        ...f,
+        participant: {
+          ...f.participant,
+          user: {
+            ...f.participant.user,
+            profileImageUrl: await this.resolveProfileImageUrl(f.participant.user.profileImageUrl),
+          },
+        },
+        replies: f.replies
+          ? await Promise.all(
+              f.replies.map(async (r) => ({
+                ...r,
+                participant: {
+                  ...r.participant,
+                  user: {
+                    ...r.participant.user,
+                    profileImageUrl: await this.resolveProfileImageUrl(r.participant.user.profileImageUrl),
+                  },
+                },
+              })),
+            )
+          : f.replies,
+      })),
+    );
+  }
+
   // photo 첨부가 있는 댓글에 presigned URL 주입
   private async attachPhotoUrls<
     T extends { photo?: { imageKey: string } | null },
@@ -61,7 +100,7 @@ export class FeedbacksService {
       dto,
     );
     return {
-      rows: await this.attachPhotoUrls(this.applyDeletedPlaceholder(rows)),
+      rows: await this.attachPhotoUrls(await this.attachProfileImageUrls(this.applyDeletedPlaceholder(rows))),
       nextCursor,
     };
   }
@@ -84,7 +123,7 @@ export class FeedbacksService {
     const feedbacks = await this.repository.findAllByPhoto(photoId, dto);
     return {
       rows: await this.attachPhotoUrls(
-        this.applyDeletedPlaceholder(feedbacks.rows),
+        await this.attachProfileImageUrls(this.applyDeletedPlaceholder(feedbacks.rows)),
       ),
       nextCursor: feedbacks.nextCursor,
     };

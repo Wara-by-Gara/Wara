@@ -96,6 +96,7 @@ export const Comments = ({ invitationId }: Props) => {
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
                   authorName={f.participant.user.name ?? f.participant.user.nickname}
+                  authorInitialName={f.participant.user.name ?? undefined}
                   authorHandle={f.participant.user.nickname}
                   onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
@@ -108,6 +109,7 @@ export const Comments = ({ invitationId }: Props) => {
                     return {
                       id: r.id,
                       authorName: r.participant.user.name ?? r.participant.user.nickname,
+                      authorInitialName: r.participant.user.name ?? undefined,
                       authorHandle: r.participant.user.nickname,
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
                       createdAt: timeAgo(r.createdAt),
@@ -148,6 +150,7 @@ export const Comments = ({ invitationId }: Props) => {
         <CommentInputBar
           avatarUrl={me?.profileImageUrl ?? undefined}
           authorName={me?.nickname ?? undefined}
+          authorInitialName={me?.name ?? undefined}
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);

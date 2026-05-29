@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
+import { useMe } from '@/hooks/useUsers';
 import { CommentInputBar } from '@/components/organisms';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
@@ -10,17 +11,14 @@ import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 
 interface Props {
   invitationId: string;
-  currentUserId: string | null;
-  currentUserNickname?: string | null;
-  currentUserProfileImageUrl?: string | null;
 }
 
-export default function InvitationFeedbacks({
-  invitationId,
-  currentUserId,
-  currentUserNickname,
-  currentUserProfileImageUrl,
-}: Props) {
+export default function InvitationFeedbacks({ invitationId }: Props) {
+  const { data: me } = useMe();
+  const currentUserId = me?.id ?? null;
+  const currentUserName = me?.name ?? null;
+  const currentUserNickname = me?.nickname ?? null;
+  const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
   const {
     data,
     isLoading,
@@ -67,8 +65,13 @@ export default function InvitationFeedbacks({
             <CommentItem
               authorName={
                 f.participant.userId === currentUserId
-                  ? (currentUserNickname ?? f.participant.user?.nickname ?? f.participant.userId)
-                  : (f.participant.user?.nickname ?? f.participant.userId)
+                  ? (currentUserNickname ?? f.participant.user?.nickname ?? f.participant.user?.name ?? f.participant.userId)
+                  : (f.participant.user?.nickname ?? f.participant.user?.name ?? f.participant.userId)
+              }
+              authorInitialName={
+                f.participant.userId === currentUserId
+                  ? (currentUserName ?? f.participant.user?.name ?? undefined)
+                  : (f.participant.user?.name ?? undefined)
               }
               authorAvatarUrl={
                 f.participant.userId === currentUserId
@@ -87,7 +90,9 @@ export default function InvitationFeedbacks({
                     ? 'editing'
                     : f.participant.userId === currentUserId
                       ? 'mine'
-                      : 'default'
+                      : f.participant.memberRole === 'HOST'
+                        ? 'host'
+                        : 'default'
               }
               moreMenuItems={
                 f.participant.userId === currentUserId && !f.deletedAt
@@ -140,7 +145,8 @@ export default function InvitationFeedbacks({
                 const isReplyEditing = editingId === r.id;
                 return {
                   id: r.id,
-                  authorName: r.participant.user?.nickname ?? r.participant.userId,
+                  authorName: r.participant.user?.nickname ?? r.participant.user?.name ?? r.participant.userId,
+                  authorInitialName: r.participant.user?.name ?? undefined,
                   authorAvatarUrl:
                     r.participant.userId === currentUserId
                       ? (currentUserProfileImageUrl ?? undefined)
@@ -206,6 +212,7 @@ export default function InvitationFeedbacks({
       <CommentInputBar
         avatarUrl={currentUserProfileImageUrl ?? undefined}
         authorName={currentUserNickname ?? undefined}
+        authorInitialName={currentUserName ?? undefined}
         placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
         onSubmit={async (text) => {
           await submitComment(text, replyingTo?.id);

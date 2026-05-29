@@ -102,11 +102,15 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
             <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
               <Avatar
                 src={invitation.host.profileImageUrl ?? undefined}
-                alt={invitation.host.nickname ?? ""}
+                alt={invitation.host.name ?? invitation.host.nickname ?? ""}
                 size="xs"
               />
               <span>
-                {invitation.host.nickname ? <span className="text-text-tertiary">@{invitation.host.nickname}</span> : null}
+                {(invitation.host.name ?? invitation.host.nickname) ? (
+                  <span className="text-text-tertiary">
+                    {invitation.host.name ?? `@${invitation.host.nickname}`}
+                  </span>
+                ) : null}
               </span>
             </span>
           )}
@@ -143,12 +147,7 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
             </section>
           )}
         </div>
-        <PhotoWithFeedbackContainer
-          invitationId={invitationId}
-          currentUserId={me?.id ?? null}
-          currentUserNickname={me?.nickname ?? null}
-          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-        />
+        <PhotoWithFeedbackContainer invitationId={invitationId} />
       </main>
 
       {!isLoggedIn && (

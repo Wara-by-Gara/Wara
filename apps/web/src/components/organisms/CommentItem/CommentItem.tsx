@@ -11,6 +11,8 @@ import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
+  /** 아바타 이니셜 계산용 실명 (미제공 시 authorName 사용) */
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
@@ -37,6 +39,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       className,
       variant = "default",
       authorName,
+      authorInitialName,
       authorHandle,
       authorAvatarUrl,
       createdAt,
@@ -97,7 +100,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
     return (
       <div ref={ref} className={cn("px-4 py-2", className)} {...props}>
         <div className="flex items-start gap-3">
-          <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
+          <Avatar src={authorAvatarUrl} alt={authorName} size="sm" name={authorInitialName ?? authorName} />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">

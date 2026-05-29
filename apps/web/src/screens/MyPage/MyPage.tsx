@@ -81,7 +81,7 @@ export const MyPage = ({
           size="xl"
           src={state === "noProfile" ? undefined : user.avatarUrl}
           alt={user.name ?? user.nickname}
-          initial={(user.name ?? user.nickname)[0]}
+          name={user.name ?? user.nickname}
           className="size-20"
         />
         <div className="flex flex-col items-center gap-0.5">

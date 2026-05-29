@@ -13,6 +13,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   id?: string;
   variant?: CommentReplyVariant;
   authorName: string;
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
@@ -41,6 +42,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       variant = "default",
       authorName,
       authorHandle,
+      authorInitialName,
       authorAvatarUrl,
       createdAt,
       content,
@@ -88,7 +90,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             src={authorAvatarUrl}
             alt={authorName}
             size="xs"
-            initial={authorName?.[0]}
+            name={authorInitialName ?? authorName}
           />
           <div className="min-w-0 flex-1">
             {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}

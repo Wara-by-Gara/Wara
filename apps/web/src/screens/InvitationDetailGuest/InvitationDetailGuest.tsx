@@ -95,7 +95,7 @@ function ParticipantAvatarStrip() {
           size="lg"
           src={participant.avatarUrl}
           alt={participant.name}
-          initial={participant.name[0]}
+          name={participant.name}
           host={participant.isHost}
         />
       ))}

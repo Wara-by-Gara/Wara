@@ -5,7 +5,7 @@ const MAX_VISIBLE = 6;
 type Props = {
   participants: {
     participant: { id: string; userId: string; memberRole?: "HOST" | "GUEST" };
-    user: { nickname: string | null; profileImageUrl: string | null };
+    user: { name: string | null; nickname: string | null; profileImageUrl: string | null };
   }[];
   currentUserId?: string | null;
   currentUserProfileImageUrl?: string | null;
@@ -34,9 +34,9 @@ export default function ParticipantAvatarRow({
               ? (currentUserProfileImageUrl ?? undefined)
               : (user.profileImageUrl ?? undefined)
           }
-          alt={user.nickname ?? ""}
+          alt={user.nickname ?? user.name ?? ""}
           size="lg"
-          initial={user.nickname?.[0]}
+          name={user.name ?? user.nickname ?? undefined}
           host={participant.memberRole === "HOST"}
         />
       ))}
