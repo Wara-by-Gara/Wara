@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Photo, getDownloadUrls, getAllDownloadUrls, PhotoDownloadItem } from '@/lib/api/photos';
 import { PhotoListModal } from '@/components/organisms/PhotoListModal';
 import PhotoDetailModal from '@/domain/InvitationDetail/PhotoWithFeedback/PhotoDetailModal/PhotoDetailModal';
@@ -25,14 +25,8 @@ const triggerDownloads = (items: PhotoDownloadItem[]) => {
   });
 };
 
-export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
+export default function AlbumModal({ photos, onClose }: Props) {
   const invitationId = photos[0]?.invitationId;
-
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const [likedMap, setLikedMap] = useState(

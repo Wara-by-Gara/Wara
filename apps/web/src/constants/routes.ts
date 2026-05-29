@@ -16,6 +16,7 @@ export const ROUTES = {
     FEEDBACKS: (id: string) => `/invitations/${id}/feedbacks`,
     LOCATION: (id: string) => `/invitations/${id}/location`,
     SETTINGS: (id: string) => `/invitations/${id}/settings`,
+    VOTE: (id: string) => `/invitations/${id}/vote`,
   },
   PUBLIC: {
     INVITATION: (id: string) => `/invitations/${id}`,
