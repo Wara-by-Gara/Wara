@@ -57,6 +57,7 @@ export default function ProfileContainer() {
         stats,
       }}
       recentInvitations={recentInvitations}
+      onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
       onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}

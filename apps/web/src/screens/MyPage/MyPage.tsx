@@ -19,6 +19,7 @@ export interface MyPageProps {
   user?: MockUser;
   /** 최근/내가 만든/참여한 — props로 주입 */
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
+  onInvitationClick?: (id: string) => void;
   onProfileEdit?: () => void;
   onAccount?: () => void;
   onSupport?: () => void;
@@ -28,6 +29,7 @@ export const MyPage = ({
   state = "default",
   user = mockMe,
   recentInvitations = [],
+  onInvitationClick,
   onProfileEdit,
   onAccount,
   onSupport,
@@ -121,6 +123,7 @@ export const MyPage = ({
                   date={inv.date}
                   dateClassName="text-[11px]"
                   imageUrl={inv.imageUrl}
+                  onClick={onInvitationClick ? () => onInvitationClick(inv.id) : undefined}
                 />
               </div>
             ))}
