@@ -95,10 +95,14 @@ const RSVP_DEFAULT_LABELS: Record<RsvpType, string> = {
   declined: "불참",
 };
 
-const RSVP_EMOJI_PALETTE = [
-  "🎉", "🥳", "😄", "💖", "🔥", "👍", "🙌", "🫶",
-  "🤔", "🫧", "😅", "🙏", "⏳", "🤷", "😶", "💭",
-  "😭", "😢", "💔", "🥺", "😞", "🙈", "😔", "🫣",
+const RSVP_PACKS: { id: string; name: string; attending: string; maybe: string; declined: string }[] = [
+  { id: "default",  name: "기본",   attending: "🎉", maybe: "🤔", declined: "😭" },
+  { id: "party",    name: "파티",   attending: "🥳", maybe: "🫧", declined: "😢" },
+  { id: "casual",   name: "캐주얼", attending: "😄", maybe: "😅", declined: "💔" },
+  { id: "love",     name: "러브",   attending: "💖", maybe: "🙏", declined: "🥺" },
+  { id: "fire",     name: "열정",   attending: "🔥", maybe: "⏳", declined: "😞" },
+  { id: "fun",      name: "재미",   attending: "👍", maybe: "🤷", declined: "🙈" },
+  { id: "vibe",     name: "감성",   attending: "🫶", maybe: "💭", declined: "😔" },
 ];
 
 type MissionItem =
@@ -206,6 +210,8 @@ export default function InvitationCreateContainer() {
   const [designFont, setDesignFont] = useState<DesignFont>("default");
   // rsvp
   const [rsvpOptions, setRsvpOptions] = useState<Record<RsvpType, RsvpOption>>(DEFAULT_RSVP);
+  const [selectedPackId, setSelectedPackId] = useState<string>("default");
+  const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [editingRsvp, setEditingRsvp] = useState<RsvpType | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
@@ -260,7 +266,15 @@ export default function InvitationCreateContainer() {
       setDateUnknown(saved.dateUnknown);
       setTimeUnknown(saved.timeUnknown);
       setLocationUnknown(saved.locationUnknown);
-      if (saved.rsvpOptions) setRsvpOptions(saved.rsvpOptions);
+      if (saved.rsvpOptions) {
+        setRsvpOptions(saved.rsvpOptions);
+        const matched = RSVP_PACKS.find(
+          (p) => p.attending === saved.rsvpOptions!.attending.emoji &&
+                 p.maybe === saved.rsvpOptions!.maybe.emoji &&
+                 p.declined === saved.rsvpOptions!.declined.emoji,
+        );
+        setSelectedPackId(matched?.id ?? "");
+      }
       setStep("design");
       setShowPublishConfirm(true);
     } catch { /* ignore */ }
@@ -870,6 +884,63 @@ export default function InvitationCreateContainer() {
         {/* RSVP 설정 */}
         <div className="flex flex-col gap-3">
           <p className="text-[14px] font-semibold text-text-primary">RSVP 설정</p>
+
+          {/* 팩 선택 드롭다운 */}
+          <div className="relative">
+            {packDropdownOpen && (
+              <div className="fixed inset-0 z-10" onClick={() => setPackDropdownOpen(false)} />
+            )}
+            <button
+              type="button"
+              onClick={() => setPackDropdownOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] leading-none">
+                  {RSVP_PACKS.find((p) => p.id === selectedPackId)?.attending ?? "🎉"}
+                </span>
+                <span className="text-[14px] font-semibold text-text-primary">
+                  {RSVP_PACKS.find((p) => p.id === selectedPackId)?.name ?? "기본"}
+                </span>
+              </div>
+              <span className={cn("transition-transform", packDropdownOpen ? "rotate-180" : "")}>
+                <Icon name="chevron-down" size="sm" color="secondary" decorative />
+              </span>
+            </button>
+
+            {packDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
+                {RSVP_PACKS.map((pack) => (
+                  <button
+                    key={pack.id}
+                    type="button"
+                    onClick={() => {
+                      setRsvpOptions((prev) => ({
+                        attending: { ...prev.attending, emoji: pack.attending },
+                        maybe:     { ...prev.maybe,     emoji: pack.maybe     },
+                        declined:  { ...prev.declined,  emoji: pack.declined  },
+                      }));
+                      setSelectedPackId(pack.id);
+                      setPackDropdownOpen(false);
+                      setEditingRsvp(null);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
+                      selectedPackId === pack.id ? "bg-gray-100" : "hover:bg-gray-50",
+                    )}
+                  >
+                    <span className="text-[20px] leading-none">{pack.attending}</span>
+                    <span className="flex-1 text-[15px] font-semibold text-text-primary">{pack.name}</span>
+                    {selectedPackId === pack.id && (
+                      <Icon name="check" size="sm" color="primary" decorative />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 버튼 미리보기 + 문구 편집 */}
           <div className="grid grid-cols-3 gap-2">
             {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
               <button
@@ -891,23 +962,6 @@ export default function InvitationCreateContainer() {
 
           {editingRsvp && (
             <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
-              <p className="text-[13px] font-semibold text-text-secondary">이모지 선택</p>
-              <div className="grid grid-cols-8 gap-1.5">
-                {RSVP_EMOJI_PALETTE.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], emoji } }))}
-                    className={cn(
-                      "flex aspect-square items-center justify-center rounded-xl text-[22px] transition-colors",
-                      rsvpOptions[editingRsvp].emoji === emoji ? "bg-primary-soft ring-2 ring-primary" : "hover:bg-gray-100",
-                    )}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              <div className="h-px bg-border" />
               <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
               <TextInput
                 value={rsvpOptions[editingRsvp].label}
