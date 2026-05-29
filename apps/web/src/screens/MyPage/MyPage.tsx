@@ -21,6 +21,7 @@ export interface MyPageProps {
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
   onSettings?: () => void;
   onProfileEdit?: () => void;
+  onInquiries?: () => void;
   onAccount?: () => void;
 }
 
@@ -30,6 +31,7 @@ export const MyPage = ({
   recentInvitations = [],
   onSettings,
   onProfileEdit,
+  onInquiries,
   onAccount,
 }: MyPageProps) => {
   if (state === "loggedOut") {
@@ -94,29 +96,13 @@ export const MyPage = ({
           initial={(user.name ?? user.nickname)[0]}
           className="size-20"
         />
-        <p className="text-[18px] font-bold text-text-primary">
-          {user.name ?? user.nickname}
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <p className="text-[18px] font-bold text-text-primary">{user.name ?? user.nickname}</p>
           {user.name && user.nickname ? (
-            <span className="ml-1.5 text-[14px] font-normal text-text-tertiary">@{user.nickname}</span>
+            <p className="text-[14px] text-text-tertiary">@{user.nickname}</p>
           ) : null}
-        </p>
+        </div>
         <Button variant="outline" size="sm" onClick={onProfileEdit}>프로필 수정</Button>
-        {user.stats ? (
-          <div className="mt-3 grid w-full grid-cols-2 border-t border-border pt-4">
-            <div className="flex flex-col items-center gap-0.5 border-r border-border">
-              <span className="text-[24px] font-extrabold tabular-nums text-primary">
-                {user.stats.created}
-              </span>
-              <span className="text-[12px] text-text-tertiary">내가 만든</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[24px] font-extrabold tabular-nums text-sky-500">
-                {user.stats.joined}
-              </span>
-              <span className="text-[12px] text-text-tertiary">참여한</span>
-            </div>
-          </div>
-        ) : null}
       </section>
 
       <section className="py-3">
@@ -141,8 +127,13 @@ export const MyPage = ({
 
       <section className="py-2">
         <div className="divide-y divide-border bg-surface">
-          <MenuItem leftIcon="ticket" rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>내가 만든 초대장</MenuItem>
-          <MenuItem leftIcon="user-check" rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>참여한 초대장</MenuItem>
+          <MenuItem
+            leftIcon="message-circle"
+            onClick={onInquiries}
+            rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
+          >
+            문의하기
+          </MenuItem>
           <MenuItem leftIcon="user-round-cog" onClick={onAccount} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>계정 관리</MenuItem>
         </div>
       </section>

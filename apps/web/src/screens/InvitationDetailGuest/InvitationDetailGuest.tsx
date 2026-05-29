@@ -5,8 +5,8 @@ import { Button } from "@/components/primitives/Button";
 import { Avatar, AvatarGroup } from "@/components/primitives/Avatar";
 import { TextInput } from "@/components/primitives/TextInput";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
+import { RsvpSection } from "@/domain/InvitationDetail/Rsvp/RsvpSection";
+import type { RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { LocationCard } from "@/components/organisms/LocationCard";
@@ -19,7 +19,6 @@ import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { ConfirmModal } from "@/components/molecules/Modal";
-import { StickyCTA } from "@/components/layout/StickyCTA";
 import {
   mockInvitation,
   mockParticipants,
@@ -108,8 +107,7 @@ function ParticipantAvatarStrip() {
   );
 }
 
-export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhotoUpload, onMomentLog }: InvitationDetailGuestProps) => {
-  const [rsvpOpen, setRsvpOpen] = useState(state === "rsvpBottomSheetOpen");
+export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsvp, onPhotoUpload, onMomentLog }: InvitationDetailGuestProps) => {
   const [cancelOpen, setCancelOpen] = useState(state === "cancelRsvpModal");
   const [profileModalOpen, setProfileModalOpen] = useState(state === "alreadyRespondedProfileOpen");
   const [selectedParticipantIdx, setSelectedParticipantIdx] = useState(0);
@@ -186,13 +184,19 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
   const isLongCollapsed = state === "longDescriptionCollapsed";
   const isLongExpanded = state === "longDescriptionExpanded";
 
-  let ctaLabel = "참석 여부 선택하기";
-  if (state === "alreadyResponded" || state === "editRsvp") ctaLabel = "응답 수정하기";
-  if (state === "closedRsvp") ctaLabel = "응답이 마감되었어요";
-  if (state === "fullCapacity") ctaLabel = "정원이 가득 찼어요";
-  if (state === "loggedOut" || state === "loginRequiredForRsvp") ctaLabel = "로그인하고 참석하기";
-  const ctaDisabled = state === "closedRsvp" || state === "fullCapacity";
+  const rsvpValue: RSVPValue | undefined =
+    state === "alreadyResponded" || state === "alreadyRespondedProfileOpen" || state === "editRsvp"
+      ? "attending"
+      : undefined;
+  const rsvpClosed = state === "closedRsvp";
+  const rsvpFullCapacity = state === "fullCapacity";
   const isPublicDetail = state === "public" || state === "publicMomentLog";
+  const albumPhotoCount =
+    state === "albumPreviewEmpty" && !isPublicDetail
+      ? 0
+      : isPublicDetail
+        ? mockAlbumPreviewBirthdaySrcs.length + mockAlbumPreviewOverflow
+        : mockAlbumPreviewSrcs.length;
   const showMomentLog = state === "publicMomentLog";
   const commentPreviewLimit = isPublicDetail ? 15 : 2;
   const showCommentMore = isPublicDetail || state !== "commentPreviewEmpty";
@@ -286,12 +290,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
                   <ParticipantAvatarStrip />
                 </div>
               </section>
-              <section className="rounded-3xl border border-border bg-surface p-4">
-                <h3 className="text-[15px] font-bold text-text-primary">참석 여부</h3>
-                <div className="mt-3">
-                  <RSVPButtonGroup layout="horizontal-3" />
-                </div>
-              </section>
             </>
           ) : null}
 
@@ -302,7 +300,10 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
                 <button className="text-[13px] text-primary">전체보기</button>
               </div>
               <div className="flex flex-col">
-                {mockParticipants.slice(0, 3).map((p, idx) => (
+                {mockParticipants
+                  .filter((p) => p.status === "attending")
+                  .slice(0, 3)
+                  .map((p, idx) => (
                   <ParticipantItem
                     key={p.id}
                     name={p.name}
@@ -316,6 +317,17 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
               </div>
             </section>
           ) : null}
+
+          <RsvpSection
+            value={rsvpValue}
+            closed={rsvpClosed}
+            fullCapacity={rsvpFullCapacity}
+            helperText={
+              state === "loggedOut" || state === "loginRequiredForRsvp"
+                ? "로그인하면 참석 응답을 남길 수 있어요"
+                : undefined
+            }
+          />
 
           {/* 모먼트로그 버튼 — publicMomentLog 상태에서 앨범 위에 표시 */}
           {showMomentLog ? (
@@ -348,13 +360,16 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
           ) : null}
 
           <section className="rounded-3xl border border-border bg-surface p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-[15px] font-bold text-text-primary">앨범</h3>
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-[15px] font-bold text-text-primary">사진 앨범</h3>
+                <p className="text-[12px] text-text-secondary">{albumPhotoCount}개의 사진</p>
+              </div>
               <button
                 type="button"
                 aria-label="사진 업로드"
                 onClick={onPhotoUpload}
-                className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-white transition-opacity active:opacity-70"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-opacity active:opacity-70"
               >
                 <Icon name="camera" size="sm" color="currentColor" decorative />
               </button>
@@ -418,23 +433,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
         </div>
       </main>
 
-      {!isPublicDetail ? (
-        <div className="relative z-10 shrink-0">
-          <StickyCTA primary={{ label: ctaLabel, onClick: () => { setRsvpOpen(true); onRsvp?.(); }, disabled: ctaDisabled }} />
-        </div>
-      ) : null}
-
-      {/* RSVP Bottom Sheet */}
-      <BottomSheet open={rsvpOpen} onOpenChange={setRsvpOpen}>
-        <BottomSheetContent contained title="참석 여부" description="원하는 응답을 선택해주세요">
-          <div className="pt-2">
-            <RSVPButtonGroup layout="horizontal-3" />
-            <p className="mt-3 text-center text-[13px] text-text-tertiary">언제든 수정할 수 있어요</p>
-            <Button fullWidth size="lg" className="mt-3">제출하기</Button>
-          </div>
-        </BottomSheetContent>
-      </BottomSheet>
-
       <ConfirmModal contained
         open={cancelOpen}
         onOpenChange={setCancelOpen}
@@ -446,7 +444,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp, onPhot
 
       {state === "loggedOut" ? (
         <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
-          로그인하면 참석 응답·댓글·앨범 사진을 남길 수 있어요
+          로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       ) : null}
 

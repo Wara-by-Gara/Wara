@@ -12,9 +12,9 @@ import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  invitations: ROUTES.INVITATIONS.LIST,
+  calendar: ROUTES.CALENDAR,
   create: ROUTES.INVITATIONS.CREATE,
-  notifications: ROUTES.NOTIFICATIONS.LIST,
+  friends: ROUTES.FRIENDS,
   me: ROUTES.PROFILE.ME,
 };
 
@@ -24,9 +24,11 @@ const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create"];
 
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";
+  if (pathname.startsWith("/calendar")) return "calendar";
   if (pathname.startsWith("/invitations/create")) return "create";
-  if (pathname.startsWith("/invitations")) return "invitations";
-  if (pathname.startsWith("/notifications")) return "notifications";
+  if (pathname.startsWith("/friends")) return "friends";
+  if (pathname.startsWith("/notifications")) return "home";
+  if (pathname.startsWith("/invitations")) return "home";
   return "me";
 }
 
@@ -39,11 +41,12 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
-  useEffect(() => { hydrate(); }, [hydrate]);
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
   if (HIDDEN_PATHS.includes(pathname) || pathname.startsWith("/i/")) return null;
 
   const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
-
 
   const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
     item.key === "me" && hydrated && !isLoggedIn
@@ -95,7 +98,9 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
                 <button
                   key={provider}
                   type="button"
-                  onClick={() => { window.location.href = `${API_BASE}/auth/${config.path}/redirect`; }}
+                  onClick={() => {
+                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
+                  }}
                   className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
                 >
                   {config.label}
