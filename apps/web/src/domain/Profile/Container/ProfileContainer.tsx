@@ -21,7 +21,15 @@ export default function ProfileContainer() {
   const recentInvitations = (invitations ?? []).slice(0, 10).map((inv) => ({
     id: inv.id,
     title: inv.title,
-    date: inv.eventStartAt ?? '',
+    date: inv.eventStartAt
+      ? new Date(inv.eventStartAt).toLocaleDateString("ko-KR", {
+          month: "long",
+          day: "numeric",
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "",
     imageUrl: inv.mainImageUrl,
     variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
