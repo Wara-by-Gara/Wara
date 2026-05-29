@@ -74,11 +74,13 @@ export function createInvitationFeedback(
   content: string,
   parentId?: string,
   attachedPhotoId?: string,
+  mentionedUserIds?: string[],
 ): Promise<Feedback> {
   return apiPost<Feedback>(`/invitations/${invitationId}/feedbacks`, {
     content,
     ...(parentId && { parentId }),
     ...(attachedPhotoId && { attachedPhotoId }),
+    ...(mentionedUserIds?.length && { mentionedUserIds }),
   });
 }
 

@@ -10,6 +10,7 @@ import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 import { Participant } from '../database/schema';
 import { S3Service } from '../s3/s3.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
@@ -18,6 +19,7 @@ export class FeedbacksService {
   constructor(
     private readonly repository: FeedbacksRepository,
     private readonly s3Service: S3Service,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // photo / attachedPhoto 필드에 presigned URL 주입 (replies 포함)
@@ -113,13 +115,31 @@ export class FeedbacksService {
       const parent = await this.repository.findById(dto.parentId);
       if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
     }
-    return this.repository.create({
+    const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
       content: dto.content,
       parentId: dto.parentId,
       attachedPhotoId: dto.attachedPhotoId,
     });
+
+    if (feedback && dto.mentionedUserIds?.length) {
+      const actorNickname = await this.repository.findUserNickname(participant.userId) ?? '누군가';
+      await Promise.all(
+        dto.mentionedUserIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            actorUserId: participant.userId,
+            type: 'mention',
+            content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
+            targetType: 'feedback',
+            targetId: feedback.id,
+          }),
+        ),
+      );
+    }
+
+    return feedback;
   }
 
   //사진 댓글 생성

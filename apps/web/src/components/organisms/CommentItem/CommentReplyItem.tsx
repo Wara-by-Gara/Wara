@@ -6,6 +6,7 @@ import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { renderMentions } from "./renderMentions";
 
 export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
@@ -126,7 +127,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     <span className="font-semibold text-primary">@{replyToName}</span>{" "}
                   </>
                 ) : null}
-                {content}
+                {renderMentions(content)}
               </p>
             ) : null}
           </div>

@@ -7,6 +7,7 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
+import { renderMentions } from "./renderMentions";
 
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
@@ -115,7 +116,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                   <>
                     {content ? (
                       <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
-                        {content}
+                        {renderMentions(content)}
                       </p>
                     ) : null}
                   </>

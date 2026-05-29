@@ -182,6 +182,15 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     });
   }
 
+  //닉네임 조회 (멘션 알림용)
+  async findUserNickname(userId: string): Promise<string | null> {
+    const user = await this.db.query.users.findFirst({
+      where: (t, { eq }) => eq(t.id, userId),
+      columns: { nickname: true },
+    });
+    return user?.nickname ?? null;
+  }
+
   //댓글 생성
   async create(
     data: Pick<

@@ -3,8 +3,10 @@
 import { useRef, useState } from 'react';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
+import { useParticipants } from '@/hooks/useParticipants';
 import { CommentInputBar } from '@/components/organisms';
 import { Icon } from '@/components/icons';
+import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
@@ -44,6 +46,29 @@ export default function InvitationFeedbacks({
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+
+  const { data: participantsData, isLoading: isParticipantsLoading } = useParticipants(invitationId);
+  const allParticipants = participantsData?.participants ?? [];
+
+  // 마지막 @ 이후 텍스트 추출
+  const mentionQuery = (() => {
+    const match = inputValue.match(/@(\S*)$/);
+    return match ? match[1] : null;
+  })();
+
+  const filteredParticipants = mentionQuery !== null
+    ? allParticipants.filter((p) =>
+        (p.user.nickname ?? '').toLowerCase().includes(mentionQuery!.toLowerCase())
+      )
+    : [];
+
+  const handleSelectMention = (userId: string, nickname: string) => {
+    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+    setInputValue(newValue);
+    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -237,6 +262,33 @@ export default function InvitationFeedbacks({
           </button>
         </div>
       )}
+      {mentionQuery !== null && (
+        <div className="mx-3 mb-1 rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+          {isParticipantsLoading ? (
+            <p className="px-4 py-3 text-[13px] text-text-tertiary">불러오는 중...</p>
+          ) : filteredParticipants.length === 0 ? (
+            <p className="px-4 py-3 text-[13px] text-text-tertiary">일치하는 참가자 없음</p>
+          ) : (
+            <ul>
+              {filteredParticipants.map((p) => (
+                <li key={p.user.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // input blur 방지
+                      handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-hover"
+                  >
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
+                    <span className="text-[14px] text-text-primary">@{p.user.nickname}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="flex items-center">
         <button
           type="button"
@@ -258,10 +310,14 @@ export default function InvitationFeedbacks({
             avatarUrl={currentUserProfileImageUrl ?? undefined}
             authorName={currentUserNickname ?? undefined}
             placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+            value={inputValue}
+            onValueChange={setInputValue}
             onSubmit={async (text) => {
-              await submitComment(text, replyingTo?.id, pendingFile ?? undefined);
+              await submitComment(text, replyingTo?.id, pendingFile ?? undefined, mentionedUserIds.length ? mentionedUserIds : undefined);
               setReplyingTo(null);
               clearPendingFile();
+              setInputValue('');
+              setMentionedUserIds([]);
             }}
             state={isSubmitting ? 'submitting' : 'default'}
           />
