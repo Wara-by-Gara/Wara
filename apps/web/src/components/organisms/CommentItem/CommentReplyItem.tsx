@@ -27,6 +27,12 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   onMore?: () => void;
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
+  /** 좋아요 수 */
+  likeCount?: number;
+  /** 좋아요 토글 콜백 */
+  onLike?: () => void;
+  /** 내가 좋아요 눌렀는지 여부 */
+  liked?: boolean;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -45,6 +51,9 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       onMore,
       moreMenuItems,
       editingSlot,
+      likeCount,
+      onLike,
+      liked = false,
       ...props
     },
     ref,
@@ -129,6 +138,20 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 ) : null}
                 {renderMentions(content)}
               </p>
+            ) : null}
+            {likeCount !== undefined ? (
+              <button
+                type="button"
+                onClick={onLike}
+                className={cn(
+                  "mt-1 flex items-center gap-1 text-[12px] font-semibold transition-colors",
+                  liked ? "text-danger" : "text-text-tertiary hover:text-danger",
+                )}
+                aria-label="좋아요"
+              >
+                <span>{liked ? "♥" : "♡"}</span>
+                {likeCount > 0 && <span>{likeCount}</span>}
+              </button>
             ) : null}
           </div>
           {(onMore || moreMenuItems) ? (

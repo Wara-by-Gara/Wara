@@ -24,6 +24,12 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 더보기 메뉴 아이템 */
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
+  /** 좋아요 수 */
+  likeCount?: number;
+  /** 좋아요 토글 콜백 */
+  onLike?: () => void;
+  /** 내가 좋아요 눌렀는지 여부 */
+  liked?: boolean;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -43,6 +49,9 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       onMore,
       moreMenuItems,
       editingSlot,
+      likeCount,
+      onLike,
+      liked = false,
       ...props
     },
     ref,
@@ -121,15 +130,31 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                     ) : null}
                   </>
                 )}
-                {onReply ? (
-                  <button
-                    type="button"
-                    onClick={onReply}
-                    className="mt-1 text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
-                  >
-                    답글 달기
-                  </button>
-                ) : null}
+                <div className="mt-1 flex items-center gap-3">
+                  {onReply ? (
+                    <button
+                      type="button"
+                      onClick={onReply}
+                      className="text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
+                    >
+                      답글 달기
+                    </button>
+                  ) : null}
+                  {likeCount !== undefined ? (
+                    <button
+                      type="button"
+                      onClick={onLike}
+                      className={cn(
+                        "flex items-center gap-1 text-[13px] font-semibold transition-colors",
+                        liked ? "text-danger" : "text-text-tertiary hover:text-danger",
+                      )}
+                      aria-label="좋아요"
+                    >
+                      <span>{liked ? "♥" : "♡"}</span>
+                      {likeCount > 0 && <span>{likeCount}</span>}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               {imageUrl ? (
                 <button
