@@ -2,7 +2,6 @@
 
 import { Icon } from '@/components/icons';
 import { Button } from '@/components/primitives/Button';
-import { SocialLoginButton } from '@/components/primitives/SocialLoginButton';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import {
   BottomSheet,
@@ -37,6 +36,64 @@ export interface LoginProps {
   onApple?: () => void;
   onContinueWithoutLogin?: () => void;
 }
+
+const SocialButton = ({
+  provider,
+  loading,
+  onClick,
+}: {
+  provider: 'kakao' | 'naver' | 'google' | 'apple';
+  loading?: boolean;
+  onClick?: () => void;
+}) => {
+  const label =
+    provider === 'kakao'
+      ? '카카오로 시작하기'
+      : provider === 'naver'
+        ? '네이버로 시작하기'
+        : provider === 'google'
+          ? 'Google로 시작하기'
+          : 'Apple로 시작하기';
+  const bg =
+    provider === 'kakao'
+      ? 'bg-[#FEE500] text-[#181600]'
+      : provider === 'naver'
+        ? 'bg-[#03C75A] text-white'
+        : provider === 'google'
+          ? 'border border-border bg-white text-text-primary'
+          : 'bg-black text-white';
+  const iconName =
+    provider === 'google'
+      ? 'google-logo'
+      : provider === 'apple'
+        ? 'apple-logo-white'
+        : ((provider + '-logo') as 'kakao-logo' | 'naver-logo');
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] font-bold text-[16px] transition-opacity disabled:opacity-60 ${bg}`}
+    >
+      {loading ? (
+        <span className="size-5 animate-spin rounded-full border-2 border-current border-r-transparent" />
+      ) : (
+        <Icon
+          name={
+            iconName as
+              | 'kakao-logo'
+              | 'naver-logo'
+              | 'google-logo'
+              | 'apple-logo-white'
+          }
+          size="md"
+          decorative
+        />
+      )}
+      <span>{label}</span>
+    </button>
+  );
+};
 
 export const Login = ({
   state = 'default',
@@ -92,17 +149,17 @@ export const Login = ({
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <SocialLoginButton
+        <SocialButton
           provider="kakao"
           loading={state === 'kakaoLoading'}
           onClick={onKakao}
         />
-        <SocialLoginButton
+        <SocialButton
           provider="naver"
           loading={state === 'naverLoading'}
           onClick={onNaver}
         />
-        <SocialLoginButton
+        <SocialButton
           provider={thirdProvider}
           loading={
             thirdProvider === 'google'
@@ -157,9 +214,9 @@ export const Login = ({
             description="이 기능을 쓰려면 먼저 로그인해주세요"
           >
             <div className="flex flex-col gap-2 pt-2">
-              <SocialLoginButton provider="kakao" onClick={onKakao} />
-              <SocialLoginButton provider="naver" onClick={onNaver} />
-              <SocialLoginButton
+              <SocialButton provider="kakao" onClick={onKakao} />
+              <SocialButton provider="naver" onClick={onNaver} />
+              <SocialButton
                 provider={thirdProvider}
                 onClick={thirdProvider === 'google' ? onGoogle : onApple}
               />

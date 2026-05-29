@@ -16,19 +16,6 @@ import { ROUTES } from '@/constants/routes';
 import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
-import type { NotificationType as WebNotificationType } from '@/components/organisms/NotificationItem';
-
-const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
-  photo: 'newPhoto',
-  feedback: 'newComment',
-  remind: 'eventReminder',
-  arrived: 'newRsvp',
-  nudge: 'hostNotice',
-  invitation_date: 'invitationUpdated',
-  participantLocations: 'invitationUpdated',
-  eventLocations: 'invitationUpdated',
-  ai_complete: 'albumOpened',
-};
 
 export default function NotificationsContainer() {
   const router = useRouter();
@@ -48,7 +35,7 @@ export default function NotificationsContainer() {
 
   const mappedItems = items.map((n) => ({
     id: n.id,
-    type: API_TO_WEB_TYPE[n.type] ?? 'invitationUpdated',
+    type: n.type,
     title: n.content,
     time: new Date(n.createdAt).toLocaleString('ko-KR', {
       month: 'short',

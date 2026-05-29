@@ -31,12 +31,6 @@ const triggerDownloads = (items: PhotoDownloadItem[]) => {
 export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage, isFetchingNextPage, initialLikedMap, initialLikeCountMap, onLikeChange }: Props) {
   const invitationId = photos[0]?.invitationId;
 
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const [likedMap, setLikedMap] = useState(() => {
     const base = new Map(photos.map((p) => [p.id, p.liked ?? false]));

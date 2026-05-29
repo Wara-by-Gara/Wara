@@ -31,11 +31,7 @@ export function useInvitationFeedback(invitationId: string) {
     queryKey,
     queryFn: ({ pageParam }) => getInvitationFeedbacks(invitationId, pageParam),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage?.nextCursor) return undefined;
-      if (lastPage.rows.length === 0) return undefined;
-      return lastPage.nextCursor;
-    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!invitationId,
   });
 

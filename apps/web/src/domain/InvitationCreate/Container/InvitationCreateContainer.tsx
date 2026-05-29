@@ -17,6 +17,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
+import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { TemplateCard } from "@/components/organisms/TemplateCard";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
@@ -27,11 +28,14 @@ import { setEventLocation } from "@/lib/api/locations";
 import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
+import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
+import { createPoll } from "@/lib/api/dateVote";
 
 type Step =
   | "start"
   | "templateCategory"
   | "templateList"
+  | "templatePreview"
   | "blankTemplate"
   | "basicInfo"
   | "scheduleAndMission"
@@ -153,8 +157,8 @@ export default function InvitationCreateContainer() {
   useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("start");
-  useEffect(() => { window.scrollTo(0, 0); }, [step]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [previewTemplateId, setPreviewTemplateId] = useState<string>("");
   const [titleError, setTitleError] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -175,6 +179,9 @@ export default function InvitationCreateContainer() {
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareCopied, setShareCopied] = useState(false);
+  // vote draft
+  const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
+  const [voteDraft, setVoteDraft] = useState<VoteDraft | null>(null);
   // design
   const [designPanel, setDesignPanel] = useState<"bgColor" | "font">("bgColor");
   const [designBgColor, setDesignBgColor] = useState("bg-white");
@@ -277,7 +284,13 @@ export default function InvitationCreateContainer() {
       }
       return invitation;
     },
-    onSuccess: (data) => { setCreatedInvitationId(data.id); setStep("publishComplete"); },
+    onSuccess: async (data) => {
+      setCreatedInvitationId(data.id);
+      if (voteDraft) {
+        try { await createPoll(data.id, voteDraft); } catch { /* invitation은 이미 생성됨 */ }
+      }
+      setStep("publishComplete");
+    },
     onError: () => setPublishError(true),
   });
 
@@ -318,6 +331,20 @@ export default function InvitationCreateContainer() {
       }
     }, 400);
   };
+
+  // vote setup subscreen
+  if (subScreen === "dateVoteSetup") {
+    return (
+      <HostCreatingView
+        onBack={() => setSubScreen(null)}
+        initialDraft={voteDraft ?? undefined}
+        onDraftComplete={(draft) => {
+          setVoteDraft(draft);
+          setSubScreen(null);
+        }}
+      />
+    );
+  }
 
   // start
   if (step === "start") {
@@ -396,13 +423,7 @@ export default function InvitationCreateContainer() {
                 name={t.name}
                 imageUrl={t.previewImageKey}
                 variant={form.templateId === t.id ? "selected" : "basic"}
-                onClick={() => {
-                  if (form.templateId === t.id) {
-                    set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
-                  } else {
-                    set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
-                  }
-                }}
+                onClick={() => { setPreviewTemplateId(t.id); setStep("templatePreview"); }}
               />
             ))}
           </div>
@@ -413,6 +434,39 @@ export default function InvitationCreateContainer() {
               label: form.templateId ? "이 템플릿으로 시작" : "다음",
               disabled: !form.templateId,
               onClick: () => setStep("basicInfo"),
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // templatePreview
+  if (step === "templatePreview") {
+    const previewTemplate = templates.find((t) => t.id === previewTemplateId);
+    const slides = previewTemplate?.previewImageKey
+      ? [{ src: previewTemplate.previewImageKey, alt: previewTemplate.name }]
+      : [];
+    return (
+      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
+        <TopAppBar className="shrink-0" title="템플릿" onBack={() => setStep("templateList")} />
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+          <AutoSlide slides={slides} intervalMs={4000} />
+          {previewTemplate && (
+            <p className="text-center text-[13px] text-text-tertiary">{previewTemplate.name}</p>
+          )}
+        </main>
+        <div className="relative z-10 shrink-0">
+          <StickyCTA
+            primary={{
+              label: "선택",
+              onClick: () => {
+                set({
+                  templateId: previewTemplateId,
+                  mainImageKey: previewTemplate?.previewImageKey ?? DEFAULT_COVER_KEY,
+                });
+                setStep("templateList");
+              },
             }}
           />
         </div>
@@ -431,10 +485,7 @@ export default function InvitationCreateContainer() {
     };
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="어떤 모임인가요?" onBack={() => setStep(form.templateId ? "templateList" : "start")} />
-        <div className="h-1 w-full shrink-0 bg-border">
-          <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "33%" }} />
-        </div>
+        <TopAppBar className="shrink-0" title="기본 정보" onBack={() => setStep(form.templateId ? "templateList" : "start")} />
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
           <FormField label="대표 이미지">
             {form.templateId ? (
@@ -487,7 +538,7 @@ export default function InvitationCreateContainer() {
               </>
             )}
           </FormField>
-          <FormField label="어떤 모임인가요?" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "모임 이름을 입력해주세요" : undefined}>
+          <FormField label="제목" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "제목을 입력해주세요" : undefined}>
             <TextInput
               value={form.title}
               onChange={(e) => { set({ title: e.target.value }); if (titleError) setTitleError(false); }}
@@ -495,7 +546,7 @@ export default function InvitationCreateContainer() {
               maxLength={30}
             />
           </FormField>
-          <FormField label="모임 소개" counter={{ current: form.description.length, max: 500 }}>
+          <FormField label="설명" counter={{ current: form.description.length, max: 500 }}>
             <Textarea
               value={form.description}
               onChange={(e) => set({ description: e.target.value })}
@@ -553,10 +604,7 @@ export default function InvitationCreateContainer() {
 
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="언제, 어디서 만날까요?" onBack={() => setStep("basicInfo")} />
-        <div className="h-1 w-full shrink-0 bg-border">
-          <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "66%" }} />
-        </div>
+        <TopAppBar className="shrink-0" title="날짜·장소·미션" onBack={() => setStep("basicInfo")} />
         <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
 
           {/* 날짜·시간 */}
@@ -567,19 +615,62 @@ export default function InvitationCreateContainer() {
             onChange={(v) => { set({ date: v }); if (dateError) setDateError(false); }}
             unknownToggle
             unknown={dateUnknown}
-            onUnknownChange={(v) => { setDateUnknown(v); if (dateError) setDateError(false); }}
+            onUnknownChange={(v) => {
+              setDateUnknown(v);
+              if (v) { setTimeUnknown(true); set({ date: "", time: "" }); }
+              else setTimeUnknown(false);
+              if (dateError) setDateError(false);
+            }}
             error={dateError ? "날짜를 선택해주세요" : undefined}
           />
-          <DateTimeSelector
-            mode="time"
-            label="시작 시간"
-            value={form.time}
-            onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
-            unknownToggle
-            unknown={timeUnknown}
-            onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
-            error={timeError ? "시간을 선택해주세요" : undefined}
-          />
+          {!dateUnknown && (
+            <DateTimeSelector
+              mode="time"
+              label="시작 시간"
+              value={form.time}
+              onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
+              unknownToggle
+              unknown={timeUnknown}
+              onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
+              error={timeError ? "시간을 선택해주세요" : undefined}
+            />
+          )}
+
+          {/* 날짜 미정 → 투표 제안 배너 */}
+          {dateUnknown && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                  <Icon name="calendar" size="md" color="primary" decorative />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
+                  <p className="text-[13px] leading-relaxed text-text-secondary">
+                    여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+                <Icon name="check-circle" size="sm" color="primary" decorative />
+                <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
+              </div>
+              {voteDraft ? (
+                <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2.5">
+                  <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
+                  <button type="button" onClick={() => setSubScreen("dateVoteSetup")}
+                    className="text-[12px] text-text-tertiary underline">수정</button>
+                </div>
+              ) : (
+                <Button variant="primary" size="md" fullWidth onClick={() => setSubScreen("dateVoteSetup")} className="mt-1">
+                  날짜 투표 만들기
+                </Button>
+              )}
+            </div>
+          )}
 
           <div className="h-px bg-border" />
 
@@ -749,12 +840,9 @@ export default function InvitationCreateContainer() {
     <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", designBgColor)}>
       <TopAppBar
         className="shrink-0"
-        title="어떻게 꾸밀까요?"
+        title="디자인"
         onBack={() => setStep("scheduleAndMission")}
       />
-      <div className="h-1 w-full shrink-0 bg-border">
-        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: "100%" }} />
-      </div>
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 미리보기 */}
         <InvitationCover
@@ -864,7 +952,7 @@ export default function InvitationCreateContainer() {
       />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent title="로그인이 필요해요" description="5초면 충분해요 · 초대장을 바로 만들 수 있어요">
+        <BottomSheetContent title="로그인이 필요해요" description="초대장을 만들려면 먼저 로그인해주세요">
           <div className="flex flex-col gap-2.5 pt-2">
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const config = {

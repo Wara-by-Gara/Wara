@@ -28,6 +28,8 @@ import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS, RSVP_LABELS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
+import { usePoll, useVoteResults } from "@/hooks/useDateVote";
+import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
@@ -48,6 +50,10 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+
+  const { data: pollData } = usePoll(invitationId);
+  const hasPoll = !!pollData?.poll;
+  const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
 
   const isLoggedIn = !!me;
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
@@ -102,11 +108,11 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
             <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
               <Avatar
                 src={invitation.host.profileImageUrl ?? undefined}
-                alt={invitation.host.nickname ?? ""}
+                alt={invitation.host.name ?? invitation.host.nickname ?? ""}
                 size="xs"
               />
               <span>
-                {invitation.host.nickname ? <span className="text-text-tertiary">@{invitation.host.nickname}</span> : null}
+                {invitation.host.name}{invitation.host.nickname ? <span className="ml-1 text-text-tertiary">@{invitation.host.nickname}</span> : null}
               </span>
             </span>
           )}
@@ -119,7 +125,16 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
         ) : null}
 
         <div className="flex flex-col gap-3">
-          <InformationsContainer invitation={invitation} isHost={false} invitationId={invitationId} />
+          {hasPoll && pollData?.poll.status !== 'confirmed' && (
+            <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost={false} onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
+          )}
+
+          <InformationsContainer
+            invitation={invitation}
+            isHost={false}
+            invitationId={invitationId}
+            voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
+          />
 
           {isLoggedIn && participantsData && participantsData.participants.length > 0 && (
             <section className="rounded-3xl border border-border bg-surface p-4">

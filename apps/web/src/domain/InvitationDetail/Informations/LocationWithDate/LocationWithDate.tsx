@@ -12,9 +12,10 @@ type Props = {
   invitation: Invitation;
   isHost: boolean;
   invitationId: string;
+  voteResultsHref?: string;
 };
 
-export default function LocationWithDate({ invitation, isHost, invitationId }: Props) {
+export default function LocationWithDate({ invitation, isHost, invitationId, voteResultsHref }: Props) {
   const eventLocation = invitation.eventLocation ?? null;
 
   return (
@@ -37,6 +38,13 @@ export default function LocationWithDate({ invitation, isHost, invitationId }: P
             variant="datetime"
             title={<time suppressHydrationWarning>{dateLabel}</time>}
             time={<time suppressHydrationWarning>{timeLabel}</time>}
+            badge={voteResultsHref ? (
+              <Link href={voteResultsHref}
+                className="text-[11px] font-medium text-primary hover:underline transition-colors"
+              >
+                투표 결과
+              </Link>
+            ) : undefined}
           />
         );
       })()}
