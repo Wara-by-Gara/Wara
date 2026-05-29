@@ -119,6 +119,7 @@ export const MyPage = ({
                   variant={inv.variant ?? "default"}
                   title={inv.title}
                   date={inv.date}
+                  dateClassName="text-[11px]"
                   imageUrl={inv.imageUrl}
                 />
               </div>
