@@ -88,21 +88,30 @@ export const MyPage = ({
         }
       />
       <main className="min-h-0 flex-1 overflow-y-auto">
-      <section className="flex flex-col items-center gap-3 bg-surface py-8">
-        <Avatar
-          size="xl"
-          src={state === "noProfile" ? undefined : user.avatarUrl}
-          alt={user.name ?? user.nickname}
-          initial={(user.name ?? user.nickname)[0]}
-          className="size-20"
-        />
+      <section className="flex flex-col items-center gap-4 bg-surface py-8">
+        <div className="relative">
+          <Avatar
+            size="xl"
+            src={state === "noProfile" ? undefined : user.avatarUrl}
+            alt={user.name ?? user.nickname}
+            initial={(user.name ?? user.nickname)[0]}
+            className="size-28"
+          />
+          <button
+            type="button"
+            aria-label="프로필 사진 변경"
+            onClick={onProfileEdit}
+            className="absolute bottom-1 right-1 inline-flex size-9 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-surface"
+          >
+            <Icon name="camera" size="sm" color="primary" decorative />
+          </button>
+        </div>
         <div className="flex flex-col items-center gap-0.5 text-center">
-          <p className="text-[18px] font-bold text-text-primary">{user.name ?? user.nickname}</p>
+          <p className="font-gmarket text-[22px] font-medium text-text-primary">{user.name ?? user.nickname}</p>
           {user.name && user.nickname ? (
             <p className="text-[14px] text-text-tertiary">@{user.nickname}</p>
           ) : null}
         </div>
-        <Button variant="outline" size="sm" onClick={onProfileEdit}>프로필 수정</Button>
       </section>
 
       <section className="py-3">
