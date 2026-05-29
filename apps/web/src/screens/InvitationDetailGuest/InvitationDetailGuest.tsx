@@ -27,6 +27,7 @@ import {
   mockAlbumPreviewBirthdaySrcs,
   mockAlbumPreviewOverflow,
   mockRemindPhotos,
+  mockPhotos,
 } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
@@ -69,7 +70,8 @@ export type InvitationDetailGuestState =
   | "loginRequiredForRsvp"
   | "alreadyRespondedProfileOpen"
   | "publicMomentLog"
-  | "dateVotePending";
+  | "dateVotePending"
+  | "albumWithLikeCount";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
@@ -376,6 +378,13 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
             </div>
             {state === "albumPreviewEmpty" && !isPublicDetail ? (
               <p className="py-4 text-center text-[13px] text-text-tertiary">아직 사진이 없어요</p>
+            ) : state === "albumWithLikeCount" ? (
+              <PhotoGrid columns={3}>
+                {mockPhotos.slice(0, 5).map((photo) => (
+                  <PhotoGridItem key={photo.id} src={photo.src} alt="" likeCount={photo.likeCount} />
+                ))}
+                <PhotoGridItem overflowLabel={`+${mockPhotos.length - 5}`} aria-label={`사진 ${mockPhotos.length - 5}장 더보기`} />
+              </PhotoGrid>
             ) : isPublicDetail ? (
               <PhotoGrid columns={3}>
                 {mockAlbumPreviewBirthdaySrcs.map((src, i) => (

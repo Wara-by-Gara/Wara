@@ -39,7 +39,7 @@ export default function CustomerSupportPage() {
 
   return (
     <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar className="shrink-0" title="고객센터" />
+      <TopAppBar className="shrink-0" title="고객센터" onBack={() => router.push(ROUTES.PROFILE.ME)} />
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         {/* 자주 묻는 질문 */}

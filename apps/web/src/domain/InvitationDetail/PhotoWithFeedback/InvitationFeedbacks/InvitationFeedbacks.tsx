@@ -94,7 +94,11 @@ export default function InvitationFeedbacks({
 
   return (
     <div className="mt-4">
-      <div className="flex flex-col">
+      <div className="rounded-3xl border border-border bg-surface p-4">
+        <h3 className="mb-3 text-[15px] font-bold text-text-primary">
+          댓글 {allRows.length}
+        </h3>
+        <div className="flex flex-col">
         {allRows.map((f) => (
           <div key={f.id}>
             <CommentItem
@@ -233,6 +237,7 @@ export default function InvitationFeedbacks({
             {isFetchingNextPage ? '불러오는 중...' : '더보기'}
           </button>
         ) : null}
+        </div>
       </div>
 
       {replyingTo ? (
