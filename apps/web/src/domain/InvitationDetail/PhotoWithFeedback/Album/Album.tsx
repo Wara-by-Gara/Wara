@@ -152,22 +152,33 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
           onChange={handleFileChange}
         />
 
-        <PhotoGrid>
-          {preview.map((photo, idx) => (
-            <PhotoGridItem
-              key={photo.id}
-              src={photo.url}
-              alt=""
-              onClick={() => setSelectedIndex(idx)}
-            />
-          ))}
-          {remaining > 0 && (
-            <PhotoGridItem
-              overflowLabel={overflowLabel}
-              onClick={() => setShowModal(true)}
-            />
-          )}
-        </PhotoGrid>
+        {photos.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="mt-2 w-full rounded-2xl border-2 border-dashed border-border py-8 text-center"
+          >
+            <Icon name="camera" size="md" color="currentColor" decorative className="mx-auto mb-2 text-text-tertiary" />
+            <p className="text-[14px] font-medium text-text-secondary">우리 추억을 업로드 해보세요</p>
+          </button>
+        ) : (
+          <PhotoGrid>
+            {preview.map((photo, idx) => (
+              <PhotoGridItem
+                key={photo.id}
+                src={photo.url}
+                alt=""
+                onClick={() => setSelectedIndex(idx)}
+              />
+            ))}
+            {remaining > 0 && (
+              <PhotoGridItem
+                overflowLabel={overflowLabel}
+                onClick={() => setShowModal(true)}
+              />
+            )}
+          </PhotoGrid>
+        )}
       </div>
 
       {uploadState === 'previewing' && (
