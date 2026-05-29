@@ -196,6 +196,7 @@ export default function MainImageEditor({
       }
       setIsApplyingAi(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedKey, invitationId]);
 
   // 프레임 전환
@@ -218,6 +219,7 @@ export default function MainImageEditor({
     if (targetKey) {
       onSave({ mainImageKey: targetKey, mainImageFrame: frame, uploadedImageKey: uploadedKey });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedKey, aiKey, handleApplyAi, isApplyingAi, onSave]);
 
   return (

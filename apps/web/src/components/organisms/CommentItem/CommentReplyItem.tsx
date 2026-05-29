@@ -6,6 +6,7 @@ import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { renderMentions } from "./renderMentions";
 
 export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
@@ -26,6 +27,9 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   onMore?: () => void;
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
+  likeCount?: number;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -44,6 +48,9 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       onMore,
       moreMenuItems,
       editingSlot,
+      likeCount,
+      liked,
+      onLike,
       ...props
     },
     ref,
@@ -126,8 +133,20 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     <span className="font-semibold text-primary">@{replyToName}</span>{" "}
                   </>
                 ) : null}
-                {content}
+                {renderMentions(content)}
               </p>
+            ) : null}
+            {(onLike || likeCount !== undefined) ? (
+              <button
+                type="button"
+                onClick={onLike}
+                className={cn(
+                  "mt-1 text-[13px] font-semibold transition-colors",
+                  liked ? "text-primary" : "text-text-tertiary hover:text-primary",
+                )}
+              >
+                ♥ {likeCount ?? 0}
+              </button>
             ) : null}
           </div>
           {(onMore || moreMenuItems) ? (

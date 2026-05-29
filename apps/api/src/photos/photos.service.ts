@@ -27,9 +27,9 @@ export class PhotosService {
   }
 
   // 전체 사진 DB 조회
-  async listPhotos(invitationId: string, dto: ListPhotosDto) {
+  async listPhotos(invitationId: string, dto: ListPhotosDto, participantId?: string) {
     const { rows, nextCursor, total } =
-      await this.repository.findAllByInvitationId(invitationId, dto);
+      await this.repository.findAllByInvitationId(invitationId, dto, participantId);
     const data = await Promise.all(
       rows.map(async (photo) => ({
         ...photo,
@@ -105,16 +105,16 @@ export class PhotosService {
 
     const existing = await this.repository.findLike(photoId, participantId);
     if (existing) {
-      await this.repository.deleteLike(photoId, participantId);
-      return { liked: false };
+      const likeCount = await this.repository.deleteLike(photoId, participantId);
+      return { liked: false, likeCount };
     }
 
     try {
-      await this.repository.createLike(photoId, participantId);
-      return { liked: true };
+      const likeCount = await this.repository.createLike(photoId, participantId);
+      return { liked: true, likeCount };
     } catch (e: unknown) {
       if (typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === '23505') {
-        return { liked: true };
+        return { liked: true, likeCount: photo.likeCount };
       }
       throw e;
     }

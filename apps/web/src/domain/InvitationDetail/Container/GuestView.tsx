@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
@@ -11,21 +10,9 @@ import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSh
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
-import {
-  RsvpSection,
-  fromRsvpButtonValue,
-  toRsvpButtonValue,
-} from "@/domain/InvitationDetail/Rsvp/RsvpSection";
-import {
-  getMyParticipant,
-  getParticipants,
-  joinInvitation,
-  updateRsvp,
-  type RsvpStatus,
-} from "@/lib/api/participants";
+import { getParticipants } from "@/lib/api/participants";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
@@ -36,19 +23,16 @@ import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreview
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
-type MyParticipant = Awaited<ReturnType<typeof getMyParticipant>>;
 
 type Props = {
   invitationId: string;
   invitation: Invitation;
   me: Me | undefined;
-  myParticipant: MyParticipant | undefined;
   participantsData: ParticipantsData | undefined;
 };
 
-export default function GuestView({ invitationId, invitation, me, myParticipant, participantsData }: Props) {
+export default function GuestView({ invitationId, invitation, me, participantsData }: Props) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
@@ -66,30 +50,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
   );
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
-
-  const rsvpOptionConfigs = [
-    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
-  ];
-
-  const rsvpClosed = invitation.status === "closed";
-  const rsvpHelperText = !isLoggedIn
-    ? "로그인하면 참석 응답을 남길 수 있어요"
-    : rsvpClosed
-      ? "참석 응답이 마감되었어요"
-      : "언제든 수정할 수 있어요";
-
-  const { mutate: submitRsvp, isPending: isRsvpPending } = useMutation({
-    mutationFn: (status: RsvpStatus) =>
-      myParticipant
-        ? updateRsvp(invitationId, myParticipant.id, status)
-        : joinInvitation(invitationId, { rsvpStatus: status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myParticipant", invitationId] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
-    },
-  });
 
   return (
     <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", invitation.bgColor, fontClass)}>
@@ -169,28 +129,49 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
           )}
 
         </div>
-
-        <RsvpSection
-          options={rsvpOptionConfigs}
-          value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
-          onValueChange={(v) => {
-            if (!isLoggedIn) {
-              setLoginSheetOpen(true);
-              return;
-            }
-            submitRsvp(fromRsvpButtonValue(v));
-          }}
-          closed={rsvpClosed}
-          loading={isRsvpPending}
-          helperText={rsvpHelperText}
-        />
-
-        <PhotoWithFeedbackContainer
-          invitationId={invitationId}
-          currentUserId={me?.id ?? null}
-          currentUserDisplayName={me?.name ?? null}
-          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-        />
+        {isLoggedIn ? (
+          <PhotoWithFeedbackContainer
+            invitationId={invitationId}
+            currentUserId={me?.id ?? null}
+            currentUserDisplayName={me?.name ?? null}
+            currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+          />
+        ) : (
+          <div className="relative overflow-hidden rounded-3xl">
+            <div className="pointer-events-none select-none blur-sm">
+              <div className="mb-3 rounded-3xl border border-border bg-surface p-4">
+                <div className="mb-3 h-5 w-16 rounded bg-border" />
+                <div className="grid grid-cols-3 gap-1">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="aspect-square rounded-xl bg-border" />
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-3xl border border-border bg-surface p-4">
+                <div className="mb-3 h-5 w-20 rounded bg-border" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="mb-3 flex gap-2">
+                    <div className="size-8 shrink-0 rounded-full bg-border" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-1/3 rounded bg-border" />
+                      <div className="h-3 w-2/3 rounded bg-border" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/60 backdrop-blur-sm">
+              <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
+              <button
+                type="button"
+                onClick={() => setLoginSheetOpen(true)}
+                className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
+              >
+                로그인하기
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {!isLoggedIn && (

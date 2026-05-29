@@ -22,7 +22,7 @@ export default function PhotoWithFeedbackContainer({
   currentUserDisplayName,
   currentUserProfileImageUrl,
 }: InvitationDetailProps) {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, hasNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;
   const photos = data?.pages.flatMap((p) => p.rows) ?? [];
@@ -56,9 +56,7 @@ export default function PhotoWithFeedbackContainer({
         invitationId={invitationId}
         photos={photos}
         total={total}
-        fetchNextPage={fetchNextPage}
         hasNextPage={!!hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
       />
       <InvitationFeedbacks
         invitationId={invitationId}

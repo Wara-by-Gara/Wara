@@ -7,6 +7,7 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { Modal, ModalOverlay, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
+import { renderMentions } from "./renderMentions";
 
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
@@ -23,6 +24,9 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 더보기 메뉴 아이템 */
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
+  likeCount?: number;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -42,6 +46,9 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       onMore,
       moreMenuItems,
       editingSlot,
+      likeCount,
+      liked,
+      onLike,
       ...props
     },
     ref,
@@ -115,20 +122,34 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                   <>
                     {content ? (
                       <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
-                        {content}
+                        {renderMentions(content)}
                       </p>
                     ) : null}
                   </>
                 )}
-                {onReply ? (
-                  <button
-                    type="button"
-                    onClick={onReply}
-                    className="mt-1 text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
-                  >
-                    답글 달기
-                  </button>
-                ) : null}
+                <div className="mt-1 flex items-center gap-3">
+                  {onReply ? (
+                    <button
+                      type="button"
+                      onClick={onReply}
+                      className="text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
+                    >
+                      답글 달기
+                    </button>
+                  ) : null}
+                  {(onLike || likeCount !== undefined) ? (
+                    <button
+                      type="button"
+                      onClick={onLike}
+                      className={cn(
+                        "text-[13px] font-semibold transition-colors",
+                        liked ? "text-primary" : "text-text-tertiary hover:text-primary",
+                      )}
+                    >
+                      ♥ {likeCount ?? 0}
+                    </button>
+                  ) : null}
+                </div>
               </div>
               {imageUrl ? (
                 <button

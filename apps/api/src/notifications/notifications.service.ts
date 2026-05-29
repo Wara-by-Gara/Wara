@@ -29,6 +29,7 @@ const TYPE_TO_SETTING: Partial<
 > = {
   remind: 'isRemind',
   feedback: 'isFeedback',
+  mention: 'isFeedback',
   invitation_date: 'isInvitationDate',
   photo: 'isPhoto',
   participantLocations: 'isParticipantLocations',
