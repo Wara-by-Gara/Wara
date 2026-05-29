@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { RSVPButtonGroup } from "@/components/molecules/RSVPButtonGroup";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
-import { StickyCTA } from "@/components/layout/StickyCTA";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
+import {
+  RsvpSection,
+  fromRsvpButtonValue,
+  toRsvpButtonValue,
+} from "@/domain/InvitationDetail/Rsvp/RsvpSection";
 import {
   getMyParticipant,
   getParticipants,
@@ -25,9 +27,11 @@ import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
-import { FONT_CLASS, RSVP_LABELS } from "@/domain/InvitationDetail/types";
+import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
+import { usePoll, useVoteResults } from "@/hooks/useDateVote";
+import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
@@ -45,23 +49,36 @@ type Props = {
 export default function GuestView({ invitationId, invitation, me, myParticipant, participantsData }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [rsvpOpen, setRsvpOpen] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+
+  const { data: pollData } = usePoll(invitationId);
+  const hasPoll = !!pollData?.poll;
+  const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
 
   const isLoggedIn = !!me;
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
   const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
 
-  const attendingParticipants = participantsData?.participants.filter(
+  const allParticipants = participantsData?.participants ?? [];
+  const attendingParticipants = allParticipants.filter(
     ({ participant }) => participant.rsvpStatus === "attending",
-  ) ?? [];
+  );
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
-  let ctaLabel = "참석 여부 선택하기";
-  if (!isLoggedIn) ctaLabel = "로그인하고 참석하기";
-  else if (myParticipant) ctaLabel = `응답 수정하기 (현재: ${RSVP_LABELS[myParticipant.rsvpStatus]})`;
+  const rsvpOptionConfigs = [
+    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  ];
+
+  const rsvpClosed = invitation.status === "closed";
+  const rsvpHelperText = !isLoggedIn
+    ? "로그인하면 참석 응답을 남길 수 있어요"
+    : rsvpClosed
+      ? "참석 응답이 마감되었어요"
+      : "언제든 수정할 수 있어요";
 
   const { mutate: submitRsvp, isPending: isRsvpPending } = useMutation({
     mutationFn: (status: RsvpStatus) =>
@@ -71,7 +88,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myParticipant", invitationId] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
-      setRsvpOpen(false);
     },
   });
 
@@ -106,11 +122,7 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
                 size="xs"
               />
               <span>
-                {(invitation.host.name ?? invitation.host.nickname) ? (
-                  <span className="text-text-tertiary">
-                    {invitation.host.name ?? `@${invitation.host.nickname}`}
-                  </span>
-                ) : null}
+                {invitation.host.name}{invitation.host.nickname ? <span className="ml-1 text-text-tertiary">@{invitation.host.nickname}</span> : null}
               </span>
             </span>
           )}
@@ -123,13 +135,22 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
         ) : null}
 
         <div className="flex flex-col gap-3">
-          <InformationsContainer invitation={invitation} isHost={false} invitationId={invitationId} />
+          {hasPoll && pollData?.poll.status !== 'confirmed' && (
+            <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost={false} onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
+          )}
 
-          {isLoggedIn && participantsData && participantsData.participants.length > 0 && (
+          <InformationsContainer
+            invitation={invitation}
+            isHost={false}
+            invitationId={invitationId}
+            voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
+          />
+
+          {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
             <section className="rounded-3xl border border-border bg-surface p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-text-primary">
-                  참석 {participantsData.summary.attendingCount}명
+                  참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
                 </h3>
                 <button
                   type="button"
@@ -146,44 +167,32 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
               />
             </section>
           )}
+
         </div>
+
+        <RsvpSection
+          options={rsvpOptionConfigs}
+          value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
+          onValueChange={(v) => {
+            if (!isLoggedIn) {
+              setLoginSheetOpen(true);
+              return;
+            }
+            submitRsvp(fromRsvpButtonValue(v));
+          }}
+          closed={rsvpClosed}
+          loading={isRsvpPending}
+          helperText={rsvpHelperText}
+        />
+
         <PhotoWithFeedbackContainer invitationId={invitationId} />
       </main>
 
       {!isLoggedIn && (
         <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
-          로그인하면 참석 응답을 남길 수 있어요
+          로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       )}
-
-      <div className="relative z-10 shrink-0">
-        <StickyCTA
-          primary={{
-            label: ctaLabel,
-            onClick: () => {
-              if (!isLoggedIn) { setLoginSheetOpen(true); return; }
-              setRsvpOpen(true);
-            },
-          }}
-        />
-      </div>
-
-
-      <BottomSheet open={rsvpOpen} onOpenChange={setRsvpOpen}>
-        <BottomSheetContent contained title="참석 여부" description="원하는 응답을 선택해주세요">
-          <div className="pt-2">
-            <RSVPButtonGroup
-              layout="horizontal-3"
-              value={myParticipant?.rsvpStatus === "attending" ? "attending" : myParticipant?.rsvpStatus === "undecided" ? "maybe" : myParticipant ? "declined" : undefined}
-              onValueChange={(v) => submitRsvp(v === "attending" ? "attending" : v === "maybe" ? "undecided" : "absent")}
-            />
-            <p className="mt-3 text-center text-[13px] text-text-tertiary">언제든 수정할 수 있어요</p>
-            <Button fullWidth size="lg" className="mt-3" disabled={isRsvpPending}>
-              {isRsvpPending ? "저장 중..." : "제출하기"}
-            </Button>
-          </div>
-        </BottomSheetContent>
-      </BottomSheet>
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 

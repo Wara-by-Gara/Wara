@@ -1,4 +1,10 @@
-import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, updateFeedback } from '@/lib/api/feedbacks';
+import {
+  createInvitationFeedback,
+  deleteFeedback,
+  getInvitationFeedbacks,
+  INVITATION_FEEDBACK_PAGE_SIZE,
+  updateFeedback,
+} from '@/lib/api/feedbacks';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -9,13 +15,10 @@ export function useInvitationFeedback(invitationId: string) {
 
   const query = useInfiniteQuery({
     queryKey,
-    queryFn: ({ pageParam }) => getInvitationFeedbacks(invitationId, pageParam),
+    queryFn: ({ pageParam }) =>
+      getInvitationFeedbacks(invitationId, pageParam, INVITATION_FEEDBACK_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage?.nextCursor) return undefined;
-      if (lastPage.rows.length === 0) return undefined;
-      return lastPage.nextCursor;
-    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!invitationId,
   });
 

@@ -67,6 +67,13 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     ...cursorConditions,
   ];
 
+  const [countRow] = await this.db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(feedbacks)
+    .where(and(...conditions));
+
+  const total = countRow?.total ?? 0;
+
   const rows = await this.db.query.feedbacks.findMany({
     where: and(...conditions),
     with: {
@@ -102,7 +109,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     orderBy: (t, { desc }) => [desc(t.createdAt), desc(t.id)],
     limit: LIMIT + 1,
   });
-  return this.paginate(rows, LIMIT);
+  return { ...this.paginate(rows, LIMIT), total };
 }
 
   //사진 댓글 목록

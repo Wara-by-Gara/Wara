@@ -30,6 +30,8 @@ export interface ParticipantItemProps extends React.HTMLAttributes<HTMLDivElemen
   requestPreview?: string;
   /** 호스트 메모 (host 화면만) */
   memo?: string;
+  /** RSVP 라벨 커스텀 (없으면 기본값) */
+  labelOverride?: string;
   /** 더보기 버튼 콜백 (host) */
   onMore?: () => void;
   /** 추가 우측 슬롯 */
@@ -48,6 +50,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
       companionCount,
       requestPreview,
       memo,
+      labelOverride,
       onMore,
       rightSlot,
       ...props
@@ -55,6 +58,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
     ref,
   ) {
     const rsvp = RSVP_LABEL[status];
+    const displayLabel = labelOverride ?? rsvp.label;
     return (
       <div
         ref={ref}
@@ -78,7 +82,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
           </div>
           <div className="mt-1 flex items-center gap-1.5">
             <Badge variant={rsvp.variant} size="sm">
-              {rsvp.label}
+              {displayLabel}
             </Badge>
             {companionCount && companionCount > 0 ? (
               <span className="text-[12px] text-text-tertiary">+{companionCount}명</span>

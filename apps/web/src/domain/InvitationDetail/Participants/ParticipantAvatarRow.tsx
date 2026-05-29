@@ -1,10 +1,14 @@
 import { Avatar } from "@/components/primitives/Avatar";
-
-const MAX_VISIBLE = 6;
+import { getParticipantDisplayName } from "@/domain/InvitationDetail/types";
 
 type Props = {
   participants: {
-    participant: { id: string; userId: string; memberRole?: "HOST" | "GUEST" };
+    participant: {
+      id: string;
+      userId: string;
+      memberRole?: "HOST" | "GUEST";
+      displayName?: string | null;
+    };
     user: { name: string | null; nickname: string | null; profileImageUrl: string | null };
   }[];
   currentUserId?: string | null;
@@ -21,30 +25,28 @@ export default function ParticipantAvatarRow({
     if (b.participant.memberRole === "HOST") return 1;
     return 0;
   });
-  const visible = sorted.slice(0, MAX_VISIBLE);
-  const overflow = sorted.length - MAX_VISIBLE;
 
   return (
-    <div className="flex items-center gap-2">
-      {visible.map(({ participant, user }) => (
-        <Avatar
-          key={participant.id}
-          src={
-            participant.userId === currentUserId
-              ? (currentUserProfileImageUrl ?? undefined)
-              : (user.profileImageUrl ?? undefined)
-          }
-          alt={user.nickname ?? user.name ?? ""}
-          size="lg"
-          name={user.name ?? user.nickname ?? undefined}
-          host={participant.memberRole === "HOST"}
-        />
-      ))}
-      {overflow > 0 && (
-        <div className="flex size-14 items-center justify-center rounded-full bg-gray-100 text-[13px] font-semibold text-text-secondary">
-          +{overflow}
-        </div>
-      )}
+    <div className="-mx-4 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-max items-center gap-2 px-4 py-1">
+        {sorted.map(({ participant, user }) => {
+          const displayName = getParticipantDisplayName(participant, user, "");
+          return (
+            <Avatar
+              key={participant.id}
+              src={
+                participant.userId === currentUserId
+                  ? (currentUserProfileImageUrl ?? undefined)
+                  : (user.profileImageUrl ?? undefined)
+              }
+              alt={displayName}
+              size="lg"
+              name={user.name ?? user.nickname ?? undefined}
+              host={participant.memberRole === "HOST"}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

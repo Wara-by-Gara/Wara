@@ -316,7 +316,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
               </div>
               <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
                 <Icon name="check-circle" size="sm" color="primary" decorative />
-                <span className="text-[12px] text-text-secondary">○ △ × 로 간편 응답, 결과 자동 집계</span>
+                <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
               </div>
               <Button
                 variant="primary"

@@ -9,6 +9,7 @@ import { useMyParticipant } from '@/hooks/useParticipants';
 import { useDeletePhoto } from '@/hooks/useDeletePhoto';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
+import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   photos: Photo[];
@@ -133,7 +134,10 @@ export default function PhotoDetailModal({
         editingSlot,
         onReply: !isDeleted ? () => {
           setCommentsOpen(true);
-          setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
+          setReplyingTo({
+            id: f.id,
+            authorName: getCommentAuthorName(f.participant.user),
+          });
         } : undefined,
       },
       ...f.replies.map((r) => {

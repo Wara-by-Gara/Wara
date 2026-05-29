@@ -1,72 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
+import { Avatar } from "@/components/primitives/Avatar";
 import { AutoSlide } from "@/components/molecules/AutoSlide";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
-import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
+import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { NotificationBellContainer } from "@/domain/Notifications/NotificationBell/NotificationBellContainer";
+import { InvitationListSection } from "@/domain/InvitationList/InvitationListSection";
+import {
+  filterInvitationsByTab,
+  mapInvitationsToListItems,
+  type InvitationListTab,
+} from "@/domain/InvitationList/invitationListUtils";
 import { useAuthStore } from "@/stores/authStore";
 import { getMyInvitations } from "@/lib/api/invitations";
+import { getMe } from "@/lib/api/users";
 import { mockTemplateSlides } from "@/lib/mockData";
 import { ROUTES } from "@/constants/routes";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-
-function isToday(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-function isUpcoming(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const tomorrowStart = new Date(todayStart);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-  return d >= tomorrowStart;
-}
-
-function getDdayLabel(dateStr: string | null): string {
-  if (!dateStr) return "";
-  const event = new Date(dateStr);
-  event.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.round((event.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return "D-day";
-  if (diff > 0) return `D-${diff}`;
-  return `D+${Math.abs(diff)}`;
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("ko-KR", {
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function HomeContainer() {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const [tab, setTab] = useState<InvitationListTab>("all");
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe,
+    enabled: hydrated && isLoggedIn,
+    retry: 1,
+  });
 
   const { data: invitations, isLoading, isError } = useQuery({
     queryKey: ["my-invitations"],
@@ -74,6 +43,12 @@ export default function HomeContainer() {
     enabled: hydrated && isLoggedIn,
     retry: 1,
   });
+
+  const mapped = useMemo(() => mapInvitationsToListItems(invitations ?? []), [invitations]);
+
+  const filtered = useMemo(() => filterInvitationsByTab(mapped, tab), [mapped, tab]);
+
+  const listState = isLoading ? "loading" : isError ? "error" : filtered.length === 0 ? "empty" : "default";
 
   if (!hydrated) return null;
 
@@ -93,57 +68,26 @@ export default function HomeContainer() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-        <TopAppBar brandLogo title="WARA" />
-        <div className="flex flex-col gap-3 px-5 py-4">
-          <InvitationCardSkeleton />
-          <InvitationCardSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-        <TopAppBar brandLogo title="WARA" />
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-          <ErrorState className="py-8" title="네트워크에 연결되지 않았어요" onRetry={() => {}} />
-        </div>
-      </div>
-    );
-  }
-
-  const active = (invitations ?? []).filter((inv) => inv.status !== "closed");
-  const todayItems = active.filter((inv) => isToday(inv.eventStartAt));
-  const upcomingItems = active
-    .filter((inv) => isUpcoming(inv.eventStartAt))
-    .sort((a, b) => new Date(a.eventStartAt!).getTime() - new Date(b.eventStartAt!).getTime());
-
-  if (active.length === 0) {
-    return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-        <TopAppBar brandLogo title="WARA" />
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-          <EmptyState
-            className="py-8"
-            icon="ticket"
-            title="아직 초대장이 없어요"
-            description="첫 모임을 Wara로 초대해보세요"
-            action={
-              <Button onClick={() => router.push(ROUTES.INVITATIONS.CREATE)}>초대장 만들기</Button>
-            }
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar brandLogo title="WARA" />
+      <TopAppBar
+        className="shrink-0"
+        title="WARA"
+        largeTitle
+        brandLogo
+        rightSlot={
+          <>
+            <NotificationBellContainer />
+            <Avatar
+              size="sm"
+              src={me?.profileImageUrl ?? undefined}
+              alt={me?.name ?? me?.nickname ?? ""}
+              initial={(me?.name ?? me?.nickname)?.[0]}
+            />
+          </>
+        }
+      />
+
       <main className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-5 pb-6">
           <AutoSlide
@@ -152,45 +96,15 @@ export default function HomeContainer() {
             aspectClassName="aspect-[16/9]"
             rounded={false}
           />
-          <div className="flex flex-col gap-5 px-5">
-            {todayItems.length > 0 ? (
-              <section>
-                <h2 className="mb-2 text-[15px] font-bold text-text-primary">오늘의 모임</h2>
-                <div className="flex flex-col gap-3">
-                  {todayItems.map((inv) => (
-                    <InvitationCard
-                      key={inv.id}
-                      title={inv.title}
-                      date={formatDate(inv.eventStartAt)}
-                      location={inv.eventLocation?.placeName ?? ""}
-                      imageUrl={inv.mainImageUrl ?? undefined}
-                      variant="today"
-                      onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            {upcomingItems.length > 0 ? (
-              <section>
-                <h2 className="mb-2 text-[15px] font-bold text-text-primary">다가오는 초대장</h2>
-                <div className="flex flex-col gap-3">
-                  {upcomingItems.map((inv) => (
-                    <InvitationCard
-                      key={inv.id}
-                      title={inv.title}
-                      date={formatDate(inv.eventStartAt)}
-                      location={inv.eventLocation?.placeName ?? ""}
-                      imageUrl={inv.mainImageUrl ?? undefined}
-                      variant="upcoming"
-                      ddayLabel={getDdayLabel(inv.eventStartAt)}
-                      onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : null}
+          <div className="px-5">
+            <InvitationListSection
+              tab={tab}
+              onTabChange={setTab}
+              state={listState}
+              invitations={filtered}
+              onCardClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
+              onCreateClick={() => router.push(ROUTES.INVITATIONS.CREATE)}
+            />
           </div>
         </div>
       </main>

@@ -13,6 +13,7 @@ import { mobileMainScroll, mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
 import { useMe } from "@/hooks/useUsers";
+import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 import { timeAgo } from "@/utils/timeAge";
 
 interface Props {
@@ -31,6 +32,7 @@ export const Comments = ({ invitationId }: Props) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
 
   const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
+  const totalCount = data?.pages[0]?.total ?? feedbacks.length;
 
   const buildMenuItems = (id: string, content: string) => [
     {
@@ -68,7 +70,7 @@ export const Comments = ({ invitationId }: Props) => {
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar
         className="shrink-0"
-        title={`댓글 ${feedbacks.length}`}
+        title={`댓글 ${totalCount}`}
         onBack={() => router.back()}
       />
 
@@ -98,7 +100,7 @@ export const Comments = ({ invitationId }: Props) => {
                   authorName={f.participant.user.name ?? f.participant.user.nickname}
                   authorInitialName={f.participant.user.name ?? undefined}
                   authorHandle={f.participant.user.nickname}
-                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname }) : undefined}
+                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname ?? '' }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
                   content={f.content}

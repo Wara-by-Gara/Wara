@@ -105,15 +105,16 @@
 |------|:--------:|------|
 | `ANALYTICS_PERIOD_TOO_LONG` | 400 | 분석 기간이 366일 초과 (admin/analytics/shares/*) |
 
-## AI
+## DateVote
 
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
-| `AI_PROCESSING_FAILED` | 500 | OpenAI 이미지 합성 실패 |
-| `AI_TIMEOUT` | 504 | OpenAI 응답 시간 초과 (60초) |
-| `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
-| `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
-| `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+| `VOTE_POLL_NOT_FOUND` | 404 | 투표 없음 |
+| `VOTE_POLL_ALREADY_EXISTS` | 409 | 초대장에 투표 이미 존재 |
+| `VOTE_POLL_CLOSED` | 422 | 마감된 투표에 응답/수정 시도, 또는 closed가 아닌 상태에서 날짜 확정 시도 |
+| `VOTE_SLOT_NOT_FOUND` | 404 | 슬롯 없음 또는 해당 폴에 속하지 않음 |
+| `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
+| `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
 
 ---
 

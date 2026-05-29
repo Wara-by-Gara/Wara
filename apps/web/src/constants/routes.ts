@@ -1,5 +1,7 @@
 export const ROUTES = {
   HOME: "/",
+  CALENDAR: "/calendar",
+  FRIENDS: "/friends",
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {
@@ -16,6 +18,7 @@ export const ROUTES = {
     FEEDBACKS: (id: string) => `/invitations/${id}/feedbacks`,
     LOCATION: (id: string) => `/invitations/${id}/location`,
     SETTINGS: (id: string) => `/invitations/${id}/settings`,
+    VOTE: (id: string) => `/invitations/${id}/vote`,
   },
   PUBLIC: {
     INVITATION: (id: string) => `/invitations/${id}`,
