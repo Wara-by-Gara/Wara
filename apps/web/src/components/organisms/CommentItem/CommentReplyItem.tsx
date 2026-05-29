@@ -27,6 +27,9 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   onMore?: () => void;
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: ReactNode;
+  likeCount?: number;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -45,6 +48,9 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       onMore,
       moreMenuItems,
       editingSlot,
+      likeCount,
+      liked,
+      onLike,
       ...props
     },
     ref,
@@ -129,6 +135,18 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 ) : null}
                 {renderMentions(content)}
               </p>
+            ) : null}
+            {(onLike || likeCount !== undefined) ? (
+              <button
+                type="button"
+                onClick={onLike}
+                className={cn(
+                  "mt-1 text-[13px] font-semibold transition-colors",
+                  liked ? "text-primary" : "text-text-tertiary hover:text-primary",
+                )}
+              >
+                ♥ {likeCount ?? 0}
+              </button>
             ) : null}
           </div>
           {(onMore || moreMenuItems) ? (

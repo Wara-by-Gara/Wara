@@ -60,8 +60,8 @@ export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage
     try {
       const result = await togglePhotoLike(invitationId, photoId);
       setLikedMap((prev) => new Map(prev).set(photoId, result.liked));
-      setLikeCountMap((prev) => new Map(prev).set(photoId, result.liked ? currentCount + 1 : currentCount - 1));
-      onLikeChange?.(photoId, result.liked, result.liked ? currentCount + 1 : currentCount - 1);
+      setLikeCountMap((prev) => new Map(prev).set(photoId, result.likeCount));
+      onLikeChange?.(photoId, result.liked, result.likeCount);
     } catch {
       setLikedMap((prev) => new Map(prev).set(photoId, currentLiked));
       setLikeCountMap((prev) => new Map(prev).set(photoId, currentCount));

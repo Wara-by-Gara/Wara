@@ -98,8 +98,7 @@ export default function PhotoDetailModal({
     setIsLiking(true);
     try {
       const result = await togglePhotoLike(photo.invitationId, photo.id);
-      const newCount = result.liked ? currentLikeCount + 1 : currentLikeCount - 1;
-      onLikeChange(photo.id, result.liked, newCount);
+      onLikeChange(photo.id, result.liked, result.likeCount);
     } finally {
       setIsLiking(false);
     }

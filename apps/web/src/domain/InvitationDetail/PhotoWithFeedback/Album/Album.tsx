@@ -85,7 +85,7 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
     try {
       const result = await togglePhotoLike(invitationId, photoId);
       setLikedMap((prev) => new Map(prev).set(photoId, result.liked));
-      setLikeCountMap((prev) => new Map(prev).set(photoId, result.liked ? currentCount + 1 : currentCount - 1));
+      setLikeCountMap((prev) => new Map(prev).set(photoId, result.likeCount));
     } catch {
       setLikedMap((prev) => new Map(prev).set(photoId, currentLiked));
       setLikeCountMap((prev) => new Map(prev).set(photoId, currentCount));

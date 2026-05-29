@@ -273,7 +273,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
 
           {commentsOpen ? (
             <>
-              <div className="max-h-[132px] overflow-y-auto border-t border-white/10 bg-black/80">
+              <div className="max-h-[132px] overflow-y-auto overscroll-contain border-t border-white/10 bg-black/80">
                 {comments.length > 0 ? (
                   <ul className="divide-y divide-white/10">
                     {comments.map((c) => (

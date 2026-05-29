@@ -170,19 +170,21 @@ export class PhotosRepository {
   }
 
   //좋아요 up
-  async createLike(photoId: string, participantId: string) {
-    await this.db.transaction(async (tx) => {
+  async createLike(photoId: string, participantId: string): Promise<number> {
+    return this.db.transaction(async (tx) => {
       await tx.insert(photoLikes).values({ photoId, participantId });
-      await tx
+      const [updated] = await tx
         .update(photos)
         .set({ likeCount: sql`${photos.likeCount}+1` })
-        .where(eq(photos.id, photoId));
+        .where(eq(photos.id, photoId))
+        .returning({ likeCount: photos.likeCount });
+      return updated!.likeCount;
     });
   }
 
   //좋아요 취소(삭제)
-  async deleteLike(photoId: string, participantId: string) {
-    await this.db.transaction(async (tx) => {
+  async deleteLike(photoId: string, participantId: string): Promise<number> {
+    return this.db.transaction(async (tx) => {
       await tx
         .delete(photoLikes)
         .where(
@@ -191,11 +193,13 @@ export class PhotosRepository {
             eq(photoLikes.participantId, participantId),
           ),
         );
-      await tx
+      const [updated] = await tx
         .update(photos)
         //likeCount가 -1된 값을 주거나, 0을 반환 (count가 0보다 이하는 되지 않게)
         .set({ likeCount: sql`GREATEST(${photos.likeCount} - 1, 0)` })
-        .where(eq(photos.id, photoId));
+        .where(eq(photos.id, photoId))
+        .returning({ likeCount: photos.likeCount });
+      return updated!.likeCount;
     });
   }
 
