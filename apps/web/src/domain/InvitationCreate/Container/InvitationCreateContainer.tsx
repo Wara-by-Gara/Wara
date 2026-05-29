@@ -881,9 +881,9 @@ export default function InvitationCreateContainer() {
 
         <div className="h-px bg-border" />
 
-        {/* RSVP 설정 */}
+        {/* 참석 버튼 꾸미기 */}
         <div className="flex flex-col gap-3">
-          <p className="text-[14px] font-semibold text-text-primary">RSVP 설정</p>
+          <p className="text-[14px] font-semibold text-text-primary">참석 버튼 꾸미기</p>
 
           {/* 팩 선택 드롭다운 */}
           <div className="relative">
