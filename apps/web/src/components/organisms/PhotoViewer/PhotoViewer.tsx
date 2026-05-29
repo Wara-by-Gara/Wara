@@ -3,7 +3,7 @@
 import { forwardRef, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import { CommentInputBar } from "@/components/organisms/CommentInputBar";
-import { CommentItem } from "@/components/organisms/CommentItem";
+import { CommentItem, type CommentReplyItemProps } from "@/components/organisms/CommentItem";
 import {
   Modal,
   ModalPortal,
@@ -23,6 +23,7 @@ export interface PhotoViewerComment {
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: React.ReactNode;
   onReply?: () => void;
+  replies?: CommentReplyItemProps[];
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -275,6 +276,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           moreMenuItems={c.moreMenuItems}
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
+                          replies={c.replies}
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
                         />
                       </li>

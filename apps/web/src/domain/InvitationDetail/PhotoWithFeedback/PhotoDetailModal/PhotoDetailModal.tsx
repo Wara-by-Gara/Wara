@@ -109,7 +109,7 @@ export default function PhotoDetailModal({
     }
   };
 
-  const comments = (feedbackData?.rows ?? []).flatMap((f) => {
+  const comments = (feedbackData?.rows ?? []).map((f) => {
     const isDeleted = !!f.deletedAt;
     const isMine = !isDeleted && !!me && f.participant.userId === me.id;
     const isEditing = editingComment?.id === f.id;
@@ -120,21 +120,20 @@ export default function PhotoDetailModal({
         onCancel={() => setEditingComment(undefined)}
       />
     ) : undefined;
-    return [
-      {
-        id: f.id,
-        authorName: f.participant.user.nickname,
-        content: f.content,
-        createdAt: timeAgo(f.createdAt),
-        variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
-        moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
-        editingSlot,
-        onReply: !isDeleted ? () => {
-          setCommentsOpen(true);
-          setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
-        } : undefined,
-      },
-      ...f.replies.map((r) => {
+    return {
+      id: f.id,
+      authorName: f.participant.user.nickname,
+      authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
+      content: f.content,
+      createdAt: timeAgo(f.createdAt),
+      variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
+      moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
+      editingSlot,
+      onReply: !isDeleted ? () => {
+        setCommentsOpen(true);
+        setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
+      } : undefined,
+      replies: f.replies.map((r) => {
         const isReplyDeleted = !!r.deletedAt;
         const isReplyMine = !isReplyDeleted && !!me && r.participant.userId === me.id;
         const isReplyEditing = editingComment?.id === r.id;
@@ -149,14 +148,14 @@ export default function PhotoDetailModal({
           id: r.id,
           authorName: r.participant.user.nickname,
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
-          content: `↳ ${r.content}`,
+          content: isReplyDeleted ? '' : r.content,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
           moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
           editingSlot: replyEditingSlot,
         };
       }),
-    ];
+    };
   });
 
   return (
@@ -181,7 +180,7 @@ export default function PhotoDetailModal({
       onSave={handleSave}
       src={photo.url}
       likeCount={currentLikeCount}
-      commentCount={feedbackData?.rows.length ?? 0}
+      commentCount={feedbackData?.rows.reduce((acc, f) => acc + 1 + f.replies.length, 0) ?? 0}
       createdAt={timeAgo(photo.createdAt)}
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
