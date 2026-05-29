@@ -93,9 +93,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   // ── 내 위치 ────────────────────────────────────────────────────────────
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
 
-  // ── 주소 복사 피드백 ────────────────────────────────────────────────────
-  const [isCopied, setIsCopied] = useState(false);
-
   // ── WebSocket ─────────────────────────────────────────────────────────
   const { sendLocation } = useLocationSocket({
     invitationId,
@@ -258,18 +255,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   );
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
-  const handleCopyAddress = () => {
-    if (eventLocation?.address) {
-      navigator.clipboard
-        .writeText(eventLocation.address)
-        .then(() => {
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 1500);
-        })
-        .catch(() => {});
-    }
-  };
-
   const handleLocate = () => {
     const pos = lastPositionRef.current;
     if (pos) {
@@ -368,7 +353,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         state={resolvedState}
         onBack={() => router.back()}
         eventLocation={eventLocation ?? null}
-        onCopyAddress={handleCopyAddress}
         onGetDirections={handleGetDirections}
         onRetry={() => refetch()}
         mapSlot={mapSlot}
@@ -390,7 +374,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         onOpenSettings={() => window.open("app-settings:", "_self")}
         isHost={isHost}
         onSetLocation={() => setPageState("searchInitial")}
-        addressCopied={isCopied}
         onLocate={handleLocate}
       />
     </>

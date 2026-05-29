@@ -3,6 +3,7 @@
 import { forwardRef } from "react";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
+import { toast } from "@/components/molecules/Toast";
 import { cn } from "@/lib/cn";
 
 export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -16,12 +17,19 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   mapPreviewUrl?: string;
   /** 온라인 모임 링크 (online 모드) */
   onlineLink?: string;
-  /** 주소 복사 콜백 */
-  onCopyAddress?: () => void;
+  /** 지도에서 보기 콜백 (preview 모드) */
+  onViewMap?: () => void;
   /** 길찾기 콜백 */
   onGetDirections?: () => void;
-  /** 복사 완료 상태 — true이면 버튼에 "복사됨!" 표시 */
-  copied?: boolean;
+}
+
+async function copyToClipboard(text: string, successMessage: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.show(successMessage);
+  } catch {
+    toast.error("복사에 실패했어요");
+  }
 }
 
 export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
@@ -33,9 +41,8 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       address,
       mapPreviewUrl,
       onlineLink,
-      onCopyAddress,
+      onViewMap,
       onGetDirections,
-      copied = false,
       ...props
     },
     ref,
@@ -74,7 +81,11 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
             <p className="text-[15px] font-semibold text-text-primary">온라인 모임</p>
             <p className="truncate text-[13px] text-text-secondary">{onlineLink}</p>
           </div>
-          <Button size="sm" variant="outline" onClick={onCopyAddress}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onlineLink && copyToClipboard(onlineLink, "링크가 복사되었어요")}
+          >
             복사
           </Button>
         </div>
@@ -95,17 +106,37 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         )}
         <div>
           <p className="text-[16px] font-bold text-text-primary">{placeName}</p>
-          <p className="text-[14px] text-text-secondary">{address}</p>
+          <p className="mt-0.5 text-[14px] text-text-secondary">
+            {address}
+            {address && (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  aria-label="주소 복사"
+                  onClick={() => copyToClipboard(address, "주소가 복사되었어요")}
+                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-colors hover:bg-gray-100 hover:text-text-primary"
+                >
+                  <Icon name="copy" size="sm" color="currentColor" decorative />
+                </button>
+              </>
+            )}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" fullWidth onClick={onCopyAddress}>
-            <Icon name={copied ? "check" : "copy"} size="sm" decorative />
-            {copied ? "복사됨!" : "주소 복사"}
-          </Button>
-          <Button variant="primary" size="sm" fullWidth onClick={onGetDirections}>
-            <Icon name="navigation" size="sm" color="inverse" decorative /> 길찾기
-          </Button>
-        </div>
+        {(onViewMap || onGetDirections) && (
+          <div className="flex gap-2">
+            {onViewMap && (
+              <Button variant="outline" size="sm" fullWidth onClick={onViewMap}>
+                <Icon name="map" size="sm" decorative /> 지도에서 보기
+              </Button>
+            )}
+            {onGetDirections && (
+              <Button variant="primary" size="sm" fullWidth onClick={onGetDirections}>
+                <Icon name="navigation" size="sm" color="inverse" decorative /> 길찾기
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     );
   },

@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Noto_Serif } from 'next/font/google';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
+import { Toaster } from '@/components/molecules/Toast';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -37,6 +38,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <MainBottomNav />
+          <Toaster />
         </Providers>
       </body>
     </html>
