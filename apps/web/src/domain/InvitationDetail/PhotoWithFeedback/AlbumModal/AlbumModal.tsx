@@ -56,6 +56,7 @@ export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage
   };
 
   const handlePhotoLike = async (photoId: string) => {
+    if (!invitationId) return;
     const currentLiked = likedMap.get(photoId) ?? false;
     const currentCount = likeCountMap.get(photoId) ?? 0;
     const newLiked = !currentLiked;
