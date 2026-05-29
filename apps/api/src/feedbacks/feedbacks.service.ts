@@ -20,20 +20,33 @@ export class FeedbacksService {
     private readonly s3Service: S3Service,
   ) {}
 
-  // photo 첨부가 있는 댓글에 presigned URL 주입
+  // photo / attachedPhoto 필드에 presigned URL 주입 (replies 포함)
   private async attachPhotoUrls<
-    T extends { photo?: { imageKey: string } | null },
+    T extends {
+      photo?: { imageKey: string } | null;
+      attachedPhoto?: { imageKey: string } | null;
+      replies?: Array<{ attachedPhoto?: { imageKey: string } | null }>;
+    },
   >(rows: T[]) {
     return Promise.all(
       rows.map(async (f) => {
-        if (!f.photo) return f;
-        return {
-          ...f,
-          photo: {
-            ...f.photo,
-            url: await this.s3Service.getViewPresignedUrl(f.photo.imageKey),
-          },
-        };
+        const photo = f.photo
+          ? { ...f.photo, url: await this.s3Service.getViewPresignedUrl(f.photo.imageKey) }
+          : f.photo;
+        const attachedPhoto = f.attachedPhoto
+          ? { ...f.attachedPhoto, url: await this.s3Service.getViewPresignedUrl(f.attachedPhoto.imageKey) }
+          : f.attachedPhoto;
+        const replies = f.replies
+          ? await Promise.all(
+              f.replies.map(async (r) => ({
+                ...r,
+                attachedPhoto: r.attachedPhoto
+                  ? { ...r.attachedPhoto, url: await this.s3Service.getViewPresignedUrl(r.attachedPhoto.imageKey) }
+                  : r.attachedPhoto,
+              })),
+            )
+          : f.replies;
+        return { ...f, photo, attachedPhoto, replies };
       }),
     );
   }
@@ -105,6 +118,7 @@ export class FeedbacksService {
       invitationId,
       content: dto.content,
       parentId: dto.parentId,
+      attachedPhotoId: dto.attachedPhotoId,
     });
   }
 

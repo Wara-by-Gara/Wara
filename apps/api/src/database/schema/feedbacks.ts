@@ -11,6 +11,7 @@ export const feedbacks = pgTable('feedbacks', {
   invitationId: text('invitation_id').references(() => invitations.id, { onDelete: 'cascade' }),
   photoId: text('photo_id').references(() => photos.id, { onDelete: 'cascade' }),
   parentId: text('parent_id').references((): AnyPgColumn => feedbacks.id, { onDelete: 'cascade' }),
+  attachedPhotoId: text('attached_photo_id').references(() => photos.id, { onDelete: 'set null' }),
   content: text('content').notNull(),
   likeCount: integer('like_count').notNull().default(0),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

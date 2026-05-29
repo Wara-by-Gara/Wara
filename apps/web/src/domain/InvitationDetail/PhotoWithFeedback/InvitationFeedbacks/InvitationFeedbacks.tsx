@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { CommentInputBar } from '@/components/organisms';
+import { Icon } from '@/components/icons';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
@@ -40,6 +41,24 @@ export default function InvitationFeedbacks({
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreview, setPendingPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    e.target.value = '';
+    if (!file) return;
+    setPendingFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPendingPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const clearPendingFile = () => {
+    setPendingFile(null);
+    setPendingPreview(null);
+  };
 
   const handlePhotoClick = async (photoId: string) => {
     const photo = await getPhoto(invitationId, photoId);
@@ -77,8 +96,8 @@ export default function InvitationFeedbacks({
               }
               content={f.deletedAt ? '' : f.content}
               createdAt={timeAgo(f.createdAt)}
-              imageUrl={f.photo?.url ?? undefined}
-              onImageClick={f.photo ? () => handlePhotoClick(f.photo!.id) : undefined}
+              imageUrl={(f.attachedPhoto?.url ?? f.photo?.url) ?? undefined}
+              onImageClick={(f.attachedPhoto || f.photo) ? () => handlePhotoClick((f.attachedPhoto ?? f.photo)!.id) : undefined}
               onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
                 f.deletedAt
@@ -203,16 +222,51 @@ export default function InvitationFeedbacks({
           <button type="button" onClick={() => setReplyingTo(null)} className="text-[13px] text-text-tertiary hover:text-text-secondary">취소</button>
         </div>
       )}
-      <CommentInputBar
-        avatarUrl={currentUserProfileImageUrl ?? undefined}
-        authorName={currentUserNickname ?? undefined}
-        placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
-        onSubmit={async (text) => {
-          await submitComment(text, replyingTo?.id);
-          setReplyingTo(null);
-        }}
-        state={isSubmitting ? 'submitting' : 'default'}
-      />
+      {pendingPreview && (
+        <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pendingPreview} alt="" className="size-full object-cover" />
+          </div>
+          <button
+            type="button"
+            onClick={clearPendingFile}
+            className="text-[12px] text-text-tertiary hover:text-text-secondary"
+          >
+            취소
+          </button>
+        </div>
+      )}
+      <div className="flex items-center">
+        <button
+          type="button"
+          aria-label="사진 첨부"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex size-11 shrink-0 items-center justify-center text-text-tertiary hover:text-text-secondary"
+        >
+          <Icon name="camera" size="sm" color="currentColor" decorative />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <div className="flex-1">
+          <CommentInputBar
+            avatarUrl={currentUserProfileImageUrl ?? undefined}
+            authorName={currentUserNickname ?? undefined}
+            placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+            onSubmit={async (text) => {
+              await submitComment(text, replyingTo?.id, pendingFile ?? undefined);
+              setReplyingTo(null);
+              clearPendingFile();
+            }}
+            state={isSubmitting ? 'submitting' : 'default'}
+          />
+        </div>
+      </div>
       {selectedPhoto && (
         <PhotoDetailModal
           photos={[selectedPhoto]}

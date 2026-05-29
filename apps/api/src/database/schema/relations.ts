@@ -71,14 +71,16 @@ export const participantsRelations = relations(participants, ({ one, many }) => 
 export const photosRelations = relations(photos, ({ one, many }) => ({
   participant: one(participants, { fields: [photos.participantId], references: [participants.id] }),
   invitation: one(invitations, { fields: [photos.invitationId], references: [invitations.id] }),
-  feedbacks: many(feedbacks),
+  feedbacks: many(feedbacks, { relationName: 'feedbacks' }),
+  attachedFeedbacks: many(feedbacks, { relationName: 'attachedFeedbacks' }),
   likes: many(photoLikes),
 }));
 
 export const feedbacksRelations = relations(feedbacks, ({ one, many }) => ({
   participant: one(participants, { fields: [feedbacks.participantId], references: [participants.id] }),
   invitation: one(invitations, { fields: [feedbacks.invitationId], references: [invitations.id] }),
-  photo: one(photos, { fields: [feedbacks.photoId], references: [photos.id] }),
+  photo: one(photos, { fields: [feedbacks.photoId], references: [photos.id], relationName: 'feedbacks' }),
+  attachedPhoto: one(photos, { fields: [feedbacks.attachedPhotoId], references: [photos.id], relationName: 'attachedFeedbacks' }),
   parent: one(feedbacks, { fields: [feedbacks.parentId], references: [feedbacks.id], relationName: 'replies' }),
   replies: many(feedbacks, { relationName: 'replies' }),
   likes: many(feedbackLikes),

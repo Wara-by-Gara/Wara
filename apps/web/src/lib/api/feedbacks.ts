@@ -28,6 +28,7 @@ export interface Feedback {
   createdAt: string;
   participant: FeedbackParticipant;
   photo: FeedbackPhoto | null;
+  attachedPhoto: FeedbackPhoto | null;
   replies: Feedback[];
 }
 
@@ -72,10 +73,12 @@ export function createInvitationFeedback(
   invitationId: string,
   content: string,
   parentId?: string,
+  attachedPhotoId?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(`/invitations/${invitationId}/feedbacks`, {
     content,
     ...(parentId && { parentId }),
+    ...(attachedPhotoId && { attachedPhotoId }),
   });
 }
 

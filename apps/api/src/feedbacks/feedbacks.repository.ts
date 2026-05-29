@@ -81,6 +81,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
         },
       },
       photo: true,
+      attachedPhoto: true,
       replies: {
         with: {
           participant: {
@@ -93,6 +94,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
               },
             },
           },
+          attachedPhoto: true,
         },
         orderBy: (t, { asc }) => [asc(t.createdAt)],
       },
@@ -108,7 +110,10 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
     const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
 
     const conditions = [
-      eq(feedbacks.photoId, photoId),
+      or(
+        eq(feedbacks.photoId, photoId),
+        eq(feedbacks.attachedPhotoId, photoId),
+      ) as SQL,
       isNull(feedbacks.parentId),
       ...cursorConditions,
     ];
@@ -128,6 +133,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
           },
         },
         photo: true,
+        attachedPhoto: true,
         replies: {
           with: {
             participant: {
@@ -141,6 +147,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
                 },
               },
             },
+            attachedPhoto: true,
           },
           orderBy: (t, { asc }) => [asc(t.createdAt)],
         },
@@ -179,7 +186,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto) {
   async create(
     data: Pick<
       NewFeedback,
-      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId'
+      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId' | 'attachedPhotoId'
     >,
   ) {
     return await this.db.transaction(async (tx) => {
