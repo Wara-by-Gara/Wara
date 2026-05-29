@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BottomNavigation, type BottomNavItem } from "@/components/molecules/BottomNavigation";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNav";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
@@ -12,9 +13,9 @@ import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  calendar: ROUTES.CALENDAR,
+  invitations: ROUTES.INVITATIONS.LIST,
   create: ROUTES.INVITATIONS.CREATE,
-  friends: ROUTES.FRIENDS,
+  notifications: ROUTES.NOTIFICATIONS.LIST,
   me: ROUTES.PROFILE.ME,
 };
 
@@ -24,11 +25,9 @@ const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create"];
 
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/calendar")) return "calendar";
   if (pathname.startsWith("/invitations/create")) return "create";
-  if (pathname.startsWith("/friends")) return "friends";
-  if (pathname.startsWith("/notifications")) return "home";
-  if (pathname.startsWith("/invitations")) return "home";
+  if (pathname.startsWith("/invitations")) return "invitations";
+  if (pathname.startsWith("/notifications")) return "notifications";
   return "me";
 }
 
@@ -41,12 +40,11 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+  useEffect(() => { hydrate(); }, [hydrate]);
   if (HIDDEN_PATHS.includes(pathname) || pathname.startsWith("/i/")) return null;
 
   const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
+
 
   const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
     item.key === "me" && hydrated && !isLoggedIn
@@ -89,24 +87,13 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작해보세요">
           <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver"] as const).map((provider) => {
-              const config = {
-                kakao: { label: "카카오로 시작하기", cls: "bg-[#FEE500] text-[#181600]", path: "kakao" },
-                naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
-              }[provider];
-              return (
-                <button
-                  key={provider}
-                  type="button"
-                  onClick={() => {
-                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
-                  }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                onClick={() => { window.location.href = `${API_BASE}/auth/${provider}/redirect`; }}
+              />
+            ))}
           </div>
         </BottomSheetContent>
       </BottomSheet>
