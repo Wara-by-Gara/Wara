@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Be_Vietnam_Pro, Noto_Serif } from 'next/font/google';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
+import { Toaster } from '@/components/molecules/Toast';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -36,7 +38,10 @@ export default function RootLayout({
         <OAuthCallbackHandler />
         <Providers>
           {children}
-          <MainBottomNav />
+          <Suspense fallback={null}>
+            <MainBottomNav />
+          </Suspense>
+          <Toaster />
         </Providers>
       </body>
     </html>

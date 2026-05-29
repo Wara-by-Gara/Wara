@@ -147,13 +147,16 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
   return (
     <>
       <div className="rounded-3xl border border-border bg-surface p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-[15px] font-bold text-text-primary">앨범</span>
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[15px] font-bold text-text-primary">사진 앨범</span>
+            <p className="text-[12px] text-text-secondary">{totalForOverflow}개의 사진</p>
+          </div>
           <button
             type="button"
             aria-label="사진 올리기"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-text-inverse"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-text-inverse"
           >
             <Icon name="camera" size="sm" color="currentColor" decorative />
           </button>

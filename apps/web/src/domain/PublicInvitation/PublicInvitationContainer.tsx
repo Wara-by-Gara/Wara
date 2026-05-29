@@ -171,7 +171,16 @@ export default function PublicInvitationContainer({ invitation }: Props) {
 
         <div className="flex flex-col gap-2">
           <p className="text-[14px] font-medium text-text-primary">참석 여부</p>
-          <RSVPButtonGroup value={rsvp} onValueChange={setRsvp} disabled={isPending} />
+          <RSVPButtonGroup
+            value={rsvp}
+            onValueChange={setRsvp}
+            disabled={isPending}
+            options={[
+              { value: "attending", emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+              { value: "maybe", emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+              { value: "declined", emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+            ]}
+          />
         </div>
 
         {rsvp !== "declined" && (

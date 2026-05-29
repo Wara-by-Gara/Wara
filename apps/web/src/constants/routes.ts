@@ -1,5 +1,7 @@
 export const ROUTES = {
   HOME: "/",
+  CALENDAR: "/calendar",
+  FRIENDS: "/friends",
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {

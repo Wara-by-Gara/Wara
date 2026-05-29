@@ -48,7 +48,6 @@ export interface MapPageProps {
 
   /** 행사 장소 (있을 때만 전달) */
   eventLocation?: { placeName: string; address: string; lat?: number; lng?: number } | null;
-  onCopyAddress?: () => void;
   onGetDirections?: () => void;
   onRetry?: () => void;
 
@@ -81,9 +80,6 @@ export interface MapPageProps {
   isHost?: boolean;
   onSetLocation?: () => void;
 
-  /** 주소 복사 완료 상태 */
-  addressCopied?: boolean;
-
   /** 내 위치 버튼 */
   onLocate?: () => void;
 }
@@ -100,7 +96,6 @@ export const MapPage = ({
   state = "fullscreen",
   onBack,
   eventLocation,
-  onCopyAddress,
   onGetDirections,
   onRetry,
   onlineLink,
@@ -118,7 +113,6 @@ export const MapPage = ({
   onOpenSettings,
   isHost,
   onSetLocation,
-  addressCopied,
   onLocate,
 }: MapPageProps) => {
   const placeName = eventLocation?.placeName ?? '';
@@ -135,7 +129,6 @@ export const MapPage = ({
             placeName={placeName}
             address={address}
             mapPreviewUrl={PLACEHOLDER_MAP_URL}
-            onCopyAddress={onCopyAddress}
             onGetDirections={onGetDirections}
           />
         </main>
@@ -190,7 +183,6 @@ export const MapPage = ({
             <LocationCard
               variant="online"
               onlineLink={onlineLink ?? "https://meet.example.com/wara"}
-              onCopyAddress={onCopyAddress}
             />
           )}
         </div>
@@ -297,7 +289,6 @@ export const MapPage = ({
               variant="preview"
               placeName={placeName}
               address={state === "manualAddress" ? "직접 입력한 주소" : address}
-              onCopyAddress={onCopyAddress}
               onGetDirections={onGetDirections}
             />
           </div>
@@ -343,9 +334,7 @@ export const MapPage = ({
             variant="preview"
             placeName={placeName}
             address={address}
-            onCopyAddress={onCopyAddress}
             onGetDirections={onGetDirections}
-            copied={addressCopied}
           />
         </div>
       </div>

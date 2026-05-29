@@ -12,8 +12,8 @@ export default meta;
 type Story = StoryObj<typeof MyPage>;
 
 const sample = [
-  { id: "i1", title: mockInvitation.title, date: mockInvitation.date, imageUrl: mockInvitation.coverImageUrl, variant: "createdByMe" as const },
-  { id: "i2", title: "주말 브런치", date: "5월 25일", imageUrl: "https://placehold.co/640x360/FFE47A/171717?text=Brunch", variant: "invited" as const },
+  { id: "i1", title: mockInvitation.title, date: "5월 31일 (일) 오후 08:00", imageUrl: mockInvitation.coverImageUrl, variant: "createdByMe" as const },
+  { id: "i2", title: "주말 브런치", date: "5월 25일 (일) 오후 02:00", imageUrl: "https://placehold.co/640x360/FFE47A/171717?text=Brunch", variant: "invited" as const },
 ];
 
 export const Default: Story = { args: { state: "default", recentInvitations: sample } };

@@ -172,7 +172,10 @@ export default function PhotoDetailModal({
         ) : undefined;
         return {
           id: r.id,
-          authorName: r.participant.user.nickname,
+          authorName:
+            isReplyMine && me
+              ? getCommentAuthorName(me)
+              : getCommentAuthorName(r.participant.user),
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: isReplyDeleted ? '' : r.content,
           createdAt: timeAgo(r.createdAt),

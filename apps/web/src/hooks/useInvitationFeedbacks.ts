@@ -29,7 +29,8 @@ export function useInvitationFeedback(invitationId: string) {
 
   const query = useInfiniteQuery({
     queryKey,
-    queryFn: ({ pageParam }) => getInvitationFeedbacks(invitationId, pageParam),
+    queryFn: ({ pageParam }) =>
+      getInvitationFeedbacks(invitationId, pageParam, INVITATION_FEEDBACK_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!invitationId,

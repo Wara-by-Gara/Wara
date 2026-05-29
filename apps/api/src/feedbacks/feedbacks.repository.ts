@@ -74,6 +74,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
         with: {
           user: {
             columns: {
+              name: true,
               nickname: true,
               profileImageUrl: true,
             },
@@ -88,6 +89,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
             with: {
               user: {
                 columns: {
+                  name: true,
                   nickname: true,
                   profileImageUrl: true,
                 },

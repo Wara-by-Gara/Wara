@@ -12,7 +12,7 @@ export interface FeedbackParticipant {
   memberRole: string;
   user: {
     name: string | null;
-    nickname: string;
+    nickname?: string | null;
     profileImageUrl: string | null;
   };
 }
@@ -33,9 +33,12 @@ export interface Feedback {
   replies: Feedback[];
 }
 
+export const INVITATION_FEEDBACK_PAGE_SIZE = 10;
+
 export interface FeedbackListResponse {
   rows: Feedback[];
   nextCursor: string | null;
+  total?: number;
 }
 
 export function getPhotoFeedbacks(
@@ -67,9 +70,11 @@ export function createPhotoFeedback(
 export function getInvitationFeedbacks(
   invitationId: string,
   cursor?: string,
+  limit = INVITATION_FEEDBACK_PAGE_SIZE,
 ): Promise<FeedbackListResponse> {
   const params = new URLSearchParams();
   if (cursor) params.set('cursor', cursor);
+  params.set('limit', String(limit));
   return apiGet<FeedbackListResponse>(
     `/invitations/${invitationId}/feedbacks/all?${params}`,
   );
