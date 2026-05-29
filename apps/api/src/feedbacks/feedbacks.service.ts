@@ -163,13 +163,31 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    return this.repository.create({
+    const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
       photoId,
       content: dto.content,
       parentId: dto.parentId,
     });
+
+    if (feedback && dto.mentionedUserIds?.length) {
+      const actorNickname = await this.repository.findUserNickname(participant.userId) ?? '누군가';
+      await Promise.all(
+        dto.mentionedUserIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            actorUserId: participant.userId,
+            type: 'mention',
+            content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
+            targetType: 'feedback',
+            targetId: feedback.id,
+          }),
+        ),
+      );
+    }
+
+    return feedback;
   }
 
   //본인 댓글인지 검증하는 헬퍼 메서드

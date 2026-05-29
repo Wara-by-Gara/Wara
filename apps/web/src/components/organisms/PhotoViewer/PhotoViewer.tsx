@@ -57,6 +57,11 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   commentPlaceholder?: string;
   /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
   replyBanner?: ReactNode;
+  /** 멘션 드롭다운 (replyBanner 위에 렌더링) */
+  mentionDropdown?: ReactNode;
+  /** 댓글 입력 controlled value */
+  inputValue?: string;
+  onInputValueChange?: (v: string) => void;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -169,6 +174,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       onCommentSubmit,
       commentPlaceholder = "댓글 남기기",
       replyBanner,
+      mentionDropdown,
+      inputValue,
+      onInputValueChange,
       rightActions,
       ...props
     },
@@ -277,7 +285,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
                           replies={c.replies}
-                          className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
+                          className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span:not(.mention-highlight)]:text-white/70"
                         />
                       </li>
                     ))}
@@ -288,12 +296,15 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {mentionDropdown}
               {replyBanner}
               <CommentInputBar
                 avatarUrl={authorAvatarUrl}
                 authorName={authorName}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
+                value={inputValue}
+                onValueChange={onInputValueChange}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
             </>

@@ -5,10 +5,11 @@ import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/pho
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
-import { useMyParticipant } from '@/hooks/useParticipants';
+import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
 import { useDeletePhoto } from '@/hooks/useDeletePhoto';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
+import { Avatar } from '@/components/primitives/Avatar';
 
 interface Props {
   photos: Photo[];
@@ -32,10 +33,14 @@ export default function PhotoDetailModal({
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | undefined>();
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [isLiking, setIsLiking] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
   const { data: myParticipant } = useMyParticipant(photo?.invitationId ?? '');
+  const { data: participantsData, isLoading: isParticipantsLoading } = useParticipants(photo?.invitationId ?? '');
+  const allParticipants = participantsData?.participants ?? [];
   const { mutate: deleteMutate, isPending: isDeleting } = useDeletePhoto(photo?.invitationId ?? '', onClose);
   const isOwner = !!myParticipant && !!photo && myParticipant.id === photo.participantId;
 
@@ -47,6 +52,23 @@ export default function PhotoDetailModal({
       }
     });
   }, [photo?.id]);
+
+  const mentionQuery = (() => {
+    const match = inputValue.match(/@(\S*)$/);
+    return match ? match[1] : null;
+  })();
+
+  const filteredParticipants = mentionQuery !== null
+    ? allParticipants.filter((p) =>
+        (p.user.nickname ?? '').toLowerCase().includes(mentionQuery!.toLowerCase())
+      )
+    : [];
+
+  const handleSelectMention = (userId: string, nickname: string) => {
+    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+    setInputValue(newValue);
+    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+  };
 
   const { data: feedbackData, submitComment, updateComment, deleteComment } = usePhotoFeedback(
     photo?.invitationId ?? '',
@@ -104,9 +126,11 @@ export default function PhotoDetailModal({
       await updateComment(editingComment.id, text);
       setEditingComment(undefined);
     } else {
-      await submitComment(text, replyingTo?.id);
+      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined);
       setReplyingTo(null);
+      setMentionedUserIds([]);
     }
+    setInputValue('');
   };
 
   const comments = (feedbackData?.rows ?? []).map((f) => {
@@ -187,6 +211,35 @@ export default function PhotoDetailModal({
       comments={comments}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+      inputValue={inputValue}
+      onInputValueChange={setInputValue}
+      mentionDropdown={mentionQuery !== null ? (
+        <div className="mx-3 mb-1 rounded-2xl border border-white/10 bg-black/80 overflow-hidden">
+          {isParticipantsLoading ? (
+            <p className="px-4 py-3 text-[13px] text-white/50">불러오는 중...</p>
+          ) : filteredParticipants.length === 0 ? (
+            <p className="px-4 py-3 text-[13px] text-white/50">일치하는 참가자 없음</p>
+          ) : (
+            <ul>
+              {filteredParticipants.map((p) => (
+                <li key={p.user.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10"
+                  >
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
+                    <span className="text-[14px] text-white">@{p.user.nickname}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : undefined}
       replyBanner={replyingTo ? (
         <div className="flex items-center justify-between border-t border-white/10 px-4 py-1.5">
           <span className="text-[12px] text-white/60">@{replyingTo.authorName}에게 답글</span>

@@ -51,10 +51,15 @@ export function createPhotoFeedback(
   photoId: string,
   content: string,
   parentId?: string,
+  mentionedUserIds?: string[],
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
-    { content, ...(parentId && { parentId }) },
+    {
+      content,
+      ...(parentId && { parentId }),
+      ...(mentionedUserIds?.length && { mentionedUserIds }),
+    },
   );
 }
 
