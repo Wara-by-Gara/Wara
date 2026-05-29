@@ -14,6 +14,7 @@ export interface AppleLoginResult {
   accessToken: string;
   refreshToken: string;
   isNew: boolean;
+  needsProfileCompletion: boolean;
 }
 
 @Injectable()
@@ -78,10 +79,12 @@ export class AppleService {
       this.authService.issueRefreshToken(userId),
     ]);
 
+    const needsProfileCompletion = !user.name || !user.email || !user.birthYear;
     return {
       accessToken,
       refreshToken,
       isNew,
+      needsProfileCompletion,
     };
   }
 }

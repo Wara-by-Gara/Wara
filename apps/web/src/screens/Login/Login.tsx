@@ -27,10 +27,7 @@ export type LoginState =
 
 export interface LoginProps {
   state?: LoginState;
-  /** 초대장 컨텍스트가 있는 경우 표시할 제목 */
   invitationTitle?: string;
-  /** 세 번째 소셜 버튼 (기본 Google) */
-  thirdProvider?: 'google' | 'apple';
   onKakao?: () => void;
   onNaver?: () => void;
   onGoogle?: () => void;
@@ -41,7 +38,6 @@ export interface LoginProps {
 export const Login = ({
   state = 'default',
   invitationTitle,
-  thirdProvider = 'google',
   onKakao,
   onNaver,
   onGoogle,
@@ -103,13 +99,14 @@ export const Login = ({
           onClick={onNaver}
         />
         <SocialLoginButton
-          provider={thirdProvider}
-          loading={
-            thirdProvider === 'google'
-              ? state === 'googleLoading'
-              : state === 'appleLoading'
-          }
-          onClick={thirdProvider === 'google' ? onGoogle : onApple}
+          provider="google"
+          loading={state === 'googleLoading'}
+          onClick={onGoogle}
+        />
+        <SocialLoginButton
+          provider="apple"
+          loading={state === 'appleLoading'}
+          onClick={onApple}
         />
 
         {errorMessage ? (
@@ -159,10 +156,8 @@ export const Login = ({
             <div className="flex flex-col gap-2 pt-2">
               <SocialLoginButton provider="kakao" onClick={onKakao} />
               <SocialLoginButton provider="naver" onClick={onNaver} />
-              <SocialLoginButton
-                provider={thirdProvider}
-                onClick={thirdProvider === 'google' ? onGoogle : onApple}
-              />
+              <SocialLoginButton provider="google" onClick={onGoogle} />
+              <SocialLoginButton provider="apple" onClick={onApple} />
             </div>
           </BottomSheetContent>
         </BottomSheet>
