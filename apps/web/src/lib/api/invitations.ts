@@ -11,6 +11,12 @@ interface CreateInvitationPayload {
   isMissionEnabled?: boolean;
   bgColor?: string;
   font?: string;
+  rsvpAttendingEmoji?: string;
+  rsvpAttendingLabel?: string;
+  rsvpMaybeEmoji?: string;
+  rsvpMaybeLabel?: string;
+  rsvpDeclinedEmoji?: string;
+  rsvpDeclinedLabel?: string;
 }
 
 export type MainImageFrame = 'default' | 'upload' | 'ai';
@@ -52,6 +58,12 @@ export interface Invitation {
   isMissionEnabled: boolean;
   bgColor: string;
   font: string;
+  rsvpAttendingEmoji: string;
+  rsvpAttendingLabel: string;
+  rsvpMaybeEmoji: string;
+  rsvpMaybeLabel: string;
+  rsvpDeclinedEmoji: string;
+  rsvpDeclinedLabel: string;
   myRole?: 'HOST' | 'GUEST';
   host?: { nickname: string | null; profileImageUrl: string | null } | null;
   createdAt: string;

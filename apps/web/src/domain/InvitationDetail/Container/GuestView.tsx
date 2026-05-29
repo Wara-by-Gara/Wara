@@ -25,7 +25,7 @@ import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
-import { FONT_CLASS, RSVP_LABELS } from "@/domain/InvitationDetail/types";
+import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 
@@ -59,9 +59,21 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
+  const rsvpOptionConfigs = [
+    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  ];
+
+  const currentRsvpLabel =
+    myParticipant?.rsvpStatus === "attending" ? invitation.rsvpAttendingLabel
+    : myParticipant?.rsvpStatus === "undecided" ? invitation.rsvpMaybeLabel
+    : myParticipant ? invitation.rsvpDeclinedLabel
+    : null;
+
   let ctaLabel = "참석 여부 선택하기";
   if (!isLoggedIn) ctaLabel = "로그인하고 참석하기";
-  else if (myParticipant) ctaLabel = `응답 수정하기 (현재: ${RSVP_LABELS[myParticipant.rsvpStatus]})`;
+  else if (myParticipant) ctaLabel = `응답 수정하기 (현재: ${currentRsvpLabel})`;
 
   const { mutate: submitRsvp, isPending: isRsvpPending } = useMutation({
     mutationFn: (status: RsvpStatus) =>
@@ -175,6 +187,7 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
           <div className="pt-2">
             <RSVPButtonGroup
               layout="horizontal-3"
+              options={rsvpOptionConfigs}
               value={myParticipant?.rsvpStatus === "attending" ? "attending" : myParticipant?.rsvpStatus === "undecided" ? "maybe" : myParticipant ? "declined" : undefined}
               onValueChange={(v) => submitRsvp(v === "attending" ? "attending" : v === "maybe" ? "undecided" : "absent")}
             />

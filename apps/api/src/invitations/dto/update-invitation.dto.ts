@@ -14,6 +14,12 @@ export const UpdateInvitationSchema = z.object({
   eventStartAt: z.coerce.date().optional().nullable(),
   isMissionEnabled: z.boolean().optional(),
   status: z.enum(['active', 'closed']).optional(),
+  rsvpAttendingEmoji: z.string().max(10).optional(),
+  rsvpAttendingLabel: z.string().max(20).optional(),
+  rsvpMaybeEmoji: z.string().max(10).optional(),
+  rsvpMaybeLabel: z.string().max(20).optional(),
+  rsvpDeclinedEmoji: z.string().max(10).optional(),
+  rsvpDeclinedLabel: z.string().max(20).optional(),
 });
 
 export type UpdateInvitationDto = z.infer<typeof UpdateInvitationSchema>;

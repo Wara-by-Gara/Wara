@@ -76,6 +76,31 @@ const DESIGN_FONTS = [
 
 type DesignFont = typeof DESIGN_FONTS[number]["id"];
 
+type RsvpType = "attending" | "maybe" | "declined";
+
+interface RsvpOption {
+  emoji: string;
+  label: string;
+}
+
+const DEFAULT_RSVP: Record<RsvpType, RsvpOption> = {
+  attending: { emoji: "🎉", label: "참석" },
+  maybe:     { emoji: "🤔", label: "미정" },
+  declined:  { emoji: "😭", label: "불참" },
+};
+
+const RSVP_DEFAULT_LABELS: Record<RsvpType, string> = {
+  attending: "참석",
+  maybe: "미정",
+  declined: "불참",
+};
+
+const RSVP_EMOJI_PALETTE = [
+  "🎉", "🥳", "😄", "💖", "🔥", "👍", "🙌", "🫶",
+  "🤔", "🫧", "😅", "🙏", "⏳", "🤷", "😶", "💭",
+  "😭", "😢", "💔", "🥺", "😞", "🙈", "😔", "🫣",
+];
+
 type MissionItem =
   | { type: "template"; templateId: string; content: string }
   | { type: "custom"; localId: string; content: string };
@@ -179,6 +204,9 @@ export default function InvitationCreateContainer() {
   const [designPanel, setDesignPanel] = useState<"bgColor" | "font">("bgColor");
   const [designBgColor, setDesignBgColor] = useState("bg-white");
   const [designFont, setDesignFont] = useState<DesignFont>("default");
+  // rsvp
+  const [rsvpOptions, setRsvpOptions] = useState<Record<RsvpType, RsvpOption>>(DEFAULT_RSVP);
+  const [editingRsvp, setEditingRsvp] = useState<RsvpType | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -222,6 +250,7 @@ export default function InvitationCreateContainer() {
         form: FormData; designBgColor: string; designFont: DesignFont;
         missionEnabled: boolean; selectedMissions: MissionItem[];
         dateUnknown: boolean; timeUnknown: boolean; locationUnknown: boolean;
+        rsvpOptions?: Record<RsvpType, RsvpOption>;
       };
       setForm(saved.form);
       setDesignBgColor(saved.designBgColor);
@@ -231,6 +260,7 @@ export default function InvitationCreateContainer() {
       setDateUnknown(saved.dateUnknown);
       setTimeUnknown(saved.timeUnknown);
       setLocationUnknown(saved.locationUnknown);
+      if (saved.rsvpOptions) setRsvpOptions(saved.rsvpOptions);
       setStep("design");
       setShowPublishConfirm(true);
     } catch { /* ignore */ }
@@ -255,6 +285,12 @@ export default function InvitationCreateContainer() {
         bgColor: designBgColor,
         font: designFont,
         isMissionEnabled: missionEnabled,
+        rsvpAttendingEmoji: rsvpOptions.attending.emoji,
+        rsvpAttendingLabel: rsvpOptions.attending.label,
+        rsvpMaybeEmoji: rsvpOptions.maybe.emoji,
+        rsvpMaybeLabel: rsvpOptions.maybe.label,
+        rsvpDeclinedEmoji: rsvpOptions.declined.emoji,
+        rsvpDeclinedLabel: rsvpOptions.declined.label,
       });
       if (!locationUnknown && form.placeName && form.lat !== null && form.lng !== null) {
         await setEventLocation(invitation.id, {
@@ -829,6 +865,60 @@ export default function InvitationCreateContainer() {
           </div>
         )}
 
+        <div className="h-px bg-border" />
+
+        {/* RSVP 설정 */}
+        <div className="flex flex-col gap-3">
+          <p className="text-[14px] font-semibold text-text-primary">RSVP 설정</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setEditingRsvp(editingRsvp === type ? null : type)}
+                className={cn(
+                  "flex flex-col items-center gap-2 rounded-2xl border-2 px-3 py-4 transition-colors",
+                  editingRsvp === type ? "border-primary bg-primary-soft" : "border-border bg-surface",
+                )}
+              >
+                <span className="text-[32px] leading-none">{rsvpOptions[type].emoji}</span>
+                <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-secondary")}>
+                  {rsvpOptions[type].label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {editingRsvp && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+              <p className="text-[13px] font-semibold text-text-secondary">이모지 선택</p>
+              <div className="grid grid-cols-8 gap-1.5">
+                {RSVP_EMOJI_PALETTE.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], emoji } }))}
+                    className={cn(
+                      "flex aspect-square items-center justify-center rounded-xl text-[22px] transition-colors",
+                      rsvpOptions[editingRsvp].emoji === emoji ? "bg-primary-soft ring-2 ring-primary" : "hover:bg-gray-100",
+                    )}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              <div className="h-px bg-border" />
+              <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
+              <TextInput
+                value={rsvpOptions[editingRsvp].label}
+                onChange={(e) => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
+                placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
+                maxLength={10}
+              />
+            </div>
+          )}
+        </div>
+
       </main>
       <div className="relative z-10 shrink-0">
         <StickyCTA
@@ -840,6 +930,7 @@ export default function InvitationCreateContainer() {
                   form, designBgColor, designFont,
                   missionEnabled, selectedMissions,
                   dateUnknown, timeUnknown, locationUnknown,
+                  rsvpOptions,
                 }));
                 setLoginSheetOpen(true);
                 return;
