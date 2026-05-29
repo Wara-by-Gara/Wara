@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Photo, getDownloadUrls, getAllDownloadUrls, PhotoDownloadItem, togglePhotoLike } from '@/lib/api/photos';
 import { PhotoListModal } from '@/components/organisms/PhotoListModal';
 import PhotoDetailModal from '@/domain/InvitationDetail/PhotoWithFeedback/PhotoDetailModal/PhotoDetailModal';
@@ -8,9 +8,6 @@ import PhotoDetailModal from '@/domain/InvitationDetail/PhotoWithFeedback/PhotoD
 interface Props {
   photos: Photo[];
   onClose: () => void;
-  fetchNextPage: () => void;
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
   initialLikedMap?: Map<string, boolean>;
   initialLikeCountMap?: Map<string, number>;
   onLikeChange?: (photoId: string, liked: boolean, likeCount: number) => void;
@@ -28,7 +25,7 @@ const triggerDownloads = (items: PhotoDownloadItem[]) => {
   });
 };
 
-export default function AlbumModal({ photos, onClose, fetchNextPage, hasNextPage, isFetchingNextPage, initialLikedMap, initialLikeCountMap, onLikeChange }: Props) {
+export default function AlbumModal({ photos, onClose, initialLikedMap, initialLikeCountMap, onLikeChange }: Props) {
   const invitationId = photos[0]?.invitationId;
 
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);

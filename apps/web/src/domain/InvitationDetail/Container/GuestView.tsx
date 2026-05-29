@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
@@ -11,21 +10,9 @@ import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSh
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
-import {
-  RsvpSection,
-  fromRsvpButtonValue,
-  toRsvpButtonValue,
-} from "@/domain/InvitationDetail/Rsvp/RsvpSection";
-import {
-  getMyParticipant,
-  getParticipants,
-  joinInvitation,
-  updateRsvp,
-  type RsvpStatus,
-} from "@/lib/api/participants";
+import { getParticipants } from "@/lib/api/participants";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
@@ -36,19 +23,16 @@ import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreview
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
-type MyParticipant = Awaited<ReturnType<typeof getMyParticipant>>;
 
 type Props = {
   invitationId: string;
   invitation: Invitation;
   me: Me | undefined;
-  myParticipant: MyParticipant | undefined;
   participantsData: ParticipantsData | undefined;
 };
 
-export default function GuestView({ invitationId, invitation, me, myParticipant, participantsData }: Props) {
+export default function GuestView({ invitationId, invitation, me, participantsData }: Props) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
@@ -66,30 +50,6 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
   );
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
-
-  const rsvpOptionConfigs = [
-    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
-  ];
-
-  const rsvpClosed = invitation.status === "closed";
-  const rsvpHelperText = !isLoggedIn
-    ? "로그인하면 참석 응답을 남길 수 있어요"
-    : rsvpClosed
-      ? "참석 응답이 마감되었어요"
-      : "언제든 수정할 수 있어요";
-
-  const { mutate: submitRsvp, isPending: isRsvpPending } = useMutation({
-    mutationFn: (status: RsvpStatus) =>
-      myParticipant
-        ? updateRsvp(invitationId, myParticipant.id, status)
-        : joinInvitation(invitationId, { rsvpStatus: status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myParticipant", invitationId] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
-    },
-  });
 
   return (
     <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", invitation.bgColor, fontClass)}>
@@ -173,7 +133,7 @@ export default function GuestView({ invitationId, invitation, me, myParticipant,
           <PhotoWithFeedbackContainer
             invitationId={invitationId}
             currentUserId={me?.id ?? null}
-            currentUserNickname={me?.nickname ?? null}
+            currentUserDisplayName={me?.name ?? null}
             currentUserProfileImageUrl={me?.profileImageUrl ?? null}
           />
         ) : (

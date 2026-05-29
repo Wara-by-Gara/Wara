@@ -27,8 +27,6 @@ export default function InvitationFeedbacks({
 }: Props) {
   const {
     data,
-    isLoading,
-    isError,
     submitComment,
     fetchNextPage,
     hasNextPage,
@@ -41,7 +39,6 @@ export default function InvitationFeedbacks({
     getLikeCount,
   } = useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
-  const totalCount = data?.pages[0]?.total ?? allRows.length;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
@@ -95,151 +92,6 @@ export default function InvitationFeedbacks({
     setSelectedPhoto(photo);
   };
 
-  const renderCommentList = () =>
-    allRows.map((f) => (
-      <CommentItem
-        key={f.id}
-        authorName={
-          f.participant.userId === currentUserId
-            ? (currentUserDisplayName ?? getCommentAuthorName(f.participant.user))
-            : getCommentAuthorName(f.participant.user)
-        }
-        authorAvatarUrl={
-          f.participant.userId === currentUserId
-            ? (currentUserProfileImageUrl ?? undefined)
-            : (f.participant.user?.profileImageUrl ?? undefined)
-        }
-        content={f.deletedAt ? '' : f.content}
-        createdAt={timeAgo(f.createdAt)}
-        imageUrl={f.photo?.url ?? undefined}
-        onImageClick={f.photo ? () => handlePhotoClick(f.photo!.id) : undefined}
-        onReply={
-          !f.deletedAt
-            ? () =>
-                setReplyingTo({
-                  id: f.id,
-                  authorName: getCommentAuthorName(f.participant.user),
-                })
-            : undefined
-        }
-        variant={
-          f.deletedAt
-            ? 'deleted'
-            : editingId === f.id
-              ? 'editing'
-              : f.participant.userId === currentUserId
-                ? 'mine'
-                : 'default'
-        }
-        moreMenuItems={
-          f.participant.userId === currentUserId && !f.deletedAt
-            ? [
-                {
-                  label: '수정',
-                  onClick: () => {
-                    setEditingId(f.id);
-                    setEditContent(f.content);
-                  },
-                  className: 'text-blue-500',
-                },
-                {
-                  label: '삭제',
-                  onClick: () => removeComment(f.id, f.photo?.id),
-                  className: 'text-red-500',
-                },
-              ]
-            : undefined
-        }
-        editingSlot={
-          editingId === f.id ? (
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded border px-2 py-1 text-sm"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-              />
-              <button
-                type="button"
-                className="text-xs text-blue-500"
-                onClick={async () => {
-                  await editComment(f.id, editContent, f.photo?.id);
-                  setEditingId(null);
-                }}
-              >
-                저장
-              </button>
-              <button
-                type="button"
-                className="text-xs text-gray-400"
-                onClick={() => setEditingId(null)}
-              >
-                취소
-              </button>
-            </div>
-          ) : undefined
-        }
-        replies={f.replies.map((r) => {
-          const isReplyDeleted = !!r.deletedAt;
-          const isReplyMine = !isReplyDeleted && r.participant.userId === currentUserId;
-          const isReplyEditing = editingId === r.id;
-          return {
-            id: r.id,
-            authorName: getCommentAuthorName(r.participant.user),
-            authorAvatarUrl:
-              r.participant.userId === currentUserId
-                ? (currentUserProfileImageUrl ?? undefined)
-                : (r.participant.user?.profileImageUrl ?? undefined),
-            content: r.deletedAt ? '' : r.content,
-            createdAt: timeAgo(r.createdAt),
-            variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
-            moreMenuItems: isReplyMine
-              ? [
-                  {
-                    label: '수정',
-                    onClick: () => {
-                      setEditingId(r.id);
-                      setEditContent(r.content);
-                    },
-                    className: 'text-blue-500',
-                  },
-                  {
-                    label: '삭제',
-                    onClick: () => removeComment(r.id, f.photo?.id),
-                    className: 'text-red-500',
-                  },
-                ]
-              : undefined,
-            editingSlot: isReplyEditing ? (
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 rounded border px-2 py-1 text-sm"
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="text-xs text-blue-500"
-                  onClick={async () => {
-                    await editComment(r.id, editContent, f.photo?.id);
-                    setEditingId(null);
-                  }}
-                >
-                  저장
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-gray-400"
-                  onClick={() => setEditingId(null)}
-                >
-                  취소
-                </button>
-              </div>
-            ) : undefined,
-          };
-        })}
-      />
-    ));
-
   return (
     <div className="mt-4">
       <div className="flex flex-col">
@@ -248,8 +100,8 @@ export default function InvitationFeedbacks({
             <CommentItem
               authorName={
                 f.participant.userId === currentUserId
-                  ? (currentUserNickname ?? f.participant.user?.nickname ?? f.participant.userId)
-                  : (f.participant.user?.nickname ?? f.participant.userId)
+                  ? (currentUserDisplayName ?? getCommentAuthorName(f.participant.user))
+                  : getCommentAuthorName(f.participant.user)
               }
               authorAvatarUrl={
                 f.participant.userId === currentUserId
@@ -456,7 +308,7 @@ export default function InvitationFeedbacks({
         <div className="flex-1">
           <CommentInputBar
             avatarUrl={currentUserProfileImageUrl ?? undefined}
-            authorName={currentUserNickname ?? undefined}
+            authorName={currentUserDisplayName ?? undefined}
             placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
             value={inputValue}
             onValueChange={setInputValue}

@@ -10,6 +10,7 @@ import { useDeletePhoto } from '@/hooks/useDeletePhoto';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { timeAgo } from '@/utils/timeAge';
 import { Avatar } from '@/components/primitives/Avatar';
+import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   photos: Photo[];
@@ -51,6 +52,7 @@ export default function PhotoDetailModal({
         onLikeChange(photo.id, result.liked, result.likeCount);
       }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo?.id]);
 
   const mentionQuery = (() => {
@@ -145,7 +147,7 @@ export default function PhotoDetailModal({
     ) : undefined;
     return {
       id: f.id,
-      authorName: f.participant.user.nickname,
+      authorName: getCommentAuthorName(f.participant.user),
       authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
       content: f.content,
       createdAt: timeAgo(f.createdAt),
@@ -157,7 +159,7 @@ export default function PhotoDetailModal({
       editingSlot,
       onReply: !isDeleted ? () => {
         setCommentsOpen(true);
-        setReplyingTo({ id: f.id, authorName: f.participant.user.nickname });
+        setReplyingTo({ id: f.id, authorName: f.participant.user.nickname ?? '' });
       } : undefined,
       replies: f.replies.map((r) => {
         const isReplyDeleted = !!r.deletedAt;

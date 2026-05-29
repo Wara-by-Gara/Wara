@@ -1,4 +1,4 @@
-import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, toggleFeedbackLike, updateFeedback } from '@/lib/api/feedbacks';
+import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, toggleFeedbackLike, updateFeedback, INVITATION_FEEDBACK_PAGE_SIZE } from '@/lib/api/feedbacks';
 import { getPresignedUrl, registerPhoto } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';

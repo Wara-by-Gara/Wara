@@ -41,12 +41,10 @@ interface Props {
   invitationId: string;
   photos: Photo[];
   total: number;
-  fetchNextPage: () => void;
   hasNextPage: boolean;
-  isFetchingNextPage: boolean;
 }
 
-export default function Album({ invitationId, photos, total, fetchNextPage, hasNextPage, isFetchingNextPage }: Props) {
+export default function Album({ invitationId, photos, total, hasNextPage }: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -246,9 +244,6 @@ export default function Album({ invitationId, photos, total, fetchNextPage, hasN
         <AlbumModal
           photos={photos}
           onClose={() => setShowModal(false)}
-          fetchNextPage={fetchNextPage}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
           initialLikedMap={likedMap}
           initialLikeCountMap={likeCountMap}
           onLikeChange={handleLikeChange}
