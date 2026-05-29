@@ -86,11 +86,12 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작해보세요">
           <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver", "google"] as const).map((provider) => {
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => {
               const config = {
                 kakao: { label: "카카오로 시작하기", cls: "bg-[#FEE500] text-[#181600]", path: "kakao" },
                 naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
                 google: { label: "Google로 시작하기", cls: "bg-white text-[#3C4043] border border-[#DADCE0]", path: "google" },
+                apple: { label: "Apple로 시작하기", cls: "bg-black text-white", path: "apple" },
               }[provider];
               return (
                 <button
