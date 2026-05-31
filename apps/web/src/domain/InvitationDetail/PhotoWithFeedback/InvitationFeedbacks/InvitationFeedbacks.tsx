@@ -360,7 +360,6 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           name={profileModal.name}
           handle={profileModal.handle}
           avatarUrl={profileModal.avatarUrl}
-          status="noResponse"
           isHost={profileModal.isHost}
         />
       )}

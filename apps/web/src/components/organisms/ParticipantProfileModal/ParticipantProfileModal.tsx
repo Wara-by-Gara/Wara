@@ -23,7 +23,7 @@ export interface ParticipantProfileModalProps {
   name: string;
   handle?: string;
   avatarUrl?: string;
-  status: ParticipantRsvp;
+  status?: ParticipantRsvp;
   isHost?: boolean;
   /** 동반 인원 수 */
   companionCount?: number;
@@ -51,7 +51,7 @@ export const ParticipantProfileModal = ({
   contained = false,
   onDm,
 }: ParticipantProfileModalProps) => {
-  const rsvp = RSVP_LABEL[status];
+  const rsvp = status ? RSVP_LABEL[status] : null;
 
   const overlayClass = cn(
     "z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in",
@@ -100,7 +100,7 @@ export const ParticipantProfileModal = ({
                   <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
                 </span>
               ) : null}
-              <Badge variant={rsvp.variant} size="sm">{rsvp.label}</Badge>
+              {rsvp ? <Badge variant={rsvp.variant} size="sm">{rsvp.label}</Badge> : null}
             </div>
           </div>
         </div>
