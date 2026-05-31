@@ -12,6 +12,7 @@ import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
+import { ParticipantProfileModal } from '@/components/organisms/ParticipantProfileModal/ParticipantProfileModal';
 
 interface Props {
   invitationId: string;
@@ -41,6 +42,12 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [profileModal, setProfileModal] = useState<{
+    name: string;
+    handle?: string;
+    avatarUrl?: string;
+    isHost: boolean;
+  } | null>(null);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -113,6 +120,12 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
               likeCount={!f.deletedAt ? getLikeCount(f.id, f.likeCount) : undefined}
               liked={!f.deletedAt ? getLiked(f.id, f.likedByMe ?? false) : undefined}
               onLike={!f.deletedAt ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined}
+              onAvatarClick={!f.deletedAt ? () => setProfileModal({
+                name: getCommentAuthorName(f.participant.user),
+                handle: f.participant.user?.nickname ?? undefined,
+                avatarUrl: f.participant.user?.profileImageUrl ?? undefined,
+                isHost: f.participant.memberRole === 'HOST',
+              }) : undefined}
               onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
                 f.deletedAt
@@ -179,6 +192,12 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                     r.participant.userId === currentUserId
                       ? (currentUserProfileImageUrl ?? undefined)
                       : (r.participant.user?.profileImageUrl ?? undefined),
+                  onAvatarClick: !isReplyDeleted ? () => setProfileModal({
+                    name: getCommentAuthorName(r.participant.user),
+                    handle: r.participant.user?.nickname ?? undefined,
+                    avatarUrl: r.participant.user?.profileImageUrl ?? undefined,
+                    isHost: r.participant.memberRole === 'HOST',
+                  }) : undefined,
                   content: r.deletedAt ? '' : r.content,
                   createdAt: timeAgo(r.createdAt),
                   variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
@@ -334,6 +353,17 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           }}
         />
       ) : null}
+      {profileModal && (
+        <ParticipantProfileModal
+          open={true}
+          onOpenChange={(open) => { if (!open) setProfileModal(null); }}
+          name={profileModal.name}
+          handle={profileModal.handle}
+          avatarUrl={profileModal.avatarUrl}
+          status="noResponse"
+          isHost={profileModal.isHost}
+        />
+      )}
     </div>
   );
 }
