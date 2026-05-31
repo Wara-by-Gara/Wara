@@ -85,8 +85,8 @@ export function registerPhoto(
 export function togglePhotoLike(
   invitationId: string,
   photoId: string,
-): Promise<{ liked: boolean }> {
-  return apiPost<{ liked: boolean }>(
+): Promise<{ liked: boolean; likeCount: number }> {
+  return apiPost<{ liked: boolean; likeCount: number }>(
     `/invitations/${invitationId}/photos/${photoId}/likes`,
     {},
   );

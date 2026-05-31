@@ -10,6 +10,8 @@ import { z } from 'zod';
 export const CreateFeedbackSchema = z.object({
   content: z.string().min(1),
   parentId: z.string().optional(),
+  attachedPhotoId: z.string().optional(),
+  mentionedUserIds: z.array(z.string()).optional(),
 });
 
 export type CreateFeedbackDto = z.infer<typeof CreateFeedbackSchema>;

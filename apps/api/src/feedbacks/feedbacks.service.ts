@@ -10,6 +10,7 @@ import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 import { Participant } from '../database/schema';
 import { S3Service } from '../s3/s3.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
@@ -18,6 +19,7 @@ export class FeedbacksService {
   constructor(
     private readonly repository: FeedbacksRepository,
     private readonly s3Service: S3Service,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
@@ -59,20 +61,33 @@ export class FeedbacksService {
     );
   }
 
-  // photo 첨부가 있는 댓글에 presigned URL 주입
+  // photo / attachedPhoto 필드에 presigned URL 주입 (replies 포함)
   private async attachPhotoUrls<
-    T extends { photo?: { imageKey: string } | null },
+    T extends {
+      photo?: { imageKey: string } | null;
+      attachedPhoto?: { imageKey: string } | null;
+      replies?: Array<{ attachedPhoto?: { imageKey: string } | null }>;
+    },
   >(rows: T[]) {
     return Promise.all(
       rows.map(async (f) => {
-        if (!f.photo) return f;
-        return {
-          ...f,
-          photo: {
-            ...f.photo,
-            url: await this.s3Service.getViewPresignedUrl(f.photo.imageKey),
-          },
-        };
+        const photo = f.photo
+          ? { ...f.photo, url: await this.s3Service.getViewPresignedUrl(f.photo.imageKey) }
+          : f.photo;
+        const attachedPhoto = f.attachedPhoto
+          ? { ...f.attachedPhoto, url: await this.s3Service.getViewPresignedUrl(f.attachedPhoto.imageKey) }
+          : f.attachedPhoto;
+        const replies = f.replies
+          ? await Promise.all(
+              f.replies.map(async (r) => ({
+                ...r,
+                attachedPhoto: r.attachedPhoto
+                  ? { ...r.attachedPhoto, url: await this.s3Service.getViewPresignedUrl(r.attachedPhoto.imageKey) }
+                  : r.attachedPhoto,
+              })),
+            )
+          : f.replies;
+        return { ...f, photo, attachedPhoto, replies };
       }),
     );
   }
@@ -94,10 +109,11 @@ export class FeedbacksService {
   }
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
-  async listAll(invitationId: string, dto: ListFeedbacksDto) {
+  async listAll(invitationId: string, dto: ListFeedbacksDto, participantId?: string) {
     const { rows, nextCursor } = await this.repository.findAllByInvitation(
       invitationId,
       dto,
+      participantId,
     );
     return {
       rows: await this.attachPhotoUrls(await this.attachProfileImageUrls(this.applyDeletedPlaceholder(rows))),
@@ -110,6 +126,7 @@ export class FeedbacksService {
     invitationId: string,
     photoId: string,
     dto: ListFeedbacksDto,
+    participantId?: string,
   ) {
     const photo = await this.repository.findPhotoById(photoId);
     if (!photo) {
@@ -120,7 +137,7 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    const feedbacks = await this.repository.findAllByPhoto(photoId, dto);
+    const feedbacks = await this.repository.findAllByPhoto(photoId, dto, participantId);
     return {
       rows: await this.attachPhotoUrls(
         await this.attachProfileImageUrls(this.applyDeletedPlaceholder(feedbacks.rows)),
@@ -139,12 +156,31 @@ export class FeedbacksService {
       const parent = await this.repository.findById(dto.parentId);
       if (!parent) throw new NotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
     }
-    return this.repository.create({
+    const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
       content: dto.content,
       parentId: dto.parentId,
+      attachedPhotoId: dto.attachedPhotoId,
     });
+
+    if (feedback && dto.mentionedUserIds?.length) {
+      const actorNickname = await this.repository.findUserNickname(participant.userId) ?? '누군가';
+      await Promise.all(
+        dto.mentionedUserIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            actorUserId: participant.userId,
+            type: 'mention',
+            content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
+            targetType: 'feedback',
+            targetId: feedback.id,
+          }),
+        ),
+      );
+    }
+
+    return feedback;
   }
 
   //사진 댓글 생성
@@ -168,13 +204,31 @@ export class FeedbacksService {
       throw new NotFoundException(ErrorCode.PHOTO_NOT_FOUND);
     }
 
-    return this.repository.create({
+    const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
       photoId,
       content: dto.content,
       parentId: dto.parentId,
     });
+
+    if (feedback && dto.mentionedUserIds?.length) {
+      const actorNickname = await this.repository.findUserNickname(participant.userId) ?? '누군가';
+      await Promise.all(
+        dto.mentionedUserIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            actorUserId: participant.userId,
+            type: 'mention',
+            content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
+            targetType: 'feedback',
+            targetId: feedback.id,
+          }),
+        ),
+      );
+    }
+
+    return feedback;
   }
 
   //본인 댓글인지 검증하는 헬퍼 메서드

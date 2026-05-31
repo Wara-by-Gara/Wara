@@ -13,6 +13,9 @@ export interface CommentInputBarProps {
   onSubmit?: (text: string) => void | Promise<void>;
   placeholder?: string;
   initialValue?: string;
+  /** controlled value — 제공 시 외부에서 input 값을 관리 */
+  value?: string;
+  onValueChange?: (value: string) => void;
   placement?: "top" | "bottom";
   className?: string;
 }
@@ -27,12 +30,20 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       onSubmit,
       placeholder = "댓글 남기기",
       initialValue,
+      value: controlledValue,
+      onValueChange,
       placement = "bottom",
       className,
     },
     ref,
   ) {
-    const [value, setValue] = useState(initialValue ?? "");
+    const [internalValue, setInternalValue] = useState(initialValue ?? "");
+    const isControlled = controlledValue !== undefined;
+    const value = isControlled ? controlledValue : internalValue;
+    const setValue = (v: string) => {
+      if (!isControlled) setInternalValue(v);
+      onValueChange?.(v);
+    };
     const isSubmittingRef = useRef(false); // ← 핵심
     const isTop = placement === "top";
     const edgeBorder = isTop ? "border-b border-border" : "border-t border-border";

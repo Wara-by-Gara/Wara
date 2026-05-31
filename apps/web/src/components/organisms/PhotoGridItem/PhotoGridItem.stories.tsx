@@ -28,3 +28,5 @@ export const Video: Story = { args: { status: "video" } };
 export const Owner: Story = { args: { isOwner: true } };
 export const HostManageUnselected: Story = { args: { hostManageMode: true } };
 export const HostManageSelected: Story = { args: { hostManageMode: true, status: "selected" } };
+export const WithLikeCount: Story = { args: { likeCount: 12 } };
+export const WithLikeCountLiked: Story = { args: { likeCount: 12, liked: true } };

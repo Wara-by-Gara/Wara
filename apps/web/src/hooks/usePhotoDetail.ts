@@ -16,7 +16,7 @@ export function usePhotoDetail(invitationId: string, photoId: string, token: str
   const toggleLike = async () => {
     const result = await togglePhotoLike(invitationId, photoId);
     setLiked(result.liked);
-    setLikeCount((prev) => result.liked ? prev + 1 : prev - 1);
+    setLikeCount(result.likeCount);
     queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.invitations.photos(invitationId),
     });

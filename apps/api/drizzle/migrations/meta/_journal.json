@@ -78,6 +78,13 @@
       "when": 1779871000000,
       "tag": "0011_rsvp_custom_options",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1748527200000,
+      "tag": "0012_feedbacks_attached_photo",
+      "breakpoints": true
     }
   ]
 }

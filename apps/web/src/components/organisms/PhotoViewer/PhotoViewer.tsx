@@ -3,7 +3,7 @@
 import { forwardRef, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import { CommentInputBar } from "@/components/organisms/CommentInputBar";
-import { CommentItem } from "@/components/organisms/CommentItem";
+import { CommentItem, type CommentReplyItemProps } from "@/components/organisms/CommentItem";
 import {
   Modal,
   ModalPortal,
@@ -24,6 +24,10 @@ export interface PhotoViewerComment {
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
   editingSlot?: React.ReactNode;
   onReply?: () => void;
+  replies?: CommentReplyItemProps[];
+  likeCount?: number;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -60,6 +64,11 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   currentUserNickname?: string;
   /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
   replyBanner?: ReactNode;
+  /** 멘션 드롭다운 (replyBanner 위에 렌더링) */
+  mentionDropdown?: ReactNode;
+  /** 댓글 입력 controlled value */
+  inputValue?: string;
+  onInputValueChange?: (v: string) => void;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -172,6 +181,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       onCommentSubmit,
       commentPlaceholder = "댓글 남기기",
       replyBanner,
+      mentionDropdown,
+      inputValue,
+      onInputValueChange,
       rightActions,
       currentUserAvatarUrl,
       currentUserInitialName,
@@ -268,7 +280,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
 
           {commentsOpen ? (
             <>
-              <div className="max-h-[132px] overflow-y-auto border-t border-white/10 bg-black/80">
+              <div className="max-h-[132px] overflow-y-auto overscroll-contain border-t border-white/10 bg-black/80">
                 {comments.length > 0 ? (
                   <ul className="divide-y divide-white/10">
                     {comments.map((c) => (
@@ -283,7 +295,11 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           moreMenuItems={c.moreMenuItems}
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
-                          className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span]:text-white/70"
+                          replies={c.replies}
+                          likeCount={c.likeCount}
+                          liked={c.liked}
+                          onLike={c.onLike}
+                          className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span:not(.mention-highlight)]:text-white/70"
                         />
                       </li>
                     ))}
@@ -294,6 +310,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {mentionDropdown}
               {replyBanner}
               <CommentInputBar
                 avatarUrl={currentUserAvatarUrl}
@@ -301,6 +318,8 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                 authorInitialName={currentUserInitialName}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
+                value={inputValue}
+                onValueChange={onInputValueChange}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
             </>

@@ -46,6 +46,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'vote_reminder',
   'vote_confirmed',
   'vote_tied',
+  'mention',
 ]);
 
 export const remindTypeEnum = pgEnum('remind_type', ['D+7', 'D+30', 'D+365']);

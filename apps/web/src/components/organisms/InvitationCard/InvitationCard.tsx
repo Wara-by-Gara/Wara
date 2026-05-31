@@ -90,7 +90,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
         )}
         {...props}
       >
-        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gray-100">
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
           {showImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="" className="size-full object-cover" />
