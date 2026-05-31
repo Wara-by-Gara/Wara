@@ -8,6 +8,7 @@ import { InvitationDetailProps } from '../../types';
 import Album from '../Album/Album';
 import InvitationFeedbacks from '../InvitationFeedbacks/InvitationFeedbacks';
 import BestNineModal from '../../BestNine/BestNineModal';
+import { InvitationFeedSkeleton } from '@/components/organisms/Skeleton';
 
 function isMomentLogVisible(eventStartAt: string | null): boolean {
   if (!eventStartAt) return false;
@@ -28,7 +29,7 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
 
   const [showMomentLogModal, setShowMomentLogModal] = useState(false);
 
-  if (isLoading) return <div>로딩중 ....</div>;
+  if (isLoading) return <InvitationFeedSkeleton />;
 
   return (
     <>

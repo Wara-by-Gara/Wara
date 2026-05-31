@@ -7,7 +7,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { PhotoGrid } from "@/components/organisms/PhotoGrid";
 import { PhotoGridItem } from "@/components/organisms/PhotoGridItem";
 import { PhotoViewer } from "@/components/organisms/PhotoViewer";
-import { AlbumGridSkeleton } from "@/components/organisms/Skeleton";
+import { AlbumGridSkeleton, RemindAlbumHeaderSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { albumViewerSampleSrc, mockComments, mockRemindPhotos } from "@/lib/mockData";
@@ -65,7 +65,9 @@ export const RemindAlbum = ({
       />
 
       {/* 이벤트 헤더 카드 */}
-      {state !== "empty" && state !== "error" && state !== "loadingSkeleton" ? (
+      {state === "loadingSkeleton" ? (
+        <RemindAlbumHeaderSkeleton />
+      ) : state !== "empty" && state !== "error" ? (
         <div className="shrink-0 border-b border-border bg-surface px-5 py-4">
           <div className="flex items-center gap-3">
             <Avatar

@@ -78,9 +78,7 @@ export const Comments = ({ invitationId }: Props) => {
 
       <main className={cn(mainCentered ? mobileMainCenter : mobileMainScroll)}>
         {isLoading ? (
-          <div className="px-2 py-2">
-            <CommentListSkeleton />
-          </div>
+          <CommentListSkeleton />
         ) : isError ? (
           <ErrorState title="댓글을 불러오지 못했어요" onRetry={() => {}} />
         ) : feedbacks.length === 0 ? (
