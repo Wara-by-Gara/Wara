@@ -223,6 +223,7 @@ export default function InvitationCreateContainer() {
   const [mainGifUrl, setMainGifUrl] = useState("");
   const [imageTab, setImageTab] = useState<"upload" | "gif">("upload");
   const [gifPickerOpen, setGifPickerOpen] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -353,6 +354,7 @@ export default function InvitationCreateContainer() {
     setImageUploading(true);
     setImageUploadError(false);
     setMainGifUrl("");
+    setLocalPreviewUrl(URL.createObjectURL(file));
     try {
       const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
       const { presignedUrl, key } = await getInvitationImagePresignedUrl(file.name, contentType);
@@ -360,6 +362,7 @@ export default function InvitationCreateContainer() {
       set({ mainImageKey: key });
       setImageError(false);
     } catch {
+      setLocalPreviewUrl(null);
       setImageUploadError(true);
     } finally {
       setImageUploading(false);
@@ -480,8 +483,10 @@ export default function InvitationCreateContainer() {
                 onClick={() => {
                   if (form.templateId === t.id) {
                     set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   } else {
                     set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   }
                 }}
               />
@@ -520,8 +525,8 @@ export default function InvitationCreateContainer() {
           <FormField label="대표 이미지">
             {form.templateId ? (
               <InvitationCover
-                imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-                variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+                imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+                variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
               />
             ) : (
               <>
@@ -567,7 +572,7 @@ export default function InvitationCreateContainer() {
                         <Icon name="alert-triangle" size="lg" color="danger" decorative />
                         <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
                       </div>
-                    ) : form.mainImageKey === DEFAULT_COVER_KEY ? (
+                    ) : !localPreviewUrl && form.mainImageKey === DEFAULT_COVER_KEY ? (
                       <button
                         type="button"
                         className={cn(
@@ -586,7 +591,7 @@ export default function InvitationCreateContainer() {
                     ) : (
                       <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
                         <InvitationCover
-                          imageUrl={form.mainImageKey}
+                          imageUrl={localPreviewUrl ?? form.mainImageKey}
                           variant="image"
                         />
                       </button>
@@ -628,7 +633,7 @@ export default function InvitationCreateContainer() {
                     {gifPickerOpen ? (
                       <div className="mt-2">
                         <GifPicker
-                          onSelect={(url) => { setMainGifUrl(url); set({ mainImageKey: DEFAULT_COVER_KEY }); setGifPickerOpen(false); setImageError(false); }}
+                          onSelect={(url) => { setMainGifUrl(url); set({ mainImageKey: DEFAULT_COVER_KEY }); setLocalPreviewUrl(null); setGifPickerOpen(false); setImageError(false); }}
                           onClose={() => setGifPickerOpen(false)}
                         />
                       </div>
@@ -952,8 +957,8 @@ export default function InvitationCreateContainer() {
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 미리보기 */}
         <InvitationCover
-          imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-          variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+          imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+          variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
         >
           {form.title ? (
             <p className={cn("text-[22px] font-bold text-white", DESIGN_FONTS.find((f) => f.id === designFont)?.style)}>
