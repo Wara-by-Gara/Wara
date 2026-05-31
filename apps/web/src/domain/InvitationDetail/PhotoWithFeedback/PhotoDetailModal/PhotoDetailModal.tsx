@@ -219,7 +219,7 @@ export default function PhotoDetailModal({
       comments={comments}
       currentUserAvatarUrl={me?.profileImageUrl ?? undefined}
       currentUserInitialName={me?.name ?? undefined}
-      currentUserNickname={me?.nickname ?? undefined}
+      currentUserNickname={me?.name ?? undefined}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
       inputValue={inputValue}

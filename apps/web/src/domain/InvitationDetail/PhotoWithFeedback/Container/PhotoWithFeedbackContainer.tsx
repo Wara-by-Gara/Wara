@@ -16,12 +16,7 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
   );
 }
 
-export default function PhotoWithFeedbackContainer({
-  invitationId,
-  currentUserId,
-  currentUserDisplayName,
-  currentUserProfileImageUrl,
-}: InvitationDetailProps) {
+export default function PhotoWithFeedbackContainer({ invitationId }: InvitationDetailProps) {
   const { data, isLoading, hasNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;

@@ -130,12 +130,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
         </div>
         {isLoggedIn ? (
-          <PhotoWithFeedbackContainer
-            invitationId={invitationId}
-            currentUserId={me?.id ?? null}
-            currentUserDisplayName={me?.name ?? null}
-            currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-          />
+          <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="relative overflow-hidden rounded-3xl">
             <div className="pointer-events-none select-none blur-sm">

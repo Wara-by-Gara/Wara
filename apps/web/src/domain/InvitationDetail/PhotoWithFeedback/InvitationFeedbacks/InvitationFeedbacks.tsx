@@ -20,8 +20,6 @@ interface Props {
 export default function InvitationFeedbacks({ invitationId }: Props) {
   const { data: me } = useMe();
   const currentUserId = me?.id ?? null;
-  const currentUserName = me?.name ?? null;
-  const currentUserNickname = me?.nickname ?? null;
   const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
   const currentUserDisplayName = me?.name ?? null;
 
@@ -176,7 +174,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                 const isReplyEditing = editingId === r.id;
                 return {
                   id: r.id,
-                  authorName: r.participant.user?.nickname ?? r.participant.userId,
+                  authorName: getCommentAuthorName(r.participant.user),
                   authorAvatarUrl:
                     r.participant.userId === currentUserId
                       ? (currentUserProfileImageUrl ?? undefined)
