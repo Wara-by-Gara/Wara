@@ -84,7 +84,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
         ref={ref}
         type="button"
         className={cn(
-          "group flex w-full flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-surface p-3 text-left shadow-xs transition-colors hover:bg-gray-50",
+          "group flex w-full flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-surface p-3 text-left shadow-xs hover-emphasis",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           className,
         )}
@@ -109,11 +109,10 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
         </div>
         <div className="flex flex-col gap-1">
           <h3 className="line-clamp-1 text-[16px] font-bold text-text-primary">{title}</h3>
-          {date ? (
-            <p className="flex items-center gap-1 text-[13px] text-text-secondary">
-              <Icon name="calendar" size="xs" color="inactive" decorative /> {date}
-            </p>
-          ) : null}
+          <p className="flex items-center gap-1 text-[13px] text-text-secondary">
+            <Icon name="calendar" size="xs" color="inactive" decorative />
+            {date?.trim() || "미정"}
+          </p>
           {location ? (
             <p className="flex items-center gap-1 text-[13px] text-text-secondary">
               <Icon name="map-pin" size="xs" color="inactive" decorative />
