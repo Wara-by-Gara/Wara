@@ -2,8 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteMe, deleteMySocial, getMe, getMySocials, updateMe, type UpdateMeInput } from '@/lib/api/users';
+import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, updateMe, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+
+export function useUserProfile(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['users', userId, 'profile'],
+    queryFn: () => getUserProfile(userId!),
+    enabled: !!userId,
+  });
+}
 
 export function useMe() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

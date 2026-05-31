@@ -7,6 +7,8 @@ import { Button } from "@/components/primitives/Button";
 import { Modal, ModalOverlay, ModalPortal, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import type { BadgeProps } from "@/components/primitives/Badge";
+import { useUserProfile } from "@/hooks/useUsers";
+import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 
 export type ParticipantRsvp = "attending" | "maybe" | "declined" | "noResponse";
 
@@ -20,7 +22,9 @@ const RSVP_LABEL: Record<ParticipantRsvp, { label: string; variant: BadgeProps["
 export interface ParticipantProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  name: string;
+  /** userId를 넘기면 내부에서 자동 fetch. name/handle/avatarUrl은 즉시 표시용 초기값 */
+  userId?: string;
+  name?: string;
   handle?: string;
   avatarUrl?: string;
   status?: ParticipantRsvp;
@@ -40,9 +44,10 @@ export interface ParticipantProfileModalProps {
 export const ParticipantProfileModal = ({
   open,
   onOpenChange,
-  name,
-  handle,
-  avatarUrl,
+  userId,
+  name: nameProp,
+  handle: handleProp,
+  avatarUrl: avatarUrlProp,
   status,
   isHost = false,
   companionCount,
@@ -51,6 +56,10 @@ export const ParticipantProfileModal = ({
   contained = false,
   onDm,
 }: ParticipantProfileModalProps) => {
+  const { data: fetched } = useUserProfile(userId);
+  const name = fetched ? getCommentAuthorName(fetched) : (nameProp ?? '');
+  const handle = fetched?.nickname ?? handleProp;
+  const avatarUrl = fetched?.profileImageUrl ?? avatarUrlProp;
   const rsvp = status ? RSVP_LABEL[status] : null;
 
   const overlayClass = cn(
