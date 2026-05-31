@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Badge } from "@/components/primitives/Badge";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -11,6 +12,8 @@ export interface InvitationCoverProps extends React.HTMLAttributes<HTMLDivElemen
   variant?: "image" | "color" | "template" | "no-image";
   /** 이미지 URL (image / template) */
   imageUrl?: string;
+  /** GIF URL (Klipy CDN) */
+  gifUrl?: string;
   /** 배경 클래스 (color) */
   backgroundClass?: string;
   /** D-day 배지 텍스트 (예: 'D-3', 'TODAY') */
@@ -38,6 +41,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       className,
       variant = "image",
       imageUrl,
+      gifUrl,
       backgroundClass,
       ddayLabel,
       isHost,
@@ -61,7 +65,15 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         )}
         {...props}
       >
-        {(variant === "image" || variant === "template") && imageUrl ? (
+        {gifUrl ? (
+          <Image
+            src={gifUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        ) : (variant === "image" || variant === "template") && imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}

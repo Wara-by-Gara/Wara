@@ -17,7 +17,7 @@ export interface PhotoViewerComment {
   id: string;
   authorName: string;
   authorAvatarUrl?: string;
-  content: string;
+  content?: string | null;
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
@@ -305,8 +305,6 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
-                avatarUrl={authorAvatarUrl}
-                authorName={authorName}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
                 value={inputValue}

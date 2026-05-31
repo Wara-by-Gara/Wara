@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitationStatusEnum, linkEventTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
@@ -23,7 +23,8 @@ export const invitations = pgTable('invitations', {
   status: invitationStatusEnum('status').notNull().default('active'),
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description').notNull(),
-  mainImageKey: text('main_image_key').notNull(),
+  mainImageKey: text('main_image_key'),
+  mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   bgColor: varchar('bg_color', { length: 50 }).notNull().default('bg-white'),
@@ -37,7 +38,10 @@ export const invitations = pgTable('invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  check('check_image_or_gif', sql`${t.mainImageKey} IS NOT NULL OR ${t.mainGifUrl} IS NOT NULL`),
+  check('check_gif_xor_image', sql`${t.mainGifUrl} IS NULL OR ${t.mainImageKey} IS NULL`),
+]);
 
 export const participants = pgTable('participants', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),

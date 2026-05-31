@@ -16,7 +16,7 @@ const meta: Meta<typeof CommentInputBar> = {
       </div>
     ),
   ],
-  args: { avatarUrl: "https://i.pravatar.cc/40?img=33", authorName: "김와라" },
+  args: {},
 };
 export default meta;
 type Story = StoryObj<typeof CommentInputBar>;

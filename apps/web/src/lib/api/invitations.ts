@@ -26,7 +26,8 @@ export async function uploadImageToS3(presignedUrl: string, file: File): Promise
 interface CreateInvitationPayload {
   title: string;
   description: string;
-  mainImageKey: string;
+  mainImageKey?: string;
+  mainGifUrl?: string;
   templateId?: string;
   eventStartAt?: string;
   isMissionEnabled?: boolean;
@@ -55,8 +56,9 @@ export interface Invitation {
   status: "active" | "closed";
   title: string;
   description: string;
-  mainImageKey: string;
-  mainImageUrl: string;
+  mainImageKey: string | null;
+  mainGifUrl?: string | null;
+  mainImageUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
   bgColor: string;

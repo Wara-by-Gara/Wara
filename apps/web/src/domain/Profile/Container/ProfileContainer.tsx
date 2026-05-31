@@ -16,7 +16,7 @@ export default function ProfileContainer() {
     id: inv.id,
     title: inv.title,
     date: formatInvitationEventDate(inv.eventStartAt),
-    imageUrl: inv.mainImageUrl,
+    imageUrl: inv.mainImageUrl ?? undefined,
     variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
 

@@ -140,7 +140,7 @@ export default function PhotoDetailModal({
     const isEditing = editingComment?.id === f.id;
     const editingSlot: ReactNode = isEditing ? (
       <InlineCommentEditor
-        initialValue={f.content}
+        initialValue={f.content ?? ''}
         onSubmit={(text) => handleCommentSubmit(text)}
         onCancel={() => setEditingComment(undefined)}
       />
@@ -149,13 +149,13 @@ export default function PhotoDetailModal({
       id: f.id,
       authorName: getCommentAuthorName(f.participant.user),
       authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
-      content: f.content,
+      content: f.content ?? '',
       createdAt: timeAgo(f.createdAt),
       variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
       likeCount: !isDeleted ? getLikeCount(f.id, f.likeCount) : undefined,
       liked: !isDeleted ? getLiked(f.id, f.likedByMe ?? false) : undefined,
       onLike: !isDeleted ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined,
-      moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
+      moreMenuItems: isMine ? buildMenuItems(f.id, f.content ?? '') : undefined,
       editingSlot,
       onReply: !isDeleted ? () => {
         setCommentsOpen(true);
@@ -167,7 +167,7 @@ export default function PhotoDetailModal({
         const isReplyEditing = editingComment?.id === r.id;
         const replyEditingSlot: ReactNode = isReplyEditing ? (
           <InlineCommentEditor
-            initialValue={r.content}
+            initialValue={r.content ?? ''}
             onSubmit={(text) => handleCommentSubmit(text)}
             onCancel={() => setEditingComment(undefined)}
           />
@@ -179,13 +179,13 @@ export default function PhotoDetailModal({
               ? getCommentAuthorName(me)
               : getCommentAuthorName(r.participant.user),
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
-          content: isReplyDeleted ? '' : r.content,
+          content: isReplyDeleted ? '' : (r.content ?? ''),
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
           likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
           liked: !isReplyDeleted ? getLiked(r.id, r.likedByMe ?? false) : undefined,
           onLike: !isReplyDeleted ? () => toggleLike(r.id, getLiked(r.id, r.likedByMe ?? false), getLikeCount(r.id, r.likeCount)) : undefined,
-          moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+          moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content ?? '') : undefined,
           editingSlot: replyEditingSlot,
         };
       }),

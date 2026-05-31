@@ -25,12 +25,17 @@ export class InvitationsService {
     return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
   }
 
+  private toResponse(invitation: { mainImageKey: string | null; mainGifUrl: string | null; [key: string]: unknown }) {
+    return {
+      ...invitation,
+      mainImageUrl: invitation.mainImageKey ? this.s3Service.getPublicUrl(invitation.mainImageKey) : null,
+      mainGifUrl: invitation.mainGifUrl ?? null,
+    };
+  }
+
   async findAll(userId: string) {
     const invitations = await this.repository.findAllByUserId(userId);
-    return invitations.map((invitation) => ({
-      ...invitation,
-      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
-    }));
+    return invitations.map((invitation) => this.toResponse(invitation));
   }
 
   async findOne(id: string) {
@@ -41,10 +46,7 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    return {
-      ...invitation,
-      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
-    };
+    return this.toResponse(invitation);
   }
 
   private async validateTemplateId(templateId: string) {
@@ -62,10 +64,7 @@ export class InvitationsService {
       await this.validateTemplateId(dto.templateId);
     }
     const invitation = await this.repository.create(userId, dto);
-    return {
-      ...invitation,
-      mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
-    };
+    return this.toResponse(invitation);
   }
 
   async update(id: string, dto: UpdateInvitationDto) {
@@ -76,13 +75,15 @@ export class InvitationsService {
       await this.validateTemplateId(dto.templateId);
     }
 
-    const updated = await this.repository.update(id, dto);
+    // 상호 배타: mainGifUrl 있으면 mainImageKey null로, mainImageKey 있으면 mainGifUrl null로
+    const updated = await this.repository.update(id, {
+      ...dto,
+      mainImageKey: dto.mainGifUrl ? null : dto.mainImageKey,
+      mainGifUrl: dto.mainImageKey ? null : dto.mainGifUrl,
+    });
     if (!updated) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
 
-    return {
-      ...updated,
-      mainImageUrl: this.s3Service.getPublicUrl(updated.mainImageKey),
-    };
+    return this.toResponse(updated);
   }
 
   async remove(id: string) {

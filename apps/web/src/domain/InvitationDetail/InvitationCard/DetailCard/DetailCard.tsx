@@ -13,8 +13,9 @@ export default function DetailCard({ invitation }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <InvitationCover
-        variant={invitation.mainImageUrl ? 'image' : 'no-image'}
-        imageUrl={invitation.mainImageUrl}
+        variant={invitation.mainGifUrl ? 'image' : invitation.mainImageUrl ? 'image' : 'no-image'}
+        imageUrl={invitation.mainImageUrl ?? undefined}
+        gifUrl={invitation.mainGifUrl ?? undefined}
       />
       <header className="flex flex-col items-start gap-2 px-1 text-left">
         <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>

@@ -93,7 +93,7 @@ export function Calendar() {
   };
 
   const getDayThumbnails = (key: string) =>
-    (eventsByDay.get(key) ?? []).map((e) => e.mainImageUrl).filter(Boolean);
+    (eventsByDay.get(key) ?? []).map((e) => e.mainImageUrl).filter((u): u is string => !!u);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">

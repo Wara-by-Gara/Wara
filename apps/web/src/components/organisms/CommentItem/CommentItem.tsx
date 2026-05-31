@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -9,13 +10,14 @@ import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
 import { renderMentions } from "./renderMentions";
 
-export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CommentItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
-  content: string;
+  content?: string | null;
+  gifUrl?: string | null;
   imageUrl?: string;
   onImageClick?: () => void;
   replies?: CommentReplyItemProps[];
@@ -39,6 +41,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       authorAvatarUrl,
       createdAt,
       content,
+      gifUrl,
       imageUrl,
       onImageClick,
       replies,
@@ -124,6 +127,17 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
                         {renderMentions(content)}
                       </p>
+                    ) : null}
+                    {gifUrl ? (
+                      <div className="relative mt-1 w-[200px] overflow-hidden rounded-xl bg-gray-100" style={{ aspectRatio: "4/3" }}>
+                        <Image
+                          src={gifUrl}
+                          alt="GIF"
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
                     ) : null}
                   </>
                 )}

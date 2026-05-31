@@ -80,7 +80,7 @@ export class InvitationsRepository {
     });
   }
 
-  async update(id: string, dto: UpdateInvitationDto) {
+  async update(id: string, dto: Omit<UpdateInvitationDto, 'mainImageKey' | 'mainGifUrl'> & { mainImageKey?: string | null; mainGifUrl?: string | null }) {
     const [updated] = await this.db
       .update(invitations)
       .set({ ...dto, updatedAt: new Date() })
