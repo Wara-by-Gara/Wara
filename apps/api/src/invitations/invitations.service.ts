@@ -41,9 +41,15 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
+    const hostProfileImageUrl = invitation.host?.profileImageUrl
+      ? await this.s3Service.getViewPresignedUrl(invitation.host.profileImageUrl)
+      : null;
     return {
       ...invitation,
       mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
+      host: invitation.host
+        ? { ...invitation.host, profileImageUrl: hostProfileImageUrl }
+        : invitation.host,
     };
   }
 
