@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { avatarGradientStyle } from "@/lib/avatar-gradient";
 
 const avatarVariants = cva(
-  "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-text-primary",
+  "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-800 text-text-primary",
   {
     variants: {
       size: {
