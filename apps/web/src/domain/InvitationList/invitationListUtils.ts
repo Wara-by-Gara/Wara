@@ -34,7 +34,7 @@ export function mapInvitationsToListItems(invitations: Invitation[]): MappedInvi
     description: "",
     date: formatInvitationEventDate(inv.eventStartAt),
     location: inv.eventLocation?.placeName ?? "",
-    coverImageUrl: inv.mainImageUrl ?? "",
+    coverImageUrl: inv.mainGifUrl ?? inv.mainImageUrl ?? "",
     host: { name: "" },
     _status: inv.status,
     _myRole: inv.myRole,
