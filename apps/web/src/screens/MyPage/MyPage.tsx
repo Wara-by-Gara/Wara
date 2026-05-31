@@ -8,7 +8,7 @@ import { ProfileSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { MenuItem } from "@/components/molecules/MenuItem";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mockMe, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 
@@ -37,8 +37,8 @@ export const MyPage = ({
   if (state === "loggedOut") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-        <TopAppBar className="shrink-0" title="마이페이지" />
-        <main className={mobileMainCenter}>
+        <StickyHeader title="마이페이지" />
+        <main className={`relative z-10 ${mobileMainCenter}`}>
           <EmptyState
             icon="user-round-cog"
             title="로그인이 필요해요"
@@ -52,9 +52,9 @@ export const MyPage = ({
 
   if (state === "loading") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-        <TopAppBar className="shrink-0" title="마이페이지" />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+        <StickyHeader title="마이페이지" />
+        <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
           <ProfileSkeleton />
         </main>
       </div>
@@ -64,8 +64,8 @@ export const MyPage = ({
   if (state === "error") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-        <TopAppBar className="shrink-0" title="마이페이지" />
-        <main className={mobileMainCenter}>
+        <StickyHeader title="마이페이지" />
+        <main className={`relative z-10 ${mobileMainCenter}`}>
           <ErrorState title="프로필을 불러오지 못했어요" onRetry={() => {}} />
         </main>
       </div>
@@ -74,7 +74,7 @@ export const MyPage = ({
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar className="shrink-0"
+      <StickyHeader
         title="마이페이지"
         rightSlot={
           <button
@@ -87,8 +87,8 @@ export const MyPage = ({
           </button>
         }
       />
-      <main className="min-h-0 flex-1 overflow-y-auto">
-      <section className="flex flex-col items-center gap-4 bg-surface py-8">
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+      <section className="flex flex-col items-center gap-4 bg-surface pb-8 pt-[88px]">
         <div className="relative">
           <Avatar
             size="xl"
