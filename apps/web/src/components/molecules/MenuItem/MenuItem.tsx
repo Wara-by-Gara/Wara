@@ -9,15 +9,15 @@ import { cn } from "@/lib/cn";
 
 const menuItemVariants = cva(
   [
-    "flex w-full min-h-[64px] items-center gap-3 rounded-none px-4 py-3 text-left transition-colors",
+    "flex w-full min-h-[64px] items-center gap-3 rounded-none px-4 py-3 text-left transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
     "disabled:opacity-40 disabled:cursor-not-allowed",
   ],
   {
     variants: {
       variant: {
-        default: "text-text-primary hover:bg-gray-50",
-        danger: "text-danger hover:bg-red-50",
+        default: "text-text-primary hover-emphasis-sm",
+        danger: "text-danger hover-emphasis-sm",
       },
     },
     defaultVariants: { variant: "default" },

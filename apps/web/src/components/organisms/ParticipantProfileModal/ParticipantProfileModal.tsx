@@ -82,7 +82,7 @@ export const ParticipantProfileModal = ({
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label="닫기"
-          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover:bg-black/20"
+          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover-emphasis-sm"
         >
           <Icon name="x" size="sm" color="currentColor" decorative />
         </button>

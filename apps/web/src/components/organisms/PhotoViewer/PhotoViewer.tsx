@@ -207,7 +207,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             variant="ghost"
             aria-label="닫기"
             onClick={onClose}
-            className="bg-black/40 text-white hover:bg-black/60"
+            className="bg-black/40 text-white hover-emphasis-sm"
           />
           <div className="flex items-center gap-1">
             {onSave ? (

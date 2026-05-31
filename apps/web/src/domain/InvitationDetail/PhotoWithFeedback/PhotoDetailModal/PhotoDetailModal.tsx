@@ -240,7 +240,7 @@ export default function PhotoDetailModal({
                       e.preventDefault();
                       handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
                   >
                     <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
                     <span className="text-[14px] text-white">@{p.user.nickname}</span>

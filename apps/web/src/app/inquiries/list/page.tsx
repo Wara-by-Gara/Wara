@@ -59,7 +59,7 @@ export default function InquiryListPage() {
                   key={inquiry.id}
                   type="button"
                   onClick={() => router.push(ROUTES.INQUIRIES.DETAIL(inquiry.id))}
-                  className="flex w-full flex-col gap-1 px-4 py-4 text-left transition-colors hover:bg-gray-50"
+                  className="flex w-full flex-col gap-1 px-4 py-4 text-left hover-emphasis-sm"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[12px] text-text-tertiary">
