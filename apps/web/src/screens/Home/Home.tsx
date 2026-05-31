@@ -94,7 +94,7 @@ export const Home = ({
         rightSlot={
           <>
             <NotificationBellContainer />
-            <Avatar size="sm" src={me.avatarUrl} alt={me.nickname} initial={me.nickname[0]} />
+            <Avatar size="sm" src={me.avatarUrl} alt={me.nickname} name={me.name ?? me.nickname} />
           </>
         }
       />

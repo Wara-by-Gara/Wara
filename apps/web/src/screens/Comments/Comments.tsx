@@ -15,6 +15,7 @@ import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
 import { useMe } from "@/hooks/useUsers";
 import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 import { timeAgo } from "@/utils/timeAge";
+import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal/ParticipantProfileModal";
 
 interface Props {
   invitationId: string;
@@ -30,6 +31,7 @@ export const Comments = ({ invitationId }: Props) => {
   const [deletingCommentId, setDeletingCommentId] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+  const [profileModal, setProfileModal] = useState<{ userId: string; isHost: boolean } | null>(null);
 
   const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
   const totalCount = data?.pages[0]?.total ?? feedbacks.length;
@@ -98,15 +100,10 @@ export const Comments = ({ invitationId }: Props) => {
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
                   authorName={getCommentAuthorName(f.participant.user)}
-                  onReply={
-                    !isDeleted
-                      ? () =>
-                          setReplyingTo({
-                            id: f.id,
-                            authorName: getCommentAuthorName(f.participant.user),
-                          })
-                      : undefined
-                  }
+                  authorInitialName={f.participant.user.name ?? undefined}
+                  authorHandle={f.participant.user.nickname ?? undefined}
+                  onAvatarClick={!isDeleted ? () => setProfileModal({ userId: f.participant.userId, isHost: f.participant.memberRole === 'HOST' }) : undefined}
+                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname ?? '' }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
                   content={f.content}
@@ -117,7 +114,10 @@ export const Comments = ({ invitationId }: Props) => {
                     return {
                       id: r.id,
                       authorName: getCommentAuthorName(r.participant.user),
+                      authorInitialName: r.participant.user.name ?? undefined,
+                      authorHandle: r.participant.user.nickname ?? undefined,
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
+                      onAvatarClick: !isReplyDeleted ? () => setProfileModal({ userId: r.participant.userId, isHost: r.participant.memberRole === 'HOST' }) : undefined,
                       createdAt: timeAgo(r.createdAt),
                       content: r.content,
                       variant: isReplyDeleted ? ("deleted" as const) : isReplyMine ? ("mine" as const) : ("default" as const),
@@ -156,6 +156,7 @@ export const Comments = ({ invitationId }: Props) => {
         <CommentInputBar
           avatarUrl={me?.profileImageUrl ?? undefined}
           authorName={me?.name ?? undefined}
+          authorInitialName={me?.name ?? undefined}
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);
@@ -176,6 +177,15 @@ export const Comments = ({ invitationId }: Props) => {
         onConfirm={handleDelete}
         loading={isDeleting}
       />
+      {profileModal && (
+        <ParticipantProfileModal
+          open={true}
+          onOpenChange={(open) => { if (!open) setProfileModal(null); }}
+          userId={profileModal.userId}
+          isHost={profileModal.isHost}
+          contained
+        />
+      )}
     </div>
   );
 };

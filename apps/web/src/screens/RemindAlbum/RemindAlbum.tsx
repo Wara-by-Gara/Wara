@@ -72,7 +72,7 @@ export const RemindAlbum = ({
               src={hostAvatarUrl}
               alt={hostName}
               size="md"
-              initial={hostName?.[0]}
+              name={hostName}
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-bold text-text-primary">

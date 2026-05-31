@@ -2,8 +2,7 @@ import type { RsvpStatus } from "@/lib/api/participants";
 
 export interface InvitationDetailProps {
   invitationId: string;
-  currentUserId: string | null;
-  /** 현재 사용자 댓글 표시 이름 (name) */
+  currentUserId?: string | null;
   currentUserDisplayName?: string | null;
   currentUserProfileImageUrl?: string | null;
 }

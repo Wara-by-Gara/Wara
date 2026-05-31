@@ -67,12 +67,12 @@ export interface Invitation {
   rsvpMaybeLabel: string;
   rsvpDeclinedEmoji: string;
   rsvpDeclinedLabel: string;
+  myRole?: 'HOST' | 'GUEST';
+  host?: { name: string | null; nickname: string | null; profileImageUrl: string | null } | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
-  host?: { name: string | null; nickname: string | null; profileImageUrl: string | null } | null;
-  myRole?: "HOST" | "GUEST";
 }
 
 export interface EventLocation {

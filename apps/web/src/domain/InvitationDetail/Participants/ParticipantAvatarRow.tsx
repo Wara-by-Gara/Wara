@@ -41,7 +41,7 @@ export default function ParticipantAvatarRow({
               }
               alt={displayName}
               size="lg"
-              initial={displayName[0]}
+              name={user.name ?? user.nickname ?? undefined}
               host={participant.memberRole === "HOST"}
             />
           );

@@ -14,6 +14,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   id?: string;
   variant?: CommentReplyVariant;
   authorName: string;
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
@@ -30,6 +31,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -39,6 +41,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       variant = "default",
       authorName,
       authorHandle,
+      authorInitialName,
       authorAvatarUrl,
       createdAt,
       content,
@@ -51,6 +54,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       likeCount,
       liked,
       onLike,
+      onAvatarClick,
       ...props
     },
     ref,
@@ -82,12 +86,14 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
           className={cn("flex gap-2 py-2.5", className)}
           {...props}
         >
-          <Avatar
-            src={authorAvatarUrl}
-            alt={authorName}
-            size="xs"
-            initial={authorName?.[0]}
-          />
+          <button type="button" onClick={onAvatarClick} className={onAvatarClick ? "cursor-pointer" : "cursor-default"}>
+            <Avatar
+              src={authorAvatarUrl}
+              alt={authorName}
+              size="xs"
+              name={authorInitialName ?? authorName}
+            />
+          </button>
           <div className="min-w-0 flex-1">
             {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}
             <div className="flex items-start justify-between gap-2">

@@ -174,10 +174,8 @@ export default function PhotoDetailModal({
         ) : undefined;
         return {
           id: r.id,
-          authorName:
-            isReplyMine && me
-              ? getCommentAuthorName(me)
-              : getCommentAuthorName(r.participant.user),
+          authorName: getCommentAuthorName(r.participant.user),
+          authorInitialName: r.participant.user.name ?? undefined,
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: isReplyDeleted ? '' : r.content,
           createdAt: timeAgo(r.createdAt),
@@ -219,6 +217,9 @@ export default function PhotoDetailModal({
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
+      currentUserAvatarUrl={me?.profileImageUrl ?? undefined}
+      currentUserInitialName={me?.name ?? undefined}
+      currentUserNickname={me?.name ?? undefined}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
       inputValue={inputValue}
