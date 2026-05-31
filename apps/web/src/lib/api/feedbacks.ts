@@ -57,13 +57,15 @@ export function createPhotoFeedback(
   content: string,
   parentId?: string,
   mentionedUserIds?: string[],
+  gifUrl?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
     {
-      content,
+      ...(content && { content }),
       ...(parentId && { parentId }),
       ...(mentionedUserIds?.length && { mentionedUserIds }),
+      ...(gifUrl && { gifUrl }),
     },
   );
 }

@@ -27,6 +27,7 @@ export interface PhotoViewerComment {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  gifUrl?: string | null;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -65,6 +66,12 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 댓글 입력 controlled value */
   inputValue?: string;
   onInputValueChange?: (v: string) => void;
+  /** GIF 관련 */
+  pendingGif?: string | null;
+  onGifClear?: () => void;
+  onGifButtonClick?: () => void;
+  /** GIF picker 슬롯 (mentionDropdown 위에 렌더링) */
+  gifPicker?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -180,6 +187,10 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       mentionDropdown,
       inputValue,
       onInputValueChange,
+      pendingGif,
+      onGifClear,
+      onGifButtonClick,
+      gifPicker,
       rightActions,
       ...props
     },
@@ -284,6 +295,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           authorAvatarUrl={c.authorAvatarUrl}
                           createdAt={c.createdAt}
                           content={c.content}
+                          gifUrl={c.gifUrl ?? undefined}
                           moreMenuItems={c.moreMenuItems}
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
@@ -302,6 +314,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {gifPicker}
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
@@ -309,6 +322,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                 onSubmit={onCommentSubmit}
                 value={inputValue}
                 onValueChange={onInputValueChange}
+                pendingGif={pendingGif}
+                onGifClear={onGifClear}
+                onGifButtonClick={onGifButtonClick}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
             </>

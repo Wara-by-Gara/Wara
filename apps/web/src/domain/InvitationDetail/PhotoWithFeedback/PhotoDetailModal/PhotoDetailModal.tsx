@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode, type ChangeEvent } from 'react';
 import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import { GifPicker } from '@/components/organisms/GifPicker';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
@@ -36,6 +37,8 @@ export default function PhotoDetailModal({
   const [isLiking, setIsLiking] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  const [pendingGif, setPendingGif] = useState<string | null>(null);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
@@ -127,9 +130,10 @@ export default function PhotoDetailModal({
       await updateComment(editingComment.id, text);
       setEditingComment(undefined);
     } else {
-      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined);
+      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined, pendingGif ?? undefined);
       setReplyingTo(null);
       setMentionedUserIds([]);
+      setPendingGif(null);
     }
     setInputValue('');
   };
@@ -150,6 +154,7 @@ export default function PhotoDetailModal({
       authorName: getCommentAuthorName(f.participant.user),
       authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
       content: f.content ?? '',
+      gifUrl: f.gifUrl ?? undefined,
       createdAt: timeAgo(f.createdAt),
       variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
       likeCount: !isDeleted ? getLikeCount(f.id, f.likeCount) : undefined,
@@ -180,6 +185,7 @@ export default function PhotoDetailModal({
               : getCommentAuthorName(r.participant.user),
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
           content: isReplyDeleted ? '' : (r.content ?? ''),
+          gifUrl: !isReplyDeleted ? (r.gifUrl ?? undefined) : undefined,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
           likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
@@ -223,6 +229,17 @@ export default function PhotoDetailModal({
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
       inputValue={inputValue}
       onInputValueChange={setInputValue}
+      pendingGif={pendingGif}
+      onGifClear={() => setPendingGif(null)}
+      onGifButtonClick={() => setGifPickerOpen((v) => !v)}
+      gifPicker={gifPickerOpen ? (
+        <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10 bg-black/80">
+          <GifPicker
+            onSelect={(url) => { setPendingGif(url); setGifPickerOpen(false); }}
+            onClose={() => setGifPickerOpen(false)}
+          />
+        </div>
+      ) : undefined}
       mentionDropdown={mentionQuery !== null ? (
         <div className="mx-3 mb-1 rounded-2xl border border-white/10 bg-black/80 overflow-hidden">
           {isParticipantsLoading ? (
