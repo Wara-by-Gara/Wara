@@ -48,8 +48,8 @@ export default function HostView({ invitationId, invitation, participantsData, m
   const [deleteError, setDeleteError] = useState("");
 
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasGif = !!invitation.mainGifUrl;
-  const hasImage = !hasGif && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
+  const hasGif = invitation.mainCoverType === "gif";
+  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
 
   const summary = participantsData?.summary;
   const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];

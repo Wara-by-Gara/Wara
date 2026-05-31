@@ -56,6 +56,7 @@ export interface Invitation {
   status: "active" | "closed";
   title: string;
   description: string;
+  mainCoverType: "image" | "gif";
   mainImageKey: string | null;
   mainGifUrl?: string | null;
   mainImageUrl: string | null;

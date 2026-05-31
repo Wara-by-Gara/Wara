@@ -92,6 +92,13 @@
       "when": 1780204475970,
       "tag": "0013_last_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1780208334564,
+      "tag": "0014_broken_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

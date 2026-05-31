@@ -25,7 +25,7 @@ export class InvitationsService {
     return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
   }
 
-  private toResponse(invitation: { mainImageKey: string | null; mainGifUrl: string | null; [key: string]: unknown }) {
+  private toResponse(invitation: { mainCoverType: string; mainImageKey: string | null; mainGifUrl: string | null; [key: string]: unknown }) {
     return {
       ...invitation,
       mainImageUrl: invitation.mainImageKey ? this.s3Service.getPublicUrl(invitation.mainImageKey) : null,
@@ -63,7 +63,8 @@ export class InvitationsService {
     if (dto.templateId) {
       await this.validateTemplateId(dto.templateId);
     }
-    const invitation = await this.repository.create(userId, dto);
+    const mainCoverType: 'image' | 'gif' = dto.mainGifUrl ? 'gif' : 'image';
+    const invitation = await this.repository.create(userId, { ...dto, mainCoverType });
     return this.toResponse(invitation);
   }
 
@@ -75,9 +76,11 @@ export class InvitationsService {
       await this.validateTemplateId(dto.templateId);
     }
 
-    // 상호 배타: mainGifUrl 있으면 mainImageKey null로, mainImageKey 있으면 mainGifUrl null로
+    // mainCoverType 자동 설정 + 상호 배타
+    const mainCoverType: 'image' | 'gif' | undefined = dto.mainGifUrl ? 'gif' : dto.mainImageKey ? 'image' : undefined;
     const updated = await this.repository.update(id, {
       ...dto,
+      ...(mainCoverType && { mainCoverType }),
       mainImageKey: dto.mainGifUrl ? null : dto.mainImageKey,
       mainGifUrl: dto.mainImageKey ? null : dto.mainGifUrl,
     });

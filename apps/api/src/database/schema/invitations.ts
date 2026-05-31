@@ -1,7 +1,7 @@
 import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { invitationStatusEnum, linkEventTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
+import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
 import { users } from './users';
 
 export const invitationTemplates = pgTable('invitation_templates', {
@@ -23,6 +23,7 @@ export const invitations = pgTable('invitations', {
   status: invitationStatusEnum('status').notNull().default('active'),
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description').notNull(),
+  mainCoverType: mainCoverTypeEnum('main_cover_type').notNull().default('image'),
   mainImageKey: text('main_image_key'),
   mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
@@ -39,8 +40,8 @@ export const invitations = pgTable('invitations', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
-  check('check_image_or_gif', sql`${t.mainImageKey} IS NOT NULL OR ${t.mainGifUrl} IS NOT NULL`),
-  check('check_gif_xor_image', sql`${t.mainGifUrl} IS NULL OR ${t.mainImageKey} IS NULL`),
+  check('check_cover_type_image', sql`${t.mainCoverType} <> 'image' OR (${t.mainImageKey} IS NOT NULL AND ${t.mainGifUrl} IS NULL)`),
+  check('check_cover_type_gif', sql`${t.mainCoverType} <> 'gif' OR (${t.mainGifUrl} IS NOT NULL AND ${t.mainImageKey} IS NULL)`),
 ]);
 
 export const participants = pgTable('participants', {

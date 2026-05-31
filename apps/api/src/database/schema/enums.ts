@@ -58,6 +58,8 @@ export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'participantLocations',
 ]);
 
+export const mainCoverTypeEnum = pgEnum('main_cover_type', ['image', 'gif']);
+
 export const dateVotePollStatusEnum = pgEnum('date_vote_poll_status', [
   'open',
   'closed',

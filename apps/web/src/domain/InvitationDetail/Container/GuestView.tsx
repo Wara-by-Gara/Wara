@@ -42,8 +42,8 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
   const isLoggedIn = !!me;
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasGif = !!invitation.mainGifUrl;
-  const hasImage = !hasGif && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
+  const hasGif = invitation.mainCoverType === "gif";
+  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
 
   const allParticipants = participantsData?.participants ?? [];
   const attendingParticipants = allParticipants.filter(
