@@ -79,6 +79,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               <Avatar
                 src={invitation.host.profileImageUrl ?? undefined}
                 alt={invitation.host.name ?? invitation.host.nickname ?? ""}
+                name={invitation.host.name ?? invitation.host.nickname ?? undefined}
                 size="xs"
               />
               <span>
