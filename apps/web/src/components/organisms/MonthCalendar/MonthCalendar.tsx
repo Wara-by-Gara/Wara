@@ -59,7 +59,7 @@ export function MonthCalendar({
           type="button"
           onClick={onPrevMonth}
           aria-label="이전 달"
-          className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+          className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
         >
           <Icon name="chevron-left" size="sm" color="inactive" decorative />
         </button>
@@ -71,7 +71,7 @@ export function MonthCalendar({
             <button
               type="button"
               onClick={onToday}
-              className="rounded-full border border-border px-2.5 py-0.5 text-[12px] font-semibold text-text-secondary hover:bg-gray-50"
+              className="rounded-full border border-border px-2.5 py-0.5 text-[12px] font-semibold text-text-secondary hover-emphasis-sm"
             >
               오늘
             </button>
@@ -81,7 +81,7 @@ export function MonthCalendar({
           type="button"
           onClick={onNextMonth}
           aria-label="다음 달"
-          className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+          className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
         >
           <Icon name="chevron-right" size="sm" color="inactive" decorative />
         </button>
@@ -114,35 +114,40 @@ export function MonthCalendar({
 
           if (isEventMode) {
             const thumbs = getDayThumbnails(key);
+            const hasThumb = thumbs.length > 0;
             return (
               <button
                 key={key}
                 type="button"
                 onClick={() => onDayClick(key)}
-                className="flex min-h-[46px] flex-col items-center gap-1 rounded-xl py-1 transition-colors hover:bg-gray-50"
+                className="flex min-h-[46px] items-center justify-center rounded-xl p-1 hover-emphasis-sm"
               >
-                <span
-                  className={cn(
-                    "flex size-7 items-center justify-center rounded-full text-[13px] font-semibold",
-                    isSelected
-                      ? "bg-primary text-white"
-                      : isToday
-                        ? "text-primary"
-                        : dow === 0
-                          ? "text-rose-400"
-                          : dow === 6
-                            ? "text-blue-400"
-                            : "text-text-primary",
-                  )}
-                >
-                  {day}
-                </span>
-                {thumbs.length > 0 && (
-                  <span className="flex gap-0.5">
-                    {thumbs.slice(0, 3).map((src, idx) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={idx} src={src} alt="" className="size-4 rounded-[4px] object-cover" />
-                    ))}
+                {hasThumb ? (
+                  <span
+                    className={cn(
+                      "aspect-square w-full overflow-hidden rounded-lg",
+                      isSelected && "ring-2 ring-primary ring-offset-1",
+                    )}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={thumbs[0]} alt="" className="h-full w-full object-cover" />
+                  </span>
+                ) : (
+                  <span
+                    className={cn(
+                      "flex size-7 items-center justify-center rounded-full text-[13px] font-semibold",
+                      isSelected
+                        ? "bg-primary text-white"
+                        : isToday
+                          ? "text-primary"
+                          : dow === 0
+                            ? "text-rose-400"
+                            : dow === 6
+                              ? "text-blue-400"
+                              : "text-text-primary",
+                    )}
+                  >
+                    {day}
                   </span>
                 )}
               </button>
@@ -156,16 +161,17 @@ export function MonthCalendar({
               disabled={disablePast && isPast}
               onClick={() => onDayClick(key)}
               className={cn(
-                "mx-auto flex size-9 items-center justify-center rounded-full text-[14px] font-semibold transition-all",
+                "mx-auto flex size-9 items-center justify-center rounded-full text-[14px] font-semibold",
+                !(disablePast && isPast) && "hover-emphasis-sm",
                 disablePast && isPast
                   ? "cursor-not-allowed text-gray-300"
                   : isSelected
                     ? "bg-primary text-white shadow-sm"
                     : dow === 0
-                      ? "text-rose-400 hover:bg-rose-50"
+                      ? "text-rose-400"
                       : dow === 6
-                        ? "text-blue-400 hover:bg-blue-50"
-                        : "text-text-primary hover:bg-gray-100",
+                        ? "text-blue-400"
+                        : "text-text-primary",
               )}
             >
               {day}
