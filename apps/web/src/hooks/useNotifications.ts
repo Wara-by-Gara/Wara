@@ -93,6 +93,14 @@ export function useUpdateNotificationSettings() {
 
 const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/notifications';
 
+export interface AiCompleteEventDetail {
+  jobId: string;
+  invitationId: string;
+  key: string | null;
+  url: string | null;
+  success: boolean;
+}
+
 export function useNotificationSocket() {
   const queryClient = useQueryClient();
 
@@ -107,7 +115,18 @@ export function useNotificationSocket() {
       queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
     }
 
-    socket.on('notification:new', invalidateNotifications);
+    socket.on('notification:new', (notification: { type: string; content: string }) => {
+      // AI 완료 알림은 window 커스텀 이벤트로 브로드캐스트 (해당 컴포넌트에서 수신)
+      if (notification.type === 'ai_complete') {
+        try {
+          const detail = JSON.parse(notification.content) as AiCompleteEventDetail;
+          window.dispatchEvent(new CustomEvent('ai:complete', { detail }));
+        } catch {
+          // JSON 파싱 실패 시 무시
+        }
+      }
+      invalidateNotifications();
+    });
     socket.on('notification:read', invalidateNotifications);
     socket.on('notification:readAll', invalidateNotifications);
 

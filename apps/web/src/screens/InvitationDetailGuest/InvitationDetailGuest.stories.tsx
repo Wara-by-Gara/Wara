@@ -40,6 +40,14 @@ export const AlbumPreviewFilled: Story = { args: { state: "albumPreviewFilled" }
 export const CommentPreviewEmpty: Story = { args: { state: "commentPreviewEmpty" } };
 export const CommentPreviewFilled: Story = { args: { state: "commentPreviewFilled" } };
 
+// Album Like Count
+export const AlbumWithLikeCount: Story = {
+  args: { state: "albumWithLikeCount" },
+  parameters: {
+    docs: { description: { story: "앨범 사진 그리드에 좋아요 카운트(♥N) 오버레이 표시" } },
+  },
+};
+
 // Date Vote
 export const DateVotePending: Story = { args: { state: "dateVotePending" } };
 

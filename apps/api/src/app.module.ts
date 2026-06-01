@@ -23,6 +23,8 @@ import { InquiriesModule } from './inquiries/inquiries.module';
 import { BlocklistModule } from './blocklist/blocklist.module';
 import { AdminModule } from './admin/admin.module';
 import { FaqModule } from './faq/faq.module';
+import { AiModule } from './ai/ai.module';
+import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
 
 @Module({
@@ -51,6 +53,8 @@ import { DateVoteModule } from './date-vote/date-vote.module';
     BlocklistModule,
     AdminModule,
     FaqModule,
+    AiModule,
+    TermsModule,
     DateVoteModule,
   ],
   controllers: [AppController],

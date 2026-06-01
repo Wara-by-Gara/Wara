@@ -7,6 +7,7 @@ import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ParticipantGuard } from '../common/guards/participant.guard';
+import { RequiredTermsGuard } from '../common/guards/required-terms.guard';
 import { RsvpStatusGuard } from '../common/guards/rsvp-status.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
@@ -69,6 +70,11 @@ import { NaverStrategy } from './strategies/naver.strategy';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+
+    {
+      provide: APP_GUARD,
+      useClass: RequiredTermsGuard,
     },
 
     ParticipantRepository,

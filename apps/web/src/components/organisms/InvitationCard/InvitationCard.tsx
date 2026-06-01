@@ -41,6 +41,8 @@ export interface InvitationCardProps extends React.HTMLAttributes<HTMLButtonElem
   date?: string;
   /** 장소 텍스트 */
   location?: string;
+  /** 날짜 텍스트에 추가할 클래스 */
+  dateClassName?: string;
   /** 본인 RSVP 상태 — 없으면 미응답 */
   rsvpStatus?: "attending" | "maybe" | "declined" | "noResponse";
   /** 참석자 수 (선택) */
@@ -64,6 +66,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
       imageUrl,
       title,
       date,
+      dateClassName,
       location,
       rsvpStatus,
       participantsCount,
@@ -109,10 +112,11 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
         </div>
         <div className="flex flex-col gap-1">
           <h3 className="line-clamp-1 text-[16px] font-bold text-text-primary">{title}</h3>
-          <p className="flex items-center gap-1 text-[13px] text-text-secondary">
-            <Icon name="calendar" size="xs" color="inactive" decorative />
-            {date?.trim() || "미정"}
-          </p>
+          {date ? (
+            <p className={cn("flex items-center gap-1 text-[13px] text-text-secondary", dateClassName)}>
+              <Icon name="calendar" size="xs" color="inactive" decorative /> {date}
+            </p>
+          ) : null}
           {location ? (
             <p className="flex items-center gap-1 text-[13px] text-text-secondary">
               <Icon name="map-pin" size="xs" color="inactive" decorative />

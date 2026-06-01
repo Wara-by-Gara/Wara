@@ -19,20 +19,24 @@ export interface MyPageProps {
   user?: MockUser;
   /** 최근/내가 만든/참여한 — props로 주입 */
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
+  onInvitationClick?: (id: string) => void;
   onSettings?: () => void;
   onProfileEdit?: () => void;
   onInquiries?: () => void;
   onAccount?: () => void;
+  onSupport?: () => void;
 }
 
 export const MyPage = ({
   state = "default",
   user = mockMe,
   recentInvitations = [],
+  onInvitationClick,
   onSettings,
   onProfileEdit,
   onInquiries,
   onAccount,
+  onSupport,
 }: MyPageProps) => {
   if (state === "loggedOut") {
     return (
@@ -126,7 +130,9 @@ export const MyPage = ({
                   variant={inv.variant ?? "default"}
                   title={inv.title}
                   date={inv.date}
+                  dateClassName="text-[11px]"
                   imageUrl={inv.imageUrl}
+                  onClick={onInvitationClick ? () => onInvitationClick(inv.id) : undefined}
                 />
               </div>
             ))}
@@ -144,6 +150,7 @@ export const MyPage = ({
             문의하기
           </MenuItem>
           <MenuItem leftIcon="user-round-cog" onClick={onAccount} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>계정 관리</MenuItem>
+          <MenuItem leftIcon="help-circle" onClick={onSupport} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>고객센터</MenuItem>
         </div>
       </section>
       </main>

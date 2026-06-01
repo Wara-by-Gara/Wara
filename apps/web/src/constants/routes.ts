@@ -48,4 +48,7 @@ export const ROUTES = {
     ME: "/inquiries/me",
     DETAIL: (id: string) => `/inquiries/${id}`,
   },
+  TERMS: {
+    AGREE: "/terms/agree",
+  },
 } as const;
