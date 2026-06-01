@@ -105,9 +105,9 @@ function slotResultToDateSlot(sr: SlotResult): DateSlot {
 
 // ── Vote constants ─────────────────────────────────────────────────────────
 const VOTE_CFG = {
-  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-white text-emerald-500 border-emerald-200 hover-emphasis-sm", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
-  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-white text-amber-500 border-amber-200 hover-emphasis-sm",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
-  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-white text-rose-400 border-rose-200 hover-emphasis-sm",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
+  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-surface text-emerald-500 border-emerald-200 hover-emphasis-sm", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
+  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-surface text-amber-500 border-amber-200 hover-emphasis-sm",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
+  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-surface text-rose-400 border-rose-200 hover-emphasis-sm",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
 } as const;
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
@@ -187,7 +187,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
   const groups = groupByDate(slots);
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-      <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-gray-50 px-4 py-3">
+      <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-background-soft px-4 py-3">
         <span className="text-[12px] font-bold text-text-tertiary">날짜 · 시간</span>
         {TYPES.map((t) => (
           <div key={t} className="flex flex-col items-center gap-0.5">
@@ -198,7 +198,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
       </div>
       {Array.from(groups.entries()).map(([date, slots], gi) => (
         <div key={date}>
-          <div className={cn("border-b border-border bg-gray-50/60 px-4 py-2", gi > 0 && "border-t-2 border-t-gray-200")}>
+          <div className={cn("border-b border-border bg-background-soft px-4 py-2", gi > 0 && "border-t-2 border-t-border")}>
             <span className="text-[12px] font-extrabold text-text-secondary">{date}</span>
           </div>
           {slots.map((slot) => {
@@ -206,7 +206,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
             const myV = myVotes[slot.id];
             const isTop = topSlotIds?.has(slot.id) ?? false;
             return (
-              <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-gray-50/40" : "bg-white")}>
+              <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-background-soft" : "bg-surface")}>
                 <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 px-4 py-3">
                   <div className="flex flex-col gap-0.5">
                     {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ 현재 최다</span>}
@@ -269,7 +269,7 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: 
                 <span className={cn("text-[18px] font-black leading-none", cfg.col)}>{cfg.symbol}</span>
                 <span className="text-[13px] font-bold text-text-primary">{slot.votes[t]}</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div className={cn("h-full rounded-full", cfg.bar)} style={{ width: `${pct}%` }} />
               </div>
             </div>
@@ -419,7 +419,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       <button
         type="button"
         onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
-        className="flex w-full items-center overflow-hidden rounded-lg border border-border bg-gray-50"
+        className="flex w-full items-center overflow-hidden rounded-lg border border-border bg-background-soft"
       >
         {(["오전", "오후"] as const).map((v) => (
           <span
@@ -433,7 +433,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       </button>
 
       {/* 시 · 분 휠 */}
-      <div className="flex items-center gap-0 rounded-xl border border-border bg-white px-2" style={{ height: 120, overflow: "hidden" }}>
+      <div className="flex items-center gap-0 rounded-xl border border-border bg-background-soft px-2" style={{ height: 120, overflow: "hidden" }}>
         <WheelColumn items={HOURS} value={hour} onChange={setHour} />
         <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
         <WheelColumn items={MINUTES} value={minute} onChange={setMinute} />
@@ -589,19 +589,19 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
               ))}
             </div>
             {deadlineMode === "custom" && (
-              <div className="mt-3 flex gap-2 rounded-xl border border-border bg-gray-50 p-3">
+              <div className="mt-3 flex gap-2 rounded-xl border border-border bg-background-soft p-3">
                 <input
                   type="date"
                   value={customDeadlineDate}
                   min={todayStr}
                   onChange={(e) => setCustomDeadlineDate(e.target.value)}
-                  className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
                 />
                 <input
                   type="time"
                   value={customDeadlineTime}
                   onChange={(e) => setCustomDeadlineTime(e.target.value)}
-                  className="w-28 rounded-lg border border-border bg-white px-3 py-2 text-[13px]"
+                  className="w-28 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
                 />
               </div>
             )}

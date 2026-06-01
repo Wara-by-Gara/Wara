@@ -26,7 +26,7 @@ export const ShareOptionItem = forwardRef<HTMLButtonElement, ShareOptionItemProp
       icon,
       title,
       description,
-      iconBg = "bg-gray-100",
+      iconBg = "bg-surface",
       iconColor = "text-text-primary",
       ...props
     },

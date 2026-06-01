@@ -146,7 +146,7 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
           <div className="flex flex-col gap-1">
             <ShareOptionItem icon="user-check" title="참석만" iconBg="bg-green-50" iconColor="text-green-600" />
             <ShareOptionItem icon="hourglass" title="미정" iconBg="bg-yellow-50" iconColor="text-yellow-400" />
-            <ShareOptionItem icon="user-x" title="불참" iconBg="bg-gray-100" />
+            <ShareOptionItem icon="user-x" title="불참" iconBg="bg-surface" />
             <ShareOptionItem icon="memo" title="메모 있음" iconBg="bg-pink-100" iconColor="text-pink-600" />
           </div>
         </BottomSheetContent>
@@ -155,9 +155,9 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
       <BottomSheet open={state === "sortBottomSheet"} onOpenChange={() => {}}>
         <BottomSheetContent contained title="정렬">
           <div className="flex flex-col gap-1">
-            <ShareOptionItem icon="clock" title="응답 빠른 순" iconBg="bg-gray-100" />
-            <ShareOptionItem icon="hourglass" title="응답 늦은 순" iconBg="bg-gray-100" />
-            <ShareOptionItem icon="user-round" title="이름순" iconBg="bg-gray-100" />
+            <ShareOptionItem icon="clock" title="응답 빠른 순" iconBg="bg-surface" />
+            <ShareOptionItem icon="hourglass" title="응답 늦은 순" iconBg="bg-surface" />
+            <ShareOptionItem icon="user-round" title="이름순" iconBg="bg-surface" />
           </div>
         </BottomSheetContent>
       </BottomSheet>
@@ -173,7 +173,7 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
             <div className="flex flex-col gap-1 pt-2">
               <ShareOptionItem icon="user-check" title="참석으로" iconBg="bg-green-50" iconColor="text-green-600" />
               <ShareOptionItem icon="help-circle" title="미정으로" iconBg="bg-yellow-50" iconColor="text-yellow-400" />
-              <ShareOptionItem icon="user-x" title="불참으로" iconBg="bg-gray-100" />
+              <ShareOptionItem icon="user-x" title="불참으로" iconBg="bg-surface" />
             </div>
           ) : (
             <div className="flex flex-col gap-2 pt-2 text-[14px]">

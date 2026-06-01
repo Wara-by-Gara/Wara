@@ -152,7 +152,7 @@ function TimeWheelPicker({
   return (
     <div className={cn("flex w-full flex-col gap-2 rounded-2xl border border-border bg-surface p-3", disabled && "opacity-40 pointer-events-none")}>
       {/* 오전/오후 토글 */}
-      <div className="flex overflow-hidden rounded-xl border border-border bg-gray-50">
+      <div className="flex overflow-hidden rounded-xl border border-border bg-background-soft">
         {(["오전", "오후"] as const).map((v) => (
           <button
             key={v}
@@ -167,7 +167,7 @@ function TimeWheelPicker({
       </div>
 
       {/* 시·분 휠 */}
-      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-border bg-white px-2" style={{ height: ITEM_H * VISIBLE }}>
+      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-border bg-background-soft px-2" style={{ height: ITEM_H * VISIBLE }}>
         <WheelColumn
           items={HOURS}
           value={hour}
@@ -247,7 +247,7 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
         </div>
 
         {unknownToggle ? (
-          <label className="flex items-center justify-between gap-3 rounded-2xl bg-gray-50 px-4 py-2.5">
+          <label className="flex items-center justify-between gap-3 rounded-2xl bg-background-soft px-4 py-2.5">
             <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
             <Switch
               checked={isUnknown}
