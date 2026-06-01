@@ -98,6 +98,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
           backgroundClass={invitation.bgColor}
           hideBottomGradient
+          fitToImage
         />
 
         <header className="flex flex-col items-start gap-2">
