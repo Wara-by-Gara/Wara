@@ -297,7 +297,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                     }}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
                   >
-                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" name={p.user.nickname ?? undefined} />
                     <span className="text-[14px] text-text-primary">@{p.user.nickname}</span>
                   </button>
                 </li>
