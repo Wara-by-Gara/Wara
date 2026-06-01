@@ -30,8 +30,17 @@ function getKakaoMapKey(): string {
   );
 }
 
+// <, >, &, ' → 유니코드 이스케이프. HTML <script> 블록과 injectJavaScript 양쪽에서 안전.
+function safeJson(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/'/g, '\\u0027');
+}
+
 function buildHtml(kakaoKey: string, eventLocation?: MapEventLocation): string {
-  const evtJson = eventLocation ? JSON.stringify(eventLocation) : 'null';
+  const evtJson = eventLocation ? safeJson(eventLocation) : 'null';
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -206,7 +215,7 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
     if (e.nativeEvent.data === 'ready') {
       setMapReady(true);
       if (pendingParticipantsRef.current) {
-        injectJs(`updateParticipants(${JSON.stringify(pendingParticipantsRef.current)});`);
+        injectJs(`updateParticipants(${safeJson(pendingParticipantsRef.current)});`);
         pendingParticipantsRef.current = null;
       }
       if (pendingMyLocationRef.current) {
@@ -223,7 +232,7 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
       pendingParticipantsRef.current = participants;
       return;
     }
-    injectJs(`updateParticipants(${JSON.stringify(participants)});`);
+    injectJs(`updateParticipants(${safeJson(participants)});`);
   }, [participants, mapReady]);
 
   useEffect(() => {

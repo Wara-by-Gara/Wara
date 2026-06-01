@@ -22,6 +22,15 @@ function getKakaoMapKey(): string {
   );
 }
 
+// <, >, &, ' → 유니코드 이스케이프. HTML <script> 블록과 injectJavaScript 양쪽에서 안전.
+function safeJson(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/'/g, '\\u0027');
+}
+
 function buildHtml(kakaoKey: string): string {
   return `<!DOCTYPE html>
 <html>
@@ -181,7 +190,7 @@ export default function PhotoKakaoMapView({ markers, onMarkerClick }: Props) {
       if (msg.type === 'ready') {
         setMapReady(true);
         if (pendingMarkersRef.current) {
-          injectJs(`updatePhotoMarkers(${JSON.stringify(pendingMarkersRef.current)});`);
+          injectJs(`updatePhotoMarkers(${safeJson(pendingMarkersRef.current)});`);
           pendingMarkersRef.current = null;
         }
       } else if (msg.type === 'photoClick' && msg.markerId) {
@@ -198,7 +207,7 @@ export default function PhotoKakaoMapView({ markers, onMarkerClick }: Props) {
       pendingMarkersRef.current = markers;
       return;
     }
-    injectJs(`updatePhotoMarkers(${JSON.stringify(markers)});`);
+    injectJs(`updatePhotoMarkers(${safeJson(markers)});`);
   }, [markers, mapReady]);
 
   return (
