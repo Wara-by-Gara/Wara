@@ -132,12 +132,17 @@ export class AuthController {
     @Body() body: { refreshToken?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const rawRefreshToken = (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE] ?? body?.refreshToken;
+    const cookieToken = (req.cookies as Record<string, string>)?.[REFRESH_TOKEN_COOKIE];
+    const rawRefreshToken = cookieToken ?? body?.refreshToken;
     if (!rawRefreshToken) {
       throw new UnauthorizedException({ code: ErrorCode.TOKEN_INVALID, message: '유효하지 않은 refresh token입니다.' });
     }
     const result = await this.authService.refresh(rawRefreshToken);
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    // 쿠키 없이 body.refreshToken으로 요청 = 모바일 클라이언트 → 토큰을 body에도 포함
+    if (!cookieToken && body?.refreshToken) {
+      return { accessToken: result.accessToken, refreshToken: result.refreshToken, refreshExpiresIn: result.refreshExpiresIn };
+    }
     return { refreshExpiresIn: result.refreshExpiresIn };
   }
 

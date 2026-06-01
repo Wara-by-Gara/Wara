@@ -21,6 +21,18 @@ export {
   type Invitation,
 } from './invitations';
 export {
+  fetchEventLocation,
+  locationKeys,
+  type EventLocation,
+  type ParticipantLocation,
+} from './locations';
+export {
+  fetchMyPhotoLocations,
+  photoKeys,
+  type MobilePhoto,
+  type MobilePhotoLocation,
+} from './photos';
+export {
   issueDevToken,
   DEV_USER_EMAILS,
   type DevUserEmail,

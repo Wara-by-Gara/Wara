@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, asc, desc, eq,  inArray, isNull,  sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { ListPhotosDto } from './dto/list-photos.dto';
 import {
   NewPhoto,
@@ -201,6 +201,34 @@ export class PhotosRepository {
         .returning({ likeCount: photos.likeCount });
       return updated!.likeCount;
     });
+  }
+
+  // 유저가 참여한 모든 초대장에서 GPS 정보가 있는 사진 조회 (지도 핀용)
+  async findAllWithGpsByUserId(userId: string) {
+    return this.db
+      .select({
+        id: photos.id,
+        participantId: photos.participantId,
+        invitationId: photos.invitationId,
+        imageKey: photos.imageKey,
+        likeCount: photos.likeCount,
+        feedbackCount: photos.feedbackCount,
+        createdAt: photos.createdAt,
+        takenAt: photos.takenAt,
+        exifMetadata: photos.exifMetadata,
+      })
+      .from(photos)
+      .innerJoin(participants, eq(photos.participantId, participants.id))
+      .where(
+        and(
+          eq(participants.userId, userId),
+          isNull(photos.deletedAt),
+          isNotNull(photos.exifMetadata),
+          sql`${photos.exifMetadata}->>'gps_lat' IS NOT NULL`,
+          sql`${photos.exifMetadata}->>'gps_lng' IS NOT NULL`,
+        ),
+      )
+      .orderBy(desc(photos.createdAt));
   }
 
   //리마인드 앨범

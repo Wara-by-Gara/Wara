@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { eventLocations, participantLocations } from '../database/schema';
 import type { SetEventLocationDto } from './dto/set-event-location.dto';
 import type { UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
@@ -11,7 +11,8 @@ export class LocationsRepository {
 
   async findEventLocation(invitationId: string) {
     return this.db.query.eventLocations.findFirst({
-      where: (t, { eq }) => eq(t.invitationId, invitationId),
+      where: (t, { eq, and, isNull }) =>
+        and(eq(t.invitationId, invitationId), isNull(t.deletedAt)),
     });
   }
 
@@ -21,7 +22,7 @@ export class LocationsRepository {
       .values({ invitationId, ...dto })
       .onConflictDoUpdate({
         target: eventLocations.invitationId,
-        set: { ...dto, updatedAt: new Date() },
+        set: { ...dto, deletedAt: null, updatedAt: new Date() },
       })
       .returning();
     return result!;
@@ -29,8 +30,14 @@ export class LocationsRepository {
 
   async deleteEventLocation(invitationId: string) {
     await this.db
-      .delete(eventLocations)
-      .where(eq(eventLocations.invitationId, invitationId));
+      .update(eventLocations)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(
+          eq(eventLocations.invitationId, invitationId),
+          isNull(eventLocations.deletedAt),
+        ),
+      );
   }
 
   async findParticipantById(id: string, invitationId: string) {
