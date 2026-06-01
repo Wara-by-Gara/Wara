@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, isNull, lte, inArray, lt, count } from 'drizzle-orm';
+import { and, eq, isNull, lte, gt, inArray, lt, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import * as schema from '../database/schema';
 import type { NewDateVotePoll, NewDateVoteSlot } from '../database/schema';
@@ -14,7 +14,7 @@ export class DateVoteRepository {
 
   async findInvitationById(id: string) {
     const [row] = await this.db
-      .select({ id: schema.invitations.id, eventStartAt: schema.invitations.eventStartAt })
+      .select({ id: schema.invitations.id, eventStartAt: schema.invitations.eventStartAt, title: schema.invitations.title })
       .from(schema.invitations)
       .where(and(eq(schema.invitations.id, id), isNull(schema.invitations.deletedAt)))
       .limit(1);
@@ -91,15 +91,18 @@ export class DateVoteRepository {
       );
   }
 
-  /** 마감 30분 이내이고 리마인더 미발송인 open 폴 조회 */
+  /** 마감 25~30분 이내이고 리마인더 미발송인 open 폴 조회 (5분 크론 주기와 일치) */
   async findPollsNeedingReminder() {
-    const thirtyMinutesLater = new Date(Date.now() + 30 * 60 * 1000);
+    const now = Date.now();
+    const twentyFiveMinutesLater = new Date(now + 25 * 60 * 1000);
+    const thirtyMinutesLater = new Date(now + 30 * 60 * 1000);
     return this.db
       .select()
       .from(schema.dateVotePolls)
       .where(
         and(
           eq(schema.dateVotePolls.status, 'open'),
+          gt(schema.dateVotePolls.closesAt, twentyFiveMinutesLater),
           lte(schema.dateVotePolls.closesAt, thirtyMinutesLater),
           isNull(schema.dateVotePolls.reminderSentAt),
           isNull(schema.dateVotePolls.deletedAt),

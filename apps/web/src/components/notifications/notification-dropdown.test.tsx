@@ -25,6 +25,7 @@ const defaultProps = {
   isMarkingAllRead: false,
   onMarkAsRead: vi.fn(),
   onMarkAllAsRead: vi.fn(),
+  onDelete: vi.fn(),
   onLoadMore: vi.fn(),
   onOpenSettings: vi.fn(),
 };

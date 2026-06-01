@@ -64,14 +64,16 @@ function TermsAgreeContent() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const { data: terms, isLoading: termsLoading } = useTerms();
-  const { data: myAgreements, isLoading: agreementsLoading } = useMyAgreements();
+  const { data: myAgreements, isLoading: agreementsLoading } =
+    useMyAgreements();
   const { mutate: doAgreeTerms, isPending } = useAgreeTerms();
 
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState('');
 
   const pendingTerms = useMemo(
-    () => terms?.filter((t) => !myAgreements?.some((a) => a.termId === t.id)) ?? [],
+    () =>
+      terms?.filter((t) => !myAgreements?.some((a) => a.termId === t.id)) ?? [],
     [terms, myAgreements],
   );
   const pendingRequired = useMemo(
@@ -89,7 +91,14 @@ function TermsAgreeContent() {
     ) {
       router.replace(returnTo);
     }
-  }, [termsLoading, agreementsLoading, myAgreements, pendingRequired.length, returnTo, router]);
+  }, [
+    termsLoading,
+    agreementsLoading,
+    myAgreements,
+    pendingRequired.length,
+    returnTo,
+    router,
+  ]);
 
   // Sync checked state when pending terms change
   useEffect(() => {
@@ -148,7 +157,9 @@ function TermsAgreeContent() {
             onChange={(e) => handleToggleAll(e.target.checked)}
             className="w-4 h-4 accent-black"
           />
-          <span className="text-sm font-medium">전체 동의</span>
+          <span className="text-sm font-medium" style={{ color: '#000' }}>
+            전체 동의
+          </span>
         </label>
 
         <div className="space-y-2">
@@ -157,16 +168,22 @@ function TermsAgreeContent() {
               key={term.id}
               term={term}
               checked={!!checked[term.id]}
-              onChange={(v) => setChecked((prev) => ({ ...prev, [term.id]: v }))}
+              onChange={(v) =>
+                setChecked((prev) => ({ ...prev, [term.id]: v }))
+              }
             />
           ))}
         </div>
       </div>
 
       <div className="pt-4">
-        {submitError && <p className="text-sm text-red-500 mb-3">{submitError}</p>}
+        {submitError && (
+          <p className="text-sm text-red-500 mb-3">{submitError}</p>
+        )}
         {!isLoggedIn && (
-          <p className="text-sm text-gray-500 mb-3 text-center">로그인 후 동의할 수 있습니다.</p>
+          <p className="text-sm text-gray-500 mb-3 text-center">
+            로그인 후 동의할 수 있습니다.
+          </p>
         )}
         <button
           type="button"
@@ -183,7 +200,11 @@ function TermsAgreeContent() {
 
 export default function TermsAgreePage() {
   return (
-    <Suspense fallback={<p className="text-center text-gray-400 py-10">불러오는 중...</p>}>
+    <Suspense
+      fallback={
+        <p className="text-center text-gray-400 py-10">불러오는 중...</p>
+      }
+    >
       <TermsAgreeContent />
     </Suspense>
   );

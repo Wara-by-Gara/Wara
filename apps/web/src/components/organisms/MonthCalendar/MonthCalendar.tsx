@@ -164,7 +164,7 @@ export function MonthCalendar({
                 "mx-auto flex size-9 items-center justify-center rounded-full text-[14px] font-semibold",
                 !(disablePast && isPast) && "hover-emphasis-sm",
                 disablePast && isPast
-                  ? "cursor-not-allowed text-gray-300"
+                  ? "cursor-not-allowed text-gray-300 line-through opacity-50"
                   : isSelected
                     ? "bg-primary text-white shadow-sm"
                     : dow === 0

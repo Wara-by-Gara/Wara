@@ -109,8 +109,6 @@ export default function HostView({ invitationId, invitation, participantsData }:
           ) : null}
         </header>
 
-        <InformationsContainer invitation={invitation} isHost invitationId={invitationId} />
-        
         {summary && (
           <ParticipantSummaryCard
             variant="host"

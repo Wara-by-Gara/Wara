@@ -52,6 +52,10 @@ export class NotificationsRepository {
     return result!;
   }
 
+  async deleteNotification(id: string) {
+    await this.db.delete(notifications).where(eq(notifications.id, id));
+  }
+
   async markAllAsRead(userId: string) {
     await this.db
       .update(notifications)
