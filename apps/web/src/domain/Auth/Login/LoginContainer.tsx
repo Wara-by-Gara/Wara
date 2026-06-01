@@ -38,12 +38,18 @@ export default function LoginContainer() {
     window.location.href = `${API_BASE}/auth/google/redirect`;
   }
 
+  function handleApple() {
+    setState('appleLoading');
+    window.location.href = `${API_BASE}/auth/apple/redirect`;
+  }
+
   return (
     <Login
       state={state}
       onKakao={handleKakao}
       onNaver={handleNaver}
       onGoogle={handleGoogle}
+      onApple={handleApple}
     />
   );
 }
