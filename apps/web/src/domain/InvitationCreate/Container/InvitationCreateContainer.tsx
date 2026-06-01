@@ -1,3 +1,4 @@
+'use client';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import type { Area } from 'react-easy-crop';
 import { cn } from '@/lib/cn';
