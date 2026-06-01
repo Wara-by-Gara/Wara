@@ -22,7 +22,8 @@ export interface Feedback {
   participantId: string;
   photoId: string | null;
   parentId: string | null;
-  content: string;
+  content: string | null;
+  gifUrl?: string | null;
   likeCount: number;
   likedByMe?: boolean;
   deletedAt: string | null;
@@ -56,13 +57,15 @@ export function createPhotoFeedback(
   content: string,
   parentId?: string,
   mentionedUserIds?: string[],
+  gifUrl?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
     {
-      content,
+      ...(content && { content }),
       ...(parentId && { parentId }),
       ...(mentionedUserIds?.length && { mentionedUserIds }),
+      ...(gifUrl && { gifUrl }),
     },
   );
 }
@@ -86,12 +89,14 @@ export function createInvitationFeedback(
   parentId?: string,
   attachedPhotoId?: string,
   mentionedUserIds?: string[],
+  gifUrl?: string,
 ): Promise<Feedback> {
   return apiPost<Feedback>(`/invitations/${invitationId}/feedbacks`, {
-    content,
+    ...(content && { content }),
     ...(parentId && { parentId }),
     ...(attachedPhotoId && { attachedPhotoId }),
     ...(mentionedUserIds?.length && { mentionedUserIds }),
+    ...(gifUrl && { gifUrl }),
   });
 }
 

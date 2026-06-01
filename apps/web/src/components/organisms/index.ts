@@ -1,4 +1,5 @@
 export * from "./CommentInputBar";
+export * from "./GifPicker";
 export * from "./CommentItem";
 export * from "./EmptyState";
 export * from "./ErrorState";

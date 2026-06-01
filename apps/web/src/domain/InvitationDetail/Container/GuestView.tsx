@@ -68,7 +68,8 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
+  const hasGif = invitation.mainCoverType === "gif";
+  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
 
   const allParticipants = participantsData?.participants ?? [];
   const attendingParticipants = allParticipants.filter(
@@ -92,8 +93,9 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
       <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6">
         <InvitationCover
-          variant={hasImage ? "image" : "color"}
-          imageUrl={hasImage ? invitation.mainImageUrl : undefined}
+          variant={hasGif || hasImage ? "image" : "color"}
+          imageUrl={hasImage ? (invitation.mainImageUrl ?? undefined) : undefined}
+          gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
           backgroundClass={invitation.bgColor}
           hideBottomGradient
         />

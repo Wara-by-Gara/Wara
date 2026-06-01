@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "fastly.picsum.photos" },
       // Pravatar — 시드 데이터 프로필 아바타
       { protocol: "https", hostname: "i.pravatar.cc" },
+      // Klipy GIF CDN
+      { protocol: "https", hostname: "static.klipy.com" },
     ],
   },
 };

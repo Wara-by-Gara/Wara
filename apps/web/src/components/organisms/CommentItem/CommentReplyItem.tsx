@@ -10,7 +10,7 @@ import { renderMentions } from "./renderMentions";
 
 export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
-export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CommentReplyItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
   id?: string;
   variant?: CommentReplyVariant;
   authorName: string;
@@ -18,7 +18,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
-  content: string;
+  content?: string | null;
   /** 답글 대상 (@멘션) */
   replyToName?: string;
   /** 사진 첨부 URL */

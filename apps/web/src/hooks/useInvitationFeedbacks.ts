@@ -40,7 +40,7 @@ export function useInvitationFeedback(invitationId: string) {
     enabled: !!invitationId,
   });
 
-  const submitComment = async (content: string, parentId?: string, attachedFile?: File, mentionedUserIds?: string[]) => {
+  const submitComment = async (content: string, parentId?: string, attachedFile?: File, mentionedUserIds?: string[], gifUrl?: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
@@ -55,7 +55,7 @@ export function useInvitationFeedback(invitationId: string) {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.photos(invitationId) });
         }
       }
-      await createInvitationFeedback(invitationId, content, parentId, attachedPhotoId, mentionedUserIds);
+      await createInvitationFeedback(invitationId, content, parentId, attachedPhotoId, mentionedUserIds, gifUrl);
       queryClient.invalidateQueries({ queryKey });
     } finally {
       setIsSubmitting(false);

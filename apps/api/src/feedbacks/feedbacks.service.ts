@@ -96,8 +96,8 @@ export class FeedbacksService {
   private applyDeletedPlaceholder<
     T extends {
       deletedAt: Date | null;
-      content: string;
-      replies?: Array<{ deletedAt: Date | null; content: string }>;
+      content: string | null;
+      replies?: Array<{ deletedAt: Date | null; content: string | null }>;
     },
   >(feedbacks: T[]) {
     return feedbacks.map((f) => ({
@@ -159,7 +159,8 @@ export class FeedbacksService {
     const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
-      content: dto.content,
+      content: dto.content ?? null,
+      gifUrl: dto.gifUrl ?? null,
       parentId: dto.parentId,
       attachedPhotoId: dto.attachedPhotoId,
     });
@@ -208,7 +209,8 @@ export class FeedbacksService {
       participantId: participant.id,
       invitationId,
       photoId,
-      content: dto.content,
+      content: dto.content ?? null,
+      gifUrl: dto.gifUrl ?? null,
       parentId: dto.parentId,
     });
 
@@ -265,7 +267,7 @@ export class FeedbacksService {
     dto: UpdateFeedbackDto,
   ) {
     await this.checkOwner(invitationId, feedbackId, participant.userId);
-    return this.repository.update(feedbackId, dto.content);
+    return this.repository.update(feedbackId, { content: dto.content, gifUrl: dto.gifUrl });
   }
 
   //댓글 삭제

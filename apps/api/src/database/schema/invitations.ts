@@ -1,7 +1,7 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { invitationStatusEnum, linkEventTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
+import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
 import { users } from './users';
 
 export const invitationTemplates = pgTable('invitation_templates', {
@@ -26,9 +26,9 @@ export const invitations = pgTable('invitations', {
   status: invitationStatusEnum('status').notNull().default('active'),
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description').notNull(),
-  mainImageKey: text('main_image_key').notNull(),
-  mainImageFrame: varchar('main_image_frame', { length: 10 }).notNull().default('default'),
-  uploadedImageKey: text('uploaded_image_key'),
+  mainCoverType: mainCoverTypeEnum('main_cover_type').notNull().default('image'),
+  mainImageKey: text('main_image_key'),
+  mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   bgColor: varchar('bg_color', { length: 50 }).notNull().default('bg-white'),
@@ -42,7 +42,10 @@ export const invitations = pgTable('invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  check('check_cover_type_image', sql`${t.mainCoverType} <> 'image' OR (${t.mainImageKey} IS NOT NULL AND ${t.mainGifUrl} IS NULL)`),
+  check('check_cover_type_gif', sql`${t.mainCoverType} <> 'gif' OR (${t.mainGifUrl} IS NOT NULL AND ${t.mainImageKey} IS NULL)`),
+]);
 
 export const participants = pgTable('participants', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),

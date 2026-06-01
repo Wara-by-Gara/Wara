@@ -117,22 +117,22 @@ export const Comments = ({ invitationId }: Props) => {
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
                       onAvatarClick: !isReplyDeleted ? () => setProfileModal({ userId: r.participant.userId, isHost: r.participant.memberRole === 'HOST' }) : undefined,
                       createdAt: timeAgo(r.createdAt),
-                      content: r.content,
+                      content: r.content ?? '',
                       variant: isReplyDeleted ? ("deleted" as const) : isReplyMine ? ("mine" as const) : ("default" as const),
-                      moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+                      moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content ?? '') : undefined,
                       editingSlot: isReplyEditing ? (
                         <InlineCommentEditor
-                          initialValue={r.content}
+                          initialValue={r.content ?? ''}
                           onSubmit={handleEdit}
                           onCancel={() => setEditingComment(undefined)}
                         />
                       ) : undefined,
                     };
                   })}
-                  moreMenuItems={isMine ? buildMenuItems(f.id, f.content) : undefined}
+                  moreMenuItems={isMine ? buildMenuItems(f.id, f.content ?? '') : undefined}
                   editingSlot={isEditing ? (
                     <InlineCommentEditor
-                      initialValue={f.content}
+                      initialValue={f.content ?? ''}
                       onSubmit={handleEdit}
                       onCancel={() => setEditingComment(undefined)}
                     />
@@ -152,9 +152,6 @@ export const Comments = ({ invitationId }: Props) => {
           </div>
         )}
         <CommentInputBar
-          avatarUrl={me?.profileImageUrl ?? undefined}
-          authorName={me?.name ?? undefined}
-          authorInitialName={me?.name ?? undefined}
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);

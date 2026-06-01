@@ -5,9 +5,7 @@ import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useParticipants } from '@/hooks/useParticipants';
-import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
-import { CommentInputBar } from '@/components/organisms';
-import { Icon } from '@/components/icons';
+import { CommentInputBar, GifPicker } from '@/components/organisms';
 import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
@@ -47,6 +45,8 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
+  const [pendingGif, setPendingGif] = useState<string | null>(null);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
@@ -77,6 +77,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
     e.target.value = '';
     if (!file) return;
     setPendingFile(file);
+    setPendingGif(null);
     const reader = new FileReader();
     reader.onload = () => setPendingPreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -86,6 +87,14 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
     setPendingFile(null);
     setPendingPreview(null);
   };
+
+  const handleGifSelect = (gifUrl: string) => {
+    setPendingGif(gifUrl);
+    clearPendingFile();
+    setGifPickerOpen(false);
+  };
+
+  const clearPendingGif = () => setPendingGif(null);
 
   const handlePhotoClick = async (photoId: string) => {
     const photo = await getPhoto(invitationId, photoId);
@@ -112,7 +121,8 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                   ? (currentUserProfileImageUrl ?? undefined)
                   : (f.participant.user?.profileImageUrl ?? undefined)
               }
-              content={f.deletedAt ? '' : f.content}
+              content={f.deletedAt ? '' : (f.content ?? '')}
+              gifUrl={!f.deletedAt ? (f.gifUrl ?? undefined) : undefined}
               createdAt={timeAgo(f.createdAt)}
               imageUrl={(f.attachedPhoto?.url ?? f.photo?.url) ?? undefined}
               onImageClick={(f.attachedPhoto || f.photo) ? () => handlePhotoClick((f.attachedPhoto ?? f.photo)!.id) : undefined}
@@ -137,7 +147,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                         label: '수정',
                         onClick: () => {
                           setEditingId(f.id);
-                          setEditContent(f.content);
+                          setEditContent(f.content ?? '');
                         },
                         className: 'text-blue-500',
                       },
@@ -186,8 +196,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                     r.participant.userId === currentUserId
                       ? (currentUserProfileImageUrl ?? undefined)
                       : (r.participant.user?.profileImageUrl ?? undefined),
-                  onAvatarClick: !isReplyDeleted ? () => setProfileModal({ userId: r.participant.userId, isHost: r.participant.memberRole === 'HOST' }) : undefined,
-                  content: r.deletedAt ? '' : r.content,
+                  content: r.deletedAt ? '' : (r.content ?? ''),
                   createdAt: timeAgo(r.createdAt),
                   variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
                   likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
@@ -196,7 +205,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                   moreMenuItems: isReplyMine ? [
                     {
                       label: '수정',
-                      onClick: () => { setEditingId(r.id); setEditContent(r.content); },
+                      onClick: () => { setEditingId(r.id); setEditContent(r.content ?? ''); },
                       className: 'text-blue-500',
                     },
                     {
@@ -296,40 +305,35 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           )}
         </div>
       )}
-      <div className="flex items-center">
-        <button
-          type="button"
-          aria-label="사진 첨부"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex size-11 shrink-0 items-center justify-center text-text-tertiary hover:text-text-secondary"
-        >
-          <Icon name="camera" size="sm" color="currentColor" decorative />
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        <div className="flex-1">
-          <CommentInputBar
-            avatarUrl={currentUserProfileImageUrl ?? undefined}
-            authorName={currentUserDisplayName ?? undefined}
-            placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
-            value={inputValue}
-            onValueChange={setInputValue}
-            onSubmit={async (text) => {
-              await submitComment(text, replyingTo?.id, pendingFile ?? undefined, mentionedUserIds.length ? mentionedUserIds : undefined);
-              setReplyingTo(null);
-              clearPendingFile();
-              setInputValue('');
-              setMentionedUserIds([]);
-            }}
-            state={isSubmitting ? 'submitting' : 'default'}
-          />
-        </div>
-      </div>
+      {gifPickerOpen ? (
+        <GifPicker onSelect={handleGifSelect} onClose={() => setGifPickerOpen(false)} />
+      ) : null}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <CommentInputBar
+        placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+        value={inputValue}
+        onValueChange={setInputValue}
+        pendingGif={pendingGif}
+        onGifClear={clearPendingGif}
+        onGifButtonClick={() => setGifPickerOpen((v) => !v)}
+        onPhotoButtonClick={() => fileInputRef.current?.click()}
+        onSubmit={async (text) => {
+          await submitComment(text, replyingTo?.id, pendingFile ?? undefined, mentionedUserIds.length ? mentionedUserIds : undefined, pendingGif ?? undefined);
+          setReplyingTo(null);
+          clearPendingFile();
+          clearPendingGif();
+          setGifPickerOpen(false);
+          setInputValue('');
+          setMentionedUserIds([]);
+        }}
+        state={isSubmitting ? 'submitting' : 'default'}
+      />
       {selectedPhoto ? (
         <PhotoDetailModal
           photos={[selectedPhoto]}

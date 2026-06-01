@@ -23,6 +23,7 @@ import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { createInvitation, getInvitationImagePresignedUrl, uploadImageToS3 } from "@/lib/api/invitations";
+import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
 import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
@@ -218,6 +219,11 @@ export default function InvitationCreateContainer() {
   const [selectedPackId, setSelectedPackId] = useState<string>("default");
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [editingRsvp, setEditingRsvp] = useState<RsvpType | null>(null);
+  // main image
+  const [mainGifUrl, setMainGifUrl] = useState("");
+  const [imageTab, setImageTab] = useState<"upload" | "gif">("upload");
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -298,7 +304,7 @@ export default function InvitationCreateContainer() {
       const invitation = await createInvitation({
         title: form.title,
         description: form.description,
-        mainImageKey: form.mainImageKey,
+        ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
         templateId: form.templateId || undefined,
         eventStartAt: toEventStartAt(form.date, form.time),
         bgColor: designBgColor,
@@ -347,6 +353,8 @@ export default function InvitationCreateContainer() {
   const handleImageFile = async (file: File) => {
     setImageUploading(true);
     setImageUploadError(false);
+    setMainGifUrl("");
+    setLocalPreviewUrl(URL.createObjectURL(file));
     try {
       const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
       const { presignedUrl, key } = await getInvitationImagePresignedUrl(file.name, contentType);
@@ -354,6 +362,7 @@ export default function InvitationCreateContainer() {
       set({ mainImageKey: key });
       setImageError(false);
     } catch {
+      setLocalPreviewUrl(null);
       setImageUploadError(true);
     } finally {
       setImageUploading(false);
@@ -474,8 +483,10 @@ export default function InvitationCreateContainer() {
                 onClick={() => {
                   if (form.templateId === t.id) {
                     set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   } else {
                     set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   }
                 }}
               />
@@ -498,7 +509,7 @@ export default function InvitationCreateContainer() {
   // basicInfo
   if (step === "basicInfo") {
     const handleNext = () => {
-      const needsImage = !form.templateId && form.mainImageKey === DEFAULT_COVER_KEY;
+      const needsImage = !form.templateId && form.mainImageKey === DEFAULT_COVER_KEY && !mainGifUrl;
       if (needsImage) { setImageError(true); }
       if (!form.title.trim()) { setTitleError(true); }
       if (needsImage || !form.title.trim()) return;
@@ -514,50 +525,120 @@ export default function InvitationCreateContainer() {
           <FormField label="대표 이미지">
             {form.templateId ? (
               <InvitationCover
-                imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-                variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+                imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+                variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
               />
             ) : (
               <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
-                />
-                {imageUploading ? (
-                  <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
-                    <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-                  </div>
-                ) : imageUploadError ? (
-                  <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
-                    <Icon name="alert-triangle" size="lg" color="danger" decorative />
-                    <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
-                  </div>
-                ) : form.mainImageKey === DEFAULT_COVER_KEY ? (
+                {/* 탭: 이미지 업로드 / GIF */}
+                <div className="mb-3 flex gap-2">
                   <button
                     type="button"
+                    onClick={() => setImageTab("upload")}
                     className={cn(
-                      "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
-                      imageError ? "border-danger bg-red-50" : "border-border-strong bg-gray-50",
+                      "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
+                      imageTab === "upload" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
                     )}
-                    onClick={() => { fileInputRef.current?.click(); }}
                   >
-                    <div className="flex flex-col items-center gap-2 text-text-tertiary">
-                      <Icon name="image" size="xl" color={imageError ? "danger" : "inactive"} decorative />
-                      <span className={cn("text-[13px]", imageError && "text-danger")}>
-                        {imageError ? "대표 이미지를 추가해주세요" : "사진을 추가해보세요"}
-                      </span>
-                    </div>
+                    이미지 업로드
                   </button>
-                ) : (
-                  <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                    <InvitationCover
-                      imageUrl={form.mainImageKey}
-                      variant="image"
+                  <button
+                    type="button"
+                    onClick={() => setImageTab("gif")}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
+                      imageTab === "gif" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
+                    )}
+                  >
+                    GIF
+                  </button>
+                </div>
+
+                {imageTab === "upload" ? (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
                     />
-                  </button>
+                    {imageUploading ? (
+                      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
+                        <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+                      </div>
+                    ) : imageUploadError ? (
+                      <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                        <Icon name="alert-triangle" size="lg" color="danger" decorative />
+                        <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
+                      </div>
+                    ) : !localPreviewUrl && form.mainImageKey === DEFAULT_COVER_KEY ? (
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-red-50" : "border-border-strong bg-gray-50",
+                        )}
+                        onClick={() => { fileInputRef.current?.click(); }}
+                      >
+                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                          <Icon name="image" size="xl" color={imageError ? "danger" : "inactive"} decorative />
+                          <span className={cn("text-[13px]", imageError && "text-danger")}>
+                            {imageError ? "대표 이미지를 추가해주세요" : "사진을 추가해보세요"}
+                          </span>
+                        </div>
+                      </button>
+                    ) : (
+                      <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                        <InvitationCover
+                          imageUrl={localPreviewUrl ?? form.mainImageKey}
+                          variant="image"
+                        />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {mainGifUrl ? (
+                      <div className="relative w-full">
+                        <button type="button" className="w-full" onClick={() => setGifPickerOpen(true)}>
+                          <InvitationCover gifUrl={mainGifUrl} variant="image" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setMainGifUrl(""); setGifPickerOpen(false); }}
+                          className="absolute right-2 top-2 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/50 text-white"
+                          aria-label="GIF 제거"
+                        >
+                          <Icon name="x" size="sm" color="currentColor" decorative />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-red-50" : "border-border-strong bg-gray-50",
+                        )}
+                        onClick={() => setGifPickerOpen(true)}
+                      >
+                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                          <span className={cn("text-[28px] font-bold", imageError && "text-danger")}>GIF</span>
+                          <span className={cn("text-[13px]", imageError && "text-danger")}>
+                            {imageError ? "대표 이미지를 추가해주세요" : "GIF를 선택해보세요"}
+                          </span>
+                        </div>
+                      </button>
+                    )}
+                    {gifPickerOpen ? (
+                      <div className="mt-2">
+                        <GifPicker
+                          onSelect={(url) => { setMainGifUrl(url); set({ mainImageKey: DEFAULT_COVER_KEY }); setLocalPreviewUrl(null); setGifPickerOpen(false); setImageError(false); }}
+                          onClose={() => setGifPickerOpen(false)}
+                        />
+                      </div>
+                    ) : null}
+                  </>
                 )}
               </>
             )}
@@ -876,8 +957,8 @@ export default function InvitationCreateContainer() {
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 미리보기 */}
         <InvitationCover
-          imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-          variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+          imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+          variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
         >
           {form.title ? (
             <p className={cn("text-[22px] font-bold text-white", DESIGN_FONTS.find((f) => f.id === designFont)?.style)}>

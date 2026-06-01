@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Badge, type BadgeProps } from "@/components/primitives/Badge";
 import { cn } from "@/lib/cn";
@@ -95,8 +96,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
       >
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
           {showImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="size-full object-cover" />
+            <Image src={imageUrl} alt="" fill unoptimized className="object-cover" />
           ) : (
             <div className="flex size-full items-center justify-center">
               <Icon name="ticket" size="xl" color="inactive" decorative />
