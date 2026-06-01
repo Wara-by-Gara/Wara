@@ -2,6 +2,7 @@
 
 import { forwardRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -163,11 +164,16 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       type="button"
                       onClick={onLike}
                       className={cn(
-                        "text-[13px] font-semibold transition-colors",
+                        "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
                         liked ? "text-primary" : "text-text-tertiary hover:text-primary",
                       )}
                     >
-                      ♥ {likeCount ?? 0}
+                      {liked ? (
+                        <IoHeart className="size-3.5 shrink-0" aria-hidden />
+                      ) : (
+                        <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+                      )}
+                      {likeCount ?? 0}
                     </button>
                   ) : null}
                 </div>

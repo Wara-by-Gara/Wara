@@ -83,7 +83,7 @@ export default function PhotoDetailModal({
   if (!photo) return null;
 
   const currentLikeCount = likeCountMap.get(photo.id) ?? photo.likeCount;
-  const currentLiked = likedMap.get(photo.id) ?? false;
+  const currentLiked = likedMap.get(photo.id) ?? photo.liked ?? false;
 
   const handleSave = async () => {
     const items = await getDownloadUrls(photo.invitationId, [photo.id]);
@@ -100,10 +100,19 @@ export default function PhotoDetailModal({
 
   const handleLike = async () => {
     if (isLiking) return;
+
+    const prevLiked = currentLiked;
+    const prevCount = currentLikeCount;
+    const optimisticLiked = !prevLiked;
+    const optimisticCount = optimisticLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
+
+    onLikeChange(photo.id, optimisticLiked, optimisticCount);
     setIsLiking(true);
     try {
       const result = await togglePhotoLike(photo.invitationId, photo.id);
       onLikeChange(photo.id, result.liked, result.likeCount);
+    } catch {
+      onLikeChange(photo.id, prevLiked, prevCount);
     } finally {
       setIsLiking(false);
     }

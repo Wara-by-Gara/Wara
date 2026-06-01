@@ -117,7 +117,7 @@ export const ParticipantProfileModal = ({
         {/* 상세 정보 */}
         <div className="flex flex-col gap-3 px-5 py-4">
           {bio ? (
-            <div className="rounded-2xl bg-gray-50 px-4 py-3">
+            <div className="rounded-2xl bg-background-soft px-4 py-3">
               <p className="text-[14px] text-text-secondary">{bio}</p>
             </div>
           ) : null}

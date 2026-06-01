@@ -141,7 +141,7 @@ export const MapPage = ({
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="지도" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto bg-gray-100">
+        <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto bg-background">
           <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
         </main>
       </div>
@@ -256,7 +256,7 @@ export const MapPage = ({
               {(searchResults ?? []).map((r) => (
                 <li
                   key={r.placeId}
-                  className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-gray-50"
+                  className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-surface"
                   onClick={() => onSelectPlace?.(r)}
                 >
                   <Icon name="map-pin" size="sm" color="inactive" decorative />

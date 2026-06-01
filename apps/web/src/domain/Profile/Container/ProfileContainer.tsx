@@ -5,6 +5,7 @@ import { useMe } from '@/hooks/useUsers';
 import { useMyInvitations } from '@/hooks/useInvitations';
 import { MyPage } from '@/screens/MyPage';
 import { ROUTES } from '@/constants/routes';
+import { getInvitationCoverImageUrl } from '@/domain/InvitationList/invitationListUtils';
 import { formatInvitationEventDate } from '@/utils/formatInvitationEventDate';
 
 export default function ProfileContainer() {
@@ -16,7 +17,7 @@ export default function ProfileContainer() {
     id: inv.id,
     title: inv.title,
     date: formatInvitationEventDate(inv.eventStartAt),
-    imageUrl: inv.mainImageUrl ?? undefined,
+    imageUrl: getInvitationCoverImageUrl(inv) || undefined,
     variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
 

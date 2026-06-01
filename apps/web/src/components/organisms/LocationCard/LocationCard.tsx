@@ -52,7 +52,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-2 rounded-3xl border border-dashed border-border-strong bg-gray-50 p-5 text-center",
+            "flex flex-col gap-2 rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center",
             className,
           )}
           {...props}

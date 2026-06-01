@@ -209,18 +209,18 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
           <FormField label="대표 이미지">
             {step === "coverImageEmpty" ? (
-              <button type="button" className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed border-border-strong bg-gray-50">
+              <button type="button" className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed border-border-strong bg-background-soft">
                 <div className="flex flex-col items-center gap-2 text-text-tertiary">
                   <Icon name="image" size="xl" color="inactive" decorative />
                   <span className="text-[13px]">사진을 추가해보세요</span>
                 </div>
               </button>
             ) : step === "coverImageUploading" ? (
-              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
+              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
                 <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
               </div>
             ) : step === "coverImageUploadFailed" ? (
-              <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+              <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-danger-soft">
                 <Icon name="alert-triangle" size="lg" color="danger" decorative />
                 <Button variant="text" size="sm">다시 시도</Button>
               </div>
@@ -547,7 +547,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="QR 코드" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
-          <div className="size-64 rounded-3xl bg-gray-100 grid place-items-center">
+          <div className="size-64 rounded-3xl bg-surface grid place-items-center">
             <Icon name="qrcode" size="xl" decorative className="size-32" />
           </div>
           <Button variant="outline" size="md">이미지로 저장</Button>

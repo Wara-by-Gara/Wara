@@ -69,7 +69,7 @@ export default function CustomerSupportPage() {
                   {item.question}
                 </MenuItem>
                 {isOpen && (
-                  <div className="bg-gray-50 px-4 py-3">
+                  <div className="bg-background-soft px-4 py-3">
                     <p className="text-[14px] leading-relaxed text-text-secondary">
                       {item.answer}
                     </p>

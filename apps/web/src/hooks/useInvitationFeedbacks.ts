@@ -2,7 +2,7 @@ import { createInvitationFeedback, deleteFeedback, getInvitationFeedbacks, toggl
 import { getPresignedUrl, registerPhoto } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const ALLOWED_CONTENT_TYPES: Record<string, string> = {
   'image/jpeg': 'image/jpeg',
@@ -26,6 +26,7 @@ export function useInvitationFeedback(invitationId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
+  const pendingLikeIdsRef = useRef<Set<string>>(new Set());
 
   const query = useInfiniteQuery({
     queryKey,
@@ -79,17 +80,25 @@ export function useInvitationFeedback(invitationId: string) {
   };
 
   const toggleLike = async (feedbackId: string, currentLiked: boolean, currentCount: number) => {
+    if (pendingLikeIdsRef.current.has(feedbackId)) return;
+
     const newLiked = !currentLiked;
-    setLikedMap(prev => new Map(prev).set(feedbackId, newLiked));
-    setLikeCountMap(prev => new Map(prev).set(feedbackId, newLiked ? currentCount + 1 : currentCount - 1));
+    const newCount = Math.max(0, newLiked ? currentCount + 1 : currentCount - 1);
+
+    pendingLikeIdsRef.current.add(feedbackId);
+    setLikedMap((prev) => new Map(prev).set(feedbackId, newLiked));
+    setLikeCountMap((prev) => new Map(prev).set(feedbackId, newCount));
+
     try {
-      await toggleFeedbackLike(invitationId, feedbackId);
-      setLikedMap(prev => { const m = new Map(prev); m.delete(feedbackId); return m; });
-      setLikeCountMap(prev => { const m = new Map(prev); m.delete(feedbackId); return m; });
+      const { liked } = await toggleFeedbackLike(invitationId, feedbackId);
+      setLikedMap((prev) => new Map(prev).set(feedbackId, liked));
+      setLikeCountMap((prev) => new Map(prev).set(feedbackId, newCount));
       queryClient.invalidateQueries({ queryKey });
     } catch {
-      setLikedMap(prev => new Map(prev).set(feedbackId, currentLiked));
-      setLikeCountMap(prev => new Map(prev).set(feedbackId, currentCount));
+      setLikedMap((prev) => new Map(prev).set(feedbackId, currentLiked));
+      setLikeCountMap((prev) => new Map(prev).set(feedbackId, currentCount));
+    } finally {
+      pendingLikeIdsRef.current.delete(feedbackId);
     }
   };
 

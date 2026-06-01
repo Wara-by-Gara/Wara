@@ -103,7 +103,7 @@ export const Home = ({
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pt-14">
         <div className="flex flex-col gap-5 pb-6">
           <div className="flex flex-col gap-1.5 px-5 pt-3">
-            <h2 className="font-gmarket text-[22px] font-medium leading-tight text-white">
+            <h2 className="font-gmarket text-[22px] font-bold leading-tight text-white">
               안녕하세요, {me.name ?? me.nickname}님!
             </h2>
             <p className="font-gmarket text-[15px] leading-tight text-white">

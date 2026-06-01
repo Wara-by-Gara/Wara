@@ -50,7 +50,7 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="QR 코드" onBack={onBack ?? (() => {})} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6">
-          <div className="size-64 rounded-3xl bg-gray-100 grid place-items-center">
+          <div className="size-64 rounded-3xl bg-surface grid place-items-center">
             <Icon name="qrcode" size="xl" color="default" decorative className="size-32" />
           </div>
           <p className="text-[14px] text-text-secondary">이 QR로 초대장을 공유할 수 있어요</p>
@@ -154,7 +154,7 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
         ) : null}
 
         {state === "noParticipants" ? (
-          <section className="rounded-3xl border border-dashed border-border-strong bg-gray-50 p-5 text-center">
+          <section className="rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center">
             <p className="text-[15px] font-semibold text-text-primary">아직 참석자가 없어요</p>
             <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
             <Button variant="primary" size="md" className="mt-3">공유하기</Button>
@@ -205,7 +205,7 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
       <BottomSheet open={state === "shareSheetOpen"} onOpenChange={() => {}}>
         <BottomSheetContent contained title="공유하기">
           <div className="flex flex-col gap-1">
-            <ShareOptionItem icon="link" title="링크 복사" iconBg="bg-gray-100" />
+            <ShareOptionItem icon="link" title="링크 복사" iconBg="bg-surface" />
             <ShareOptionItem icon="message-circle" title="카카오톡 공유" iconBg="bg-yellow-300" iconColor="text-gray-900" />
             <ShareOptionItem icon="qrcode" title="QR 코드" iconBg="bg-sky-100" iconColor="text-sky-500" />
             <ShareOptionItem icon="download" title="이미지로 저장" iconBg="bg-pink-100" iconColor="text-pink-600" />

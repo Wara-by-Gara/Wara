@@ -246,7 +246,7 @@ export default function MainImageEditor({
             <button
               type="button"
               onClick={() => setCropSrc(null)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow]"
+              className="flex-1 px-4 py-2 border border-border-strong text-text-primary rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow]"
             >
               취소
             </button>
@@ -262,9 +262,9 @@ export default function MainImageEditor({
         </div>
       ) : isApplyingAi && pendingJobId ? (
         /* AI 백그라운드 처리 중 */
-        <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
-          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-          <p className="text-sm text-gray-600">
+        <div className="flex items-center gap-3 px-4 py-3 bg-background-soft rounded-xl">
+          <div className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          <p className="text-sm text-text-secondary">
             AI가 사진을 만들고 있어요. 다른 작업을 계속하셔도 됩니다.
           </p>
         </div>
@@ -275,7 +275,7 @@ export default function MainImageEditor({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isApplyingAi}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow] text-sm"
+            className="flex-1 px-4 py-2 border border-border-strong text-text-primary rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow] text-sm"
           >
             사진 선택
           </button>
@@ -310,11 +310,11 @@ export default function MainImageEditor({
           aria-labelledby="ai-limit-title"
           className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
         >
-          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+          <div className="bg-surface rounded-2xl shadow-lg max-w-sm w-full p-6">
             <p id="ai-limit-title" className="text-lg font-semibold mb-1">
               오늘의 AI 사용 횟수를 모두 썼어요
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               하루 3회까지 사용할 수 있어요. 내일 다시 시도해주세요.
             </p>
             <button
@@ -336,18 +336,18 @@ export default function MainImageEditor({
           aria-labelledby="ai-complete-title"
           className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
         >
-          <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6">
+          <div className="bg-surface rounded-2xl shadow-lg max-w-sm w-full p-6">
             <p id="ai-complete-title" className="text-lg font-semibold mb-1">
               AI 사진이 완성됐어요! 🎉
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               AI 탭을 확인하고 마음에 들면 적용해보세요.
             </p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowAiCompletePopup(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm transition-[color,transform,box-shadow] text-sm"
+                className="flex-1 px-4 py-2 border border-border-strong text-text-primary rounded-lg hover-emphasis-sm transition-[color,transform,box-shadow] text-sm"
               >
                 나중에
               </button>
