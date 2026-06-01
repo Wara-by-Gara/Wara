@@ -8,14 +8,14 @@ import { cn } from "@/lib/cn";
 const chipVariants = cva(
   [
     "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[13px] font-medium",
-    "transition-colors border select-none",
+    "transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter] border select-none",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
   ],
   {
     variants: {
       variant: {
-        selectable: "border-border bg-surface text-text-primary hover:bg-gray-50",
-        filter: "border-border bg-surface text-text-secondary hover:bg-gray-50",
+        selectable: "border-border bg-surface text-text-primary hover-emphasis-sm",
+        filter: "border-border bg-surface text-text-secondary hover-emphasis-sm",
         category: "border-transparent bg-gray-100 text-text-primary",
         status: "border-transparent bg-primary-soft text-primary",
         removable: "border-border bg-surface text-text-primary",
@@ -63,7 +63,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
           role="button"
           tabIndex={-1}
           aria-label="제거"
-          className="-mr-1 inline-flex size-4 items-center justify-center rounded-full hover:bg-gray-200"
+          className="-mr-1 inline-flex size-4 items-center justify-center rounded-full hover-emphasis-sm"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();

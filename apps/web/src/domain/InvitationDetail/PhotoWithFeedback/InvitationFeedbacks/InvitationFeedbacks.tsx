@@ -3,27 +3,25 @@
 import { useRef, useState } from 'react';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
+import { useMe } from '@/hooks/useUsers';
 import { useParticipants } from '@/hooks/useParticipants';
 import { CommentInputBar, GifPicker } from '@/components/organisms';
 import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
-import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
+import { ParticipantProfileModal } from '@/components/organisms/ParticipantProfileModal/ParticipantProfileModal';
 
 interface Props {
   invitationId: string;
-  currentUserId: string | null;
-  currentUserDisplayName?: string | null;
-  currentUserProfileImageUrl?: string | null;
 }
 
-export default function InvitationFeedbacks({
-  invitationId,
-  currentUserId,
-  currentUserDisplayName,
-  currentUserProfileImageUrl,
-}: Props) {
+export default function InvitationFeedbacks({ invitationId }: Props) {
+  const { data: me } = useMe();
+  const currentUserId = me?.id ?? null;
+  const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
+  const currentUserDisplayName = me?.name ?? null;
+
   const {
     data,
     submitComment,
@@ -42,6 +40,7 @@ export default function InvitationFeedbacks({
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [profileModal, setProfileModal] = useState<{ userId: string; isHost: boolean } | null>(null);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -104,7 +103,11 @@ export default function InvitationFeedbacks({
 
   return (
     <div className="mt-4">
-      <div className="flex flex-col">
+      <div className="rounded-3xl border border-border bg-surface p-4">
+        <h3 className="mb-3 text-[15px] font-bold text-text-primary">
+          댓글 {allRows.length}
+        </h3>
+        <div className="flex flex-col">
         {allRows.map((f) => (
           <div key={f.id}>
             <CommentItem
@@ -126,6 +129,7 @@ export default function InvitationFeedbacks({
               likeCount={!f.deletedAt ? getLikeCount(f.id, f.likeCount) : undefined}
               liked={!f.deletedAt ? getLiked(f.id, f.likedByMe ?? false) : undefined}
               onLike={!f.deletedAt ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined}
+              onAvatarClick={!f.deletedAt ? () => setProfileModal({ userId: f.participant.userId, isHost: f.participant.memberRole === 'HOST' }) : undefined}
               onReply={!f.deletedAt ? () => setReplyingTo({ id: f.id, authorName: f.participant.user?.nickname ?? f.participant.userId }) : undefined}
               variant={
                 f.deletedAt
@@ -187,7 +191,7 @@ export default function InvitationFeedbacks({
                 const isReplyEditing = editingId === r.id;
                 return {
                   id: r.id,
-                  authorName: r.participant.user?.nickname ?? r.participant.userId,
+                  authorName: getCommentAuthorName(r.participant.user),
                   authorAvatarUrl:
                     r.participant.userId === currentUserId
                       ? (currentUserProfileImageUrl ?? undefined)
@@ -244,6 +248,7 @@ export default function InvitationFeedbacks({
             {isFetchingNextPage ? '불러오는 중...' : '더보기'}
           </button>
         ) : null}
+        </div>
       </div>
 
       {replyingTo ? (
@@ -289,7 +294,7 @@ export default function InvitationFeedbacks({
                       e.preventDefault(); // input blur 방지
                       handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-hover"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
                   >
                     <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
                     <span className="text-[14px] text-text-primary">@{p.user.nickname}</span>
@@ -342,6 +347,14 @@ export default function InvitationFeedbacks({
           }}
         />
       ) : null}
+      {profileModal && (
+        <ParticipantProfileModal
+          open={true}
+          onOpenChange={(open) => { if (!open) setProfileModal(null); }}
+          userId={profileModal.userId}
+          isHost={profileModal.isHost}
+        />
+      )}
     </div>
   );
 }

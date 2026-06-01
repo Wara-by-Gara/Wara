@@ -246,7 +246,7 @@ export default function MainImageEditor({
             <button
               type="button"
               onClick={() => setCropSrc(null)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow]"
             >
               취소
             </button>
@@ -275,7 +275,7 @@ export default function MainImageEditor({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isApplyingAi}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors text-sm"
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm disabled:opacity-50 transition-[color,transform,box-shadow] text-sm"
           >
             사진 선택
           </button>
@@ -347,7 +347,7 @@ export default function MainImageEditor({
               <button
                 type="button"
                 onClick={() => setShowAiCompletePopup(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover-emphasis-sm transition-[color,transform,box-shadow] text-sm"
               >
                 나중에
               </button>

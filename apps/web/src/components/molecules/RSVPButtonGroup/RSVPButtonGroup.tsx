@@ -99,14 +99,14 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
               disabled={itemDisabled}
               onClick={() => handleSelect(opt.value)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 font-bold transition-colors",
+                "flex flex-col items-center justify-center gap-1 font-bold transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter]",
                 isPill ? "rounded-full border" : "rounded-2xl border-2",
                 isHorizontal ? "h-16 text-[13px]" : "h-14 px-5 text-[15px]",
                 active
                   ? opt.activeColor
                   : isPill
-                    ? "border-border bg-surface text-text-primary hover:bg-gray-50"
-                    : "border-border-strong bg-surface text-text-primary hover:bg-gray-50",
+                    ? "border-border bg-surface text-text-primary hover-emphasis-sm"
+                    : "border-border-strong bg-surface text-text-primary hover-emphasis-sm",
                 "disabled:cursor-not-allowed disabled:opacity-40",
               )}
             >

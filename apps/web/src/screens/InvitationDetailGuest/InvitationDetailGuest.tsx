@@ -27,6 +27,7 @@ import {
   mockAlbumPreviewBirthdaySrcs,
   mockAlbumPreviewOverflow,
   mockRemindPhotos,
+  mockPhotos,
 } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
@@ -69,7 +70,8 @@ export type InvitationDetailGuestState =
   | "loginRequiredForRsvp"
   | "alreadyRespondedProfileOpen"
   | "publicMomentLog"
-  | "dateVotePending";
+  | "dateVotePending"
+  | "albumWithLikeCount";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
@@ -92,7 +94,7 @@ function ParticipantAvatarStrip() {
           size="lg"
           src={participant.avatarUrl}
           alt={participant.name}
-          initial={participant.name[0]}
+          name={participant.name}
           host={participant.isHost}
         />
       ))}
@@ -123,7 +125,9 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" onBack={onBack} />
-        <div className="px-5"><InvitationDetailSkeleton /></div>
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6 pt-2">
+          <InvitationDetailSkeleton />
+        </main>
       </div>
     );
   }
@@ -311,7 +315,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
                     status={p.status}
                     isHost={p.isHost}
                     onClick={() => openProfile(idx)}
-                    className="cursor-pointer rounded-xl transition-colors hover:bg-gray-50 active:bg-gray-100"
+                    className="cursor-pointer rounded-xl hover-emphasis-sm active:opacity-80"
                   />
                 ))}
               </div>
@@ -376,6 +380,13 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
             </div>
             {state === "albumPreviewEmpty" && !isPublicDetail ? (
               <p className="py-4 text-center text-[13px] text-text-tertiary">아직 사진이 없어요</p>
+            ) : state === "albumWithLikeCount" ? (
+              <PhotoGrid columns={3}>
+                {mockPhotos.slice(0, 5).map((photo) => (
+                  <PhotoGridItem key={photo.id} src={photo.src} alt="" likeCount={photo.likeCount} />
+                ))}
+                <PhotoGridItem overflowLabel={`+${mockPhotos.length - 5}`} aria-label={`사진 ${mockPhotos.length - 5}장 더보기`} />
+              </PhotoGrid>
             ) : isPublicDetail ? (
               <PhotoGrid columns={3}>
                 {mockAlbumPreviewBirthdaySrcs.map((src, i) => (

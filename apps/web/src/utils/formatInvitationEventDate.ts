@@ -1,9 +1,9 @@
 /** 초대장 카드·목록용 일시 — 예: 5월 31일 (일) 오후 08:00 */
 export function formatInvitationEventDate(eventStartAt: string | null | undefined): string {
-  if (!eventStartAt) return "";
+  if (!eventStartAt) return "미정";
 
   const d = new Date(eventStartAt);
-  if (Number.isNaN(d.getTime())) return "";
+  if (Number.isNaN(d.getTime())) return "미정";
 
   const monthDay = d.toLocaleDateString("ko-KR", {
     month: "long",

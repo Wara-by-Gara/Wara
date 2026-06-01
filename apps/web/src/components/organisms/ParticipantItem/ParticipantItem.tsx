@@ -65,7 +65,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
         className={cn("flex items-start gap-3 py-3", className)}
         {...props}
       >
-        <Avatar src={avatarUrl} alt={name} size="md" initial={name?.[0]} host={isHost} />
+        <Avatar src={avatarUrl} alt={name} size="md" name={name} host={isHost} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="truncate text-[15px] font-semibold text-text-primary">

@@ -25,7 +25,9 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" onBack={() => router.back()} />
-        <div className="px-5 py-4"><InvitationDetailSkeleton /></div>
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6 pt-2">
+          <InvitationDetailSkeleton />
+        </main>
       </div>
     );
   }
@@ -46,7 +48,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
   const isHost = isLoggedIn && me?.id === invitation.userId;
 
   if (isHost) {
-    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} me={me} />;
+    return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} />;
   }
 
   return (

@@ -43,6 +43,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'photo',
   'arrived',
   'nudge',
+  'ai_complete',
   'vote_reminder',
   'vote_confirmed',
   'vote_tied',
@@ -84,4 +85,11 @@ export const inquiryStatusEnum = pgEnum('inquiry_status', [
   'pending',
   'in_progress',
   'resolved',
+]);
+
+export const termTypeEnum = pgEnum('term_type', [
+  'service',
+  'privacy',
+  'marketing',
+  'location',
 ]);

@@ -25,6 +25,7 @@ export type ProfileEditState =
 
 export interface ProfileEditProps {
   state?: ProfileEditState;
+  defaultName?: string;
   defaultNickname?: string;
   avatarUrl?: string;
   cropImageSrc?: string;
@@ -39,6 +40,7 @@ export interface ProfileEditProps {
 
 export const ProfileEdit = ({
   state = "default",
+  defaultName,
   defaultNickname = "김와라",
   avatarUrl,
   cropImageSrc,
@@ -137,7 +139,7 @@ export const ProfileEdit = ({
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
         <section className="flex flex-col items-center gap-3">
           <button type="button" className="relative" onClick={() => fileInputRef.current?.click()}>
-            <Avatar size="xl" src={avatarUrl} alt={defaultNickname} initial={defaultNickname[0]} className="size-24" />
+            <Avatar size="xl" src={avatarUrl} alt={defaultNickname} name={defaultName ?? defaultNickname} className="size-24" />
             <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
               <Icon name="camera" size="sm" color="currentColor" decorative />
             </span>

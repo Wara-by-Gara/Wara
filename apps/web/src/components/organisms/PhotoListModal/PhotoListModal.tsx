@@ -125,7 +125,7 @@ export const PhotoListModal = ({
               }
             }}
             aria-label={selectMode ? "선택 취소" : "닫기"}
-            className="inline-flex size-8 items-center justify-center rounded-full text-text-secondary hover:bg-gray-100"
+            className="inline-flex size-8 items-center justify-center rounded-full text-text-secondary hover-emphasis-sm"
           >
             <Icon name="x" size="md" color="currentColor" decorative />
           </button>

@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2 font-bold whitespace-nowrap",
-    "transition-colors select-none",
+    "transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter] select-none",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
     "disabled:opacity-40 disabled:cursor-not-allowed",
   ],
@@ -16,10 +16,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-primary text-text-inverse hover:bg-primary-hover active:bg-primary-hover",
-        secondary: "bg-primary-soft text-primary hover:bg-pink-200",
+        secondary: "bg-primary-soft text-primary hover-emphasis-sm",
         outline:
-          "border border-border-strong bg-surface text-text-primary hover:bg-gray-50",
-        ghost: "bg-transparent text-text-primary hover:bg-gray-100",
+          "border border-border-strong bg-surface text-text-primary hover-emphasis-sm",
+        ghost: "bg-transparent text-text-primary hover-emphasis-sm",
         text: "bg-transparent text-primary underline-offset-4 hover:underline px-1",
         danger: "bg-danger text-text-inverse hover:bg-red-600 active:bg-red-600",
       },

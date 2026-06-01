@@ -32,7 +32,11 @@ export function useInvitationFeedback(invitationId: string) {
     queryFn: ({ pageParam }) =>
       getInvitationFeedbacks(invitationId, pageParam, INVITATION_FEEDBACK_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.nextCursor) return undefined;
+      if (lastPage.rows.length === 0) return undefined;
+      return lastPage.nextCursor;
+    },
     enabled: !!invitationId,
   });
 

@@ -37,4 +37,8 @@ export const QUERY_KEYS = {
     adminList: () => ["inquiries", "admin"] as const,
     adminDetail: (id: string) => ["inquiries", "admin", id] as const,
   },
+  terms: {
+    all: () => ["terms"] as const,
+    agreements: () => ["terms", "agreements"] as const,
+  },
 } as const;

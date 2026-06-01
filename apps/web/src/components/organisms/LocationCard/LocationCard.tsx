@@ -115,7 +115,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                   type="button"
                   aria-label="주소 복사"
                   onClick={() => copyToClipboard(address, "주소가 복사되었어요")}
-                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-colors hover:bg-gray-100 hover:text-text-primary"
+                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-[color,transform,box-shadow] hover-emphasis-sm hover:text-text-primary"
                 >
                   <Icon name="copy" size="sm" color="currentColor" decorative />
                 </button>

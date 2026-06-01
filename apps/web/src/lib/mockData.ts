@@ -84,6 +84,7 @@ export interface MockCommentReply {
   createdAt: string;
   variant?: "default" | "mine" | "host";
   replyToName?: string;
+  likeCount?: number;
 }
 
 export interface MockComment {
@@ -94,6 +95,7 @@ export interface MockComment {
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
   replies?: MockCommentReply[];
+  likeCount?: number;
 }
 
 export const mockComments: MockComment[] = [
@@ -103,6 +105,7 @@ export const mockComments: MockComment[] = [
     authorAvatarUrl: "https://i.pravatar.cc/80?img=21",
     content: "기대돼요! 곧 봬요 ✨",
     createdAt: "3분 전",
+    likeCount: 12,
     replies: [
       {
         id: "c1-r1",
@@ -111,6 +114,7 @@ export const mockComments: MockComment[] = [
         replyToName: "박미라",
         content: "저도 너무 기대돼요!",
         createdAt: "2분 전",
+        likeCount: 4,
       },
       {
         id: "c1-r2",
@@ -120,17 +124,19 @@ export const mockComments: MockComment[] = [
         content: "곧 봬요 💕",
         createdAt: "1분 전",
         variant: "host",
+        likeCount: 7,
       },
     ],
   },
-  { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전" },
-  { id: "c3", authorName: "김와라", authorAvatarUrl: mockMeAvatarUrl, content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host" },
+  { id: "c2", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "선물 가져갈게요!", createdAt: "12분 전", likeCount: 6 },
+  { id: "c3", authorName: "김와라", authorAvatarUrl: mockMeAvatarUrl, content: "다들 와주셔서 감사해요 ❤️", createdAt: "1시간 전", variant: "host", likeCount: 24 },
   {
     id: "c4",
     authorName: "최하나",
     authorAvatarUrl: "https://i.pravatar.cc/80?img=44",
     content: "주차장 위치 알려주실 수 있나요?",
     createdAt: "2시간 전",
+    likeCount: 3,
     replies: [
       {
         id: "c4-r1",
@@ -140,6 +146,7 @@ export const mockComments: MockComment[] = [
         content: "건물 지하 1층 무료 주차 가능해요. 만차면 인근 공영주차장 이용해주세요!",
         createdAt: "1시간 전",
         variant: "host",
+        likeCount: 11,
       },
       {
         id: "c4-r2",
@@ -148,6 +155,7 @@ export const mockComments: MockComment[] = [
         replyToName: "김와라",
         content: "알려주셔서 감사해요!",
         createdAt: "45분 전",
+        likeCount: 2,
       },
       {
         id: "c4-r3",
@@ -156,20 +164,21 @@ export const mockComments: MockComment[] = [
         replyToName: "김와라",
         content: "저도 그쪽으로 갈게요~",
         createdAt: "30분 전",
+        likeCount: 1,
       },
     ],
   },
-  { id: "c5", authorName: "정민지", authorAvatarUrl: "https://i.pravatar.cc/80?img=49", content: "친구 한 명 더 데려가도 될까요?", createdAt: "어제" },
-  { id: "c6", authorName: "이상민", authorAvatarUrl: "https://i.pravatar.cc/80?img=51", content: "케이크 너무 기대돼요 🎂", createdAt: "어제" },
-  { id: "c7", authorName: "윤지호", authorAvatarUrl: "https://i.pravatar.cc/80?img=53", content: "조금 늦을 수도 있어요!", createdAt: "2일 전" },
-  { id: "c8", authorName: "강수연", authorAvatarUrl: "https://i.pravatar.cc/80?img=56", content: "선물 포장 완료했어요", createdAt: "2일 전" },
-  { id: "c9", authorName: "오현우", authorAvatarUrl: "https://i.pravatar.cc/80?img=60", content: "사진 많이 찍어주세요 📸", createdAt: "3일 전" },
-  { id: "c10", authorName: "한지수", authorAvatarUrl: "https://i.pravatar.cc/80?img=62", content: "너무 설레요, 곧 봐요!", createdAt: "3일 전" },
-  { id: "c11", authorName: "송태형", authorAvatarUrl: "https://i.pravatar.cc/80?img=65", content: "드레스코드 있나요?", createdAt: "4일 전" },
-  { id: "c12", authorName: "전유진", authorAvatarUrl: "https://i.pravatar.cc/80?img=68", content: "케이크 기대 중이에요 🎂", createdAt: "4일 전" },
-  { id: "c13", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "카메라 챙겨갈게요!", createdAt: "5일 전" },
-  { id: "c14", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "같이 가는 친구도 데려도 될까요?", createdAt: "5일 전" },
-  { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전" },
+  { id: "c5", authorName: "정민지", authorAvatarUrl: "https://i.pravatar.cc/80?img=49", content: "친구 한 명 더 데려가도 될까요?", createdAt: "어제", likeCount: 2 },
+  { id: "c6", authorName: "이상민", authorAvatarUrl: "https://i.pravatar.cc/80?img=51", content: "케이크 너무 기대돼요 🎂", createdAt: "어제", likeCount: 8 },
+  { id: "c7", authorName: "윤지호", authorAvatarUrl: "https://i.pravatar.cc/80?img=53", content: "조금 늦을 수도 있어요!", createdAt: "2일 전", likeCount: 0 },
+  { id: "c8", authorName: "강수연", authorAvatarUrl: "https://i.pravatar.cc/80?img=56", content: "선물 포장 완료했어요", createdAt: "2일 전", likeCount: 5 },
+  { id: "c9", authorName: "오현우", authorAvatarUrl: "https://i.pravatar.cc/80?img=60", content: "사진 많이 찍어주세요 📸", createdAt: "3일 전", likeCount: 9 },
+  { id: "c10", authorName: "한지수", authorAvatarUrl: "https://i.pravatar.cc/80?img=62", content: "너무 설레요, 곧 봐요!", createdAt: "3일 전", likeCount: 3 },
+  { id: "c11", authorName: "송태형", authorAvatarUrl: "https://i.pravatar.cc/80?img=65", content: "드레스코드 있나요?", createdAt: "4일 전", likeCount: 1 },
+  { id: "c12", authorName: "전유진", authorAvatarUrl: "https://i.pravatar.cc/80?img=68", content: "케이크 기대 중이에요 🎂", createdAt: "4일 전", likeCount: 7 },
+  { id: "c13", authorName: "박미라", authorAvatarUrl: "https://i.pravatar.cc/80?img=21", content: "카메라 챙겨갈게요!", createdAt: "5일 전", likeCount: 4 },
+  { id: "c14", authorName: "이지은", authorAvatarUrl: "https://i.pravatar.cc/80?img=24", content: "같이 가는 친구도 데려도 될까요?", createdAt: "5일 전", likeCount: 2 },
+  { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전", likeCount: 6 },
 ];
 
 /** 초대장 상세·앨범 mock용 로컬 사진 (외부 URL 차단 환경 대비) */
@@ -286,3 +295,60 @@ export const mockMe: MockUser = {
   socialProvider: "kakao",
   stats: { created: 4, joined: 12 },
 };
+
+/* ───────────────── 친구 (Friends 탭) ───────────────── */
+
+export interface MockFriend {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  /** 함께한 모임 수 */
+  sharedCount: number;
+  /** 가장 최근 함께한 모임 제목 */
+  lastSharedTitle: string;
+  /** 최근 함께한 시점(상대 표기) */
+  lastSharedAt: string;
+}
+
+/** 친구 목록 — 함께한 모임 많은 순. mockParticipants와 동일 인물/아바타 재사용 */
+export const mockFriends: MockFriend[] = [
+  { id: "p2", name: "박미라", avatarUrl: "https://i.pravatar.cc/80?img=21", sharedCount: 8, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p3", name: "이지은", avatarUrl: "https://i.pravatar.cc/80?img=24", sharedCount: 6, lastSharedTitle: "주말 브런치", lastSharedAt: "5일 전" },
+  { id: "p4", name: "최하나", avatarUrl: "https://i.pravatar.cc/80?img=44", sharedCount: 5, lastSharedTitle: "북클럽 3월 모임", lastSharedAt: "1주 전" },
+  { id: "p5", name: "정민지", avatarUrl: "https://i.pravatar.cc/80?img=49", sharedCount: 4, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p6", name: "이상민", avatarUrl: "https://i.pravatar.cc/80?img=51", sharedCount: 4, lastSharedTitle: "등산 모임", lastSharedAt: "3주 전" },
+  { id: "p8", name: "강수연", avatarUrl: "https://i.pravatar.cc/80?img=56", sharedCount: 3, lastSharedTitle: "주말 브런치", lastSharedAt: "5일 전" },
+  { id: "p7", name: "윤지호", avatarUrl: "https://i.pravatar.cc/80?img=53", sharedCount: 3, lastSharedTitle: "와인 한잔", lastSharedAt: "10일 전" },
+  { id: "p9", name: "오현우", avatarUrl: "https://i.pravatar.cc/80?img=60", sharedCount: 2, lastSharedTitle: "북클럽 3월 모임", lastSharedAt: "1주 전" },
+  { id: "p10", name: "한지수", avatarUrl: "https://i.pravatar.cc/80?img=62", sharedCount: 2, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p12", name: "전유진", avatarUrl: "https://i.pravatar.cc/80?img=68", sharedCount: 1, lastSharedTitle: "등산 모임", lastSharedAt: "3주 전" },
+  { id: "p11", name: "송태형", avatarUrl: "https://i.pravatar.cc/80?img=65", sharedCount: 1, lastSharedTitle: "와인 한잔", lastSharedAt: "10일 전" },
+];
+
+/** 상단 "최근 함께한 친구" — 최근 함께한 순 상위 10명 (id 큐레이션) */
+const RECENT_FRIEND_ORDER = ["p2", "p5", "p10", "p3", "p8", "p4", "p9", "p7", "p11", "p6"] as const;
+export const mockRecentFriends: MockFriend[] = RECENT_FRIEND_ORDER.map((id) =>
+  mockFriends.find((f) => f.id === id),
+).filter((f): f is MockFriend => Boolean(f));
+
+export interface MockFriendProfile extends MockFriend {
+  /** 함께 아는 친구 */
+  mutualFriends: { id: string; name: string; avatarUrl?: string }[];
+  /** 함께 참여했던 초대 */
+  sharedInvitations: { id: string; title: string; date: string; imageUrl?: string }[];
+}
+
+/** 친구 프로필 상세 mock — id로 친구를 찾아 공통 mutual/shared를 합성 */
+export function getMockFriendProfile(id: string): MockFriendProfile {
+  const friend = mockFriends.find((f) => f.id === id) ?? mockFriends[0]!;
+  const mutualFriends = mockFriends
+    .filter((f) => f.id !== friend.id)
+    .slice(0, 5)
+    .map((f) => ({ id: f.id, name: f.name, avatarUrl: f.avatarUrl }));
+  const sharedInvitations = [
+    { id: mockInvitation.id, title: mockInvitation.title, date: mockInvitation.date, imageUrl: mockInvitation.coverImageUrl },
+    { id: "inv_brunch", title: "주말 브런치", date: "2026년 5월 25일 일요일", imageUrl: undefined },
+    { id: "inv_book", title: "북클럽 3월 모임", date: "2026년 4월 12일 토요일", imageUrl: undefined },
+  ];
+  return { ...friend, mutualFriends, sharedInvitations };
+}
