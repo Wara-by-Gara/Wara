@@ -51,6 +51,15 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
     }
   }
 
+  if (res.status === 403 && typeof window !== 'undefined') {
+    const body: ApiErrorBody = await res.clone().json();
+    const TERMS_AGREE_PATH = '/terms/agree';
+    if (body.error?.code === 'TERMS_AGREEMENT_REQUIRED' && !window.location.pathname.startsWith(TERMS_AGREE_PATH)) {
+      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `${TERMS_AGREE_PATH}?returnTo=${returnTo}`;
+    }
+  }
+
   if (!res.ok) {
     const body: ApiErrorBody = await res.json();
     throw new Error(body.error?.code ?? 'UNKNOWN_ERROR');

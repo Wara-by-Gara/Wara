@@ -184,9 +184,7 @@ export const Notifications = ({
         )}
       >
         {state === 'loading' ? (
-          <div className="px-3 py-2">
-            <NotificationListSkeleton />
-          </div>
+          <NotificationListSkeleton />
         ) : state === 'error' ? (
           <ErrorState title="알림을 불러오지 못했어요" onRetry={onRetry} />
         ) : state === 'empty' ? (

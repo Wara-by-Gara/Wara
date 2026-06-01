@@ -85,7 +85,7 @@ export class AuthController {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     if (error || !code) {
-      return res.redirect(`${frontendUrl}/invitations/create?auth_error=1`);
+      return res.redirect(`${frontendUrl}/login?auth_error=cancelled`);
     }
 
     try {
@@ -103,7 +103,7 @@ export class AuthController {
       return res.redirect(`${frontendUrl}/?auth_success=1`);
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
-      return res.redirect(`${frontendUrl}/login?auth_error=1`);
+      return res.redirect(`${frontendUrl}/login?auth_error=failed`);
     }
   }
 

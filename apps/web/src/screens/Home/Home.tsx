@@ -3,13 +3,13 @@
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
-import { AutoSlide } from "@/components/molecules/AutoSlide";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { HeaderGradient } from "@/components/layout/StickyHeader";
 import { InvitationListSection } from "@/domain/InvitationList/InvitationListSection";
 import type { InvitationListTab } from "@/domain/InvitationList/invitationListUtils";
 import type { InvitationListSectionState } from "@/domain/InvitationList/InvitationListSection";
 import { NotificationBellContainer } from "@/domain/Notifications/NotificationBell/NotificationBellContainer";
-import { mockInvitation, mockMe, mockTemplateSlides, type MockInvitation, type MockUser } from "@/lib/mockData";
+import { mockInvitation, mockMe, type MockInvitation, type MockUser } from "@/lib/mockData";
 import type { InvitationCardVariant } from "@/components/organisms/InvitationCard";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
@@ -50,8 +50,8 @@ export const Home = ({
 
   if (state === "guestLanding") {
     return (
-      <div className="mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background">
-        <TopAppBar title="Wara" brandLogo />
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background">
+        <TopAppBar className="absolute inset-x-0 top-0 z-30" brandLogo brandLogoCompact />
         <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <Icon name="pixel-heart" size="xl" color="primary" decorative />
           <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
@@ -86,33 +86,37 @@ export const Home = ({
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <HeaderGradient fixed />
       <TopAppBar
-        className="shrink-0"
-        title="WARA"
-        largeTitle
+        className="absolute inset-x-0 top-0 z-30"
+        variant="transparent"
         brandLogo
+        brandLogoCompact
         rightSlot={
           <>
             <NotificationBellContainer />
-            <Avatar size="sm" src={me.avatarUrl} alt={me.nickname} initial={me.nickname[0]} />
+            <Avatar size="sm" src={me.avatarUrl} alt={me.nickname} name={me.name ?? me.nickname} />
           </>
         }
       />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pt-14">
         <div className="flex flex-col gap-5 pb-6">
-          <AutoSlide
-            slides={mockTemplateSlides}
-            intervalMs={2500}
-            aspectClassName="aspect-[16/9]"
-            rounded={false}
-          />
+          <div className="flex flex-col gap-1.5 px-5 pt-3">
+            <h2 className="font-gmarket text-[22px] font-medium leading-tight text-white">
+              안녕하세요, {me.name ?? me.nickname}님!
+            </h2>
+            <p className="font-gmarket text-[15px] leading-tight text-white">
+              오늘도 즐거운 모임 되세요👋
+            </p>
+          </div>
           <div className={cn("px-5", (state === "networkError" || state === "loggedInEmpty") && "flex min-h-[40vh] flex-col justify-center")}>
             <InvitationListSection
               tab={tab}
               onTabChange={setTab}
               state={listState}
               invitations={listItems}
+              columns={2}
             />
           </div>
         </div>

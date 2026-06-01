@@ -48,7 +48,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
         ref={ref}
         type="button"
         className={cn(
-          "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-gray-50",
+          "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left hover-emphasis-sm",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           unread && "bg-pink-50/60",
           className,

@@ -22,6 +22,7 @@ export default function LoginContainer() {
     }
   }, []);
 
+
   function handleKakao() {
     setState('kakaoLoading');
     window.location.href = `${API_BASE}/auth/kakao/redirect`;

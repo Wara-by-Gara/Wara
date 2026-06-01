@@ -352,7 +352,7 @@ export default function ParticipantsContainer() {
                   memo={isHost ? (participant.hostMemo ?? undefined) : undefined}
                   onClick={() => openProfile({ participant, user })}
                   onMore={isHost && participant.memberRole !== "HOST" ? () => openActionSheet({ participant, user }) : undefined}
-                  className="cursor-pointer rounded-xl transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  className="cursor-pointer rounded-xl hover-emphasis-sm active:opacity-80"
                 />
               ))}
             </div>

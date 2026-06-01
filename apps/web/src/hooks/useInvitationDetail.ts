@@ -14,7 +14,7 @@ export function useInvitationDetail(invitationId: string) {
   });
 
   const { data: me } = useQuery({
-    queryKey: ["me"],
+    queryKey: QUERY_KEYS.users.me(),
     queryFn: getMe,
     enabled: hydrated && isLoggedIn,
   });

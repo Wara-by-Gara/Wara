@@ -1,6 +1,6 @@
 {
   "id": "a56a5e33-c631-49df-856e-fe8c78e083b3",
-  "prevId": "4f994d70-6360-476d-83ae-257c7f1683d4",
+  "prevId": "0006_invitations_design_columns",
   "version": "7",
   "dialect": "postgresql",
   "tables": {

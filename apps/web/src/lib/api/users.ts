@@ -27,8 +27,19 @@ export function getProfileImagePresignedUrl(
   return apiPost<{ presignedUrl: string; key: string }>("/users/me/presigned-url", { fileName, contentType });
 }
 
+export interface UserProfile {
+  id: string;
+  name: string | null;
+  nickname: string | null;
+  profileImageUrl: string | null;
+}
+
 export function getMe(): Promise<Me> {
   return apiGet<Me>("/users/me");
+}
+
+export function getUserProfile(userId: string): Promise<UserProfile> {
+  return apiGet<UserProfile>(`/users/${userId}`);
 }
 
 export function updateMe(data: UpdateMeInput): Promise<Me> {

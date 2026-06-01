@@ -16,6 +16,7 @@ import { cn } from "@/lib/cn";
 export interface PhotoViewerComment {
   id: string;
   authorName: string;
+  authorInitialName?: string;
   authorAvatarUrl?: string;
   content: string;
   createdAt: string;
@@ -58,6 +59,9 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   comments?: PhotoViewerComment[];
   onCommentSubmit?: (text: string) => void;
   commentPlaceholder?: string;
+  currentUserAvatarUrl?: string;
+  currentUserInitialName?: string;
+  currentUserNickname?: string;
   /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
   replyBanner?: ReactNode;
   /** 멘션 드롭다운 (replyBanner 위에 렌더링) */
@@ -141,7 +145,7 @@ function ProfileActions({
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
+        <Avatar src={authorAvatarUrl} alt={authorName} size="sm" name={authorName} />
         <div className="min-w-0 flex flex-col">
           <span className="truncate text-[14px] font-semibold">{authorName}</span>
           {createdAt ? <span className="text-[12px] opacity-80">{createdAt}</span> : null}
@@ -181,6 +185,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       inputValue,
       onInputValueChange,
       rightActions,
+      currentUserAvatarUrl,
+      currentUserInitialName,
+      currentUserNickname,
       ...props
     },
     ref,
@@ -200,7 +207,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             variant="ghost"
             aria-label="닫기"
             onClick={onClose}
-            className="bg-black/40 text-white hover:bg-black/60"
+            className="bg-black/40 text-white hover-emphasis-sm"
           />
           <div className="flex items-center gap-1">
             {onSave ? (
@@ -281,6 +288,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                         <CommentItem
                           variant={c.editingSlot ? "editing" : c.variant}
                           authorName={c.authorName}
+                          authorInitialName={c.authorInitialName}
                           authorAvatarUrl={c.authorAvatarUrl}
                           createdAt={c.createdAt}
                           content={c.content}
@@ -305,8 +313,9 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
-                avatarUrl={authorAvatarUrl}
-                authorName={authorName}
+                avatarUrl={currentUserAvatarUrl}
+                authorName={currentUserNickname}
+                authorInitialName={currentUserInitialName}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
                 value={inputValue}

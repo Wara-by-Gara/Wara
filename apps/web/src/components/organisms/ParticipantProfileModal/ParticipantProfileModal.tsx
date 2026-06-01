@@ -7,6 +7,8 @@ import { Button } from "@/components/primitives/Button";
 import { Modal, ModalOverlay, ModalPortal, ModalPrimitive } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import type { BadgeProps } from "@/components/primitives/Badge";
+import { useUserProfile } from "@/hooks/useUsers";
+import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 
 export type ParticipantRsvp = "attending" | "maybe" | "declined" | "noResponse";
 
@@ -20,10 +22,12 @@ const RSVP_LABEL: Record<ParticipantRsvp, { label: string; variant: BadgeProps["
 export interface ParticipantProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  name: string;
+  /** userId를 넘기면 내부에서 자동 fetch. name/handle/avatarUrl은 즉시 표시용 초기값 */
+  userId?: string;
+  name?: string;
   handle?: string;
   avatarUrl?: string;
-  status: ParticipantRsvp;
+  status?: ParticipantRsvp;
   isHost?: boolean;
   /** 동반 인원 수 */
   companionCount?: number;
@@ -40,9 +44,10 @@ export interface ParticipantProfileModalProps {
 export const ParticipantProfileModal = ({
   open,
   onOpenChange,
-  name,
-  handle,
-  avatarUrl,
+  userId,
+  name: nameProp,
+  handle: handleProp,
+  avatarUrl: avatarUrlProp,
   status,
   isHost = false,
   companionCount,
@@ -51,7 +56,11 @@ export const ParticipantProfileModal = ({
   contained = false,
   onDm,
 }: ParticipantProfileModalProps) => {
-  const rsvp = RSVP_LABEL[status];
+  const { data: fetched } = useUserProfile(userId);
+  const name = fetched ? getCommentAuthorName(fetched) : (nameProp ?? '');
+  const handle = fetched?.nickname ?? handleProp;
+  const avatarUrl = fetched?.profileImageUrl ?? avatarUrlProp;
+  const rsvp = status ? RSVP_LABEL[status] : null;
 
   const overlayClass = cn(
     "z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in",
@@ -73,7 +82,7 @@ export const ParticipantProfileModal = ({
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label="닫기"
-          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover:bg-black/20"
+          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover-emphasis-sm"
         >
           <Icon name="x" size="sm" color="currentColor" decorative />
         </button>
@@ -84,7 +93,7 @@ export const ParticipantProfileModal = ({
             src={avatarUrl}
             alt={name}
             size="xl"
-            initial={name?.[0]}
+            name={name}
             className={cn("ring-4 ring-surface", isHost && "ring-yellow-200")}
           />
           <div className="mt-3 flex flex-col items-center gap-1.5">
@@ -100,7 +109,7 @@ export const ParticipantProfileModal = ({
                   <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
                 </span>
               ) : null}
-              <Badge variant={rsvp.variant} size="sm">{rsvp.label}</Badge>
+              {rsvp ? <Badge variant={rsvp.variant} size="sm">{rsvp.label}</Badge> : null}
             </div>
           </div>
         </div>

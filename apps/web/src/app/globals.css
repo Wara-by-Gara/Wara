@@ -90,41 +90,41 @@
   --color-green-500: #22c55e;
   --color-green-600: #16a34a;
 
-  /* ---------- Semantic Colors ---------- */
-  --color-background: var(--color-wara-white);
-  --color-background-soft: var(--color-gray-50);
-  --color-surface: var(--color-wara-white);
-  --color-surface-pastel: var(--color-pink-50);
+  /* ---------- Semantic Colors (Dark) ---------- */
+  --color-background: #0d0d0d;
+  --color-background-soft: #111111;
+  --color-surface: #1c1c1e;
+  --color-surface-pastel: #241820;
 
   --color-primary: var(--color-pink-500);
   --color-primary-hover: var(--color-pink-600);
-  --color-primary-soft: var(--color-pink-100);
+  --color-primary-soft: #3a2230;
 
   --color-secondary: var(--color-sky-400);
-  --color-secondary-soft: var(--color-sky-100);
+  --color-secondary-soft: #14222e;
 
   --color-accent: var(--color-yellow-300);
-  --color-accent-soft: var(--color-yellow-100);
+  --color-accent-soft: #2a2410;
 
   --color-success: var(--color-green-500);
-  --color-success-soft: var(--color-green-50);
+  --color-success-soft: #122017;
 
   --color-danger: var(--color-red-500);
-  --color-danger-soft: var(--color-red-50);
+  --color-danger-soft: #2a1418;
 
-  --color-text-primary: var(--color-gray-900);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-tertiary: var(--color-gray-400);
+  --color-text-primary: var(--color-gray-100);
+  --color-text-secondary: #b0b0b0;
+  --color-text-tertiary: #7a7a7a;
   --color-text-inverse: var(--color-wara-white);
-  --color-text-inactive: var(--color-gray-300);
+  --color-text-inactive: #5a5a5a;
 
-  --color-border: var(--color-gray-200);
-  --color-border-strong: var(--color-gray-300);
+  --color-border: #2a2a2c;
+  --color-border-strong: #3a3a3c;
 
   /* ---------- Icon Color Aliases ---------- */
-  --color-icon-default: var(--color-gray-700);
+  --color-icon-default: var(--color-gray-300);
   --color-icon-primary: var(--color-pink-500);
-  --color-icon-inactive: var(--color-gray-300);
+  --color-icon-inactive: #6a6a6a;
   --color-icon-danger: var(--color-red-500);
   --color-icon-inverse: var(--color-wara-white);
 
@@ -180,6 +180,43 @@ body {
   font-family: var(--font-sans);
 }
 
+/* 초대장 상세 등 라이트 모드 화면 — DESIGN.md §4.2 Semantic Colors */
+html.theme-light {
+  --color-background: var(--color-wara-white);
+  --color-background-soft: var(--color-gray-50);
+  --color-surface: var(--color-wara-white);
+  --color-surface-pastel: var(--color-pink-50);
+
+  --color-primary-soft: var(--color-pink-100);
+
+  --color-secondary-soft: var(--color-sky-100);
+
+  --color-accent-soft: var(--color-yellow-100);
+
+  --color-success-soft: var(--color-green-50);
+
+  --color-danger-soft: var(--color-red-50);
+
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-inactive: var(--color-gray-400);
+
+  --color-border: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  --color-icon-default: var(--color-gray-600);
+  --color-icon-inactive: var(--color-gray-400);
+
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+html.theme-light body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin-left:0 / margin-right:[gap]px를
    !important로 주입해 mx-auto 센터링을 깨뜨리는 문제 방지 */
 @layer base {
@@ -197,6 +234,51 @@ a {
 
 @utility font-pixel {
   font-family: var(--font-family-pixel);
+}
+
+@utility hover-emphasis {
+  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 24px rgb(0 0 0 / 0.28),
+        0 2px 8px rgb(0 0 0 / 0.16);
+    }
+  }
+}
+
+@utility hover-emphasis-sm {
+  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgb(0 0 0 / 0.24);
+    }
+  }
+}
+
+@utility hover-emphasis-glass {
+  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 32px rgb(0 0 0 / 0.32),
+        0 4px 12px rgb(0 0 0 / 0.2);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+    }
+  }
 }
 
 /* Storybook MobileDeviceFrame: min-h-screen → frame height */

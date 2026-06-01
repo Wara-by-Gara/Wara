@@ -21,7 +21,7 @@ export function NotificationItem({ notification, onReadAction }: Props) {
     <button
       type="button"
       onClick={() => !notification.isRead && onReadAction(notification.id)}
-      className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-surface transition-colors ${
+      className={`w-full text-left px-4 py-3 flex gap-3 hover-emphasis-sm ${
         notification.isRead ? '' : 'bg-primary-soft/40'
       }`}
     >

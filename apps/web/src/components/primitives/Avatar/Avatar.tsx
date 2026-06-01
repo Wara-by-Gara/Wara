@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { avatarGradientStyle } from "@/lib/avatar-gradient";
 
 const avatarVariants = cva(
-  "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-text-primary",
+  "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-800 text-text-primary",
   {
     variants: {
       size: {
@@ -28,29 +28,35 @@ export interface AvatarProps
     VariantProps<typeof avatarVariants> {
   /** 이미지 URL — 없으면 fallback */
   src?: string;
-  /** 이미지 alt — 없으면 이니셜 자동 생성 */
+  /** 이미지 alt (접근성용) */
   alt?: string;
-  /** 이니셜 fallback (예: "김와") */
+  /** 이니셜 계산용 실명 — 제공 시 alt 대신 이니셜 계산에 사용 */
+  name?: string;
+  /** 이니셜 강제 지정 ("+3" 같은 특수 케이스) */
   initial?: string;
-  /** 아이콘 fallback (예: 'user') */
+  /** 아이콘 fallback */
   fallbackIcon?: ReactNode;
   /** HOST 표시 — 우측 하단 crown 배지 */
   host?: boolean;
 }
 
-const getInitials = (alt?: string): string => {
-  if (!alt) return "?";
-  const trimmed = alt.trim();
+const getInitials = (name: string): string => {
+  const trimmed = name.trim();
   if (!trimmed) return "?";
-  return trimmed.slice(0, 2);
+  const code = trimmed.charCodeAt(0);
+  if (code >= 0xac00 && code <= 0xd7a3) {
+    return trimmed.slice(1) || trimmed[0]!;
+  }
+  return trimmed.split(" ")[0]!.slice(0, 2);
 };
 
 export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(function Avatar(
-  { className, size, src, alt, initial, fallbackIcon, host, ...props },
+  { className, size, src, alt, name, initial, fallbackIcon, host, ...props },
   ref,
 ) {
-  const gradientKey = alt ?? initial ?? "anonymous";
-  const showGradient = !src && !(typeof initial === "string" && initial.startsWith("+"));
+  const initialSource = name ?? alt;
+  const gradientKey = initialSource ?? initial ?? "anonymous";
+  const showGradient = !src && !!(initial ?? initialSource) && !(typeof initial === "string" && initial.startsWith("+"));
 
   return (
     <div ref={ref} className="relative inline-flex shrink-0">
@@ -70,8 +76,12 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(function Avatar(
           className="flex size-full items-center justify-center font-semibold"
           style={showGradient ? avatarGradientStyle(gradientKey) : undefined}
         >
-          {initial ?? (fallbackIcon ? fallbackIcon : <Icon name="user" size="sm" color="currentColor" decorative />)}
-          {!initial && !fallbackIcon && alt ? getInitials(alt) : null}
+          {initial
+            ? initial
+            : initialSource
+              ? getInitials(initialSource)
+              : fallbackIcon ?? <Icon name="user" size="sm" color="currentColor" decorative />
+          }
         </RAvatar.Fallback>
       </RAvatar.Root>
       {host ? (

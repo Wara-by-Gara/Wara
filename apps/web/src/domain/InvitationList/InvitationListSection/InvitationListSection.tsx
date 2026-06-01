@@ -24,6 +24,8 @@ export interface InvitationListSectionProps {
   onCardClick?: (id: string) => void;
   onCreateClick?: () => void;
   className?: string;
+  /** 카드 배치 열 수 (기본 1열, 홈은 2열) */
+  columns?: 1 | 2;
 }
 
 export function InvitationListSection({
@@ -35,7 +37,9 @@ export function InvitationListSection({
   onCardClick,
   onCreateClick,
   className,
+  columns = 1,
 }: InvitationListSectionProps) {
+  const listClass = columns === 2 ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3";
   return (
     <section id={id} className={cn("flex flex-col", className)}>
       <div className="flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide">
@@ -54,10 +58,10 @@ export function InvitationListSection({
 
       <div className="mt-3">
         {state === "loading" ? (
-          <div className="flex flex-col gap-3">
-            <InvitationCardSkeleton />
-            <InvitationCardSkeleton />
-            <InvitationCardSkeleton />
+          <div className={listClass}>
+            {Array.from({ length: columns === 2 ? 4 : 3 }).map((_, i) => (
+              <InvitationCardSkeleton key={i} />
+            ))}
           </div>
         ) : state === "error" ? (
           <ErrorState title="초대장 목록을 불러오지 못했어요" onRetry={() => {}} />
@@ -69,7 +73,7 @@ export function InvitationListSection({
             action={<Button onClick={onCreateClick}>초대장 만들기</Button>}
           />
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className={listClass}>
             {invitations.map((inv) => (
               <InvitationCard
                 key={inv.id}

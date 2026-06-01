@@ -22,7 +22,7 @@ async function main() {
   log(`users: ${SEEDS.users.length}건, templates: ${SEEDS.templates.length}건`);
 
   await seedTier0(db);
-  log('✓ Tier 0 — users, invitation_templates');
+  log(`✓ Tier 0 — service_terms: ${SEEDS.terms.length}건, users, invitation_templates`);
 
   await seedTier1(db);
   log(`✓ Tier 1 — social_accounts, notification_settings, inquiries: ${SEEDS.inquiries.length}건`);
