@@ -32,7 +32,7 @@ export default function InvitationCardContainer({ invitation }: Props) {
         mainImageFrame: data.mainImageFrame,
         uploadedImageKey: data.uploadedImageKey,
       });
-      setCurrentMainImageUrl(updated.mainImageUrl);
+      setCurrentMainImageUrl(updated.mainImageUrl ?? '');
     } catch {
       setSaveError('저장에 실패했습니다. 다시 시도해주세요.');
     }
@@ -55,11 +55,11 @@ export default function InvitationCardContainer({ invitation }: Props) {
       {/* 메인 이미지 편집 */}
       <MainImageEditor
         invitationId={invitation.id}
-        templatePreviewUrl={invitation.templatePreviewUrl ?? invitation.mainImageUrl}
-        initialFrame={invitation.mainImageFrame}
-        initialMainImageKey={invitation.mainImageKey}
-        initialUploadedImageKey={invitation.uploadedImageKey}
-        initialUploadedImageUrl={invitation.uploadedImageUrl}
+        templatePreviewUrl={invitation.mainImageUrl ?? ''}
+        initialFrame="default"
+        initialMainImageKey={invitation.mainImageKey ?? ''}
+        initialUploadedImageKey={null}
+        initialUploadedImageUrl={null}
         onSave={handleSave}
       />
 

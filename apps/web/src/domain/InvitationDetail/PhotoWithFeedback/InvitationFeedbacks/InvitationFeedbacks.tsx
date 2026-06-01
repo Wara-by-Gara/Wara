@@ -11,6 +11,7 @@ import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 import { ParticipantProfileModal } from '@/components/organisms/ParticipantProfileModal/ParticipantProfileModal';
+import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   invitationId: string;
