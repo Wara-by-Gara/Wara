@@ -19,6 +19,13 @@ import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/Partici
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
+import {
+  RsvpSection,
+  toRsvpButtonValue,
+  fromRsvpButtonValue,
+} from "@/domain/InvitationDetail/Rsvp/RsvpSection";
+import { useMyParticipant, useUpdateRsvp, useJoinInvitation } from "@/hooks/useParticipants";
+import type { RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
@@ -41,8 +48,28 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
 
   const isLoggedIn = !!me;
+
+  const { data: myParticipant } = useMyParticipant(invitationId, { enabled: isLoggedIn });
+  const updateRsvp = useUpdateRsvp(invitationId);
+  const joinInvitation = useJoinInvitation(invitationId);
+
+  const rsvpOptions = [
+    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  ];
+
+  const handleRsvp = (next: RSVPValue) => {
+    const rsvpStatus = fromRsvpButtonValue(next);
+    if (myParticipant) {
+      updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus });
+    } else {
+      joinInvitation.mutate({ rsvpStatus });
+    }
+  };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
+  const hasGif = invitation.mainCoverType === "gif";
+  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
 
   const allParticipants = participantsData?.participants ?? [];
   const attendingParticipants = allParticipants.filter(
@@ -66,10 +93,12 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
       <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6">
         <InvitationCover
-          variant={hasImage ? "image" : "color"}
-          imageUrl={hasImage ? invitation.mainImageUrl : undefined}
+          variant={hasGif || hasImage ? "image" : "color"}
+          imageUrl={hasImage ? (invitation.mainImageUrl ?? undefined) : undefined}
+          gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
           backgroundClass={invitation.bgColor}
           hideBottomGradient
+          fitToImage
         />
 
         <header className="flex flex-col items-start gap-2">
@@ -79,6 +108,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               <Avatar
                 src={invitation.host.profileImageUrl ?? undefined}
                 alt={invitation.host.name ?? invitation.host.nickname ?? ""}
+                name={invitation.host.name ?? invitation.host.nickname ?? undefined}
                 size="xs"
               />
               <span>
@@ -129,13 +159,19 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           )}
 
         </div>
-        {isLoggedIn ? (
-          <PhotoWithFeedbackContainer
-            invitationId={invitationId}
-            currentUserId={me?.id ?? null}
-            currentUserDisplayName={me?.name ?? null}
-            currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+
+        {isLoggedIn && (
+          <RsvpSection
+            value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
+            onValueChange={handleRsvp}
+            options={rsvpOptions}
+            closed={invitation.status === "closed"}
+            loading={updateRsvp.isPending || joinInvitation.isPending}
           />
+        )}
+
+        {isLoggedIn ? (
+          <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="relative overflow-hidden rounded-3xl">
             <div className="pointer-events-none select-none blur-sm">

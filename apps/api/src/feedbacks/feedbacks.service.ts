@@ -22,6 +22,45 @@ export class FeedbacksService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
+    if (!url) return null;
+    return this.s3Service.getViewPresignedUrl(url);
+  }
+
+  private async attachProfileImageUrls<
+    T extends {
+      participant: { user: { profileImageUrl: string | null } };
+      replies?: Array<{ participant: { user: { profileImageUrl: string | null } } }>;
+    },
+  >(rows: T[]): Promise<T[]> {
+    return Promise.all(
+      rows.map(async (f) => ({
+        ...f,
+        participant: {
+          ...f.participant,
+          user: {
+            ...f.participant.user,
+            profileImageUrl: await this.resolveProfileImageUrl(f.participant.user.profileImageUrl),
+          },
+        },
+        replies: f.replies
+          ? await Promise.all(
+              f.replies.map(async (r) => ({
+                ...r,
+                participant: {
+                  ...r.participant,
+                  user: {
+                    ...r.participant.user,
+                    profileImageUrl: await this.resolveProfileImageUrl(r.participant.user.profileImageUrl),
+                  },
+                },
+              })),
+            )
+          : f.replies,
+      })),
+    );
+  }
+
   // photo / attachedPhoto 필드에 presigned URL 주입 (replies 포함)
   private async attachPhotoUrls<
     T extends {
@@ -57,8 +96,8 @@ export class FeedbacksService {
   private applyDeletedPlaceholder<
     T extends {
       deletedAt: Date | null;
-      content: string;
-      replies?: Array<{ deletedAt: Date | null; content: string }>;
+      content: string | null;
+      replies?: Array<{ deletedAt: Date | null; content: string | null }>;
     },
   >(feedbacks: T[]) {
     return feedbacks.map((f) => ({
@@ -77,7 +116,7 @@ export class FeedbacksService {
       participantId,
     );
     return {
-      rows: await this.attachPhotoUrls(this.applyDeletedPlaceholder(rows)),
+      rows: await this.attachPhotoUrls(await this.attachProfileImageUrls(this.applyDeletedPlaceholder(rows))),
       nextCursor,
     };
   }
@@ -101,7 +140,7 @@ export class FeedbacksService {
     const feedbacks = await this.repository.findAllByPhoto(photoId, dto, participantId);
     return {
       rows: await this.attachPhotoUrls(
-        this.applyDeletedPlaceholder(feedbacks.rows),
+        await this.attachProfileImageUrls(this.applyDeletedPlaceholder(feedbacks.rows)),
       ),
       nextCursor: feedbacks.nextCursor,
     };
@@ -120,7 +159,8 @@ export class FeedbacksService {
     const feedback = await this.repository.create({
       participantId: participant.id,
       invitationId,
-      content: dto.content,
+      content: dto.content ?? null,
+      gifUrl: dto.gifUrl ?? null,
       parentId: dto.parentId,
       attachedPhotoId: dto.attachedPhotoId,
     });
@@ -169,7 +209,8 @@ export class FeedbacksService {
       participantId: participant.id,
       invitationId,
       photoId,
-      content: dto.content,
+      content: dto.content ?? null,
+      gifUrl: dto.gifUrl ?? null,
       parentId: dto.parentId,
     });
 
@@ -226,7 +267,7 @@ export class FeedbacksService {
     dto: UpdateFeedbackDto,
   ) {
     await this.checkOwner(invitationId, feedbackId, participant.userId);
-    return this.repository.update(feedbackId, dto.content);
+    return this.repository.update(feedbackId, { content: dto.content, gifUrl: dto.gifUrl });
   }
 
   //댓글 삭제

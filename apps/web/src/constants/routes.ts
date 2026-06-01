@@ -1,7 +1,10 @@
 export const ROUTES = {
   HOME: "/",
   CALENDAR: "/calendar",
-  FRIENDS: "/friends",
+  FRIENDS: {
+    LIST: "/friends",
+    DETAIL: (id: string) => `/friends/${id}`,
+  },
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {
@@ -44,5 +47,8 @@ export const ROUTES = {
     LIST: "/inquiries/list",
     ME: "/inquiries/me",
     DETAIL: (id: string) => `/inquiries/${id}`,
+  },
+  TERMS: {
+    AGREE: "/terms/agree",
   },
 } as const;

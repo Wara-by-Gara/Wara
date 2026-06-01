@@ -1,6 +1,8 @@
 "use client";
 
 import { forwardRef, useState, type ReactNode } from "react";
+import Image from "next/image";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -9,13 +11,16 @@ import { cn } from "@/lib/cn";
 import { CommentReplyItem, type CommentReplyItemProps } from "./CommentReplyItem";
 import { renderMentions } from "./renderMentions";
 
-export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CommentItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
+  /** 아바타 이니셜 계산용 실명 (미제공 시 authorName 사용) */
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
-  content: string;
+  content?: string | null;
+  gifUrl?: string | null;
   imageUrl?: string;
   onImageClick?: () => void;
   replies?: CommentReplyItemProps[];
@@ -27,6 +32,7 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -35,10 +41,12 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       className,
       variant = "default",
       authorName,
+      authorInitialName,
       authorHandle,
       authorAvatarUrl,
       createdAt,
       content,
+      gifUrl,
       imageUrl,
       onImageClick,
       replies,
@@ -49,6 +57,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       likeCount,
       liked,
       onLike,
+      onAvatarClick,
       ...props
     },
     ref,
@@ -95,7 +104,9 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
     return (
       <div ref={ref} className={cn("px-4 py-2", className)} {...props}>
         <div className="flex items-start gap-3">
-          <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
+          <button type="button" onClick={onAvatarClick} className={onAvatarClick ? "cursor-pointer" : "cursor-default"}>
+            <Avatar src={authorAvatarUrl} alt={authorName} size="sm" name={authorInitialName ?? authorName} />
+          </button>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -125,6 +136,17 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                         {renderMentions(content)}
                       </p>
                     ) : null}
+                    {gifUrl ? (
+                      <div className="relative mt-1 w-[200px] overflow-hidden rounded-xl bg-gray-100" style={{ aspectRatio: "4/3" }}>
+                        <Image
+                          src={gifUrl}
+                          alt="GIF"
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : null}
                   </>
                 )}
                 <div className="mt-1 flex items-center gap-3">
@@ -142,11 +164,16 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       type="button"
                       onClick={onLike}
                       className={cn(
-                        "text-[13px] font-semibold transition-colors",
+                        "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
                         liked ? "text-primary" : "text-text-tertiary hover:text-primary",
                       )}
                     >
-                      ♥ {likeCount ?? 0}
+                      {liked ? (
+                        <IoHeart className="size-3.5 shrink-0" aria-hidden />
+                      ) : (
+                        <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+                      )}
+                      {likeCount ?? 0}
                     </button>
                   ) : null}
                 </div>
@@ -160,7 +187,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="첨부 사진" className="size-full object-cover" />
-                  <span className="absolute inset-0 bg-black/0 transition-colors hover:bg-black/15" />
+                  <span className="absolute inset-0 bg-black/0 transition-[transform,box-shadow] hover-emphasis-sm" />
                 </button>
               ) : null}
             </div>
@@ -185,7 +212,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                     <button
                       key={item.label}
                       type="button"
-                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-surface-hover", item.className)}
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover-emphasis-sm", item.className)}
                       onClick={() => {
                         item.onClick();
                         setMenuOpen(false);

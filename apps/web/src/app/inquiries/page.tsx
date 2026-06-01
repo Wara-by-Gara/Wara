@@ -39,7 +39,7 @@ export default function CustomerSupportPage() {
 
   return (
     <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar className="shrink-0" title="고객센터" />
+      <TopAppBar className="shrink-0" title="고객센터" onBack={() => router.push(ROUTES.PROFILE.ME)} />
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         {/* 자주 묻는 질문 */}
@@ -69,7 +69,7 @@ export default function CustomerSupportPage() {
                   {item.question}
                 </MenuItem>
                 {isOpen && (
-                  <div className="bg-gray-50 px-4 py-3">
+                  <div className="bg-background-soft px-4 py-3">
                     <p className="text-[14px] leading-relaxed text-text-secondary">
                       {item.answer}
                     </p>

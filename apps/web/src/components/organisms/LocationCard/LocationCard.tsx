@@ -52,7 +52,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-2 rounded-3xl border border-dashed border-border-strong bg-gray-50 p-5 text-center",
+            "flex flex-col gap-2 rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center",
             className,
           )}
           {...props}
@@ -115,7 +115,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                   type="button"
                   aria-label="주소 복사"
                   onClick={() => copyToClipboard(address, "주소가 복사되었어요")}
-                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-colors hover:bg-gray-100 hover:text-text-primary"
+                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-[color,transform,box-shadow] hover-emphasis-sm hover:text-text-primary"
                 >
                   <Icon name="copy" size="sm" color="currentColor" decorative />
                 </button>

@@ -12,7 +12,8 @@ export const feedbacks = pgTable('feedbacks', {
   photoId: text('photo_id').references(() => photos.id, { onDelete: 'cascade' }),
   parentId: text('parent_id').references((): AnyPgColumn => feedbacks.id, { onDelete: 'cascade' }),
   attachedPhotoId: text('attached_photo_id').references(() => photos.id, { onDelete: 'set null' }),
-  content: text('content').notNull(),
+  gifUrl: text('gif_url'),
+  content: text('content'),
   likeCount: integer('like_count').notNull().default(0),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -20,6 +21,8 @@ export const feedbacks = pgTable('feedbacks', {
 }, (t) => [
   check('check_feedback_ref', sql`${t.invitationId} IS NOT NULL OR ${t.photoId} IS NOT NULL`),
   check('check_feedback_like_count', sql`${t.likeCount} >= 0`),
+  check('check_content_or_gif', sql`(${t.content} IS NOT NULL AND ${t.content} <> '') OR ${t.gifUrl} IS NOT NULL`),
+  check('check_gif_xor_photo', sql`${t.gifUrl} IS NULL OR ${t.attachedPhotoId} IS NULL`),
 ]);
 
 export const feedbackLikes = pgTable('feedback_likes', {

@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { CommentInputBar } from "@/components/organisms/CommentInputBar";
 import { CommentItem, type CommentReplyItemProps } from "@/components/organisms/CommentItem";
@@ -16,8 +17,9 @@ import { cn } from "@/lib/cn";
 export interface PhotoViewerComment {
   id: string;
   authorName: string;
+  authorInitialName?: string;
   authorAvatarUrl?: string;
-  content: string;
+  content?: string | null;
   createdAt: string;
   variant?: "default" | "mine" | "host" | "deleted" | "reported";
   moreMenuItems?: Array<{ label: string; onClick: () => void; className?: string }>;
@@ -27,6 +29,7 @@ export interface PhotoViewerComment {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  gifUrl?: string | null;
 }
 
 export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -58,6 +61,9 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   comments?: PhotoViewerComment[];
   onCommentSubmit?: (text: string) => void;
   commentPlaceholder?: string;
+  currentUserAvatarUrl?: string;
+  currentUserInitialName?: string;
+  currentUserNickname?: string;
   /** 답글 대상 표시 배너 (CommentInputBar 위에 렌더링) */
   replyBanner?: ReactNode;
   /** 멘션 드롭다운 (replyBanner 위에 렌더링) */
@@ -65,6 +71,12 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 댓글 입력 controlled value */
   inputValue?: string;
   onInputValueChange?: (v: string) => void;
+  /** GIF 관련 */
+  pendingGif?: string | null;
+  onGifClear?: () => void;
+  onGifButtonClick?: () => void;
+  /** GIF picker 슬롯 (mentionDropdown 위에 렌더링) */
+  gifPicker?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
 }
@@ -107,13 +119,11 @@ function ProfileActions({
         aria-label={liked ? "좋아요 취소" : "좋아요"}
         className="inline-flex items-center gap-1.5 text-white disabled:opacity-60"
       >
-        <Icon
-          name="heart"
-          size="lg"
-          color="currentColor"
-          decorative
-          className={cn(liked && "fill-primary text-primary")}
-        />
+        {liked ? (
+          <IoHeart className="size-6 shrink-0 text-primary" aria-hidden />
+        ) : (
+          <IoHeartOutline className="size-6 shrink-0" aria-hidden />
+        )}
         <span className="text-[14px] font-semibold tabular-nums">{formatCount(likeCount ?? 0)}</span>
       </button>
       <button
@@ -141,7 +151,7 @@ function ProfileActions({
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
+        <Avatar src={authorAvatarUrl} alt={authorName} size="sm" name={authorName} />
         <div className="min-w-0 flex flex-col">
           <span className="truncate text-[14px] font-semibold">{authorName}</span>
           {createdAt ? <span className="text-[12px] opacity-80">{createdAt}</span> : null}
@@ -180,7 +190,14 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       mentionDropdown,
       inputValue,
       onInputValueChange,
+      pendingGif,
+      onGifClear,
+      onGifButtonClick,
+      gifPicker,
       rightActions,
+      currentUserAvatarUrl,
+      currentUserInitialName,
+      currentUserNickname,
       ...props
     },
     ref,
@@ -200,7 +217,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             variant="ghost"
             aria-label="닫기"
             onClick={onClose}
-            className="bg-black/40 text-white hover:bg-black/60"
+            className="bg-black/40 text-white hover-emphasis-sm"
           />
           <div className="flex items-center gap-1">
             {onSave ? (
@@ -281,9 +298,11 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                         <CommentItem
                           variant={c.editingSlot ? "editing" : c.variant}
                           authorName={c.authorName}
+                          authorInitialName={c.authorInitialName}
                           authorAvatarUrl={c.authorAvatarUrl}
                           createdAt={c.createdAt}
                           content={c.content}
+                          gifUrl={c.gifUrl ?? undefined}
                           moreMenuItems={c.moreMenuItems}
                           editingSlot={c.editingSlot}
                           onReply={c.onReply}
@@ -302,15 +321,17 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
+              {gifPicker}
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
-                avatarUrl={authorAvatarUrl}
-                authorName={authorName}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
                 value={inputValue}
                 onValueChange={onInputValueChange}
+                pendingGif={pendingGif}
+                onGifClear={onGifClear}
+                onGifButtonClick={onGifButtonClick}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
             </>

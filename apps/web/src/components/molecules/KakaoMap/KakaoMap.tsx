@@ -68,6 +68,14 @@ export interface KakaoMapHandle {
   centerOn: (lat: number, lng: number) => void;
 }
 
+export interface PhotoMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  url: string;
+  count: number;
+}
+
 export interface KakaoMapProps {
   ready?: boolean;
   eventLocation?: {
@@ -79,6 +87,10 @@ export interface KakaoMapProps {
   className?: string;
   /** 내 현재 위치 — 파란 점으로 표시 */
   myLocation?: { lat: number; lng: number };
+  /** 사진 위치 핀 목록 */
+  photoMarkers?: PhotoMarker[];
+  /** 사진 핀 클릭 콜백 — markerId는 클러스터 대표 사진 ID */
+  onPhotoMarkerClick?: (markerId: string) => void;
 }
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 }; // 서울 시청
@@ -203,8 +215,73 @@ function createEventMarkerContent(placeName: string): HTMLElement {
   return wrapper;
 }
 
+function createPhotoMarkerContent(url: string, count: number, onClick: () => void): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  `;
+
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = "";
+  img.style.cssText = `
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2.5px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    display: block;
+  `;
+
+  const tail = document.createElement("div");
+  tail.style.cssText = `
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid white;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+    margin-top: -1px;
+  `;
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(tail);
+
+  if (count > 1) {
+    const badge = document.createElement("div");
+    badge.style.cssText = `
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #ff4fa3;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    `;
+    badge.textContent = String(count);
+    wrapper.appendChild(badge);
+  }
+
+  wrapper.addEventListener("click", onClick);
+  return wrapper;
+}
+
 export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
-  { ready, eventLocation, participants = [], className, myLocation },
+  { ready, eventLocation, participants = [], className, myLocation, photoMarkers = [], onPhotoMarkerClick },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -212,6 +289,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   const eventOverlayRef = useRef<KakaoCustomOverlay | null>(null);
   const participantOverlaysRef = useRef<Map<string, KakaoCustomOverlay>>(new Map());
   const myLocationOverlayRef = useRef<KakaoCustomOverlay | null>(null);
+  const photoOverlaysRef = useRef<Map<string, KakaoCustomOverlay>>(new Map());
   const initializedRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
@@ -313,6 +391,43 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
     fitBounds();
   }, [participants]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 사진 핀 갱신
+  useEffect(() => {
+    if (!mapRef.current || !window.kakao?.maps) return;
+    const { maps } = window.kakao;
+
+    const incoming = new Set(photoMarkers.map((m) => m.id));
+
+    for (const [id, overlay] of photoOverlaysRef.current) {
+      if (!incoming.has(id)) {
+        overlay.setMap(null);
+        photoOverlaysRef.current.delete(id);
+      }
+    }
+
+    for (const marker of photoMarkers) {
+      const pos = new maps.LatLng(marker.lat, marker.lng);
+      const existing = photoOverlaysRef.current.get(marker.id);
+      if (existing) {
+        existing.setPosition(pos);
+        continue;
+      }
+      const content = createPhotoMarkerContent(marker.url, marker.count, () => {
+        onPhotoMarkerClick?.(marker.id);
+      });
+      const overlay = new maps.CustomOverlay({
+        position: pos,
+        content,
+        map: mapRef.current!,
+        yAnchor: 1.35,
+        zIndex: 8,
+      });
+      photoOverlaysRef.current.set(marker.id, overlay);
+    }
+
+    fitBounds();
+  }, [photoMarkers]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 내 위치 파란 점 갱신
   useEffect(() => {
     if (!mapRef.current || !window.kakao?.maps) return;
@@ -358,6 +473,9 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       if (!pin.isArrived) {
         bounds.extend(new maps.LatLng(pin.lat, pin.lng));
       }
+    }
+    for (const marker of photoMarkers) {
+      bounds.extend(new maps.LatLng(marker.lat, marker.lng));
     }
 
     if (!bounds.isEmpty()) {

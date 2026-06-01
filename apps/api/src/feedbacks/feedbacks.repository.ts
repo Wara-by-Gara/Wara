@@ -229,7 +229,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
   async create(
     data: Pick<
       NewFeedback,
-      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId' | 'attachedPhotoId'
+      'participantId' | 'content' | 'invitationId' | 'photoId' | 'parentId' | 'attachedPhotoId' | 'gifUrl'
     >,
   ) {
     return await this.db.transaction(async (tx) => {
@@ -247,10 +247,14 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
   }
 
   //댓글 수정
-  async update(id: string, content: string) {
+  async update(id: string, payload: { content?: string; gifUrl?: string }) {
+    // 상호 배타: gifUrl 있으면 content null, content 있으면 gifUrl null
+    const set = payload.gifUrl
+      ? { gifUrl: payload.gifUrl, content: null as string | null, updatedAt: new Date() }
+      : { content: payload.content!, gifUrl: null as string | null, updatedAt: new Date() };
     const [result] = await this.db
       .update(feedbacks)
-      .set({ content, updatedAt: new Date() })
+      .set(set)
       .where(eq(feedbacks.id, id))
       .returning();
     return result;

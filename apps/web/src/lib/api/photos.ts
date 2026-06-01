@@ -78,8 +78,22 @@ export function getPresignedUrl(
 export function registerPhoto(
   invitationId: string,
   imageKey: string,
+  meta?: {
+    takenAt?: string;
+    exifMetadata?: { gps_lat: number; gps_lng: number };
+  },
 ): Promise<Photo> {
-  return apiPost<Photo>(`/invitations/${invitationId}/photos`, { imageKey });
+  return apiPost<Photo>(`/invitations/${invitationId}/photos`, { imageKey, ...meta });
+}
+
+export interface PhotoLocation extends Photo {
+  takenAt: string | null;
+  gpsLat: number;
+  gpsLng: number;
+}
+
+export function getMyPhotoLocations(): Promise<PhotoLocation[]> {
+  return apiGet<PhotoLocation[]>('/photos/locations');
 }
 
 export function togglePhotoLike(

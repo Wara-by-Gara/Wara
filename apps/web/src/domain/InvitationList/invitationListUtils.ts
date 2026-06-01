@@ -27,6 +27,12 @@ export type MappedInvitationListItem = InvitationListItem & {
   _myRole?: "HOST" | "GUEST";
 };
 
+export function getInvitationCoverImageUrl(
+  inv: Pick<Invitation, "mainCoverType" | "mainGifUrl" | "mainImageUrl">,
+): string {
+  return inv.mainCoverType === "gif" ? (inv.mainGifUrl ?? "") : (inv.mainImageUrl ?? "");
+}
+
 export function mapInvitationsToListItems(invitations: Invitation[]): MappedInvitationListItem[] {
   return invitations.map((inv) => ({
     id: inv.id,
@@ -34,7 +40,7 @@ export function mapInvitationsToListItems(invitations: Invitation[]): MappedInvi
     description: "",
     date: formatInvitationEventDate(inv.eventStartAt),
     location: inv.eventLocation?.placeName ?? "",
-    coverImageUrl: inv.mainImageUrl ?? "",
+    coverImageUrl: getInvitationCoverImageUrl(inv),
     host: { name: "" },
     _status: inv.status,
     _myRole: inv.myRole,

@@ -14,7 +14,7 @@ interface Props {
 export default function ShareBottomSheet({ invitationId, open, onOpenChange }: Props) {
   const { data: invitation } = useInvitation(invitationId);
   const { copyLink, shareViaKakao, shareViaSms, shareViaInstagram, copied } =
-    useShareInvitation(invitationId, invitation?.title, invitation?.description, invitation?.mainImageUrl);
+    useShareInvitation(invitationId, invitation?.title, invitation?.description, invitation?.mainImageUrl ?? undefined);
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
@@ -23,7 +23,7 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
           <ShareOptionItem
             icon="link"
             title={copied ? "복사됨!" : "링크 복사"}
-            iconBg="bg-gray-100"
+            iconBg="bg-surface"
             onClick={copyLink}
           />
           <ShareOptionItem
@@ -35,7 +35,7 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
           <ShareOptionItem
             icon="message-circle"
             title="문자"
-            iconBg="bg-gray-100"
+            iconBg="bg-surface"
             onClick={shareViaSms}
           />
           <ShareOptionItem

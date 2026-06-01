@@ -17,7 +17,6 @@ import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { updateInvitationStatus, deleteInvitation } from "@/lib/api/invitations";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getParticipants } from "@/lib/api/participants";
-import type { getMe } from "@/lib/api/users";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS, getParticipantDisplayName } from "@/domain/InvitationDetail/types";
@@ -27,16 +26,14 @@ import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreview
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
-type Me = Awaited<ReturnType<typeof getMe>>;
 
 type Props = {
   invitationId: string;
   invitation: Invitation;
   participantsData: ParticipantsData | undefined;
-  me: Me | undefined;
 };
 
-export default function HostView({ invitationId, invitation, participantsData, me }: Props) {
+export default function HostView({ invitationId, invitation, participantsData }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: pollData } = usePoll(invitationId);
@@ -48,7 +45,8 @@ export default function HostView({ invitationId, invitation, participantsData, m
   const [deleteError, setDeleteError] = useState("");
 
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasImage = invitation.mainImageUrl && !invitation.mainImageKey.includes("defaults/");
+  const hasGif = invitation.mainCoverType === "gif";
+  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
 
   const summary = participantsData?.summary;
   const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];
@@ -93,10 +91,12 @@ export default function HostView({ invitationId, invitation, participantsData, m
       />
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6">
         <InvitationCover
-          variant={hasImage ? "image" : "color"}
-          imageUrl={hasImage ? invitation.mainImageUrl : undefined}
+          variant={hasGif || hasImage ? "image" : "color"}
+          imageUrl={hasImage ? (invitation.mainImageUrl ?? undefined) : undefined}
+          gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
           backgroundClass={invitation.bgColor}
           isHost
+          fitToImage
         />
         <header className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -162,17 +162,12 @@ export default function HostView({ invitationId, invitation, participantsData, m
             </div>
           </section>
         ) : (
-          <section className="rounded-3xl border border-dashed border-border-strong bg-gray-50 p-5 text-center">
+          <section className="rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center">
             <p className="text-[15px] font-semibold text-text-primary">아직 참석자가 없어요</p>
             <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
           </section>
         )}
-        <PhotoWithFeedbackContainer
-          invitationId={invitationId}
-          currentUserId={me?.id ?? null}
-          currentUserDisplayName={me?.name ?? null}
-          currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-        />
+        <PhotoWithFeedbackContainer invitationId={invitationId} />
       </main>
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />

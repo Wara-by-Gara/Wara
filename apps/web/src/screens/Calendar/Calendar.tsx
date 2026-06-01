@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { StickyHeader } from "@/components/layout/StickyHeader";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { MonthCalendar } from "@/components/organisms/MonthCalendar";
 import { useMyInvitations } from "@/hooks/useInvitations";
 import type { Invitation } from "@/lib/api/invitations";
 import { ROUTES } from "@/constants/routes";
+import { getInvitationCoverImageUrl } from "@/domain/InvitationList/invitationListUtils";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -93,14 +94,16 @@ export function Calendar() {
   };
 
   const getDayThumbnails = (key: string) =>
-    (eventsByDay.get(key) ?? []).map((e) => e.mainImageUrl).filter(Boolean);
+    (eventsByDay.get(key) ?? [])
+      .map((e) => getInvitationCoverImageUrl(e))
+      .filter((u): u is string => !!u);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <TopAppBar className="shrink-0" title="캘린더" />
+      <StickyHeader title="캘린더" />
 
       {!isLoading && !hasAnyEvent ? (
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center px-5">
+        <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-5">
           <EmptyState
             icon="calendar"
             title="아직 일정이 없어요"
@@ -108,7 +111,7 @@ export function Calendar() {
           />
         </main>
       ) : (
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+        <main className="relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4 pt-[72px]">
           <MonthCalendar
             year={year}
             month={month}
@@ -126,7 +129,7 @@ export function Calendar() {
                 type="button"
                 aria-label="이전 날"
                 onClick={() => shiftDay(-1)}
-                className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
               >
                 <Icon name="chevron-left" size="sm" color="inactive" decorative />
               </button>
@@ -137,7 +140,7 @@ export function Calendar() {
                 type="button"
                 aria-label="다음 날"
                 onClick={() => shiftDay(1)}
-                className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100"
+                className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
               >
                 <Icon name="chevron-right" size="sm" color="inactive" decorative />
               </button>
@@ -147,17 +150,19 @@ export function Calendar() {
               <p className="py-6 text-center text-[14px] text-text-tertiary">이 날 일정이 없어요</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {selectedEvents.map((ev) => (
+                {selectedEvents.map((ev) => {
+                  const coverUrl = getInvitationCoverImageUrl(ev);
+                  return (
                   <button
                     key={ev.id}
                     type="button"
                     onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
-                    className="flex items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-gray-50"
+                    className="flex items-center gap-3 rounded-xl p-2 text-left hover-emphasis-sm"
                   >
                     <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                      {ev.mainImageUrl ? (
+                      {coverUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={ev.mainImageUrl} alt="" className="h-full w-full object-cover" />
+                        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -172,7 +177,8 @@ export function Calendar() {
                       </span>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

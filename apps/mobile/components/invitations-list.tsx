@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -66,14 +66,19 @@ export function InvitationsList({ onLogout }: { onLogout: () => void }) {
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <ThemedText type="title">내 초대장</ThemedText>
-        <Pressable
-          onPress={async () => {
-            await clearTokens();
-            await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
-            onLogout();
-          }}>
-          <ThemedText style={styles.logout}>로그아웃</ThemedText>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable onPress={() => router.push('/photos/map')}>
+            <ThemedText style={styles.mapLink}>사진 지도</ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={async () => {
+              await clearTokens();
+              await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
+              onLogout();
+            }}>
+            <ThemedText style={styles.logout}>로그아웃</ThemedText>
+          </Pressable>
+        </View>
       </View>
       <FlatList
         data={query.data}
@@ -125,6 +130,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     paddingTop: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  mapLink: {
+    fontSize: 14,
+    color: colors.primary,
   },
   logout: {
     fontSize: 14,

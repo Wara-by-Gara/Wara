@@ -15,6 +15,7 @@ import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
 import { useMe } from "@/hooks/useUsers";
 import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 import { timeAgo } from "@/utils/timeAge";
+import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal/ParticipantProfileModal";
 
 interface Props {
   invitationId: string;
@@ -30,6 +31,7 @@ export const Comments = ({ invitationId }: Props) => {
   const [deletingCommentId, setDeletingCommentId] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+  const [profileModal, setProfileModal] = useState<{ userId: string; isHost: boolean } | null>(null);
 
   const feedbacks = data?.pages.flatMap((p) => p.rows) ?? [];
   const totalCount = data?.pages[0]?.total ?? feedbacks.length;
@@ -76,9 +78,7 @@ export const Comments = ({ invitationId }: Props) => {
 
       <main className={cn(mainCentered ? mobileMainCenter : mobileMainScroll)}>
         {isLoading ? (
-          <div className="px-2 py-2">
-            <CommentListSkeleton />
-          </div>
+          <CommentListSkeleton />
         ) : isError ? (
           <ErrorState title="댓글을 불러오지 못했어요" onRetry={() => {}} />
         ) : feedbacks.length === 0 ? (
@@ -98,15 +98,10 @@ export const Comments = ({ invitationId }: Props) => {
                   key={f.id}
                   variant={isDeleted ? "deleted" : isEditing ? "editing" : isMine ? "mine" : "default"}
                   authorName={getCommentAuthorName(f.participant.user)}
-                  onReply={
-                    !isDeleted
-                      ? () =>
-                          setReplyingTo({
-                            id: f.id,
-                            authorName: getCommentAuthorName(f.participant.user),
-                          })
-                      : undefined
-                  }
+                  authorInitialName={f.participant.user.name ?? undefined}
+                  authorHandle={f.participant.user.nickname ?? undefined}
+                  onAvatarClick={!isDeleted ? () => setProfileModal({ userId: f.participant.userId, isHost: f.participant.memberRole === 'HOST' }) : undefined}
+                  onReply={!isDeleted ? () => setReplyingTo({ id: f.id, authorName: f.participant.user.nickname ?? '' }) : undefined}
                   authorAvatarUrl={f.participant.user.profileImageUrl ?? undefined}
                   createdAt={timeAgo(f.createdAt)}
                   content={f.content}
@@ -117,24 +112,27 @@ export const Comments = ({ invitationId }: Props) => {
                     return {
                       id: r.id,
                       authorName: getCommentAuthorName(r.participant.user),
+                      authorInitialName: r.participant.user.name ?? undefined,
+                      authorHandle: r.participant.user.nickname ?? undefined,
                       authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
+                      onAvatarClick: !isReplyDeleted ? () => setProfileModal({ userId: r.participant.userId, isHost: r.participant.memberRole === 'HOST' }) : undefined,
                       createdAt: timeAgo(r.createdAt),
-                      content: r.content,
+                      content: r.content ?? '',
                       variant: isReplyDeleted ? ("deleted" as const) : isReplyMine ? ("mine" as const) : ("default" as const),
-                      moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+                      moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content ?? '') : undefined,
                       editingSlot: isReplyEditing ? (
                         <InlineCommentEditor
-                          initialValue={r.content}
+                          initialValue={r.content ?? ''}
                           onSubmit={handleEdit}
                           onCancel={() => setEditingComment(undefined)}
                         />
                       ) : undefined,
                     };
                   })}
-                  moreMenuItems={isMine ? buildMenuItems(f.id, f.content) : undefined}
+                  moreMenuItems={isMine ? buildMenuItems(f.id, f.content ?? '') : undefined}
                   editingSlot={isEditing ? (
                     <InlineCommentEditor
-                      initialValue={f.content}
+                      initialValue={f.content ?? ''}
                       onSubmit={handleEdit}
                       onCancel={() => setEditingComment(undefined)}
                     />
@@ -146,7 +144,7 @@ export const Comments = ({ invitationId }: Props) => {
         )}
       </main>
 
-      <div className="shrink-0">
+      <div className="shrink-0 pt-2">
         {replyingTo && (
           <div className="flex items-center justify-between border-t border-border bg-primary-soft px-4 py-1.5">
             <span className="text-[13px] text-primary">@{replyingTo.authorName}에게 답글</span>
@@ -154,8 +152,6 @@ export const Comments = ({ invitationId }: Props) => {
           </div>
         )}
         <CommentInputBar
-          avatarUrl={me?.profileImageUrl ?? undefined}
-          authorName={me?.name ?? undefined}
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);
@@ -176,6 +172,15 @@ export const Comments = ({ invitationId }: Props) => {
         onConfirm={handleDelete}
         loading={isDeleting}
       />
+      {profileModal && (
+        <ParticipantProfileModal
+          open={true}
+          onOpenChange={(open) => { if (!open) setProfileModal(null); }}
+          userId={profileModal.userId}
+          isHost={profileModal.isHost}
+          contained
+        />
+      )}
     </div>
   );
 };

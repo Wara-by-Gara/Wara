@@ -51,7 +51,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={cn(
             "w-full rounded-[14px] border bg-surface p-4 text-[16px] text-text-primary placeholder:text-text-tertiary transition-colors resize-y",
             "outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
-            "disabled:bg-gray-50 disabled:cursor-not-allowed",
+            "disabled:bg-background-soft disabled:cursor-not-allowed",
             error
               ? "border-danger focus:border-danger focus:ring-danger/20"
               : "border-border-strong",

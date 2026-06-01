@@ -1,16 +1,23 @@
 "use client";
 
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, useEffect, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Badge } from "@/components/primitives/Badge";
 import { IconButton } from "@/components/primitives/IconButton";
 import { cn } from "@/lib/cn";
+import {
+  clampCoverRatio,
+  COVER_DEFAULT_RATIO,
+} from "@/utils/invitationCoverAspect";
 
 export interface InvitationCoverProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 표지 모드 */
   variant?: "image" | "color" | "template" | "no-image";
   /** 이미지 URL (image / template) */
   imageUrl?: string;
+  /** GIF URL (Klipy CDN) */
+  gifUrl?: string;
   /** 배경 클래스 (color) */
   backgroundClass?: string;
   /** D-day 배지 텍스트 (예: 'D-3', 'TODAY') */
@@ -27,6 +34,8 @@ export interface InvitationCoverProps extends React.HTMLAttributes<HTMLDivElemen
   children?: ReactNode;
   /** 하단 검정 그라데이션 숨김 */
   hideBottomGradient?: boolean;
+  /** 이미지/GIF 원본 비율에 맞춰 높이 가변(1.91:1~3:4 clamp). 상세 페이지 전용 */
+  fitToImage?: boolean;
 }
 
 const containerBase =
@@ -38,6 +47,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       className,
       variant = "image",
       imageUrl,
+      gifUrl,
       backgroundClass,
       ddayLabel,
       isHost,
@@ -46,22 +56,62 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       onBack,
       children,
       hideBottomGradient = false,
+      fitToImage = false,
+      style,
       ...props
     },
     ref,
   ) {
+    const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
+
+    const mediaUrl =
+      gifUrl ??
+      ((variant === "image" || variant === "template") && imageUrl ? imageUrl : undefined);
+    const fit = fitToImage && !!mediaUrl;
+    const displayRatio = clampCoverRatio(naturalRatio ?? COVER_DEFAULT_RATIO);
+
+    useEffect(() => {
+      setNaturalRatio(null);
+    }, [mediaUrl]);
+
+    const handleMediaLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = e.currentTarget;
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setNaturalRatio(img.naturalWidth / img.naturalHeight);
+      }
+    };
+
     return (
       <div
         ref={ref}
         className={cn(
-          containerBase,
-          variant === "color" && (backgroundClass ?? "bg-white"),
-          variant === "no-image" && "bg-gray-100",
+          fit ? "relative w-full overflow-hidden rounded-3xl" : containerBase,
+          !fit && variant === "color" && (backgroundClass ?? "bg-white"),
+          !fit && variant === "no-image" && "bg-gray-100",
+          fit && variant === "color" && (backgroundClass ?? "bg-white"),
+          fit && variant === "no-image" && "bg-gray-100",
           className,
         )}
+        style={fit ? { aspectRatio: String(displayRatio), ...style } : style}
         {...props}
       >
-        {(variant === "image" || variant === "template") && imageUrl ? (
+        {fit && mediaUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={mediaUrl}
+            alt=""
+            onLoad={handleMediaLoad}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : gifUrl ? (
+          <Image
+            src={gifUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        ) : (variant === "image" || variant === "template") && imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
@@ -90,7 +140,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
               size="sm"
               aria-label="뒤로가기"
               onClick={onBack}
-              className="bg-black/40 text-white hover:bg-black/60"
+              className="bg-black/40 text-white hover-emphasis-sm"
             />
           ) : (
             <span />
@@ -103,7 +153,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="공유"
                 onClick={onShare}
-                className="bg-black/40 text-white hover:bg-black/60"
+                className="bg-black/40 text-white hover-emphasis-sm"
               />
             ) : null}
             {isHost && onMore ? (
@@ -113,7 +163,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="더보기"
                 onClick={onMore}
-                className="bg-black/40 text-white hover:bg-black/60"
+                className="bg-black/40 text-white hover-emphasis-sm"
               />
             ) : null}
           </div>

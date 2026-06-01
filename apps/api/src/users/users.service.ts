@@ -15,23 +15,23 @@ export class UsersService {
   ) {}
 
   async generatePresignedUrl(userId: string, dto: ProfileImagePresignedUrlDto) {
-    const key = `profile-images/${userId}/${ulid()}/${dto.fileName}`;
+    const key = `public/profiles/${userId}/${ulid()}/${dto.fileName}`;
     return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
   }
 
   private isS3Key(value: string): boolean {
-    return value.startsWith('profile-images/');
+    return value.startsWith('public/profiles/');
   }
 
-  private async getViewUrl(key: string): Promise<string> {
-    return this.s3Service.getViewPresignedUrl(key);
+  private getViewUrl(key: string): string {
+    return this.s3Service.getPublicUrl(key);
   }
 
   async getMe(userId: string) {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
-      return { ...user, profileImageUrl: await this.getViewUrl(user.profileImageUrl) };
+      return { ...user, profileImageUrl: this.getViewUrl(user.profileImageUrl) };
     }
     return user;
   }
@@ -40,7 +40,7 @@ export class UsersService {
     const updated = await this.repository.updateUser(userId, data);
     if (!updated) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     if (updated.profileImageUrl && this.isS3Key(updated.profileImageUrl)) {
-      return { ...updated, profileImageUrl: await this.getViewUrl(updated.profileImageUrl) };
+      return { ...updated, profileImageUrl: this.getViewUrl(updated.profileImageUrl) };
     }
     return updated;
   }
@@ -69,7 +69,7 @@ export class UsersService {
     const user = await this.repository.findPublicById(targetId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
     if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
-      return { ...user, profileImageUrl: await this.getViewUrl(user.profileImageUrl) };
+      return { ...user, profileImageUrl: this.getViewUrl(user.profileImageUrl) };
     }
     return user;
   }

@@ -23,7 +23,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       <div className="flex items-center gap-2">
         <div
           className={cn(
-            "flex flex-1 items-center gap-2 rounded-full bg-gray-100 px-4 h-11",
+            "flex flex-1 items-center gap-2 rounded-full bg-surface px-4 h-11",
             "focus-within:bg-surface focus-within:ring-2 focus-within:ring-primary",
             disabled && "opacity-40",
             className,

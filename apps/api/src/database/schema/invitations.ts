@@ -1,7 +1,7 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { invitationStatusEnum, linkEventTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
+import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
 import { users } from './users';
 
 export const invitationTemplates = pgTable('invitation_templates', {
@@ -11,6 +11,9 @@ export const invitationTemplates = pgTable('invitation_templates', {
   theme: varchar('theme', { length: 50 }).notNull(),
   font: varchar('font', { length: 50 }).notNull(),
   effect: varchar('effect', { length: 50 }),
+  prompt: text('prompt').default(
+    '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. 배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.',
+  ),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -23,7 +26,9 @@ export const invitations = pgTable('invitations', {
   status: invitationStatusEnum('status').notNull().default('active'),
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description').notNull(),
-  mainImageKey: text('main_image_key').notNull(),
+  mainCoverType: mainCoverTypeEnum('main_cover_type').notNull().default('image'),
+  mainImageKey: text('main_image_key'),
+  mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   bgColor: varchar('bg_color', { length: 50 }).notNull().default('bg-white'),
@@ -37,7 +42,10 @@ export const invitations = pgTable('invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  check('check_cover_type_image', sql`${t.mainCoverType} <> 'image' OR (${t.mainImageKey} IS NOT NULL AND ${t.mainGifUrl} IS NULL)`),
+  check('check_cover_type_gif', sql`${t.mainCoverType} <> 'gif' OR (${t.mainGifUrl} IS NOT NULL AND ${t.mainImageKey} IS NULL)`),
+]);
 
 export const participants = pgTable('participants', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),

@@ -8,6 +8,7 @@ import { InvitationDetailProps } from '../../types';
 import Album from '../Album/Album';
 import InvitationFeedbacks from '../InvitationFeedbacks/InvitationFeedbacks';
 import BestNineModal from '../../BestNine/BestNineModal';
+import { InvitationFeedSkeleton } from '@/components/organisms/Skeleton';
 
 function isMomentLogVisible(eventStartAt: string | null): boolean {
   if (!eventStartAt) return false;
@@ -16,12 +17,7 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
   );
 }
 
-export default function PhotoWithFeedbackContainer({
-  invitationId,
-  currentUserId,
-  currentUserDisplayName,
-  currentUserProfileImageUrl,
-}: InvitationDetailProps) {
+export default function PhotoWithFeedbackContainer({ invitationId }: InvitationDetailProps) {
   const { data, isLoading, hasNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;
@@ -33,7 +29,7 @@ export default function PhotoWithFeedbackContainer({
 
   const [showMomentLogModal, setShowMomentLogModal] = useState(false);
 
-  if (isLoading) return <div>로딩중 ....</div>;
+  if (isLoading) return <InvitationFeedSkeleton />;
 
   return (
     <>
@@ -58,12 +54,7 @@ export default function PhotoWithFeedbackContainer({
         total={total}
         hasNextPage={!!hasNextPage}
       />
-      <InvitationFeedbacks
-        invitationId={invitationId}
-        currentUserId={currentUserId}
-        currentUserDisplayName={currentUserDisplayName}
-        currentUserProfileImageUrl={currentUserProfileImageUrl}
-      />
+      <InvitationFeedbacks invitationId={invitationId} />
       {showMomentLogModal && (
         <BestNineModal
           invitationId={invitationId}

@@ -14,9 +14,10 @@ const barVariants = cva(
         solid: "bg-surface border-b border-border",
         transparent: "bg-transparent",
         scrolled: "bg-surface border-b border-border shadow-xs",
+        glass: "bg-surface/70 backdrop-blur-xl border-b border-border/50",
       },
     },
-    defaultVariants: { variant: "solid" },
+    defaultVariants: { variant: "glass" },
   },
 );
 
@@ -31,8 +32,10 @@ export interface TopAppBarProps
   title?: ReactNode;
   /** 큰 제목 모드 — 좌측 정렬, 22px */
   largeTitle?: boolean;
-  /** WARA 브랜드 로고 — 픽셀 폰트 적용 */
+  /** WARA 브랜드 로고 — Gmarket 폰트 적용 */
   brandLogo?: boolean;
+  /** 헤더 바 좌측용 작은 WARA 로고 (알림 아이콘 높이에 맞춤) */
+  brandLogoCompact?: boolean;
   /** 제목 추가 클래스 (로고·픽셀 폰트 등) */
   titleClassName?: string;
   /** 우측 액션 슬롯 */
@@ -49,6 +52,7 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
       title,
       largeTitle,
       brandLogo,
+      brandLogoCompact,
       titleClassName,
       rightSlot,
       ...props
@@ -57,14 +61,21 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
   ) {
     const logoTitleClass = brandLogo
       ? cn(
-          "font-pixel font-normal tracking-wide leading-none",
-          largeTitle ? "text-[32px]" : "text-[28px]",
+          "font-gmarket font-bold tracking-wide leading-none",
+          brandLogoCompact
+            ? "ml-[4px] text-[20px] text-white"
+            : cn("text-wara-black", largeTitle ? "text-[32px]" : "text-[28px]"),
         )
       : undefined;
+
+    const compactBrandLogo = brandLogo && brandLogoCompact ? (
+      <span className={cn(logoTitleClass, titleClassName)}>WARA</span>
+    ) : null;
+
     const left = leftSlot ??
       (onBack ? (
         <IconButton icon="chevron-left" aria-label="뒤로가기" onClick={onBack} variant="ghost" />
-      ) : null);
+      ) : compactBrandLogo);
 
     const gridCols = largeTitle
       ? "grid-cols-[auto_1fr_auto]"
@@ -81,8 +92,8 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
           largeTitle ? (
             <h1
               className={cn(
-                "truncate text-left text-text-primary",
-                brandLogo ? logoTitleClass : "text-[22px] font-bold",
+                "truncate text-left",
+                brandLogo ? logoTitleClass : "text-[22px] font-bold text-text-primary",
                 titleClassName,
               )}
             >
@@ -91,8 +102,10 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
           ) : (
             <h1
               className={cn(
-                "truncate text-text-primary",
-                brandLogo ? cn("text-center", logoTitleClass) : "text-center text-[18px] font-bold",
+                "truncate",
+                brandLogo
+                  ? cn("text-center", logoTitleClass)
+                  : "text-center text-[18px] font-bold text-text-primary",
                 titleClassName,
               )}
             >

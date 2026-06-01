@@ -6,8 +6,17 @@ import { z } from 'zod';
  *
  * content만 수정 가능 (초대장/사진은 변경 불가)
  */
-export const UpdateFeedbackSchema = z.object({
-  content: z.string().min(1),
-});
+export const UpdateFeedbackSchema = z
+  .object({
+    content: z.string().min(1).optional(),
+    gifUrl: z
+      .string()
+      .url()
+      .startsWith('https://static.klipy.com/')
+      .optional(),
+  })
+  .refine((d) => (d.content && d.content.length > 0) || !!d.gifUrl, {
+    message: 'content or gifUrl is required',
+  });
 
 export type UpdateFeedbackDto = z.infer<typeof UpdateFeedbackSchema>;

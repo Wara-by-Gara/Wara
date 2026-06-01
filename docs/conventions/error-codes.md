@@ -117,6 +117,25 @@
 | `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
 | `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
 
+## AI
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `AI_PROCESSING_FAILED` | 500 | OpenAI 이미지 합성 실패 |
+| `AI_TIMEOUT` | 504 | OpenAI 응답 시간 초과 (60초) |
+| `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
+| `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
+| `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+
+## Terms
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `TERMS_AGREEMENT_REQUIRED` | 403 | 필수 약관 미동의 상태로 API 접근 |
+| `TERM_NOT_FOUND` | 404 | 약관 없음 |
+| `TERM_AGREEMENT_ALREADY_EXISTS` | 409 | 이미 동의한 버전에 재동의 시도 |
+
+
 ---
 
 ## 규칙

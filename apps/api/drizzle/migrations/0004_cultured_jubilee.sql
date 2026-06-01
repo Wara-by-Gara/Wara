@@ -1,1 +1,0 @@
-ALTER TABLE "participants" ADD COLUMN "display_name" varchar(100);

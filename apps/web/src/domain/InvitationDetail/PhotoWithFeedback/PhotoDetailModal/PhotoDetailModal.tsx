@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode, type ChangeEvent } from 'react';
 import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import { GifPicker } from '@/components/organisms/GifPicker';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
@@ -36,6 +37,8 @@ export default function PhotoDetailModal({
   const [isLiking, setIsLiking] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  const [pendingGif, setPendingGif] = useState<string | null>(null);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const photo = photos[index];
   const { data: me } = useMe();
@@ -80,7 +83,7 @@ export default function PhotoDetailModal({
   if (!photo) return null;
 
   const currentLikeCount = likeCountMap.get(photo.id) ?? photo.likeCount;
-  const currentLiked = likedMap.get(photo.id) ?? false;
+  const currentLiked = likedMap.get(photo.id) ?? photo.liked ?? false;
 
   const handleSave = async () => {
     const items = await getDownloadUrls(photo.invitationId, [photo.id]);
@@ -97,10 +100,19 @@ export default function PhotoDetailModal({
 
   const handleLike = async () => {
     if (isLiking) return;
+
+    const prevLiked = currentLiked;
+    const prevCount = currentLikeCount;
+    const optimisticLiked = !prevLiked;
+    const optimisticCount = optimisticLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
+
+    onLikeChange(photo.id, optimisticLiked, optimisticCount);
     setIsLiking(true);
     try {
       const result = await togglePhotoLike(photo.invitationId, photo.id);
       onLikeChange(photo.id, result.liked, result.likeCount);
+    } catch {
+      onLikeChange(photo.id, prevLiked, prevCount);
     } finally {
       setIsLiking(false);
     }
@@ -127,9 +139,10 @@ export default function PhotoDetailModal({
       await updateComment(editingComment.id, text);
       setEditingComment(undefined);
     } else {
-      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined);
+      await submitComment(text, replyingTo?.id, mentionedUserIds.length ? mentionedUserIds : undefined, pendingGif ?? undefined);
       setReplyingTo(null);
       setMentionedUserIds([]);
+      setPendingGif(null);
     }
     setInputValue('');
   };
@@ -140,7 +153,7 @@ export default function PhotoDetailModal({
     const isEditing = editingComment?.id === f.id;
     const editingSlot: ReactNode = isEditing ? (
       <InlineCommentEditor
-        initialValue={f.content}
+        initialValue={f.content ?? ''}
         onSubmit={(text) => handleCommentSubmit(text)}
         onCancel={() => setEditingComment(undefined)}
       />
@@ -149,13 +162,14 @@ export default function PhotoDetailModal({
       id: f.id,
       authorName: getCommentAuthorName(f.participant.user),
       authorAvatarUrl: f.participant.user.profileImageUrl ?? undefined,
-      content: f.content,
+      content: f.content ?? '',
+      gifUrl: f.gifUrl ?? undefined,
       createdAt: timeAgo(f.createdAt),
       variant: isDeleted ? ('deleted' as const) : isMine ? ('mine' as const) : ('default' as const),
       likeCount: !isDeleted ? getLikeCount(f.id, f.likeCount) : undefined,
       liked: !isDeleted ? getLiked(f.id, f.likedByMe ?? false) : undefined,
       onLike: !isDeleted ? () => toggleLike(f.id, getLiked(f.id, f.likedByMe ?? false), getLikeCount(f.id, f.likeCount)) : undefined,
-      moreMenuItems: isMine ? buildMenuItems(f.id, f.content) : undefined,
+      moreMenuItems: isMine ? buildMenuItems(f.id, f.content ?? '') : undefined,
       editingSlot,
       onReply: !isDeleted ? () => {
         setCommentsOpen(true);
@@ -167,25 +181,24 @@ export default function PhotoDetailModal({
         const isReplyEditing = editingComment?.id === r.id;
         const replyEditingSlot: ReactNode = isReplyEditing ? (
           <InlineCommentEditor
-            initialValue={r.content}
+            initialValue={r.content ?? ''}
             onSubmit={(text) => handleCommentSubmit(text)}
             onCancel={() => setEditingComment(undefined)}
           />
         ) : undefined;
         return {
           id: r.id,
-          authorName:
-            isReplyMine && me
-              ? getCommentAuthorName(me)
-              : getCommentAuthorName(r.participant.user),
+          authorName: getCommentAuthorName(r.participant.user),
+          authorInitialName: r.participant.user.name ?? undefined,
           authorAvatarUrl: r.participant.user.profileImageUrl ?? undefined,
-          content: isReplyDeleted ? '' : r.content,
+          content: isReplyDeleted ? '' : (r.content ?? ''),
+          gifUrl: !isReplyDeleted ? (r.gifUrl ?? undefined) : undefined,
           createdAt: timeAgo(r.createdAt),
           variant: isReplyDeleted ? ('deleted' as const) : isReplyMine ? ('mine' as const) : ('default' as const),
           likeCount: !isReplyDeleted ? getLikeCount(r.id, r.likeCount) : undefined,
           liked: !isReplyDeleted ? getLiked(r.id, r.likedByMe ?? false) : undefined,
           onLike: !isReplyDeleted ? () => toggleLike(r.id, getLiked(r.id, r.likedByMe ?? false), getLikeCount(r.id, r.likeCount)) : undefined,
-          moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content) : undefined,
+          moreMenuItems: isReplyMine ? buildMenuItems(r.id, r.content ?? '') : undefined,
           editingSlot: replyEditingSlot,
         };
       }),
@@ -219,10 +232,24 @@ export default function PhotoDetailModal({
       commentsOpen={commentsOpen}
       onCommentsOpenChange={setCommentsOpen}
       comments={comments}
+      currentUserAvatarUrl={me?.profileImageUrl ?? undefined}
+      currentUserInitialName={me?.name ?? undefined}
+      currentUserNickname={me?.name ?? undefined}
       onCommentSubmit={handleCommentSubmit}
       commentPlaceholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
       inputValue={inputValue}
       onInputValueChange={setInputValue}
+      pendingGif={pendingGif}
+      onGifClear={() => setPendingGif(null)}
+      onGifButtonClick={() => setGifPickerOpen((v) => !v)}
+      gifPicker={gifPickerOpen ? (
+        <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10 bg-black/80">
+          <GifPicker
+            onSelect={(url) => { setPendingGif(url); setGifPickerOpen(false); }}
+            onClose={() => setGifPickerOpen(false)}
+          />
+        </div>
+      ) : undefined}
       mentionDropdown={mentionQuery !== null ? (
         <div className="mx-3 mb-1 rounded-2xl border border-white/10 bg-black/80 overflow-hidden">
           {isParticipantsLoading ? (
@@ -239,7 +266,7 @@ export default function PhotoDetailModal({
                       e.preventDefault();
                       handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
                   >
                     <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" initial={p.user.nickname?.[0]} />
                     <span className="text-[14px] text-white">@{p.user.nickname}</span>

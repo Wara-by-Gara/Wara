@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import imageCompression from "browser-image-compression";
+import type { Area } from "react-easy-crop";
 import { cn } from "@/lib/cn";
 import { searchPlaces } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
@@ -22,13 +24,23 @@ import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { createInvitation, getInvitationImagePresignedUrl, uploadImageToS3 } from "@/lib/api/invitations";
+import { createInvitation, getInvitationImagePresignedUrl } from "@/lib/api/invitations";
+import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
 import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
 import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
 import { createPoll } from "@/lib/api/dateVote";
+import ImageCropEditor from "@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor";
+import { getCroppedImageBlob } from "@/utils/cropImage";
+import {
+  clampCoverRatio,
+  isCoverRatioOutOfBounds,
+  loadImageNaturalRatio,
+} from "@/utils/invitationCoverAspect";
+
+const COVER_CONTENT_TYPE = "image/webp" as const;
 
 type Step =
   | "start"
@@ -128,7 +140,7 @@ function MissionTemplateSection({
   });
 
   if (isLoading) {
-    return <div className="h-24 animate-pulse rounded-2xl bg-gray-100" />;
+    return <div className="h-24 animate-pulse rounded-2xl bg-surface" />;
   }
 
   if (missionTemplates.length === 0) return null;
@@ -153,8 +165,8 @@ function MissionTemplateSection({
                 isSelected
                   ? "border-primary bg-primary-soft"
                   : disabled
-                  ? "border-border bg-gray-50 opacity-50"
-                  : "border-border bg-surface hover:bg-gray-50",
+                  ? "border-border bg-background-soft opacity-50"
+                  : "border-border bg-surface hover-emphasis-sm",
               )}
             >
               <span className={cn("flex-1 text-[14px]", isSelected ? "font-semibold text-primary" : "text-text-primary")}>
@@ -218,6 +230,14 @@ export default function InvitationCreateContainer() {
   const [selectedPackId, setSelectedPackId] = useState<string>("default");
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [editingRsvp, setEditingRsvp] = useState<RsvpType | null>(null);
+  // main image
+  const [mainGifUrl, setMainGifUrl] = useState("");
+  const [imageTab, setImageTab] = useState<"upload" | "gif">("upload");
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropAspect, setCropAspect] = useState(4 / 5);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -238,6 +258,12 @@ export default function InvitationCreateContainer() {
   });
 
   // 로그인 리다이렉트 후 복귀 처리
+  useEffect(() => {
+    return () => {
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+    };
+  }, [cropSrc]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -298,7 +324,7 @@ export default function InvitationCreateContainer() {
       const invitation = await createInvitation({
         title: form.title,
         description: form.description,
-        mainImageKey: form.mainImageKey,
+        ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
         templateId: form.templateId || undefined,
         eventStartAt: toEventStartAt(form.date, form.time),
         bgColor: designBgColor,
@@ -344,15 +370,71 @@ export default function InvitationCreateContainer() {
 
   const set = (patch: Partial<FormData>) => setForm((f) => ({ ...f, ...patch }));
 
+  const uploadCoverBlob = useCallback(async (blob: Blob) => {
+    const fileName = `main-${Date.now()}.webp`;
+    const { presignedUrl, key } = await getInvitationImagePresignedUrl(fileName, COVER_CONTENT_TYPE);
+    await fetch(presignedUrl, {
+      method: "PUT",
+      body: blob,
+      headers: { "Content-Type": COVER_CONTENT_TYPE },
+    });
+    setLocalPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(blob);
+    });
+    set({ mainImageKey: key });
+    setImageError(false);
+  }, []);
+
   const handleImageFile = async (file: File) => {
+    setImageUploadError(false);
+    setMainGifUrl("");
+    setImageUploading(true);
+
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+      const objectUrl = URL.createObjectURL(compressed);
+      const naturalRatio = await loadImageNaturalRatio(objectUrl);
+
+      if (isCoverRatioOutOfBounds(naturalRatio)) {
+        setCropAspect(clampCoverRatio(naturalRatio));
+        setCropSrc(objectUrl);
+        setCroppedAreaPixels(null);
+        return;
+      }
+
+      await uploadCoverBlob(compressed);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      setLocalPreviewUrl(null);
+      setImageUploadError(true);
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCroppedAreaPixels(null);
+  };
+
+  const handleCropConfirm = async () => {
+    if (!cropSrc || !croppedAreaPixels) return;
     setImageUploading(true);
     setImageUploadError(false);
+
     try {
-      const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
-      const { presignedUrl, key } = await getInvitationImagePresignedUrl(file.name, contentType);
-      await uploadImageToS3(presignedUrl, file);
-      set({ mainImageKey: key });
-      setImageError(false);
+      const blob = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
+      await uploadCoverBlob(blob);
+      URL.revokeObjectURL(cropSrc);
+      setCropSrc(null);
+      setCroppedAreaPixels(null);
     } catch {
       setImageUploadError(true);
     } finally {
@@ -474,8 +556,10 @@ export default function InvitationCreateContainer() {
                 onClick={() => {
                   if (form.templateId === t.id) {
                     set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   } else {
                     set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
+                    setLocalPreviewUrl(null);
                   }
                 }}
               />
@@ -498,7 +582,7 @@ export default function InvitationCreateContainer() {
   // basicInfo
   if (step === "basicInfo") {
     const handleNext = () => {
-      const needsImage = !form.templateId && form.mainImageKey === DEFAULT_COVER_KEY;
+      const needsImage = !form.templateId && form.mainImageKey === DEFAULT_COVER_KEY && !mainGifUrl;
       if (needsImage) { setImageError(true); }
       if (!form.title.trim()) { setTitleError(true); }
       if (needsImage || !form.title.trim()) return;
@@ -514,50 +598,143 @@ export default function InvitationCreateContainer() {
           <FormField label="대표 이미지">
             {form.templateId ? (
               <InvitationCover
-                imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-                variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+                imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+                variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
               />
             ) : (
               <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
-                />
-                {imageUploading ? (
-                  <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
-                    <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-                  </div>
-                ) : imageUploadError ? (
-                  <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
-                    <Icon name="alert-triangle" size="lg" color="danger" decorative />
-                    <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
-                  </div>
-                ) : form.mainImageKey === DEFAULT_COVER_KEY ? (
+                {/* 탭: 이미지 업로드 / GIF */}
+                <div className="mb-3 flex gap-2">
                   <button
                     type="button"
+                    onClick={() => setImageTab("upload")}
                     className={cn(
-                      "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
-                      imageError ? "border-danger bg-red-50" : "border-border-strong bg-gray-50",
+                      "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
+                      imageTab === "upload" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
                     )}
-                    onClick={() => { fileInputRef.current?.click(); }}
                   >
-                    <div className="flex flex-col items-center gap-2 text-text-tertiary">
-                      <Icon name="image" size="xl" color={imageError ? "danger" : "inactive"} decorative />
-                      <span className={cn("text-[13px]", imageError && "text-danger")}>
-                        {imageError ? "대표 이미지를 추가해주세요" : "사진을 추가해보세요"}
-                      </span>
-                    </div>
+                    이미지 업로드
                   </button>
-                ) : (
-                  <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                    <InvitationCover
-                      imageUrl={form.mainImageKey}
-                      variant="image"
+                  <button
+                    type="button"
+                    onClick={() => setImageTab("gif")}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
+                      imageTab === "gif" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
+                    )}
+                  >
+                    GIF
+                  </button>
+                </div>
+
+                {imageTab === "upload" ? (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
                     />
-                  </button>
+                    {cropSrc ? (
+                      <div className="flex flex-col gap-3">
+                        <p className="text-[13px] text-text-secondary">
+                          사진 비율이 표시 범위를 벗어나요. 드래그·확대로 맞춰주세요.
+                        </p>
+                        <ImageCropEditor
+                          imageSrc={cropSrc}
+                          aspect={cropAspect}
+                          onCropComplete={setCroppedAreaPixels}
+                        />
+                        <div className="flex gap-2">
+                          <Button variant="secondary" className="flex-1" onClick={handleCropCancel}>
+                            취소
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            onClick={handleCropConfirm}
+                            disabled={imageUploading || !croppedAreaPixels}
+                          >
+                            {imageUploading ? "업로드 중..." : "적용"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : imageUploading ? (
+                      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
+                        <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+                      </div>
+                    ) : imageUploadError ? (
+                      <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                        <Icon name="alert-triangle" size="lg" color="danger" decorative />
+                        <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
+                      </div>
+                    ) : !localPreviewUrl && form.mainImageKey === DEFAULT_COVER_KEY ? (
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
+                        )}
+                        onClick={() => { fileInputRef.current?.click(); }}
+                      >
+                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                          <Icon name="image" size="xl" color={imageError ? "danger" : "inactive"} decorative />
+                          <span className={cn("text-[13px]", imageError && "text-danger")}>
+                            {imageError ? "대표 이미지를 추가해주세요" : "사진을 추가해보세요"}
+                          </span>
+                        </div>
+                      </button>
+                    ) : (
+                      <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                        <InvitationCover
+                          imageUrl={localPreviewUrl ?? form.mainImageKey}
+                          variant="image"
+                        />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {mainGifUrl ? (
+                      <div className="relative w-full">
+                        <button type="button" className="w-full" onClick={() => setGifPickerOpen(true)}>
+                          <InvitationCover gifUrl={mainGifUrl} variant="image" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setMainGifUrl(""); setGifPickerOpen(false); }}
+                          className="absolute right-2 top-2 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/50 text-white"
+                          aria-label="GIF 제거"
+                        >
+                          <Icon name="x" size="sm" color="currentColor" decorative />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
+                        )}
+                        onClick={() => setGifPickerOpen(true)}
+                      >
+                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                          <span className={cn("text-[28px] font-bold", imageError && "text-danger")}>GIF</span>
+                          <span className={cn("text-[13px]", imageError && "text-danger")}>
+                            {imageError ? "대표 이미지를 추가해주세요" : "GIF를 선택해보세요"}
+                          </span>
+                        </div>
+                      </button>
+                    )}
+                    {gifPickerOpen ? (
+                      <div className="mt-2">
+                        <GifPicker
+                          onSelect={(url) => { setMainGifUrl(url); set({ mainImageKey: DEFAULT_COVER_KEY }); setLocalPreviewUrl(null); setGifPickerOpen(false); setImageError(false); }}
+                          onClose={() => setGifPickerOpen(false)}
+                        />
+                      </div>
+                    ) : null}
+                  </>
                 )}
               </>
             )}
@@ -718,7 +895,7 @@ export default function InvitationCreateContainer() {
                 <button
                   key={place.placeId}
                   type="button"
-                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover-emphasis-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
                   onClick={() => {
                     set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
                     setLocationMode("selected");
@@ -876,8 +1053,8 @@ export default function InvitationCreateContainer() {
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {/* 미리보기 */}
         <InvitationCover
-          imageUrl={form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined}
-          variant={form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+          imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+          variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
         >
           {form.title ? (
             <p className={cn("text-[22px] font-bold text-white", DESIGN_FONTS.find((f) => f.id === designFont)?.style)}>
@@ -961,7 +1138,7 @@ export default function InvitationCreateContainer() {
             <button
               type="button"
               onClick={() => setPackDropdownOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-gray-50"
+              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 hover-emphasis-sm"
             >
               <div className="flex items-center gap-2">
                 <span className="text-[20px] leading-none">
@@ -994,7 +1171,7 @@ export default function InvitationCreateContainer() {
                     }}
                     className={cn(
                       "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
-                      selectedPackId === pack.id ? "bg-gray-100" : "hover:bg-gray-50",
+                      selectedPackId === pack.id ? "bg-surface" : "hover-emphasis-sm",
                     )}
                   >
                     <span className="text-[20px] leading-none">{pack.attending}</span>

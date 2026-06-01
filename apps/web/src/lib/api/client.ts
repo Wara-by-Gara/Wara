@@ -5,8 +5,9 @@ interface ApiResponse<T> {
   data: T;
 }
 
-interface ApiError {
-  error?: { code?: string };
+interface ApiErrorBody {
+  success: false;
+  error?: { code?: string; type?: string; message?: string };
 }
 
 // 동시에 여러 요청이 401을 받아도 refresh는 한 번만 실행
@@ -36,18 +37,33 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
   let res = await fetchFn();
 
   if (res.status === 401) {
-    const err: ApiError = await res.clone().json();
-    const code = err.error?.code;
-    // TOKEN_EXPIRED: 토큰 만료 / TOKEN_INVALID: 쿠키 소멸(만료 후 브라우저 삭제) — 둘 다 refresh 시도
+    const body: ApiErrorBody = await res.clone().json();
+    const code = body.error?.code;
+    // TOKEN_EXPIRED: 토큰 만료 / TOKEN_INVALID: 쿠키 소멸 — 둘 다 refresh 시도
     if (code === "TOKEN_EXPIRED" || code === "TOKEN_INVALID") {
       const refreshed = await tryRefresh();
       if (refreshed) {
         res = await fetchFn();
+      } else {
+        window.location.href = '/login';
+        throw new Error(code);
       }
     }
   }
 
-  if (!res.ok) throw await res.json();
+  if (res.status === 403 && typeof window !== 'undefined') {
+    const body: ApiErrorBody = await res.clone().json();
+    const TERMS_AGREE_PATH = '/terms/agree';
+    if (body.error?.code === 'TERMS_AGREEMENT_REQUIRED' && !window.location.pathname.startsWith(TERMS_AGREE_PATH)) {
+      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `${TERMS_AGREE_PATH}?returnTo=${returnTo}`;
+    }
+  }
+
+  if (!res.ok) {
+    const body: ApiErrorBody = await res.json();
+    throw new Error(body.error?.code ?? 'UNKNOWN_ERROR');
+  }
   if (res.status === 204) return undefined as T;
   const json: ApiResponse<T> = await res.json();
   return json.data;

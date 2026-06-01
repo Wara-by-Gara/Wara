@@ -52,7 +52,7 @@ export default function BestNineModal({ invitationId, onClose }: Props) {
               src={invitation?.host?.profileImageUrl ?? undefined}
               alt={invitation?.host?.nickname ?? ''}
               size="md"
-              initial={invitation?.host?.nickname?.[0]}
+              name={invitation?.host?.name ?? invitation?.host?.nickname ?? undefined}
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-bold text-text-primary">

@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useState, type ReactNode } from "react";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -10,14 +11,15 @@ import { renderMentions } from "./renderMentions";
 
 export type CommentReplyVariant = "default" | "mine" | "host" | "deleted";
 
-export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CommentReplyItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
   id?: string;
   variant?: CommentReplyVariant;
   authorName: string;
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
-  content: string;
+  content?: string | null;
   /** 답글 대상 (@멘션) */
   replyToName?: string;
   /** 사진 첨부 URL */
@@ -30,6 +32,7 @@ export interface CommentReplyItemProps extends React.HTMLAttributes<HTMLDivEleme
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -39,6 +42,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       variant = "default",
       authorName,
       authorHandle,
+      authorInitialName,
       authorAvatarUrl,
       createdAt,
       content,
@@ -51,6 +55,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       likeCount,
       liked,
       onLike,
+      onAvatarClick,
       ...props
     },
     ref,
@@ -82,12 +87,14 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
           className={cn("flex gap-2 py-2.5", className)}
           {...props}
         >
-          <Avatar
-            src={authorAvatarUrl}
-            alt={authorName}
-            size="xs"
-            initial={authorName?.[0]}
-          />
+          <button type="button" onClick={onAvatarClick} className={onAvatarClick ? "cursor-pointer" : "cursor-default"}>
+            <Avatar
+              src={authorAvatarUrl}
+              alt={authorName}
+              size="xs"
+              name={authorInitialName ?? authorName}
+            />
+          </button>
           <div className="min-w-0 flex-1">
             {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}
             <div className="flex items-start justify-between gap-2">
@@ -120,7 +127,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="첨부 사진" className="size-full object-cover" />
-                  <span className="absolute inset-0 bg-black/0 transition-colors hover:bg-black/15" />
+                  <span className="absolute inset-0 bg-black/0 transition-[transform,box-shadow] hover-emphasis-sm" />
                 </button>
               ) : null}
             </div>
@@ -141,11 +148,16 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 type="button"
                 onClick={onLike}
                 className={cn(
-                  "mt-1 text-[13px] font-semibold transition-colors",
+                  "mt-1 inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
                   liked ? "text-primary" : "text-text-tertiary hover:text-primary",
                 )}
               >
-                ♥ {likeCount ?? 0}
+                {liked ? (
+                  <IoHeart className="size-3.5 shrink-0" aria-hidden />
+                ) : (
+                  <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+                )}
+                {likeCount ?? 0}
               </button>
             ) : null}
           </div>
@@ -168,7 +180,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     <button
                       key={item.label}
                       type="button"
-                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-surface-hover", item.className)}
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover-emphasis-sm", item.className)}
                       onClick={() => {
                         item.onClick();
                         setMenuOpen(false);

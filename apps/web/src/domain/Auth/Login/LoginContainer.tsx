@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Login, type LoginState } from '@/screens/Login';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/api';
 
+const AUTH_ERROR_STATE: Record<string, LoginState> = {
+  cancelled: 'socialCancelled',
+  failed: 'socialFailed',
+};
+
 export default function LoginContainer() {
   const [state, setState] = useState<LoginState>('default');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get('auth_error');
+    if (authError) {
+      setState(AUTH_ERROR_STATE[authError] ?? 'socialFailed');
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
+
 
   function handleKakao() {
     setState('kakaoLoading');
@@ -23,12 +38,18 @@ export default function LoginContainer() {
     window.location.href = `${API_BASE}/auth/google/redirect`;
   }
 
+  function handleApple() {
+    setState('appleLoading');
+    window.location.href = `${API_BASE}/auth/apple/redirect`;
+  }
+
   return (
     <Login
       state={state}
       onKakao={handleKakao}
       onNaver={handleNaver}
       onGoogle={handleGoogle}
+      onApple={handleApple}
     />
   );
 }
