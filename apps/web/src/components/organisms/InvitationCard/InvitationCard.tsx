@@ -87,7 +87,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
         ref={ref}
         type="button"
         className={cn(
-          "group flex w-full flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-surface p-3 text-left shadow-xs transition-colors hover:bg-gray-50",
+          "group flex w-full flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-surface p-3 text-left shadow-xs hover-emphasis",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           className,
         )}

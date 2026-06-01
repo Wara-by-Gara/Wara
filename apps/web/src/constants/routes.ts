@@ -1,7 +1,10 @@
 export const ROUTES = {
   HOME: "/",
   CALENDAR: "/calendar",
-  FRIENDS: "/friends",
+  FRIENDS: {
+    LIST: "/friends",
+    DETAIL: (id: string) => `/friends/${id}`,
+  },
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {

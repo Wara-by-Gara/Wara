@@ -154,7 +154,7 @@ function MissionTemplateSection({
                   ? "border-primary bg-primary-soft"
                   : disabled
                   ? "border-border bg-gray-50 opacity-50"
-                  : "border-border bg-surface hover:bg-gray-50",
+                  : "border-border bg-surface hover-emphasis-sm",
               )}
             >
               <span className={cn("flex-1 text-[14px]", isSelected ? "font-semibold text-primary" : "text-text-primary")}>
@@ -718,7 +718,7 @@ export default function InvitationCreateContainer() {
                 <button
                   key={place.placeId}
                   type="button"
-                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover-emphasis-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
                   onClick={() => {
                     set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
                     setLocationMode("selected");
@@ -961,7 +961,7 @@ export default function InvitationCreateContainer() {
             <button
               type="button"
               onClick={() => setPackDropdownOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-gray-50"
+              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 hover-emphasis-sm"
             >
               <div className="flex items-center gap-2">
                 <span className="text-[20px] leading-none">
@@ -994,7 +994,7 @@ export default function InvitationCreateContainer() {
                     }}
                     className={cn(
                       "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
-                      selectedPackId === pack.id ? "bg-gray-100" : "hover:bg-gray-50",
+                      selectedPackId === pack.id ? "bg-gray-100" : "hover-emphasis-sm",
                     )}
                   >
                     <span className="text-[20px] leading-none">{pack.attending}</span>

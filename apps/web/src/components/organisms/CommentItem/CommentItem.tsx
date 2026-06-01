@@ -12,6 +12,8 @@ import { renderMentions } from "./renderMentions";
 export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "mine" | "host" | "deleted" | "reported" | "editing";
   authorName: string;
+  /** 아바타 이니셜 계산용 실명 (미제공 시 authorName 사용) */
+  authorInitialName?: string;
   authorHandle?: string;
   authorAvatarUrl?: string;
   createdAt: string;
@@ -27,6 +29,7 @@ export interface CommentItemProps extends React.HTMLAttributes<HTMLDivElement> {
   likeCount?: number;
   liked?: boolean;
   onLike?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -35,6 +38,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       className,
       variant = "default",
       authorName,
+      authorInitialName,
       authorHandle,
       authorAvatarUrl,
       createdAt,
@@ -49,6 +53,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       likeCount,
       liked,
       onLike,
+      onAvatarClick,
       ...props
     },
     ref,
@@ -95,7 +100,9 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
     return (
       <div ref={ref} className={cn("px-4 py-2", className)} {...props}>
         <div className="flex items-start gap-3">
-          <Avatar src={authorAvatarUrl} alt={authorName} size="sm" initial={authorName?.[0]} />
+          <button type="button" onClick={onAvatarClick} className={onAvatarClick ? "cursor-pointer" : "cursor-default"}>
+            <Avatar src={authorAvatarUrl} alt={authorName} size="sm" name={authorInitialName ?? authorName} />
+          </button>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -160,7 +167,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="첨부 사진" className="size-full object-cover" />
-                  <span className="absolute inset-0 bg-black/0 transition-colors hover:bg-black/15" />
+                  <span className="absolute inset-0 bg-black/0 transition-[transform,box-shadow] hover-emphasis-sm" />
                 </button>
               ) : null}
             </div>
@@ -185,7 +192,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                     <button
                       key={item.label}
                       type="button"
-                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-surface-hover", item.className)}
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover-emphasis-sm", item.className)}
                       onClick={() => {
                         item.onClick();
                         setMenuOpen(false);

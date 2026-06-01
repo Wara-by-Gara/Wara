@@ -90,7 +90,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
               size="sm"
               aria-label="뒤로가기"
               onClick={onBack}
-              className="bg-black/40 text-white hover:bg-black/60"
+              className="bg-black/40 text-white hover-emphasis-sm"
             />
           ) : (
             <span />
@@ -103,7 +103,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="공유"
                 onClick={onShare}
-                className="bg-black/40 text-white hover:bg-black/60"
+                className="bg-black/40 text-white hover-emphasis-sm"
               />
             ) : null}
             {isHost && onMore ? (
@@ -113,7 +113,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="더보기"
                 onClick={onMore}
-                className="bg-black/40 text-white hover:bg-black/60"
+                className="bg-black/40 text-white hover-emphasis-sm"
               />
             ) : null}
           </div>

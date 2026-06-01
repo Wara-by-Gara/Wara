@@ -95,7 +95,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             onClick={() => setShow((v) => !v)}
             aria-label={show ? "비밀번호 숨기기" : "비밀번호 보기"}
             aria-pressed={show}
-            className="inline-flex size-8 items-center justify-center rounded-full text-text-tertiary hover:bg-gray-100"
+            className="inline-flex size-8 items-center justify-center rounded-full text-text-tertiary hover-emphasis-sm"
           >
             <Icon name={show ? "eye-off" : "eye"} size="sm" color="currentColor" decorative />
           </button>

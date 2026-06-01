@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { MonthCalendar } from "@/components/organisms/MonthCalendar";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
@@ -104,9 +105,9 @@ function slotResultToDateSlot(sr: SlotResult): DateSlot {
 
 // ── Vote constants ─────────────────────────────────────────────────────────
 const VOTE_CFG = {
-  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-white text-emerald-500 border-emerald-200 hover:bg-emerald-50", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
-  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-white text-amber-500 border-amber-200 hover:bg-amber-50",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
-  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-white text-rose-400 border-rose-200 hover:bg-rose-50",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
+  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-white text-emerald-500 border-emerald-200 hover-emphasis-sm", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
+  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-white text-amber-500 border-amber-200 hover-emphasis-sm",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
+  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-white text-rose-400 border-rose-200 hover-emphasis-sm",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
 } as const;
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
@@ -251,7 +252,7 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: 
             <button
               type="button"
               onClick={onConfirm}
-              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover:bg-primary/5 active:scale-95 transition-all"
+              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover-emphasis-sm active:scale-95 transition-[transform,box-shadow]"
             >
               이 날짜로 확정
             </button>
@@ -450,78 +451,6 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
         <Icon name="plus" size="xs" color="currentColor" decorative />
         <span className="font-bold text-primary">{preview}</span> 추가
       </Button>
-    </div>
-  );
-}
-
-// ── Calendar ───────────────────────────────────────────────────────────────
-function CalendarPicker({
-  year, month,
-  selectedDates, onToggleDate,
-  onPrevMonth, onNextMonth,
-}: {
-  year: number; month: number;
-  selectedDates: Set<string>;
-  onToggleDate: (key: string) => void;
-  onPrevMonth: () => void; onNextMonth: () => void;
-}) {
-  const firstDay = new Date(year, month - 1, 1).getDay(); // 0=Sun
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-  const cells: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
-      {/* Month nav */}
-      <div className="mb-3 flex items-center justify-between">
-        <button type="button" onClick={onPrevMonth} className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100">
-          <Icon name="chevron-left" size="sm" color="inactive" decorative />
-        </button>
-        <span className="text-[15px] font-bold text-text-primary">{year}년 {month}월</span>
-        <button type="button" onClick={onNextMonth} className="flex size-8 items-center justify-center rounded-full hover:bg-gray-100">
-          <Icon name="chevron-right" size="sm" color="inactive" decorative />
-        </button>
-      </div>
-
-      {/* Day headers */}
-      <div className="mb-1 grid grid-cols-7">
-        {DAY_LABELS.map((d, i) => (
-          <span key={d} className={cn("text-center text-[12px] font-bold", i === 0 ? "text-rose-400" : i === 6 ? "text-blue-400" : "text-text-tertiary")}>{d}</span>
-        ))}
-      </div>
-
-      {/* Date cells */}
-      <div className="grid grid-cols-7 gap-y-1">
-        {cells.map((day, i) => {
-          if (!day) return <span key={`e-${i}`} />;
-          const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-          const isPast = key < todayKey;
-          const isSelected = selectedDates.has(key);
-          const dow = i % 7;
-          return (
-            <button
-              key={key}
-              type="button"
-              disabled={isPast}
-              onClick={() => onToggleDate(key)}
-              className={cn(
-                "mx-auto flex size-9 items-center justify-center rounded-full text-[14px] font-semibold transition-all",
-                isPast ? "text-gray-300 cursor-not-allowed" :
-                isSelected ? "bg-primary text-white shadow-sm" :
-                dow === 0 ? "text-rose-400 hover:bg-rose-50" :
-                dow === 6 ? "text-blue-400 hover:bg-blue-50" :
-                "text-text-primary hover:bg-gray-100",
-              )}
-            >{day}</button>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -743,12 +672,13 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
         </div>
 
         {/* Calendar */}
-        <CalendarPicker
+        <MonthCalendar
           year={calYear} month={calMonth}
-          selectedDates={selectedDates}
-          onToggleDate={toggleDate}
+          selectedKeys={selectedDates}
+          onDayClick={toggleDate}
           onPrevMonth={prevMonth}
           onNextMonth={nextMonth}
+          disablePast
         />
 
         {/* Date tab strip – tap to focus */}
@@ -806,7 +736,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                       type="button"
                       onClick={() => removeSlot(slots.indexOf(s))}
                       aria-label="삭제"
-                      className="flex size-7 items-center justify-center rounded-full text-text-tertiary hover:bg-gray-100"
+                      className="flex size-7 items-center justify-center rounded-full text-text-tertiary hover-emphasis-sm"
                     >
                       <Icon name="x" size="xs" color="currentColor" decorative />
                     </button>
@@ -988,7 +918,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             <p className="mb-2.5 text-[13px] font-bold text-text-primary">호스트 관리</p>
             <div className="mt-2.5 flex gap-2">
               <Button variant="outline" size="sm"
-                className="flex-1 gap-1.5 border-rose-200 text-rose-500 hover:bg-rose-50"
+                className="flex-1 gap-1.5 border-rose-200 text-rose-500"
                 disabled={closePollMutation.isPending}
                 onClick={() => setCloseConfirmOpen(true)}
               >

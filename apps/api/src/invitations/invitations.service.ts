@@ -84,11 +84,17 @@ export class InvitationsService {
         ? Promise.resolve(this.s3Service.getPublicUrl(invitation.uploadedImageKey))
         : Promise.resolve(null),
     ]);
+    const hostProfileImageUrl = invitation.host?.profileImageUrl
+      ? await this.s3Service.getViewPresignedUrl(invitation.host.profileImageUrl)
+      : null;
     return {
       ...invitation,
       mainImageUrl: this.s3Service.getPublicUrl(invitation.mainImageKey),
       templatePreviewUrl,
       uploadedImageUrl,
+      host: invitation.host
+        ? { ...invitation.host, profileImageUrl: hostProfileImageUrl }
+        : invitation.host,
     };
   }
 

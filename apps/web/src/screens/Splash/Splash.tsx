@@ -68,7 +68,7 @@ const SplashDefaultNew = ({
         size="lg"
         fullWidth
         onClick={onStart}
-        className="border-0 bg-white text-text-primary shadow-md hover:bg-white/95 active:bg-white/90"
+        className="border-0 bg-white text-text-primary shadow-md hover-emphasis active:opacity-90"
       >
         시작하기
       </Button>

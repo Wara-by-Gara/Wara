@@ -295,3 +295,60 @@ export const mockMe: MockUser = {
   socialProvider: "kakao",
   stats: { created: 4, joined: 12 },
 };
+
+/* ───────────────── 친구 (Friends 탭) ───────────────── */
+
+export interface MockFriend {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  /** 함께한 모임 수 */
+  sharedCount: number;
+  /** 가장 최근 함께한 모임 제목 */
+  lastSharedTitle: string;
+  /** 최근 함께한 시점(상대 표기) */
+  lastSharedAt: string;
+}
+
+/** 친구 목록 — 함께한 모임 많은 순. mockParticipants와 동일 인물/아바타 재사용 */
+export const mockFriends: MockFriend[] = [
+  { id: "p2", name: "박미라", avatarUrl: "https://i.pravatar.cc/80?img=21", sharedCount: 8, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p3", name: "이지은", avatarUrl: "https://i.pravatar.cc/80?img=24", sharedCount: 6, lastSharedTitle: "주말 브런치", lastSharedAt: "5일 전" },
+  { id: "p4", name: "최하나", avatarUrl: "https://i.pravatar.cc/80?img=44", sharedCount: 5, lastSharedTitle: "북클럽 3월 모임", lastSharedAt: "1주 전" },
+  { id: "p5", name: "정민지", avatarUrl: "https://i.pravatar.cc/80?img=49", sharedCount: 4, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p6", name: "이상민", avatarUrl: "https://i.pravatar.cc/80?img=51", sharedCount: 4, lastSharedTitle: "등산 모임", lastSharedAt: "3주 전" },
+  { id: "p8", name: "강수연", avatarUrl: "https://i.pravatar.cc/80?img=56", sharedCount: 3, lastSharedTitle: "주말 브런치", lastSharedAt: "5일 전" },
+  { id: "p7", name: "윤지호", avatarUrl: "https://i.pravatar.cc/80?img=53", sharedCount: 3, lastSharedTitle: "와인 한잔", lastSharedAt: "10일 전" },
+  { id: "p9", name: "오현우", avatarUrl: "https://i.pravatar.cc/80?img=60", sharedCount: 2, lastSharedTitle: "북클럽 3월 모임", lastSharedAt: "1주 전" },
+  { id: "p10", name: "한지수", avatarUrl: "https://i.pravatar.cc/80?img=62", sharedCount: 2, lastSharedTitle: "와라의 생일 파티", lastSharedAt: "2일 전" },
+  { id: "p12", name: "전유진", avatarUrl: "https://i.pravatar.cc/80?img=68", sharedCount: 1, lastSharedTitle: "등산 모임", lastSharedAt: "3주 전" },
+  { id: "p11", name: "송태형", avatarUrl: "https://i.pravatar.cc/80?img=65", sharedCount: 1, lastSharedTitle: "와인 한잔", lastSharedAt: "10일 전" },
+];
+
+/** 상단 "최근 함께한 친구" — 최근 함께한 순 상위 10명 (id 큐레이션) */
+const RECENT_FRIEND_ORDER = ["p2", "p5", "p10", "p3", "p8", "p4", "p9", "p7", "p11", "p6"] as const;
+export const mockRecentFriends: MockFriend[] = RECENT_FRIEND_ORDER.map((id) =>
+  mockFriends.find((f) => f.id === id),
+).filter((f): f is MockFriend => Boolean(f));
+
+export interface MockFriendProfile extends MockFriend {
+  /** 함께 아는 친구 */
+  mutualFriends: { id: string; name: string; avatarUrl?: string }[];
+  /** 함께 참여했던 초대 */
+  sharedInvitations: { id: string; title: string; date: string; imageUrl?: string }[];
+}
+
+/** 친구 프로필 상세 mock — id로 친구를 찾아 공통 mutual/shared를 합성 */
+export function getMockFriendProfile(id: string): MockFriendProfile {
+  const friend = mockFriends.find((f) => f.id === id) ?? mockFriends[0]!;
+  const mutualFriends = mockFriends
+    .filter((f) => f.id !== friend.id)
+    .slice(0, 5)
+    .map((f) => ({ id: f.id, name: f.name, avatarUrl: f.avatarUrl }));
+  const sharedInvitations = [
+    { id: mockInvitation.id, title: mockInvitation.title, date: mockInvitation.date, imageUrl: mockInvitation.coverImageUrl },
+    { id: "inv_brunch", title: "주말 브런치", date: "2026년 5월 25일 일요일", imageUrl: undefined },
+    { id: "inv_book", title: "북클럽 3월 모임", date: "2026년 4월 12일 토요일", imageUrl: undefined },
+  ];
+  return { ...friend, mutualFriends, sharedInvitations };
+}
