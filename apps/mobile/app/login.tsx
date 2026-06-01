@@ -1,7 +1,7 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -15,6 +15,10 @@ import { colors, layout, radius, spacing, typography } from '@/constants/tokens'
 type LoadingProvider = 'kakao' | 'naver' | 'google' | 'apple' | null;
 type LoginError = 'cancelled' | 'failed' | null;
 
+// TODO(post-PR): needsProfileCompletion=true 처리.
+// 백엔드는 user.name/email/birthYear 중 하나라도 없으면 true를 반환하며,
+// 카카오/네이버는 birthYear를 안 주므로 신규 가입자는 항상 true.
+// 현재는 모두 /(tabs)로 직행하지만 별도 onboarding/profile-completion 화면 필요.
 type AuthResult = {
   accessToken: string;
   refreshToken: string;
@@ -64,7 +68,8 @@ export default function LoginScreen() {
       });
       await setTokens({ accessToken, refreshToken });
       router.replace('/(tabs)');
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.warn('[kakao login]', err);
       setError('failed');
     } finally {
       setLoading(null);
@@ -87,7 +92,8 @@ export default function LoginScreen() {
       });
       await setTokens({ accessToken, refreshToken });
       router.replace('/(tabs)');
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.warn('[naver login]', err);
       setError('failed');
     } finally {
       setLoading(null);
@@ -115,7 +121,8 @@ export default function LoginScreen() {
       });
       await setTokens({ accessToken, refreshToken });
       router.replace('/(tabs)');
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.warn('[google login]', err);
       setError('failed');
     } finally {
       setLoading(null);
@@ -149,7 +156,7 @@ export default function LoginScreen() {
         : undefined;
 
       const { accessToken, refreshToken } = await apiFetch<AuthResult>(
-        '/auth/apple/callback?platform=MOBILE',
+        '/auth/apple/callback?platform=mobile',
         {
           method: 'POST',
           body: {
@@ -166,6 +173,7 @@ export default function LoginScreen() {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_CANCELED') {
         setError('cancelled');
       } else {
+        if (__DEV__) console.warn('[apple login]', err);
         setError('failed');
       }
     } finally {
@@ -179,6 +187,11 @@ export default function LoginScreen() {
       : error === 'failed'
         ? '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'
         : null;
+
+  // TODO(post-PR): /terms, /privacy 모바일 약관 화면 추가 후 router.push로 변경.
+  const showTermsTBD = () => {
+    Alert.alert('알림', '약관 화면은 곧 추가됩니다.');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -236,8 +249,8 @@ export default function LoginScreen() {
         )}
 
         <Text style={styles.termsNotice}>
-          시작하면 <Text style={styles.termsLink}>이용약관</Text> 및{' '}
-          <Text style={styles.termsLink}>개인정보 처리방침</Text>에 동의하게 됩니다.
+          시작하면 <Text style={styles.termsLink} onPress={showTermsTBD}>이용약관</Text> 및{' '}
+          <Text style={styles.termsLink} onPress={showTermsTBD}>개인정보 처리방침</Text>에 동의하게 됩니다.
         </Text>
       </View>
     </SafeAreaView>

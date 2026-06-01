@@ -13,6 +13,9 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
   if (googleIosScheme) {
     plugins.push(['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosScheme }]);
   }
+  // Naver SDK: iOS Info.plist의 LSApplicationQueriesSchemes/CFBundleURLTypes + AppDelegate URL handler 자동 등록.
+  // login.tsx의 serviceUrlSchemeIOS와 일치해야 함.
+  plugins.push(['@react-native-seoul/naver-login', { urlScheme: 'wara' }]);
 
   return {
     ...config,
