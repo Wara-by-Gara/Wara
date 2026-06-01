@@ -1,6 +1,6 @@
 import type { ExpoConfig } from 'expo/config';
 
-const DEFAULT_DEV_API_URL = 'http://localhost:3000/api/v1';
+const DEFAULT_DEV_API_URL = 'http://localhost:3000';
 
 export default ({ config }: { config: ExpoConfig }): ExpoConfig => ({
   ...config,

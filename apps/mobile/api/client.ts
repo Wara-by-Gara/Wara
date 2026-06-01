@@ -12,8 +12,7 @@ function resolveBaseUrl(): string {
       'API_URL이 설정되지 않았습니다. EXPO_PUBLIC_API_URL 환경변수 또는 app.config.ts extra.apiUrl 확인.',
     );
   }
-  // 끝 슬래시 제거 — path는 항상 `/`로 시작하므로 `//` 이중 슬래시 방지
-  return fromExtra.replace(/\/+$/, '');
+  return fromExtra.replace(/\/+$/, '') + '/api';
 }
 
 const DEFAULT_TIMEOUT_MS = 15_000;
