@@ -9,6 +9,7 @@ import { MonthCalendar } from "@/components/organisms/MonthCalendar";
 import { useMyInvitations } from "@/hooks/useInvitations";
 import type { Invitation } from "@/lib/api/invitations";
 import { ROUTES } from "@/constants/routes";
+import { getInvitationCoverImageUrl } from "@/domain/InvitationList/invitationListUtils";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -93,7 +94,9 @@ export function Calendar() {
   };
 
   const getDayThumbnails = (key: string) =>
-    (eventsByDay.get(key) ?? []).map((e) => e.mainImageUrl).filter((u): u is string => !!u);
+    (eventsByDay.get(key) ?? [])
+      .map((e) => getInvitationCoverImageUrl(e))
+      .filter((u): u is string => !!u);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -147,7 +150,9 @@ export function Calendar() {
               <p className="py-6 text-center text-[14px] text-text-tertiary">이 날 일정이 없어요</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {selectedEvents.map((ev) => (
+                {selectedEvents.map((ev) => {
+                  const coverUrl = getInvitationCoverImageUrl(ev);
+                  return (
                   <button
                     key={ev.id}
                     type="button"
@@ -155,9 +160,9 @@ export function Calendar() {
                     className="flex items-center gap-3 rounded-xl p-2 text-left hover-emphasis-sm"
                   >
                     <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                      {ev.mainImageUrl ? (
+                      {coverUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={ev.mainImageUrl} alt="" className="h-full w-full object-cover" />
+                        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -172,7 +177,8 @@ export function Calendar() {
                       </span>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
