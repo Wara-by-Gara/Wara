@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import exifr from 'exifr';
 import { useQueryClient } from '@tanstack/react-query';
 import { type Photo, getPresignedUrl, registerPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
@@ -111,7 +112,14 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
         const contentType = resolveContentType(file)!;
         const { presignedUrl, key } = await getPresignedUrl(invitationId, file.name, contentType);
         await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
-        await registerPhoto(invitationId, key);
+        const [gps, exifFull] = await Promise.all([
+          exifr.gps(file).catch(() => null),
+          exifr.parse(file, ['DateTimeOriginal']).catch(() => null),
+        ]);
+        await registerPhoto(invitationId, key, {
+          takenAt: (exifFull?.DateTimeOriginal as Date | undefined)?.toISOString(),
+          exifMetadata: gps ? { gps_lat: gps.latitude, gps_lng: gps.longitude } : undefined,
+        });
         successCount++;
         setUploadProgress((prev) => ({ ...prev, done: prev.done + 1 }));
       } catch {

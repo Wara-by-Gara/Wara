@@ -1,20 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { fetchInvitation, invitationKeys, WaraApiError } from '@/api';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { colors } from '@/constants/tokens';
 
-/**
- * 초대장 상세. Expo Router dynamic route — /invitations/:id.
- * useLocalSearchParams로 id 추출, useQuery로 GET /invitations/:id.
- *
- * 와라 API 명세상 상세는 비로그인 접근 가능 (RSVP는 별도) → apiFetch authenticated:false 유지.
- */
 export default function InvitationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const query = useQuery({
     queryKey: invitationKeys.detail(id),
     queryFn: ({ signal }) => fetchInvitation(id, { signal }),
@@ -61,6 +56,14 @@ export default function InvitationDetailScreen() {
           </ThemedText>
         )}
         <ThemedText style={styles.description}>{inv.description}</ThemedText>
+        <TouchableOpacity
+          style={styles.mapButton}
+          onPress={() => router.push(`/invitations/${id}/map`)}
+          accessibilityRole="button"
+          accessibilityLabel="지도 보기"
+        >
+          <ThemedText style={styles.mapButtonText}>📍 지도 보기</ThemedText>
+        </TouchableOpacity>
       </ScrollView>
     </ThemedView>
   );
@@ -102,4 +105,12 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 12 },
   errorBody: { fontSize: 13, opacity: 0.7, textAlign: 'center' },
+  mapButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  mapButtonText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

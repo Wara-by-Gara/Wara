@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-import { getAccessToken } from './auth-storage';
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './auth-storage';
 import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
 
 // API base URL — app.config.ts의 expo.extra.apiUrl에서 옴.
@@ -16,9 +16,42 @@ function resolveBaseUrl(): string {
   return fromExtra.replace(/\/+$/, '');
 }
 
-// 네트워크 hang 회피용 default timeout. 사진 업로드 같은 대용량 endpoint는
-// 호출 측에서 명시적으로 override (예: timeoutMs: 60_000).
 const DEFAULT_TIMEOUT_MS = 15_000;
+
+// ── 토큰 자동 갱신 ────────────────────────────────────────────────────────────
+// 동시에 여러 요청이 401을 받아도 refresh는 한 번만 실행하도록 Promise를 공유.
+let ongoingRefresh: Promise<boolean> | null = null;
+
+async function doRefreshAccessToken(): Promise<boolean> {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) return false;
+  try {
+    const res = await fetch(`${resolveBaseUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return false;
+    const raw = (await res.json()) as {
+      success?: boolean;
+      data?: { accessToken?: string; refreshToken?: string };
+    };
+    if (!raw.success || !raw.data?.accessToken) return false;
+    await setTokens({ accessToken: raw.data.accessToken, refreshToken: raw.data.refreshToken });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryRefreshAccessToken(): Promise<boolean> {
+  if (!ongoingRefresh) {
+    ongoingRefresh = doRefreshAccessToken().finally(() => {
+      ongoingRefresh = null;
+    });
+  }
+  return ongoingRefresh;
+}
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -142,10 +175,16 @@ export async function apiFetch<T>(
     return json.data;
   }
 
-  // 실패 envelope → 도메인 에러
-  // TODO(auth-kakao PR): code === 'TOKEN_EXPIRED' && status === 401일 때
-  //   refresh token으로 access token 자동 갱신 후 원 요청 재시도.
-  //   현재는 UI 레이어에서 catch 후 로그인 화면으로 리다이렉트하는 것이 fallback.
+  // access token 만료 → refresh 시도 후 원 요청 1회 재시도
+  if (json.error.code === 'TOKEN_EXPIRED' && res.status === 401 && authenticated) {
+    const refreshed = await tryRefreshAccessToken();
+    if (refreshed) {
+      return apiFetch<T>(path, options);
+    }
+    // refresh도 실패하면 저장된 토큰 제거 (로그인 화면으로 자연스럽게 떨어지도록)
+    await clearTokens();
+  }
+
   throw new WaraApiError({
     code: json.error.code,
     type: json.error.type,

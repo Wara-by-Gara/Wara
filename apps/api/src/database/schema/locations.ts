@@ -15,6 +15,7 @@ export const eventLocations = pgTable('event_locations', {
   placeId: text('place_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   check('check_event_location_coords', sql`${t.lat} >= -90 AND ${t.lat} <= 90 AND ${t.lng} >= -180 AND ${t.lng} <= 180`),
 ]);

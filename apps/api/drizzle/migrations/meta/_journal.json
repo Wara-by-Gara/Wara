@@ -8,6 +8,13 @@
       "when": 1780275321968,
       "tag": "0000_gorgeous_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780281438260,
+      "tag": "0001_add_deleted_at_to_event_locations",
+      "breakpoints": true
     }
   ]
 }
