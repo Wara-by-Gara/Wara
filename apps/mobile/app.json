@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "wara",
-    "slug": "wara-app",
+    "slug": "wara",
     "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -51,6 +51,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1aded1f1-4680-4fbb-8b3d-7d2ad25f3cc5"
+      }
     }
   }
 }
