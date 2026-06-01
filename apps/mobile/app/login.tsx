@@ -1,16 +1,39 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
+import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+
+import { login as kakaoLogin } from '@react-native-kakao/user';
+import NaverLogin from '@react-native-seoul/naver-login';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { apiFetch, setTokens } from '@/api';
 import { colors, layout, radius, spacing, typography } from '@/constants/tokens';
 
 type LoadingProvider = 'kakao' | 'naver' | 'google' | 'apple' | null;
 type LoginError = 'cancelled' | 'failed' | null;
+
+type AuthResult = {
+  accessToken: string;
+  refreshToken: string;
+  isNew: boolean;
+  needsProfileCompletion: boolean;
+};
+
+const extra = Constants.expoConfig?.extra as {
+  googleWebClientId?: string;
+  googleIosClientId?: string;
+  naverClientId?: string;
+  naverClientSecret?: string;
+} | undefined;
+
+GoogleSignin.configure({
+  webClientId: extra?.googleWebClientId ?? '',
+  iosClientId: extra?.googleIosClientId,
+  scopes: ['email', 'profile'],
+});
 
 export default function LoginScreen() {
   const [appleAvailable, setAppleAvailable] = useState(false);
@@ -21,39 +44,76 @@ export default function LoginScreen() {
     if (Platform.OS === 'ios') {
       AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
     }
+    NaverLogin.initialize({
+      appName: 'Wara',
+      consumerKey: extra?.naverClientId ?? '',
+      consumerSecret: extra?.naverClientSecret ?? '',
+      serviceUrlSchemeIOS: 'wara',
+    });
   }, []);
 
-  async function handleSocialLogin(provider: 'kakao' | 'naver' | 'google') {
-    setLoading(provider);
+  async function handleKakao() {
+    setLoading('kakao');
     setError(null);
     try {
-      const { url, state } = await apiFetch<{ url: string; state: string }>(
-        `/auth/${provider}/url?platform=MOBILE`,
-        { authenticated: false },
-      );
+      const result = await kakaoLogin();
+      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/kakao/token', {
+        method: 'POST',
+        body: { providerToken: result.accessToken },
+        authenticated: false,
+      });
+      await setTokens({ accessToken, refreshToken });
+      router.replace('/(tabs)');
+    } catch {
+      setError('failed');
+    } finally {
+      setLoading(null);
+    }
+  }
 
-      const result = await WebBrowser.openAuthSessionAsync(url, 'wara://auth/callback');
+  async function handleNaver() {
+    setLoading('naver');
+    setError(null);
+    try {
+      const { isSuccess, successResponse, failureResponse } = await NaverLogin.login();
+      if (!isSuccess || !successResponse) {
+        setError(failureResponse?.isCancel ? 'cancelled' : 'failed');
+        return;
+      }
+      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/naver/token', {
+        method: 'POST',
+        body: { providerToken: successResponse.accessToken },
+        authenticated: false,
+      });
+      await setTokens({ accessToken, refreshToken });
+      router.replace('/(tabs)');
+    } catch {
+      setError('failed');
+    } finally {
+      setLoading(null);
+    }
+  }
 
-      if (result.type !== 'success') {
+  async function handleGoogle() {
+    setLoading('google');
+    setError(null);
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const response = await GoogleSignin.signIn();
+      if (response.type === 'cancelled') {
         setError('cancelled');
         return;
       }
-
-      const parsed = Linking.parse(result.url);
-      const code = parsed.queryParams?.code as string | undefined;
-      const returnedState = parsed.queryParams?.state as string | undefined;
-
-      if (!code) {
+      if (response.type !== 'success' || !response.data.idToken) {
         setError('failed');
         return;
       }
-
-      const tokens = await apiFetch<{ accessToken: string; refreshToken: string }>(
-        `/auth/${provider}/callback?platform=MOBILE`,
-        { method: 'POST', body: { code, state: returnedState ?? state }, authenticated: false },
-      );
-
-      await setTokens({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/google/token', {
+        method: 'POST',
+        body: { providerToken: response.data.idToken },
+        authenticated: false,
+      });
+      await setTokens({ accessToken, refreshToken });
       router.replace('/(tabs)');
     } catch {
       setError('failed');
@@ -78,16 +138,29 @@ export default function LoginScreen() {
         return;
       }
 
-      const tokens = await apiFetch<{ accessToken: string; refreshToken: string }>(
+      const user = credential.fullName
+        ? {
+            name: {
+              firstName: credential.fullName.givenName ?? undefined,
+              lastName: credential.fullName.familyName ?? undefined,
+            },
+            email: credential.email ?? undefined,
+          }
+        : undefined;
+
+      const { accessToken, refreshToken } = await apiFetch<AuthResult>(
         '/auth/apple/callback?platform=MOBILE',
         {
           method: 'POST',
-          body: { id_token: credential.identityToken, code: credential.authorizationCode },
+          body: {
+            id_token: credential.identityToken,
+            code: credential.authorizationCode,
+            ...(user !== undefined && { user }),
+          },
           authenticated: false,
         },
       );
-
-      await setTokens({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+      await setTokens({ accessToken, refreshToken });
       router.replace('/(tabs)');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_CANCELED') {
@@ -117,7 +190,7 @@ export default function LoginScreen() {
       <View style={styles.buttonArea}>
         <TouchableOpacity
           style={[styles.socialButton, styles.kakaoButton, loading !== null && styles.disabledButton]}
-          onPress={() => handleSocialLogin('kakao')}
+          onPress={handleKakao}
           activeOpacity={0.85}
           disabled={loading !== null}
         >
@@ -128,7 +201,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={[styles.socialButton, styles.naverButton, loading !== null && styles.disabledButton]}
-          onPress={() => handleSocialLogin('naver')}
+          onPress={handleNaver}
           activeOpacity={0.85}
           disabled={loading !== null}
         >
@@ -139,7 +212,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={[styles.socialButton, styles.googleButton, loading !== null && styles.disabledButton]}
-          onPress={() => handleSocialLogin('google')}
+          onPress={handleGoogle}
           activeOpacity={0.85}
           disabled={loading !== null}
         >

@@ -48,7 +48,6 @@
 - `console.log` 커밋 (대신 디버그 도구 / Sentry 사용)
 - `any` 타입 사용 (`@typescript-eslint/no-explicit-any` warn 적용 중)
 - 환경 변수 하드코딩 (.env.* 또는 EAS Secret만)
-- Google OAuth 연동 (V1.0 소셜 로그인: kakao / naver / apple만)
 - V1.1+ 기능 화면·코드 작성
 - mobile 단독으로 `@wara/ui` 동등 공용 컴포넌트 신규 작성 — 에스더님 협의 우선
 
