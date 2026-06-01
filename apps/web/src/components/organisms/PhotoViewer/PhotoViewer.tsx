@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { CommentInputBar } from "@/components/organisms/CommentInputBar";
 import { CommentItem, type CommentReplyItemProps } from "@/components/organisms/CommentItem";
@@ -118,13 +119,11 @@ function ProfileActions({
         aria-label={liked ? "좋아요 취소" : "좋아요"}
         className="inline-flex items-center gap-1.5 text-white disabled:opacity-60"
       >
-        <Icon
-          name="heart"
-          size="lg"
-          color="currentColor"
-          decorative
-          className={cn(liked && "fill-primary text-primary")}
-        />
+        {liked ? (
+          <IoHeart className="size-6 shrink-0 text-primary" aria-hidden />
+        ) : (
+          <IoHeartOutline className="size-6 shrink-0" aria-hidden />
+        )}
         <span className="text-[14px] font-semibold tabular-nums">{formatCount(likeCount ?? 0)}</span>
       </button>
       <button
