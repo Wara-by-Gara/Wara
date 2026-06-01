@@ -375,6 +375,27 @@ const INQUIRY_DEFS = Array.from({ length: INQUIRY_COUNT }, (_, i) => {
 const PHOTO_LIKE_PATTERN = [2, 3, 1, 2, 3, 0, 1, 2, 1, 3, 0, 1, 2, 0, 1];
 const FEEDBACK_LIKE_PATTERN = [2, 1, 3, 0, 1, 2, 0, 1, 0, 1, 0, 0];
 
+// GIF 풀 (Klipy CDN — next.config remotePatterns에 static.klipy.com 허용됨)
+// 초대장 메인 커버(gif) / gif 댓글 시드에 사용
+const GIF_POOL = [
+  'https://static.klipy.com/ii/c3a19a0b747a76e98651f2b9a3cca5ff/14/f5/Bo47kJNK.gif',
+  'https://static.klipy.com/ii/e293a233a303a98e471f78d04e13a1b0/7b/a1/pMWZBXHj.gif',
+  'https://static.klipy.com/ii/e293a233a303a98e471f78d04e13a1b0/b2/d5/GyRgdDkM.gif',
+  'https://static.klipy.com/ii/925f17378dd1893b674a723c07535afe/96/cf/x6plW89p.gif',
+  'https://static.klipy.com/ii/925f17378dd1893b674a723c07535afe/7f/d6/5cNR3rym.gif',
+  'https://static.klipy.com/ii/39f2394ae36df6e199be9eb7c9fa1012/8e/ba/eEttBgRK.gif',
+  'https://static.klipy.com/ii/935d7ab9d8c6202580a668421940ec81/3f/27/3xsdt1z2.gif',
+  'https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/37/fc/HtyXkxIx.gif',
+  'https://static.klipy.com/ii/c3a19a0b747a76e98651f2b9a3cca5ff/5f/42/dgwH9jEu.gif',
+  'https://static.klipy.com/ii/39f2394ae36df6e199be9eb7c9fa1012/96/e2/HtvOEEAj.gif',
+  'https://static.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/2c/05/mr8AsPEx.gif',
+  'https://static.klipy.com/ii/39f2394ae36df6e199be9eb7c9fa1012/73/09/mE0mO3K3.gif',
+  'https://static.klipy.com/ii/35ccce3d852f7995dd2da910f2abd795/1c/6b/ibYUkeDj.gif',
+  'https://static.klipy.com/ii/da290b156d64898341638f3c299e7478/f2/54/buWFhtUy.gif',
+  'https://static.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/d5/79/oggMl8fy.gif',
+  'https://static.klipy.com/ii/c3a19a0b747a76e98651f2b9a3cca5ff/12/8a/D5HwuGXM.gif',
+] as const;
+
 // ── FAQ (정적 카탈로그) ──────────────────────────────────────────────────────
 const FAQ_DEFS: { q: string; a: string }[] = [
   { q: '초대장은 어떻게 만드나요?', a: '홈 화면 우측 하단의 + 버튼을 눌러 제목, 일정, 장소를 입력하면 초대장이 만들어져요.' },
@@ -456,17 +477,23 @@ function buildSeeds() {
   const invIdByKey: Record<string, string> = {};
   for (const inv of INV_DEFS) invIdByKey[inv.key] = id(`invitation:${inv.key}`);
 
-  const invitations = INV_DEFS.map((inv) => ({
-    id: invIdByKey[inv.key]!,
-    userId: userIdByKey[inv.hostKey]!,
-    templateId: inv.templateKey ? templateIdByKey[inv.templateKey]! : (null as string | null),
-    status: inv.status,
-    title: inv.title,
-    description: inv.description,
-    mainImageKey: invitationCoverUrl(inv.key),
-    eventStartAt: inv.eventStartAt,
-    isMissionEnabled: inv.isMissionEnabled,
-  }));
+  const invitations = INV_DEFS.map((inv, i) => {
+    const isGif = i % 6 === 5; // 약 17%는 gif 커버
+    return {
+      id: invIdByKey[inv.key]!,
+      userId: userIdByKey[inv.hostKey]!,
+      templateId: inv.templateKey ? templateIdByKey[inv.templateKey]! : (null as string | null),
+      status: inv.status,
+      title: inv.title,
+      description: inv.description,
+      // 커버 XOR 제약(check_cover_type_*): image면 gif=null, gif면 image_key=null
+      mainCoverType: isGif ? ('gif' as const) : ('image' as const),
+      mainImageKey: isGif ? (null as string | null) : invitationCoverUrl(inv.key),
+      mainGifUrl: isGif ? pick(GIF_POOL, i) : (null as string | null),
+      eventStartAt: inv.eventStartAt,
+      isMissionEnabled: inv.isMissionEnabled,
+    };
+  });
 
   // 7. Participants
   const partIdByKey: Record<string, Record<string, string>> = {};
@@ -701,9 +728,11 @@ function buildSeeds() {
   const feedbacks: Array<{
     id: string; participantId: string;
     invitationId: string | null; photoId: string | null; parentId: string | null;
-    content: string; likeCount: number; deletedAt: Date | null;
+    content: string; gifUrl?: string | null; likeCount: number; deletedAt: Date | null;
   }> = [];
   const feedbackLikes: Array<{ id: string; feedbackId: string; participantId: string }> = [];
+
+  let fbGifCursor = 0; // gif 댓글에 GIF_POOL을 순환 배정
 
   for (const [invKey, userKeys] of INV_PARTICIPANT_KEYS) {
     const pIds = userKeys.map((uk) => partIdByKey[invKey]![uk]!);
@@ -722,9 +751,15 @@ function buildSeeds() {
       const likerCount = Math.min(FEEDBACK_LIKE_PATTERN[i]!, others.length);
       const likers = others.slice(0, likerCount);
 
+      // 초대장당 1개(i===1)는 gif-only 댓글 (content '' + gifUrl).
+      // check_content_or_gif: gif가 있으면 content 빈 문자열 허용.
+      // check_gif_xor_photo: attached_photo_id를 안 쓰므로(null) gif 단독 OK.
+      const isGif = i === 1;
       feedbacks.push({
         id: fbId, participantId: authorId, invitationId: invId, photoId: null, parentId: null,
-        content: pick(FEEDBACK_INV_TEMPLATES, i), likeCount: likers.length, deletedAt: null,
+        content: isGif ? '' : pick(FEEDBACK_INV_TEMPLATES, i),
+        gifUrl: isGif ? GIF_POOL[fbGifCursor++ % GIF_POOL.length]! : null,
+        likeCount: likers.length, deletedAt: null,
       });
       likers.forEach((lId, li) => feedbackLikes.push({ id: id(`fblike:${invKey}:inv:${i}:${li}`), feedbackId: fbId, participantId: lId }));
     }

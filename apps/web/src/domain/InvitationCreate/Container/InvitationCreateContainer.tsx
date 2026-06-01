@@ -1,42 +1,48 @@
-'use client';
-
-import { useRef, useState, useEffect } from 'react';
-import { cn } from '@/lib/cn';
-import { searchPlaces } from '@/lib/api/locations';
-import type { Place } from '@/lib/api/locations';
-import { Chip } from '@/components/primitives/Chip';
-import { Switch } from '@/components/primitives/Switch';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Icon } from '@/components/icons';
-import { Button } from '@/components/primitives/Button';
-import { TextInput } from '@/components/primitives/TextInput';
-import { Textarea } from '@/components/primitives/Textarea';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { FormField } from '@/components/molecules/FormField';
-import { DateTimeSelector } from '@/components/molecules/DateTimeSelector';
-import { LocationSelector } from '@/components/molecules/LocationSelector';
-import { TemplateCard } from '@/components/organisms/TemplateCard';
-import { InvitationCover } from '@/components/organisms/InvitationCover';
-import { StickyCTA } from '@/components/layout/StickyCTA';
-import { ConfirmModal } from '@/components/molecules/Modal';
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from '@/components/molecules/BottomSheet';
+import { useRef, useState, useEffect, useCallback } from "react";
+import imageCompression from "browser-image-compression";
+import type { Area } from "react-easy-crop";
+import { cn } from "@/lib/cn";
+import { searchPlaces } from "@/lib/api/locations";
+import type { Place } from "@/lib/api/locations";
+import { Chip } from "@/components/primitives/Chip";
+import { Switch } from "@/components/primitives/Switch";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Icon } from "@/components/icons";
+import { Button } from "@/components/primitives/Button";
+import { TextInput } from "@/components/primitives/TextInput";
+import { Textarea } from "@/components/primitives/Textarea";
+import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { FormField } from "@/components/molecules/FormField";
+import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
+import { LocationSelector } from "@/components/molecules/LocationSelector";
+import { TemplateCard } from "@/components/organisms/TemplateCard";
+import { InvitationCover } from "@/components/organisms/InvitationCover";
+import { StickyCTA } from "@/components/layout/StickyCTA";
+import { ConfirmModal } from "@/components/molecules/Modal";
+import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import {
   createInvitation,
   getInvitationImagePresignedUrl,
   uploadImageToS3,
-} from '@/lib/api/invitations';
-import { GifPicker } from '@/components/organisms/GifPicker';
-import { setEventLocation } from '@/lib/api/locations';
-import { ROUTES } from '@/constants/routes';
-import { getMissionTemplates, createMission } from '@/lib/api/missions';
-import { getTemplates } from '@/lib/api/templates';
-import { HostCreatingView, type VoteDraft } from '@/screens/DateVote/DateVote';
-import { createPoll } from '@/lib/api/dateVote';
+} from "@/lib/api/invitations";
+import { GifPicker } from "@/components/organisms/GifPicker";
+import { setEventLocation } from "@/lib/api/locations";
+import { ROUTES } from "@/constants/routes";
+import { getMissionTemplates, createMission } from "@/lib/api/missions";
+import { getTemplates } from "@/lib/api/templates";
+import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
+import { createPoll } from "@/lib/api/dateVote";
+import ImageCropEditor from "@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor";
+import { getCroppedImageBlob } from "@/utils/cropImage";
+import {
+  clampCoverRatio,
+  isCoverRatioOutOfBounds,
+  loadImageNaturalRatio,
+} from "@/utils/invitationCoverAspect";
+
+const COVER_CONTENT_TYPE = "image/webp" as const;
 
 type Step =
   | 'start'
@@ -152,7 +158,7 @@ function MissionTemplateSection({
   });
 
   if (isLoading) {
-    return <div className="h-24 animate-pulse rounded-2xl bg-gray-100" />;
+    return <div className="h-24 animate-pulse rounded-2xl bg-surface" />;
   }
 
   if (missionTemplates.length === 0) return null;
@@ -269,6 +275,9 @@ export default function InvitationCreateContainer() {
   const [imageTab, setImageTab] = useState<'upload' | 'gif'>('upload');
   const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropAspect, setCropAspect] = useState(4 / 5);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
@@ -290,7 +299,13 @@ export default function InvitationCreateContainer() {
 
   // 로그인 리다이렉트 후 복귀 처리
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    return () => {
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+    };
+  }, [cropSrc]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('auth_success') !== '1') return;
 
@@ -418,8 +433,23 @@ export default function InvitationCreateContainer() {
   const set = (patch: Partial<FormData>) =>
     setForm((f) => ({ ...f, ...patch }));
 
+  const uploadCoverBlob = useCallback(async (blob: Blob) => {
+    const fileName = `main-${Date.now()}.webp`;
+    const { presignedUrl, key } = await getInvitationImagePresignedUrl(fileName, COVER_CONTENT_TYPE);
+    await fetch(presignedUrl, {
+      method: "PUT",
+      body: blob,
+      headers: { "Content-Type": COVER_CONTENT_TYPE },
+    });
+    setLocalPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(blob);
+    });
+    set({ mainImageKey: key });
+    setImageError(false);
+  }, []);
+
   const handleImageFile = async (file: File) => {
-    setImageUploading(true);
     setImageUploadError(false);
     setMainGifUrl('');
     setLocalPreviewUrl(URL.createObjectURL(file));
@@ -439,6 +469,30 @@ export default function InvitationCreateContainer() {
       setImageError(false);
     } catch {
       setLocalPreviewUrl(null);
+      setImageUploadError(true);
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCroppedAreaPixels(null);
+  };
+
+  const handleCropConfirm = async () => {
+    if (!cropSrc || !croppedAreaPixels) return;
+    setImageUploading(true);
+    setImageUploadError(false);
+
+    try {
+      const blob = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
+      await uploadCoverBlob(blob);
+      URL.revokeObjectURL(cropSrc);
+      setCropSrc(null);
+      setCroppedAreaPixels(null);
+    } catch {
       setImageUploadError(true);
     } finally {
       setImageUploading(false);
@@ -714,8 +768,31 @@ export default function InvitationCreateContainer() {
                         e.target.value = '';
                       }}
                     />
-                    {imageUploading ? (
-                      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-gray-100">
+                    {cropSrc ? (
+                      <div className="flex flex-col gap-3">
+                        <p className="text-[13px] text-text-secondary">
+                          사진 비율이 표시 범위를 벗어나요. 드래그·확대로 맞춰주세요.
+                        </p>
+                        <ImageCropEditor
+                          imageSrc={cropSrc}
+                          aspect={cropAspect}
+                          onCropComplete={setCroppedAreaPixels}
+                        />
+                        <div className="flex gap-2">
+                          <Button variant="secondary" className="flex-1" onClick={handleCropCancel}>
+                            취소
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            onClick={handleCropConfirm}
+                            disabled={imageUploading || !croppedAreaPixels}
+                          >
+                            {imageUploading ? "업로드 중..." : "적용"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : imageUploading ? (
+                      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
                         <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
                       </div>
                     ) : imageUploadError ? (
@@ -739,10 +816,8 @@ export default function InvitationCreateContainer() {
                       <button
                         type="button"
                         className={cn(
-                          'flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed',
-                          imageError
-                            ? 'border-danger bg-red-50'
-                            : 'border-border-strong bg-gray-50',
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                         )}
                         onClick={() => {
                           fileInputRef.current?.click();
@@ -815,10 +890,8 @@ export default function InvitationCreateContainer() {
                       <button
                         type="button"
                         className={cn(
-                          'flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed',
-                          imageError
-                            ? 'border-danger bg-red-50'
-                            : 'border-border-strong bg-gray-50',
+                          "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                          imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                         )}
                         onClick={() => setGifPickerOpen(true)}
                       >
@@ -1493,10 +1566,8 @@ export default function InvitationCreateContainer() {
                       setEditingRsvp(null);
                     }}
                     className={cn(
-                      'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors',
-                      selectedPackId === pack.id
-                        ? 'bg-gray-100'
-                        : 'hover-emphasis-sm',
+                      "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
+                      selectedPackId === pack.id ? "bg-surface" : "hover-emphasis-sm",
                     )}
                   >
                     <span className="text-[20px] leading-none">

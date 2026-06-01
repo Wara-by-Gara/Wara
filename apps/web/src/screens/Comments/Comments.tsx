@@ -144,7 +144,7 @@ export const Comments = ({ invitationId }: Props) => {
         )}
       </main>
 
-      <div className="shrink-0">
+      <div className="shrink-0 pt-2">
         {replyingTo && (
           <div className="flex items-center justify-between border-t border-border bg-primary-soft px-4 py-1.5">
             <span className="text-[13px] text-primary">@{replyingTo.authorName}에게 답글</span>

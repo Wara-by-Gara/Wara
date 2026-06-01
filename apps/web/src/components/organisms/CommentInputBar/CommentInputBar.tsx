@@ -117,7 +117,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
         <div className="flex items-center gap-2 px-3 py-2">
           <div
             className={cn(
-              "flex flex-1 items-center gap-1 rounded-full bg-gray-100 px-3",
+              "flex flex-1 items-center gap-1 rounded-full bg-border px-3",
               state === "error" && "ring-2 ring-danger",
             )}
           >

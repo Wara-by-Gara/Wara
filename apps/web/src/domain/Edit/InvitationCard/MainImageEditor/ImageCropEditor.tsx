@@ -6,10 +6,12 @@ import type { Point, Area } from 'react-easy-crop';
 
 interface Props {
   imageSrc: string;
+  /** width / height. 기본 1 (정사각형) */
+  aspect?: number;
   onCropComplete: (croppedAreaPixels: Area) => void;
 }
 
-export default function ImageCropEditor({ imageSrc, onCropComplete }: Props) {
+export default function ImageCropEditor({ imageSrc, aspect = 1, onCropComplete }: Props) {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
 
@@ -27,7 +29,7 @@ export default function ImageCropEditor({ imageSrc, onCropComplete }: Props) {
           image={imageSrc}
           crop={crop}
           zoom={zoom}
-          aspect={1}
+          aspect={aspect}
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={handleCropComplete}

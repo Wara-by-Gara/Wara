@@ -239,8 +239,8 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       <BottomSheet open={state === "uploadSourceSheet"} onOpenChange={() => {}}>
         <BottomSheetContent contained title="사진 올리기">
           <div className="flex flex-col gap-1">
-            <ShareOptionItem icon="camera" title="카메라로 촬영" iconBg="bg-gray-100" />
-            <ShareOptionItem icon="images" title="앨범에서 선택" iconBg="bg-gray-100" />
+            <ShareOptionItem icon="camera" title="카메라로 촬영" iconBg="bg-surface" />
+            <ShareOptionItem icon="images" title="앨범에서 선택" iconBg="bg-surface" />
           </div>
         </BottomSheetContent>
       </BottomSheet>
@@ -249,8 +249,8 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
         <BottomSheetContent contained title="정렬">
           <div className="flex flex-col gap-1">
             <ShareOptionItem icon="hourglass" title="최신순" iconBg="bg-pink-100" iconColor="text-pink-600" />
-            <ShareOptionItem icon="clock" title="오래된순" iconBg="bg-gray-100" />
-            <ShareOptionItem icon="heart" title="좋아요순 (V1.1+)" iconBg="bg-gray-100" />
+            <ShareOptionItem icon="clock" title="오래된순" iconBg="bg-surface" />
+            <ShareOptionItem icon="heart" title="좋아요순 (V1.1+)" iconBg="bg-surface" />
           </div>
         </BottomSheetContent>
       </BottomSheet>

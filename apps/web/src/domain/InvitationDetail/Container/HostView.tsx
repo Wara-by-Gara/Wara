@@ -96,6 +96,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
           gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
           backgroundClass={invitation.bgColor}
           isHost
+          fitToImage
         />
         <header className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -159,7 +160,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
             </div>
           </section>
         ) : (
-          <section className="rounded-3xl border border-dashed border-border-strong bg-gray-50 p-5 text-center">
+          <section className="rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center">
             <p className="text-[15px] font-semibold text-text-primary">아직 참석자가 없어요</p>
             <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
           </section>

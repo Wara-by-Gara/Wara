@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "위치를 공유하여 모임 장소로 이동 중인 참가자를 확인합니다."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

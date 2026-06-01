@@ -120,6 +120,29 @@ export class PhotosService {
     }
   }
 
+  // 유저 전체 모임 GPS 사진 조회 (지도 핀용)
+  async getPhotoLocations(userId: string) {
+    const rows = await this.repository.findAllWithGpsByUserId(userId);
+    return Promise.all(
+      rows.map(async (photo) => {
+        const meta = photo.exifMetadata as Record<string, unknown>;
+        return {
+          id: photo.id,
+          participantId: photo.participantId,
+          invitationId: photo.invitationId,
+          imageKey: photo.imageKey,
+          likeCount: photo.likeCount,
+          feedbackCount: photo.feedbackCount,
+          url: await this.s3Service.getViewPresignedUrl(photo.imageKey),
+          createdAt: photo.createdAt.toISOString(),
+          takenAt: photo.takenAt?.toISOString() ?? null,
+          gpsLat: Number(meta.gps_lat),
+          gpsLng: Number(meta.gps_lng),
+        };
+      }),
+    );
+  }
+
   // 리마인드 Best 9
   async getBest9(invitationId: string) {
     const rows = await this.repository.findBest9(invitationId);

@@ -18,18 +18,18 @@ function TermItem({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden">
       <label className="flex items-center gap-3 px-4 py-3 cursor-pointer">
         <input
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="w-4 h-4 accent-black shrink-0"
+          className="w-4 h-4 accent-primary shrink-0"
         />
         <span className="flex-1 text-sm">
           <span
             className={`mr-1 text-xs font-medium ${
-              term.isRequired ? 'text-red-500' : 'text-gray-400'
+              term.isRequired ? 'text-danger' : 'text-text-tertiary'
             }`}
           >
             {term.isRequired ? '[필수]' : '[선택]'}
@@ -42,13 +42,13 @@ function TermItem({
             e.preventDefault();
             setExpanded((v) => !v);
           }}
-          className="text-xs text-gray-400 hover:text-gray-600 shrink-0"
+          className="text-xs text-text-tertiary hover:text-text-secondary shrink-0"
         >
           {expanded ? '닫기' : '보기'}
         </button>
       </label>
       {expanded && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto">
+        <div className="px-4 py-3 border-t border-border bg-background-soft text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto">
           {term.content}
         </div>
       )}
@@ -137,7 +137,7 @@ function TermsAgreeContent() {
   }
 
   if (termsLoading || agreementsLoading) {
-    return <p className="text-center text-gray-400 py-10">불러오는 중...</p>;
+    return <p className="text-center text-text-tertiary py-10">불러오는 중...</p>;
   }
 
   if (pendingRequired.length === 0) return null;
@@ -146,16 +146,16 @@ function TermsAgreeContent() {
     <main className="max-w-lg mx-auto px-4 pt-8 pb-6 flex flex-col min-h-[100dvh]">
       <div className="flex-1">
         <h1 className="text-xl font-bold mb-1">서비스 이용약관 동의</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-text-secondary mb-6">
           서비스 이용을 위해 아래 약관에 동의해주세요.
         </p>
 
-        <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg mb-3 cursor-pointer bg-gray-50">
+        <label className="flex items-center gap-3 p-4 border border-border rounded-lg mb-3 cursor-pointer bg-background-soft">
           <input
             type="checkbox"
             checked={allChecked}
             onChange={(e) => handleToggleAll(e.target.checked)}
-            className="w-4 h-4 accent-black"
+            className="w-4 h-4 accent-primary"
           />
           <span className="text-sm font-medium" style={{ color: '#000' }}>
             전체 동의
@@ -200,11 +200,7 @@ function TermsAgreeContent() {
 
 export default function TermsAgreePage() {
   return (
-    <Suspense
-      fallback={
-        <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-      }
-    >
+    <Suspense fallback={<p className="text-center text-text-tertiary py-10">불러오는 중...</p>}>
       <TermsAgreeContent />
     </Suspense>
   );

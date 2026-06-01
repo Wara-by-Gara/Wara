@@ -15,5 +15,6 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => ({
   extra: {
     ...config.extra,
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_DEV_API_URL,
+    kakaoMapKey: process.env.EXPO_PUBLIC_KAKAO_MAP_APP_KEY ?? '',
   },
 });

@@ -17,7 +17,7 @@ const wrapperVariants = cva(
         default: "border-border-strong",
         error: "border-danger focus-within:border-danger focus-within:ring-danger/20",
         success: "border-success",
-        disabled: "border-border bg-gray-50 cursor-not-allowed",
+        disabled: "border-border bg-background-soft cursor-not-allowed",
       },
     },
     defaultVariants: { state: "default" },
