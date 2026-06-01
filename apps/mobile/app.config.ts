@@ -6,7 +6,7 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => ({
   ...config,
   plugins: [
     ...(config.plugins ?? []),
-    ['@react-native-kakao/core', { nativeAppKey: process.env.KAKAO_NATIVE_APP_KEY ?? '' }],
+    ['@react-native-kakao/core', { nativeAppKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? '' }],
     ['@react-native-google-signin/google-signin', { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME ?? '' }],
   ],
   extra: {
