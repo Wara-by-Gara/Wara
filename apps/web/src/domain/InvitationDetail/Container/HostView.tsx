@@ -19,7 +19,7 @@ import type { getInvitation } from "@/lib/api/invitations";
 import type { getParticipants } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
-import { FONT_CLASS, getParticipantDisplayName } from "@/domain/InvitationDetail/types";
+import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
@@ -151,7 +151,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
               {recentParticipants.map(({ participant, user }) => (
                 <ParticipantItem
                   key={participant.id}
-                  name={getParticipantDisplayName(participant, user)}
+                  name={user.name ?? user.nickname ?? '이름 없음'}
                   handle={user.nickname ?? undefined}
                   avatarUrl={user.profileImageUrl ?? undefined}
                   status={participant.rsvpStatus === "attending" ? "attending" : participant.rsvpStatus === "undecided" ? "maybe" : "declined"}
