@@ -19,18 +19,34 @@ const base: Notification = {
 
 describe('NotificationItem', () => {
   it('알림 내용을 렌더링한다', () => {
-    render(<NotificationItem notification={base} onReadAction={vi.fn()} onDelete={vi.fn()} />);
+    render(
+      <NotificationItem
+        notification={base}
+        onReadAction={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
     expect(screen.getByText('새 피드백이 도착했어요')).toBeInTheDocument();
   });
 
   it('알림 타입 레이블을 렌더링한다', () => {
-    render(<NotificationItem notification={base} onReadAction={vi.fn()} onDelete={vi.fn()} />);
+    render(
+      <NotificationItem
+        notification={base}
+        onReadAction={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
     expect(screen.getByText('피드백')).toBeInTheDocument();
   });
 
   it('읽지 않은 알림에 파란 점이 표시된다', () => {
     const { container } = render(
-      <NotificationItem notification={base} onReadAction={vi.fn()} onDelete={vi.fn()} />,
+      <NotificationItem
+        notification={base}
+        onReadAction={vi.fn()}
+        onDelete={vi.fn()}
+      />,
     );
     expect(container.querySelector('.bg-primary')).toBeInTheDocument();
   });
@@ -52,8 +68,15 @@ describe('NotificationItem', () => {
 
   it('읽지 않은 알림 클릭 시 onRead가 id와 함께 호출된다', async () => {
     const onRead = vi.fn();
-    render(<NotificationItem notification={base} onReadAction={onRead} onDelete={vi.fn()} />);
-    await userEvent.click(screen.getByRole('button'));
+    render(
+      <NotificationItem
+        notification={base}
+        onReadAction={onRead}
+        onDelete={vi.fn()}
+      />,
+    );
+    const buttons = screen.getAllByRole('button');
+    await userEvent.click(buttons[0]!);
     expect(onRead).toHaveBeenCalledWith('n1');
   });
 
@@ -70,7 +93,8 @@ describe('NotificationItem', () => {
         onDelete={vi.fn()}
       />,
     );
-    await userEvent.click(screen.getByRole('button'));
+    const buttons = screen.getAllByRole('button');
+    await userEvent.click(buttons[0]!);
     expect(onRead).not.toHaveBeenCalled();
   });
 });
