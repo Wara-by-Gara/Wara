@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { AppleCallbackDto } from './apple-callback.dto';
 import { AuthRepository } from '../auth.repository';
 import { AuthService } from '../auth.service';
@@ -14,12 +15,14 @@ export interface AppleLoginResult {
   accessToken: string;
   refreshToken: string;
   isNew: boolean;
+  needsProfileCompletion: boolean;
 }
 
 @Injectable()
 export class AppleService {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     private readonly authRepository: AuthRepository,
     private readonly authService: AuthService,
     private readonly appleStrategy: AppleStrategy,
@@ -27,15 +30,21 @@ export class AppleService {
 
   generateState(): string {
     return this.jwtService.sign(
-      {
-        nonce: randomUUID(),
-      },
-
-      {
-        secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: '10m',
-      },
+      { nonce: randomUUID() },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '10m' },
     );
+  }
+
+  getWebAuthorizationUrl(state: string): string {
+    const params = new URLSearchParams({
+      client_id: this.configService.getOrThrow<string>('APPLE_SERVICE_ID'),
+      redirect_uri: this.configService.getOrThrow<string>('APPLE_WEB_REDIRECT_URI'),
+      response_type: 'code id_token',
+      response_mode: 'form_post',
+      scope: 'name email',
+      state,
+    });
+    return `https://appleid.apple.com/auth/authorize?${params.toString()}`;
   }
 
   async login(dto: AppleCallbackDto): Promise<AppleLoginResult> {
@@ -43,12 +52,10 @@ export class AppleService {
       this.appleStrategy.verifyState(dto.state);
     }
 
-    const payload = await this.appleStrategy.verifyIdToken(dto.id_token);
+    const payload = await this.appleStrategy.verifyIdToken(dto.id_token, dto.nonce);
 
     const name = dto.user?.name
-      ? [dto.user.name.firstName, dto.user.name.lastName]
-          .filter(Boolean)
-          .join(' ')
+      ? [dto.user.name.firstName, dto.user.name.lastName].filter(Boolean).join(' ')
       : undefined;
 
     const { userId, isNew } = await this.authRepository.upsertSocialAccount({
@@ -78,10 +85,7 @@ export class AppleService {
       this.authService.issueRefreshToken(userId),
     ]);
 
-    return {
-      accessToken,
-      refreshToken,
-      isNew,
-    };
+    const needsProfileCompletion = !user.name || !user.email || !user.birthYear;
+    return { accessToken, refreshToken, isNew, needsProfileCompletion };
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -9,6 +9,7 @@ import {
   SocialAuthParams,
   SocialStrategy,
 } from './interfaces/social.strategy.interface';
+import { ErrorCode } from '../../common/constants/error-codes';
 
 @Injectable()
 export class NaverStrategy implements SocialStrategy {
@@ -80,5 +81,35 @@ export class NaverStrategy implements SocialStrategy {
       email: user.email ?? undefined,
       profileImage: user.profile_image ?? undefined,
     };
+  }
+
+  async authenticateWithProviderToken(accessToken: string): Promise<SocialUser> {
+    try {
+      const userResponse = await firstValueFrom(
+        this.httpService.get('https://openapi.naver.com/v1/nid/me', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      );
+      const user = userResponse.data.response;
+      return {
+        provider: this.provider,
+        providerAccountId: user.id,
+        name: user.name ?? undefined,
+        gender:
+          user.gender === 'M'
+            ? 'male'
+            : user.gender === 'F'
+              ? 'female'
+              : undefined,
+        birthYear: user.birthyear ?? undefined,
+        email: user.email ?? undefined,
+        profileImage: user.profile_image ?? undefined,
+      };
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_PROVIDER_TOKEN_INVALID,
+        message: '유효하지 않은 Naver access token입니다.',
+      });
+    }
   }
 }

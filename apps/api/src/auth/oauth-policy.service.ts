@@ -5,10 +5,10 @@ import { Provider } from './enums/provider.enum';
 @Injectable()
 export class OauthPolicyService {
   private readonly policies: Record<Provider, Platform[]> = {
-    [Provider.GOOGLE]: [Platform.WEB],
+    [Provider.GOOGLE]: [Platform.WEB, Platform.MOBILE],
     [Provider.KAKAO]: [Platform.WEB, Platform.MOBILE],
     [Provider.NAVER]: [Platform.WEB, Platform.MOBILE],
-    [Provider.APPLE]: [Platform.MOBILE],
+    [Provider.APPLE]: [Platform.WEB, Platform.MOBILE],
   };
 
   validatePlatform(provider: Provider, platform: Platform): void {

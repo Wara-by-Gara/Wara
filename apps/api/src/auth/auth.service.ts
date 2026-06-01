@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes, randomUUID } from 'crypto';
@@ -166,6 +166,50 @@ export class AuthService {
 
     const user = await this.repository.findUserById(userId);
 
+    if (!user) {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_USER_NOT_FOUND,
+        message: '유저 정보를 찾을 수 없습니다.',
+      });
+    }
+
+    const payload: JwtPayload = {
+      id: user.id,
+      role: user.role as UserRole,
+      scope: user.role === UserRole.ADMIN ? ['admin'] : [],
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.issueAccessToken(payload),
+      this.issueRefreshToken(user.id),
+    ]);
+
+    const needsProfileCompletion = !user.name || !user.email || !user.birthYear;
+    return { accessToken, refreshToken, isNew, needsProfileCompletion };
+  }
+
+  async socialLoginWithProviderToken(params: {
+    provider: Provider;
+    providerToken: string;
+  }) {
+    this.oauthPolicyService.validatePlatform(params.provider, Platform.MOBILE);
+
+    const strategy = this.socialAuthFactory.getStrategy(params.provider);
+    if (!strategy.authenticateWithProviderToken) {
+      throw new BadRequestException(`${params.provider} does not support token-based login`);
+    }
+
+    const socialUser = await strategy.authenticateWithProviderToken(params.providerToken);
+
+    const { userId, isNew } = await this.repository.upsertSocialAccount({
+      provider: params.provider,
+      providerAccountId: socialUser.providerAccountId,
+      email: socialUser.email,
+      name: socialUser.name,
+      profileImageUrl: socialUser.profileImage,
+    });
+
+    const user = await this.repository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException({
         code: ErrorCode.AUTH_USER_NOT_FOUND,
