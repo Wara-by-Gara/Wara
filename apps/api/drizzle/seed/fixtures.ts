@@ -375,6 +375,18 @@ const INQUIRY_DEFS = Array.from({ length: INQUIRY_COUNT }, (_, i) => {
 const PHOTO_LIKE_PATTERN = [2, 3, 1, 2, 3, 0, 1, 2, 1, 3, 0, 1, 2, 0, 1];
 const FEEDBACK_LIKE_PATTERN = [2, 1, 3, 0, 1, 2, 0, 1, 0, 1, 0, 0];
 
+// ── FAQ (정적 카탈로그) ──────────────────────────────────────────────────────
+const FAQ_DEFS: { q: string; a: string }[] = [
+  { q: '초대장은 어떻게 만드나요?', a: '홈 화면 우측 하단의 + 버튼을 눌러 제목, 일정, 장소를 입력하면 초대장이 만들어져요.' },
+  { q: '초대장 링크는 어디서 공유하나요?', a: '초대장 상세 화면의 공유 버튼을 누르면 카카오톡, 문자, 링크 복사로 게스트에게 보낼 수 있어요.' },
+  { q: '참석 여부(RSVP)는 어떻게 변경하나요?', a: '초대장에 들어가 참석/미정/불참 버튼을 다시 누르면 언제든 변경돼요. 단, 마감된 초대장은 변경할 수 없어요.' },
+  { q: '사진은 누가 올릴 수 있나요?', a: '해당 초대장에 참여한 게스트와 호스트 모두 사진을 올릴 수 있어요.' },
+  { q: '미션 기능은 무엇인가요?', a: '호스트가 등록한 미션을 참석 게스트에게 무작위로 배정해, 모임을 더 재미있게 만들어주는 기능이에요.' },
+  { q: '초대장을 마감하면 어떻게 되나요?', a: '마감하면 새로운 참여와 RSVP 변경이 막히고, 기존 참여자는 사진과 댓글을 계속 볼 수 있어요.' },
+  { q: '탈퇴하면 데이터는 어떻게 되나요?', a: '탈퇴 시 회원 정보는 즉시 비활성화되며, 관련 데이터는 운영정책에 따라 일정 기간 후 삭제돼요.' },
+  { q: '문의는 어디에 남기나요?', a: '설정 > 문의하기에서 유형을 선택해 남겨주시면 운영팀이 확인 후 답변드려요.' },
+];
+
 // ── Seed builder ─────────────────────────────────────────────────────────────
 
 function buildSeeds() {
@@ -831,6 +843,104 @@ function buildSeeds() {
     ];
   });
 
+  // 21. FAQ items (정적 카탈로그)
+  const faqItems = FAQ_DEFS.map((f, i) => ({
+    id: id(`faq:${i + 1}`),
+    question: f.q,
+    answer: f.a,
+    sortOrder: i,
+    isActive: true,
+    createdBy: null as string | null,
+  }));
+
+  // 22. User term agreements (필수 약관 2종 전원 동의 + 위치 약관 일부 동의)
+  const REQUIRED_TERM_IDS = [id('term:service:v1.0'), id('term:privacy:v1.0')];
+  const LOCATION_TERM_ID = id('term:location:v1.0');
+  const AGREED_AT = new Date('2026-05-01T09:00:00Z');
+  const userTermAgreements = users.flatMap((u, ui) => {
+    const rows = REQUIRED_TERM_IDS.map((termId, ti) => ({
+      id: id(`termagree:${u.id}:${ti}`),
+      userId: u.id,
+      termId,
+      agreedAt: AGREED_AT,
+    }));
+    // 70%는 선택(위치) 약관에도 동의
+    if (ui % 10 < 7) {
+      rows.push({ id: id(`termagree:${u.id}:loc`), userId: u.id, termId: LOCATION_TERM_ID, agreedAt: AGREED_AT });
+    }
+    return rows;
+  });
+
+  // 23. Remind logs (마감된 초대장 대상 D+7 발송 로그)
+  const remindLogs = invitations
+    .filter((inv) => inv.status === 'closed')
+    .map((inv) => ({
+      id: id(`remindlog:${inv.id}:D+7`),
+      invitationId: inv.id,
+      remindType: 'D+7' as const,
+      sentAt: new Date(inv.eventStartAt.getTime() + 7 * 86_400_000),
+    }));
+
+  // 24. AI image jobs (8번째 초대장마다 호스트가 완료한 합성 작업)
+  const aiImageJobs = invitations
+    .filter((_, i) => i % 8 === 0)
+    .map((inv) => ({
+      id: id(`aijob:${inv.id}`),
+      userId: inv.userId,
+      invitationId: inv.id,
+      uploadedImageKey: photoUrl(`aijob-src-${inv.id}`),
+      status: 'completed' as const,
+      resultKey: photoUrl(`aijob-result-${inv.id}`),
+      errorCode: null as string | null,
+      completedAt: new Date('2026-05-15T12:00:00Z'),
+    }));
+
+  // 25. Date vote polls / slots / responses (10번째 초대장마다 1개 폴)
+  const DATE_SLOTS = ['2026-07-10', '2026-07-11', '2026-07-12'] as const;
+  const RESPONSE_PATTERN = ['good', 'maybe', 'bad', 'good', 'good', 'maybe', 'bad', 'good'] as const;
+  const dateVotePolls: Array<{
+    id: string; invitationId: string; closesAt: Date;
+    status: 'open' | 'closed' | 'confirmed'; isAnonymous: boolean;
+  }> = [];
+  const dateVoteSlots: Array<{
+    id: string; pollId: string; date: string; startTime: string | null; sortOrder: number;
+  }> = [];
+  const dateVoteResponses: Array<{
+    id: string; slotId: string; participantId: string; response: 'good' | 'maybe' | 'bad';
+  }> = [];
+
+  invitations
+    .filter((_, i) => i % 10 === 0)
+    .forEach((inv) => {
+      const pollId = id(`datevotepoll:${inv.id}`);
+      dateVotePolls.push({
+        id: pollId,
+        invitationId: inv.id,
+        closesAt: new Date('2026-07-05T00:00:00Z'),
+        status: 'open',
+        isAnonymous: false,
+      });
+      const invParticipants = participants.filter((p) => p.invitationId === inv.id);
+      DATE_SLOTS.forEach((d, si) => {
+        const slotId = id(`datevoteslot:${inv.id}:${si}`);
+        dateVoteSlots.push({
+          id: slotId,
+          pollId,
+          date: d,
+          startTime: si === 0 ? null : '18:00', // 첫 슬롯은 종일
+          sortOrder: si,
+        });
+        invParticipants.forEach((p, pi) => {
+          dateVoteResponses.push({
+            id: id(`datevoteresp:${slotId}:${p.id}`),
+            slotId,
+            participantId: p.id,
+            response: pick(RESPONSE_PATTERN, si * 3 + pi),
+          });
+        });
+      });
+    });
+
   return {
     users,
     socialAccounts,
@@ -852,6 +962,13 @@ function buildSeeds() {
     feedbackLikes,
     notifications,
     inquiries,
+    faqItems,
+    userTermAgreements,
+    remindLogs,
+    aiImageJobs,
+    dateVotePolls,
+    dateVoteSlots,
+    dateVoteResponses,
   };
 }
 

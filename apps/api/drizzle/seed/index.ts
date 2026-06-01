@@ -7,6 +7,7 @@ import { seedTier2 } from './tier2-invitations';
 import { seedTier3 } from './tier3-invitation-deps';
 import { seedTier4 } from './tier4-activity';
 import { seedTier5 } from './tier5-engagement';
+import { seedTier6 } from './tier6-extras';
 import { SEEDS } from './fixtures';
 
 async function main() {
@@ -39,6 +40,10 @@ async function main() {
 
   await seedTier5(db);
   log(`✓ Tier 5 — photo_likes: ${SEEDS.photoLikes.length}건, feedbacks: ${SEEDS.feedbacks.length}건, feedback_likes: ${SEEDS.feedbackLikes.length}건`);
+
+  await seedTier6(db);
+  log(`✓ Tier 6 — faq_items: ${SEEDS.faqItems.length}건, user_term_agreements: ${SEEDS.userTermAgreements.length}건, remind_logs: ${SEEDS.remindLogs.length}건, ai_image_jobs: ${SEEDS.aiImageJobs.length}건`);
+  log(`           date_vote_polls: ${SEEDS.dateVotePolls.length}건, date_vote_slots: ${SEEDS.dateVoteSlots.length}건, date_vote_responses: ${SEEDS.dateVoteResponses.length}건`);
 
   log('시드 완료!');
   await client.end();
