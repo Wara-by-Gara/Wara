@@ -178,6 +178,7 @@
   ```typescript
   // 파일 상단에 import 필수
   // import { Response } from 'express';
+  //날씨 데이터가 아직 없어서 응답 본문 없이 204 No Content 명시하기 위해 
 
   @Get()
   @UseGuards(ParticipantGuard)
