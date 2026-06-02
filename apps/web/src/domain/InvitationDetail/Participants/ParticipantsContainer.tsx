@@ -23,7 +23,6 @@ import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participa
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import type { IconName } from "@/components/icons";
 import type { RsvpStatus } from "@/lib/api/participants";
-import { getParticipantDisplayName } from "@/domain/InvitationDetail/types";
 import { ParticipantProfilePanel, type ParticipantRow } from "./ParticipantProfilePanel";
 
 type Tab = "all" | RsvpStatus | "memo";
@@ -62,8 +61,8 @@ function applySort(list: ParticipantRow[], sort: SortKey): ParticipantRow[] {
     return copy.sort((a, b) => new Date(b.participant.createdAt).getTime() - new Date(a.participant.createdAt).getTime());
   if (sort === "name-asc")
     return copy.sort((a, b) =>
-      getParticipantDisplayName(a.participant, a.user).localeCompare(
-        getParticipantDisplayName(b.participant, b.user),
+      (a.user.name ?? a.user.nickname ?? '').localeCompare(
+        b.user.name ?? b.user.nickname ?? '',
         "ko",
       ),
     );
@@ -127,8 +126,8 @@ export default function ParticipantsContainer() {
     (data?.participants ?? [])
       .filter(({ participant }) => tab === "all" || (tab === "memo" ? !!participant.note : participant.rsvpStatus === tab))
       .filter(
-        ({ participant, user }) =>
-          !searchQuery || getParticipantDisplayName(participant, user).includes(searchQuery),
+        ({ user }) =>
+          !searchQuery || (user.name ?? user.nickname ?? '').includes(searchQuery),
       ),
     sort,
   );
@@ -187,7 +186,7 @@ export default function ParticipantsContainer() {
       {/* HOST 참가자 액션 바텀시트 */}
       <BottomSheet open={sheetMode === "action"} onOpenChange={(open) => !open && setSheetMode(null)}>
         <BottomSheetContent
-          title={selectedRow ? getParticipantDisplayName(selectedRow.participant, selectedRow.user) : ""}
+          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
           description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           {selectedRow?.participant.note && (
@@ -221,7 +220,7 @@ export default function ParticipantsContainer() {
       {/* 메모 입력 바텀시트 */}
       <BottomSheet open={sheetMode === "memo"} onOpenChange={(open) => !open && setSheetMode("action")}>
         <BottomSheetContent
-          title={selectedRow ? getParticipantDisplayName(selectedRow.participant, selectedRow.user) : ""}
+          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
           description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           <textarea
@@ -253,7 +252,7 @@ export default function ParticipantsContainer() {
       {/* RSVP 상태 변경 바텀시트 */}
       <BottomSheet open={sheetMode === "rsvp"} onOpenChange={(open) => !open && setSheetMode("action")}>
         <BottomSheetContent
-          title={selectedRow ? getParticipantDisplayName(selectedRow.participant, selectedRow.user) : ""}
+          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
           description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           <div className="divide-y divide-border">
@@ -343,7 +342,8 @@ export default function ParticipantsContainer() {
               {filtered.map(({ participant, user }) => (
                 <ParticipantItem
                   key={participant.id}
-                  name={getParticipantDisplayName(participant, user)}
+                  name={user.name ?? user.nickname ?? '이름 없음'}
+                  avatarName={user.name ?? undefined}
                   handle={user.nickname ?? undefined}
                   avatarUrl={user.profileImageUrl ?? undefined}
                   status={RSVP_TO_PARTICIPANT[participant.rsvpStatus]}

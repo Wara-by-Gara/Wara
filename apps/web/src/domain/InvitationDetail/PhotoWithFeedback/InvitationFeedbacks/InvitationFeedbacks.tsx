@@ -338,6 +338,77 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
         </div>
       </div>
 
+      {pendingPreview && (
+        <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pendingPreview} alt="" className="size-full object-cover" />
+          </div>
+          <button
+            type="button"
+            onClick={clearPendingFile}
+            className="text-[12px] text-text-tertiary hover:text-text-secondary"
+          >
+            취소
+          </button>
+        </div>
+      )}
+      {mentionQuery !== null && (
+        <div className="mx-3 mb-1 rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+          {isParticipantsLoading ? (
+            <p className="px-4 py-3 text-[13px] text-text-tertiary">불러오는 중...</p>
+          ) : filteredParticipants.length === 0 ? (
+            <p className="px-4 py-3 text-[13px] text-text-tertiary">일치하는 참가자 없음</p>
+          ) : (
+            <ul>
+              {filteredParticipants.map((p) => (
+                <li key={p.user.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // input blur 방지
+                      handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
+                  >
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" name={p.user.nickname ?? undefined} />
+                    <span className="text-[14px] text-text-primary">@{p.user.nickname}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {gifPickerOpen ? (
+        <GifPicker onSelect={handleGifSelect} onClose={() => setGifPickerOpen(false)} />
+      ) : null}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <CommentInputBar
+        placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+        value={inputValue}
+        onValueChange={setInputValue}
+        pendingGif={pendingGif}
+        onGifClear={clearPendingGif}
+        onGifButtonClick={() => setGifPickerOpen((v) => !v)}
+        onPhotoButtonClick={() => fileInputRef.current?.click()}
+        onSubmit={async (text) => {
+          await submitComment(text, replyingTo?.id, pendingFile ?? undefined, mentionedUserIds.length ? mentionedUserIds : undefined, pendingGif ?? undefined);
+          setReplyingTo(null);
+          clearPendingFile();
+          clearPendingGif();
+          setGifPickerOpen(false);
+          setInputValue('');
+          setMentionedUserIds([]);
+        }}
+        state={isSubmitting ? 'submitting' : 'default'}
+      />
       {selectedPhoto ? (
         <PhotoDetailModal
           photos={[selectedPhoto]}

@@ -79,7 +79,7 @@ export default function HomeContainer() {
               size="sm"
               src={me?.profileImageUrl ?? undefined}
               alt={me?.name ?? me?.nickname ?? ""}
-              initial={(me?.name ?? me?.nickname)?.[0]}
+              name={me?.name ?? me?.nickname ?? undefined}
             />
           </>
         }
