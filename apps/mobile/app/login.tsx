@@ -1,7 +1,7 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -188,11 +188,6 @@ export default function LoginScreen() {
         ? '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'
         : null;
 
-  // TODO(post-PR): /terms, /privacy 모바일 약관 화면 추가 후 router.push로 변경.
-  const showTermsTBD = () => {
-    Alert.alert('알림', '약관 화면은 곧 추가됩니다.');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.brandArea}>
@@ -249,8 +244,8 @@ export default function LoginScreen() {
         )}
 
         <Text style={styles.termsNotice}>
-          시작하면 <Text style={styles.termsLink} onPress={showTermsTBD}>이용약관</Text> 및{' '}
-          <Text style={styles.termsLink} onPress={showTermsTBD}>개인정보 처리방침</Text>에 동의하게 됩니다.
+          시작하면 <Text style={styles.termsLink} onPress={() => router.push('/terms-agree')}>이용약관</Text> 및{' '}
+          <Text style={styles.termsLink} onPress={() => router.push('/terms-agree')}>개인정보 처리방침</Text>에 동의하게 됩니다.
         </Text>
       </View>
     </SafeAreaView>
