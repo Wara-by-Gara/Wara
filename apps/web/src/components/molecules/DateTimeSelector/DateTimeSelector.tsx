@@ -167,7 +167,7 @@ function TimeWheelPicker({
       </div>
 
       {/* 시·분 휠 */}
-      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-border bg-background-soft px-2" style={{ height: ITEM_H * VISIBLE }}>
+      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-border bg-white px-2 h-[150px]">
         <WheelColumn
           items={HOURS}
           value={hour}

@@ -6,7 +6,12 @@ export type NotificationType =
   | 'eventLocations'
   | 'feedback'
   | 'invitation_date'
-  | 'photo';
+  | 'photo'
+  | 'arrived'
+  | 'nudge'
+  | 'vote_reminder'
+  | 'vote_tied'
+  | 'vote_confirmed';
 
 export type NotificationTargetType =
   | 'photo'
@@ -69,6 +74,10 @@ export function fetchNotifications(cursor?: string, limit = 20) {
 
 export function fetchUnreadCount() {
   return apiClient<{ count: number }>('/notifications/unread');
+}
+
+export function deleteNotification(id: string) {
+  return apiClient<void>(`/notifications/${id}`, { method: 'DELETE' });
 }
 
 export function markAsRead(id: string) {

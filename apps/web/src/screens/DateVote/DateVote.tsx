@@ -10,6 +10,7 @@ import { MonthCalendar } from "@/components/organisms/MonthCalendar";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
+import { ROUTES } from "@/constants/routes";
 import { usePoll, useCreatePoll, useVoteResults, useSubmitResponses, useClosePoll, useConfirmSlot } from "@/hooks/useDateVote";
 import { useMyParticipant, useParticipants } from "@/hooks/useParticipants";
 import { useInvitation } from "@/hooks/useInvitations";
@@ -498,7 +499,10 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
   // 투표 마감 옵션
   const [deadlineMode, setDeadlineMode] = useState<"none" | "custom">("none");
   const [customDeadlineDate, setCustomDeadlineDate] = useState("");
-  const [customDeadlineTime, setCustomDeadlineTime] = useState("23:59");
+  const [customDeadlineTime, setCustomDeadlineTime] = useState(() => {
+    const n = new Date();
+    return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
+  });
   const closesAt = deadlineMode === "custom" && customDeadlineDate
     ? new Date(`${customDeadlineDate}T${customDeadlineTime}:00`).toISOString()
     : undefined;
@@ -512,6 +516,10 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
         setSlots((s) => s.filter((sl) => sl.dateKey !== key));
         if (focusedDate === key) setFocusedDate(null);
       } else {
+        // 슬롯 없는 기존 선택 날짜 제거
+        for (const d of next) {
+          if (!slots.some((s) => s.dateKey === d)) next.delete(d);
+        }
         next.add(key);
         setFocusedDate(key);
       }
@@ -519,9 +527,15 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
     });
   };
 
+  const [slotLimitMsg, setSlotLimitMsg] = useState(false);
+
   const addTime = (time: string, hhmm: string) => {
     if (!focusedDate) return;
-    if (slots.length >= 30) return;
+    if (slots.length >= 30) {
+      setSlotLimitMsg(true);
+      setTimeout(() => setSlotLimitMsg(false), 2500);
+      return;
+    }
     if (slots.some((s) => s.dateKey === focusedDate && s.time === time)) return;
     const label = formatDateLabel(focusedDate);
     setSlots((prev) => [...prev, { date: label, dateKey: focusedDate, time, timeKey: hhmm }]);
@@ -655,7 +669,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-      <TopAppBar className="shrink-0" title="날짜 투표 만들기" onBack={onBack ?? (() => {})} />
+      <TopAppBar className="shrink-0" title="일정 투표 만들기" onBack={onBack ?? (() => {})} />
 
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
         {/* Step indicator */}
@@ -681,26 +695,29 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
           disablePast
         />
 
-        {/* Date tab strip – tap to focus */}
-        {selectedDates.size > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-0.5">
-            {Array.from(selectedDates).sort().map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFocusedDate(key)}
-                className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all",
-                  focusedDate === key
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-surface text-text-secondary",
-                )}
-              >
-                {new Date(key).getMonth() + 1}월 {new Date(key).getDate()}일
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Date tab strip – 슬롯이 있는 날짜만 표시 */}
+        {slots.length > 0 && (() => {
+          const datesWithSlots = Array.from(new Set(slots.map((s) => s.dateKey))).sort();
+          return datesWithSlots.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-0.5">
+              {datesWithSlots.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFocusedDate(key)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all",
+                    focusedDate === key
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-text-secondary",
+                  )}
+                >
+                  {new Date(key).getMonth() + 1}월 {new Date(key).getDate()}일
+                </button>
+              ))}
+            </div>
+          ) : null;
+        })()}
 
         {/* Time picker for focused date */}
         {focusedDate && (
@@ -715,12 +732,23 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
           </div>
         )}
 
+        {/* 30개 초과 메시지 */}
+        {slotLimitMsg && (
+          <div className="rounded-xl bg-rose-50 px-4 py-2.5 text-[13px] font-medium text-rose-600">
+            후보는 최대 30개까지 추가할 수 있어요
+          </div>
+        )}
+
         {/* Added slots list */}
         {slots.length > 0 && (
-          <div className="rounded-2xl border border-border bg-surface p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[13px] font-bold text-text-primary">추가된 후보 ({slots.length} / 30)</p>
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+            <div className="sticky top-0 z-10 bg-surface px-4 pb-2 pt-4">
+              <p className="text-[13px] font-bold text-text-primary">추가된 후보 ({slots.length}개)</p>
+              {slots.length >= 30 && (
+                <p className="mt-1 text-[12px] text-rose-500">30개 이상은 추가할 수 없습니다.</p>
+              )}
             </div>
+            <div style={{ maxHeight: 300, overflowY: 'auto' }} className="px-4 pb-4">
             <div className="flex flex-col divide-y divide-border">
               {Array.from(slotsByDate.entries()).sort().map(([, daySlots]) =>
                 daySlots.map((s) => (
@@ -744,6 +772,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                 ))
               )}
             </div>
+            </div>{/* scroll container */}
           </div>
         )}
       </main>
@@ -751,9 +780,9 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
       <div className="relative z-10 shrink-0">
         <StickyCTA
           primary={{
-            label: slots.length > 0 ? `다음 — ${slots.length}개 후보 선택됨` : "날짜·시간을 선택해주세요",
-            onClick: () => { if (slots.length > 0) setStep("settings"); },
-            disabled: slots.length === 0,
+            label: slots.length >= 2 ? `다음 — ${slots.length}개 후보 선택됨` : slots.length === 1 ? "후보를 1개 이상 더 추가해주세요" : "날짜·시간을 선택해주세요",
+            onClick: () => { if (slots.length >= 2) setStep("settings"); },
+            disabled: slots.length < 2,
           }}
         />
       </div>
@@ -764,7 +793,14 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 // ── Main Component ─────────────────────────────────────────────────────────
 export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVoteProps) => {
   const router = useRouter();
-  const goBack = onBack ?? (() => router.back());
+  const goBack = onBack ?? (() => {
+    if (invitationId) {
+      if (window.history.length > 1) router.back();
+      else router.push(ROUTES.INVITATIONS.DETAIL(invitationId));
+    } else {
+      router.back();
+    }
+  });
 
   const enabled = !!invitationId;
   const { data: invitation } = useInvitation(invitationId ?? '');
