@@ -3,6 +3,7 @@ import { Link, router } from 'expo-router';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import {
+  clearAllSocialSessions,
   clearTokens,
   fetchMyInvitations,
   invitationKeys,
@@ -51,6 +52,7 @@ export function InvitationsList({ onLogout }: { onLogout: () => void }) {
           <Pressable
             style={styles.buttonGhost}
             onPress={async () => {
+              await clearAllSocialSessions();
               await clearTokens();
               await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
               onLogout();
@@ -72,6 +74,7 @@ export function InvitationsList({ onLogout }: { onLogout: () => void }) {
           </Pressable>
           <Pressable
             onPress={async () => {
+              await clearAllSocialSessions();
               await clearTokens();
               await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
               onLogout();
