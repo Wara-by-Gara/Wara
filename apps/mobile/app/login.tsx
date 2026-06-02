@@ -15,10 +15,6 @@ import { colors, layout, radius, spacing, typography } from '@/constants/tokens'
 type LoadingProvider = 'kakao' | 'naver' | 'google' | 'apple' | null;
 type LoginError = 'cancelled' | 'failed' | null;
 
-// TODO(post-PR): needsProfileCompletion=true 처리.
-// 백엔드는 user.name/email/birthYear 중 하나라도 없으면 true를 반환하며,
-// 카카오/네이버는 birthYear를 안 주므로 신규 가입자는 항상 true.
-// 현재는 모두 /(tabs)로 직행하지만 별도 onboarding/profile-completion 화면 필요.
 type AuthResult = {
   accessToken: string;
   refreshToken: string;
@@ -61,13 +57,13 @@ export default function LoginScreen() {
     setError(null);
     try {
       const result = await kakaoLogin();
-      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/kakao/token', {
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/kakao/token', {
         method: 'POST',
         body: { providerToken: result.accessToken },
         authenticated: false,
       });
       await setTokens({ accessToken, refreshToken });
-      router.replace('/(tabs)');
+      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
     } catch (err) {
       if (__DEV__) console.warn('[kakao login]', err);
       setError('failed');
@@ -85,13 +81,13 @@ export default function LoginScreen() {
         setError(failureResponse?.isCancel ? 'cancelled' : 'failed');
         return;
       }
-      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/naver/token', {
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/naver/token', {
         method: 'POST',
         body: { providerToken: successResponse.accessToken },
         authenticated: false,
       });
       await setTokens({ accessToken, refreshToken });
-      router.replace('/(tabs)');
+      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
     } catch (err) {
       if (__DEV__) console.warn('[naver login]', err);
       setError('failed');
@@ -114,13 +110,13 @@ export default function LoginScreen() {
         setError('failed');
         return;
       }
-      const { accessToken, refreshToken } = await apiFetch<AuthResult>('/auth/google/token', {
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/google/token', {
         method: 'POST',
         body: { providerToken: response.data.idToken },
         authenticated: false,
       });
       await setTokens({ accessToken, refreshToken });
-      router.replace('/(tabs)');
+      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
     } catch (err) {
       if (__DEV__) console.warn('[google login]', err);
       setError('failed');
@@ -155,7 +151,7 @@ export default function LoginScreen() {
           }
         : undefined;
 
-      const { accessToken, refreshToken } = await apiFetch<AuthResult>(
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>(
         '/auth/apple/callback?platform=mobile',
         {
           method: 'POST',
@@ -168,7 +164,7 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      router.replace('/(tabs)');
+      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_CANCELED') {
         setError('cancelled');
