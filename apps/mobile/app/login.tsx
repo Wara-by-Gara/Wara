@@ -1,5 +1,4 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
-import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,11 +8,17 @@ import { login as kakaoLogin } from '@react-native-kakao/user';
 import NaverLogin from '@react-native-seoul/naver-login';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import { apiFetch, setTokens } from '@/api';
+import {
+  apiFetch,
+  describeLoginError,
+  ensureKakaoSDK,
+  isKakaoCancellation,
+  LOGIN_CANCELLED_MESSAGE,
+  setTokens,
+} from '@/api';
 import { colors, layout, radius, spacing, typography } from '@/constants/tokens';
 
 type LoadingProvider = 'kakao' | 'naver' | 'google' | 'apple' | null;
-type LoginError = 'cancelled' | 'failed' | null;
 
 type AuthResult = {
   accessToken: string;
@@ -22,51 +27,44 @@ type AuthResult = {
   needsProfileCompletion: boolean;
 };
 
-const extra = Constants.expoConfig?.extra as {
-  googleWebClientId?: string;
-  googleIosClientId?: string;
-  naverClientId?: string;
-  naverClientSecret?: string;
-} | undefined;
-
-GoogleSignin.configure({
-  webClientId: extra?.googleWebClientId ?? '',
-  iosClientId: extra?.googleIosClientId,
-  scopes: ['email', 'profile'],
-});
-
 export default function LoginScreen() {
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [loading, setLoading] = useState<LoadingProvider>(null);
-  const [error, setError] = useState<LoginError>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
       AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
     }
-    NaverLogin.initialize({
-      appName: 'Wara',
-      consumerKey: extra?.naverClientId ?? '',
-      consumerSecret: extra?.naverClientSecret ?? '',
-      serviceUrlSchemeIOS: 'wara',
-    });
   }, []);
+
+  function routeAfterLogin(needsProfileCompletion: boolean) {
+    router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
+  }
 
   async function handleKakao() {
     setLoading('kakao');
-    setError(null);
+    setErrorMessage(null);
     try {
+      await ensureKakaoSDK();
       const result = await kakaoLogin();
-      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/kakao/token', {
-        method: 'POST',
-        body: { providerToken: result.accessToken },
-        authenticated: false,
-      });
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>(
+        '/auth/kakao/token',
+        {
+          method: 'POST',
+          body: { providerToken: result.accessToken },
+          authenticated: false,
+        },
+      );
       await setTokens({ accessToken, refreshToken });
-      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
+      routeAfterLogin(needsProfileCompletion);
     } catch (err) {
-      if (__DEV__) console.warn('[kakao login]', err);
-      setError('failed');
+      if (isKakaoCancellation(err)) {
+        setErrorMessage(LOGIN_CANCELLED_MESSAGE);
+      } else {
+        if (__DEV__) console.warn('[kakao login]', err);
+        setErrorMessage(describeLoginError(err));
+      }
     } finally {
       setLoading(null);
     }
@@ -74,23 +72,26 @@ export default function LoginScreen() {
 
   async function handleNaver() {
     setLoading('naver');
-    setError(null);
+    setErrorMessage(null);
     try {
       const { isSuccess, successResponse, failureResponse } = await NaverLogin.login();
       if (!isSuccess || !successResponse) {
-        setError(failureResponse?.isCancel ? 'cancelled' : 'failed');
+        setErrorMessage(failureResponse?.isCancel ? LOGIN_CANCELLED_MESSAGE : describeLoginError(failureResponse));
         return;
       }
-      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/naver/token', {
-        method: 'POST',
-        body: { providerToken: successResponse.accessToken },
-        authenticated: false,
-      });
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>(
+        '/auth/naver/token',
+        {
+          method: 'POST',
+          body: { providerToken: successResponse.accessToken },
+          authenticated: false,
+        },
+      );
       await setTokens({ accessToken, refreshToken });
-      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
+      routeAfterLogin(needsProfileCompletion);
     } catch (err) {
       if (__DEV__) console.warn('[naver login]', err);
-      setError('failed');
+      setErrorMessage(describeLoginError(err));
     } finally {
       setLoading(null);
     }
@@ -98,28 +99,31 @@ export default function LoginScreen() {
 
   async function handleGoogle() {
     setLoading('google');
-    setError(null);
+    setErrorMessage(null);
     try {
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       const response = await GoogleSignin.signIn();
       if (response.type === 'cancelled') {
-        setError('cancelled');
+        setErrorMessage(LOGIN_CANCELLED_MESSAGE);
         return;
       }
       if (response.type !== 'success' || !response.data.idToken) {
-        setError('failed');
+        setErrorMessage(describeLoginError(null));
         return;
       }
-      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>('/auth/google/token', {
-        method: 'POST',
-        body: { providerToken: response.data.idToken },
-        authenticated: false,
-      });
+      const { accessToken, refreshToken, needsProfileCompletion } = await apiFetch<AuthResult>(
+        '/auth/google/token',
+        {
+          method: 'POST',
+          body: { providerToken: response.data.idToken },
+          authenticated: false,
+        },
+      );
       await setTokens({ accessToken, refreshToken });
-      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
+      routeAfterLogin(needsProfileCompletion);
     } catch (err) {
       if (__DEV__) console.warn('[google login]', err);
-      setError('failed');
+      setErrorMessage(describeLoginError(err));
     } finally {
       setLoading(null);
     }
@@ -127,7 +131,7 @@ export default function LoginScreen() {
 
   async function handleApple() {
     setLoading('apple');
-    setError(null);
+    setErrorMessage(null);
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -137,7 +141,7 @@ export default function LoginScreen() {
       });
 
       if (!credential.identityToken || !credential.authorizationCode) {
-        setError('failed');
+        setErrorMessage(describeLoginError(null));
         return;
       }
 
@@ -164,25 +168,18 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
+      routeAfterLogin(needsProfileCompletion);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_CANCELED') {
-        setError('cancelled');
+        setErrorMessage(LOGIN_CANCELLED_MESSAGE);
       } else {
         if (__DEV__) console.warn('[apple login]', err);
-        setError('failed');
+        setErrorMessage(describeLoginError(err));
       }
     } finally {
       setLoading(null);
     }
   }
-
-  const errorMessage =
-    error === 'cancelled'
-      ? '로그인이 취소되었어요.'
-      : error === 'failed'
-        ? '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'
-        : null;
 
   return (
     <SafeAreaView style={styles.container}>

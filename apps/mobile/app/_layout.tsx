@@ -6,6 +6,8 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { QueryProvider } from '@/providers/query-provider';
 
+import '@/api/social-auth';
+
 export const unstable_settings = {
   anchor: '(tabs)',
 };

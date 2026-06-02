@@ -53,3 +53,10 @@ export {
   type Me,
   type UpdateMeInput,
 } from './users';
+export {
+  ensureKakaoSDK,
+  clearAllSocialSessions,
+  isKakaoCancellation,
+  describeLoginError,
+  LOGIN_CANCELLED_MESSAGE,
+} from './social-auth';
