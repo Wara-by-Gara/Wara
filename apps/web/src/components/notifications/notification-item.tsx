@@ -28,7 +28,7 @@ export function NotificationItem({ notification, onReadAction, onDelete }: Props
     <div className={`flex items-center ${notification.isRead ? '' : 'bg-primary-soft/40'}`}>
       <button
         type="button"
-        onClick={() => onReadAction(notification.id)}
+        onClick={() => !notification.isRead && onReadAction(notification.id)}
         className="flex-1 text-left px-4 py-3 flex gap-3 hover-emphasis-sm min-w-0"
       >
         <span
