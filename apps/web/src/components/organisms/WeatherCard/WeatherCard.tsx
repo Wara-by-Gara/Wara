@@ -52,7 +52,7 @@ export function WeatherCard({
   const meta = WEATHER_META[condition];
 
   return (
-    <div className="flex flex-col gap-3 rounded-3xl bg-surface-elevated p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4">
       {/* Header */}
       <div className="flex items-center gap-2">
         <span className="text-[18px]">🌤️</span>
@@ -68,10 +68,6 @@ export function WeatherCard({
             날씨 정보는 모임 날짜 3일 전부터<br />확인하실 수 있어요.
           </p>
           <p className="text-[13px] text-text-tertiary">조금만 기다려주세요!</p>
-          <p className="mt-2 flex items-center gap-1 text-[12px] text-text-tertiary">
-            <span>ⓘ</span>
-            <span>기상청 예보는 3일 이후부터 제공됩니다.</span>
-          </p>
         </div>
       ) : (
         /* 날씨 정보 표시 */
