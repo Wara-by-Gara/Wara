@@ -16,7 +16,9 @@ import {
   fetchTerms,
   termsKeys,
   type ServiceTerm,
+  type TermAgreement,
 } from '@/api/terms';
+import { WaraApiError } from '@/api';
 import { border, colors, layout, radius, spacing, typography } from '@/constants/tokens';
 
 function TermItem({
@@ -74,7 +76,7 @@ function TermItem({
 export default function TermsAgreeScreen() {
   const queryClient = useQueryClient();
 
-  const { data: terms, isLoading: termsLoading } = useQuery({
+  const { data: terms, isLoading: termsLoading, isError: isTermsError } = useQuery({
     queryKey: termsKeys.list(),
     queryFn: ({ signal }) => fetchTerms(signal),
   });
@@ -112,25 +114,39 @@ export default function TermsAgreeScreen() {
     });
   }, [pendingTerms]);
 
-  // 미동의 필수 약관이 없으면 탭으로 자동 이동
+  // 미동의 필수 약관이 없으면 탭으로 자동 이동 (terms 로드 실패 시엔 이동하지 않음)
   useEffect(() => {
     if (
       !termsLoading &&
       !agreementsLoading &&
+      terms !== undefined &&
       myAgreements !== undefined &&
       pendingRequired.length === 0
     ) {
       router.replace('/(tabs)');
     }
-  }, [termsLoading, agreementsLoading, myAgreements, pendingRequired.length]);
+  }, [termsLoading, agreementsLoading, terms, myAgreements, pendingRequired.length]);
 
   const { mutate: doAgree, isPending } = useMutation({
     mutationFn: (termIds: string[]) => agreeTerms(termIds),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: termsKeys.myAgreements() });
+    onSuccess: (newAgreements) => {
+      // 즉시 캐시 갱신 → guard가 네비게이션 직후 stale 데이터를 보는 것 방지
+      queryClient.setQueryData<TermAgreement[]>(
+        termsKeys.myAgreements(),
+        (old) => [...(old ?? []), ...newAgreements],
+      );
+      // 백그라운드 재검증 (fire-and-forget)
+      void queryClient.invalidateQueries({ queryKey: termsKeys.myAgreements() });
       router.replace('/(tabs)');
     },
-    onError: () => setSubmitError('오류가 발생했습니다. 다시 시도해주세요.'),
+    onError: (error) => {
+      // 이미 동의된 경우(네트워크 재시도 등) → 성공과 동일 처리
+      if (error instanceof WaraApiError && error.code === 'TERM_AGREEMENT_ALREADY_EXISTS') {
+        router.replace('/(tabs)');
+        return;
+      }
+      setSubmitError('오류가 발생했습니다. 다시 시도해주세요.');
+    },
   });
 
   const allChecked =
@@ -156,6 +172,18 @@ export default function TermsAgreeScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isTermsError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>
+            약관을 불러오지 못했습니다.{'\n'}앱을 다시 실행해주세요.
+          </Text>
         </View>
       </SafeAreaView>
     );
