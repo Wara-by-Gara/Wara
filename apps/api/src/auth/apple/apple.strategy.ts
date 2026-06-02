@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import appleSignin from 'apple-signin-auth';
 import { ErrorCode } from '../../common/constants/error-codes';
 
@@ -29,14 +30,13 @@ export class AppleStrategy {
     }
   }
 
-  async verifyIdToken(idToken: string) {
+  async verifyIdToken(idToken: string, nonce?: string) {
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () =>
           reject(
             new GatewayTimeoutException({
               code: ErrorCode.APPLE_SERVER_TIMEOUT,
-
               message: 'Apple 인증 서버 응답 시간이 초과되었습니다.',
             }),
           ),
@@ -44,12 +44,17 @@ export class AppleStrategy {
       ),
     );
 
+    const audience = [
+      this.configService.getOrThrow<string>('APPLE_CLIENT_ID'),
+      this.configService.get<string>('APPLE_SERVICE_ID'),
+    ].filter(Boolean) as string[];
+
     try {
       return await Promise.race([
         appleSignin.verifyIdToken(idToken, {
-          audience: this.configService.getOrThrow<string>('APPLE_CLIENT_ID'),
+          audience,
+          nonce: nonce ? createHash('sha256').update(nonce).digest('hex') : undefined,
         }),
-
         timeoutPromise,
       ]);
     } catch (err) {
@@ -59,7 +64,6 @@ export class AppleStrategy {
 
       throw new UnauthorizedException({
         code: ErrorCode.AUTH_INVALID_TOKEN,
-
         message: '유효하지 않은 Apple id_token입니다.',
       });
     }

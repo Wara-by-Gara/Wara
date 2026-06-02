@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -9,6 +9,7 @@ import {
   SocialAuthParams,
   SocialStrategy,
 } from './interfaces/social.strategy.interface';
+import { ErrorCode } from '../../common/constants/error-codes';
 
 @Injectable()
 export class KakaoStrategy implements SocialStrategy {
@@ -77,5 +78,30 @@ export class KakaoStrategy implements SocialStrategy {
       email: user.kakao_account?.email ?? undefined,
       profileImage: user.properties?.profile_image ?? undefined,
     };
+  }
+
+  async authenticateWithProviderToken(accessToken: string): Promise<SocialUser> {
+    try {
+      const userResponse = await firstValueFrom(
+        this.httpService.get('https://kapi.kakao.com/v2/user/me', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      );
+      const user = userResponse.data;
+      return {
+        provider: this.provider,
+        providerAccountId: String(user.id),
+        name: user.properties?.nickname ?? undefined,
+        gender: user.kakao_account?.gender ?? undefined,
+        birthYear: user.kakao_account?.birthyear ?? undefined,
+        email: user.kakao_account?.email ?? undefined,
+        profileImage: user.properties?.profile_image ?? undefined,
+      };
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_PROVIDER_TOKEN_INVALID,
+        message: '유효하지 않은 Kakao access token입니다.',
+      });
+    }
   }
 }
