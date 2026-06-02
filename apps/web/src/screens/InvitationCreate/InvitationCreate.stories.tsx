@@ -50,6 +50,13 @@ export const DateVotePropose: Story = {
 export const RsvpDeadlineSelect: Story = { args: { step: "rsvpDeadlineSelect" } };
 export const PastDateError: Story = { args: { step: "pastDateError" } };
 export const DateRequiredError: Story = { args: { step: "dateRequiredError" } };
+export const WeatherToggle: Story = {
+  args: { step: "weatherToggle" },
+  parameters: {
+    ...pageStoryParameters,
+    docs: { description: { story: "공개 범위 설정 화면에서 날씨 정보 표시 여부를 토글로 설정하는 UI" } },
+  },
+};
 
 // Location
 export const LocationEmpty: Story = { args: { step: "locationEmpty" } };
