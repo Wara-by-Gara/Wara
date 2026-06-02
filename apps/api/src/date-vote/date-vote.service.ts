@@ -263,12 +263,14 @@ export class DateVoteService {
   async sendReminders() {
     const polls = await this.repo.findPollsNeedingReminder();
     for (const poll of polls) {
+      const invitation = await this.repo.findInvitationById(poll.invitationId);
+      const title = invitation?.title ?? '모임';
       const nonVoters = await this.repo.findNonVotersByPoll(poll.id);
       for (const participant of nonVoters) {
         await this.notificationsService.notify({
           userId:     participant.userId,
           type:       'vote_reminder',
-          content:    '투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!',
+          content:    `[${title}] 투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!`,
           targetType: 'invitation',
           targetId:   poll.invitationId,
         });
@@ -306,20 +308,41 @@ export class DateVoteService {
       // 단독 최다 득표 → 자동 확정
       await this.applyConfirmation(pollId, invitationId, winners[0]!.slot);
     } else {
-      // 동점 또는 응답 없음 → 호스트에게 알림
+      // 동점 또는 응답 없음 → 호스트에게 동점 알림, 참가자 전체에게 마감 알림
+      const invitation = await this.repo.findInvitationById(invitationId);
+      const title = invitation?.title ?? '모임';
       const hostUserId = await this.repo.findHostUserIdByInvitation(invitationId);
-      if (hostUserId) {
-        await this.notificationsService.notify({
-          userId:     hostUserId,
-          type:       'vote_tied',
-          content:    '투표가 마감됐어요. 동점이 발생해 호스트가 날짜를 선택해주세요.',
-          targetType: 'invitation',
-          targetId:   invitationId,
-        });
-      }
+      const allUserIds = await this.repo.findAllParticipantUserIds(invitationId);
+
+      await Promise.all(
+        allUserIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            type:       'vote_tied',
+            content:    userId === hostUserId
+              ? `[${title}] 투표가 마감됐어요. 동점이 발생해 날짜를 직접 선택해주세요.`
+              : `[${title}] 일정 투표가 마감됐어요. 호스트가 날짜를 선택할 예정이에요.`,
+            targetType: 'invitation',
+            targetId:   invitationId,
+          }),
+        ),
+      );
     }
 
     return this.repo.findPollById(pollId);
+  }
+
+  private formatConfirmedDate(date: string, startTime: string | null): string {
+    const [y, m, d] = date.split('-').map(Number);
+    const dateStr = `${String(y! % 100).padStart(2, '0')}년 ${m}월 ${d}일`;
+    if (!startTime) return dateStr;
+    const [hStr, mStr] = startTime.split(':');
+    const h = Number(hStr);
+    const min = Number(mStr);
+    const ampm = h < 12 ? '오전' : '오후';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const minStr = min === 0 ? '' : ` ${min}분`;
+    return `${dateStr} ${ampm} ${h12}시${minStr}`;
   }
 
   private async applyConfirmation(
@@ -333,6 +356,10 @@ export class DateVoteService {
 
     await this.repo.confirmPollAndUpdateInvitation(pollId, slot.id, invitationId, eventStartAt);
 
+    const invitation = await this.repo.findInvitationById(invitationId);
+    const formattedDate = this.formatConfirmedDate(slot.date, slot.startTime);
+    const title = invitation?.title ?? '모임';
+
     // 전체 참가자에게 확정 알림
     const userIds = await this.repo.findAllParticipantUserIds(invitationId);
     await Promise.all(
@@ -340,7 +367,7 @@ export class DateVoteService {
         this.notificationsService.notify({
           userId,
           type:       'vote_confirmed',
-          content:    `날짜가 확정됐어요! ${slot.date}${slot.startTime ? ` ${slot.startTime}` : ''}`,
+          content:    `${title} 날짜가 확정됐어요! ${formattedDate}`,
           targetType: 'invitation',
           targetId:   invitationId,
         }),

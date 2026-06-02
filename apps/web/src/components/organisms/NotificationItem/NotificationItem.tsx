@@ -35,49 +35,61 @@ export interface NotificationItemProps
   time: string;
   /** 읽지 않음 — 좌측 작은 dot */
   unread?: boolean;
+  onDelete?: () => void;
 }
 
 export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemProps>(
   function NotificationItem(
-    { className, type, title, description, time, unread, ...props },
+    { className, type, title, description, time, unread, onDelete, ...props },
     ref,
   ) {
     const meta = ICON_MAP[type];
     return (
-      <button
-        ref={ref}
-        type="button"
-        className={cn(
-          "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left hover-emphasis-sm",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-          unread && "bg-pink-50/60",
-          className,
-        )}
-        {...props}
-      >
-        <span
+      <div className={cn("relative flex items-start", unread && "bg-pink-50/60", "rounded-2xl")}>
+        <button
+          ref={ref}
+          type="button"
           className={cn(
-            "relative inline-flex size-10 shrink-0 items-center justify-center rounded-2xl",
-            meta.bg,
-            meta.color,
+            "flex flex-1 items-start gap-3 rounded-2xl px-4 py-3 text-left hover-emphasis-sm",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            className,
           )}
+          {...props}
         >
-          <Icon name={meta.icon} size="md" color="currentColor" decorative />
-          {unread ? (
-            <span
-              aria-hidden
-              className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-primary ring-2 ring-surface"
-            />
-          ) : null}
-        </span>
-        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-          <p className="line-clamp-1 text-[15px] font-semibold text-text-primary">{title}</p>
-          {description ? (
-            <p className="line-clamp-1 text-[13px] text-text-secondary">{description}</p>
-          ) : null}
-          <p className="text-[12px] text-text-tertiary">{time}</p>
-        </div>
-      </button>
+          <span
+            className={cn(
+              "relative inline-flex size-10 shrink-0 items-center justify-center rounded-2xl",
+              meta.bg,
+              meta.color,
+            )}
+          >
+            <Icon name={meta.icon} size="md" color="currentColor" decorative />
+            {unread ? (
+              <span
+                aria-hidden
+                className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-primary ring-2 ring-surface"
+              />
+            ) : null}
+          </span>
+          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+            <p className="line-clamp-1 text-[15px] font-semibold text-text-primary">{title}</p>
+            {description ? (
+              <p className="line-clamp-1 text-[13px] text-text-secondary">{description}</p>
+            ) : null}
+            <p className="text-[12px] text-text-tertiary">{time}</p>
+          </div>
+        </button>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            aria-label="알림 삭제"
+            className="shrink-0 self-center p-2 text-text-secondary hover:text-red-400 transition-colors"
+          >
+            <Icon name="x" size="sm" color="currentColor" decorative />
+          </button>
+        )}
+      </div>
     );
   },
 );

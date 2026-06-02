@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 import {
   useUnreadCount,
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
+  useDeleteNotification,
   useNotificationSettings,
   useUpdateNotificationSettings,
   useNotificationSocket,
@@ -16,7 +19,10 @@ import { NotificationSettingsSheet } from '@/components/notifications/notificati
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 
+const VOTE_NOTIFICATION_TYPES = new Set(['vote_reminder', 'vote_tied', 'vote_confirmed']);
+
 export function NotificationBellContainer() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -29,6 +35,7 @@ export function NotificationBellContainer() {
   const { mutate: markAsRead } = useMarkAsRead();
   const { mutate: markAllAsRead, isPending: isMarkingAllRead } =
     useMarkAllAsRead();
+  const { mutate: deleteNotification } = useDeleteNotification();
 
   const { data: settings, isLoading: isSettingsLoading } =
     useNotificationSettings();
@@ -62,8 +69,20 @@ export function NotificationBellContainer() {
           hasNextPage={hasNextPage ?? false}
           isFetchingNextPage={isFetchingNextPage}
           isMarkingAllRead={isMarkingAllRead}
-          onMarkAsRead={(id) => markAsRead(id)}
+          onMarkAsRead={(id) => {
+            markAsRead(id);
+            const n = notifications.find((item) => item.id === id);
+            if (n?.targetType === 'invitation' && n.targetId) {
+              setOpen(false);
+              if (VOTE_NOTIFICATION_TYPES.has(n.type)) {
+                router.push(ROUTES.INVITATIONS.VOTE(n.targetId));
+              } else {
+                router.push(ROUTES.INVITATIONS.DETAIL(n.targetId));
+              }
+            }
+          }}
           onMarkAllAsRead={() => markAllAsRead()}
+          onDelete={(id) => deleteNotification(id)}
           onLoadMore={() => fetchNextPage()}
           onOpenSettings={() => setSettingsOpen(true)}
         />

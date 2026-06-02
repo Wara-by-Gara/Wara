@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -62,6 +63,15 @@ export class NotificationsController {
     dto: UpdateNotificationSettingsDto,
   ) {
     return this.notificationsService.updateSettings(user.id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteNotification(
+    @Param('id', ParseUlidPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.notificationsService.deleteNotification(user.id, id);
   }
 
   @Patch(':id/read')

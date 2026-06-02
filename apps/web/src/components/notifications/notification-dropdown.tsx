@@ -11,6 +11,7 @@ interface Props {
   isMarkingAllRead: boolean;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
+  onDelete: (id: string) => void;
   onLoadMore: () => void;
   onOpenSettings: () => void;
 }
@@ -23,6 +24,7 @@ export function NotificationDropdown({
   isMarkingAllRead,
   onMarkAsRead,
   onMarkAllAsRead,
+  onDelete,
   onLoadMore,
   onOpenSettings,
 }: Props) {
@@ -65,6 +67,7 @@ export function NotificationDropdown({
             key={n.id}
             notification={n}
             onReadAction={onMarkAsRead}
+            onDelete={onDelete}
           />
         ))}
         {hasNextPage && (

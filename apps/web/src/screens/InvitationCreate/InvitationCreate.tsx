@@ -80,6 +80,7 @@ export type CreateStep =
   | "commentToggle"
   | "albumToggle"
   | "searchExposureToggle"
+  | "weatherToggle"
   | "designStyle"
   | "backgroundColor"
   | "fontSelect"
@@ -441,7 +442,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
   }
 
   // Privacy
-  if (step.startsWith("privacy") || step.endsWith("Toggle") || step === "searchExposureToggle") {
+  if (step.startsWith("privacy") || step.endsWith("Toggle") || step === "searchExposureToggle" || step === "weatherToggle") {
     const value =
       step === "privacyLinkOnly" ? "link" : step === "privacyPasswordProtected" || step === "privacyPasswordInput" ? "password" : "public";
     return (
@@ -477,6 +478,13 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
               <div className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-[15px]">검색 노출</span>
                 <Switch defaultChecked={step === "searchExposureToggle"} />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3.5">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[15px]">날씨 정보 표시</span>
+                  <span className="text-[12px] text-text-tertiary">모임 날짜 기준 날씨를 초대장에 표시해요</span>
+                </div>
+                <Switch defaultChecked={step === "weatherToggle"} />
               </div>
             </div>
           </section>

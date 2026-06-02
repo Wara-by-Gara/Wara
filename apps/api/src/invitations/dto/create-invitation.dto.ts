@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const CreateInvitationSchema = z
   .object({
     title: z.string().min(1).max(100),
-    description: z.string().min(1),
+    description: z.string(),
     mainImageKey: z.string().min(1).optional(),
     mainGifUrl: z
       .string()

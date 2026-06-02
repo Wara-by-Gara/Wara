@@ -38,6 +38,7 @@ export type SettingsScreen =
 export interface SettingsProps {
   screen?: SettingsScreen;
   onBack?: () => void;
+  onNavigate?: (screen: SettingsScreen) => void;
 }
 
 const Section = ({
@@ -72,7 +73,7 @@ const ToggleItem = ({
   </MenuItem>
 );
 
-export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
+export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps) => {
   const [inquiryDone, setInquiryDone] = useState(screen === 'inquiryComplete');
 
   if (screen === 'main') {
@@ -88,6 +89,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           <Section title="알림">
             <MenuItem
               leftIcon="bell"
+              onClick={() => onNavigate?.('notification')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -103,6 +105,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           <Section title="권한">
             <MenuItem
               leftIcon="image"
+              onClick={() => onNavigate?.('photoPermission')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -116,6 +119,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="map-pin"
+              onClick={() => onNavigate?.('locationPermission')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -129,6 +133,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="camera"
+              onClick={() => onNavigate?.('cameraPermission')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -144,6 +149,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           <Section title="앱">
             <MenuItem
               leftIcon="palette"
+              onClick={() => onNavigate?.('theme')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -157,6 +163,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="globe"
+              onClick={() => onNavigate?.('language')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -172,6 +179,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
           <Section title="약관 / 정책">
             <MenuItem
               leftIcon="file-text"
+              onClick={() => onNavigate?.('terms')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -185,6 +193,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="shield-check"
+              onClick={() => onNavigate?.('privacy')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -198,6 +207,7 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="file-text"
+              onClick={() => onNavigate?.('openSourceLicense')}
               rightSlot={
                 <Icon
                   name="chevron-right"
@@ -211,26 +221,12 @@ export const Settings = ({ screen = 'main', onBack }: SettingsProps) => {
             </MenuItem>
             <MenuItem
               leftIcon="info"
+              onClick={() => onNavigate?.('appVersion')}
               rightSlot={
                 <span className="text-[13px] text-text-tertiary">v0.1.0</span>
               }
             >
               앱 버전
-            </MenuItem>
-          </Section>
-          <Section title="지원">
-            <MenuItem
-              leftIcon="message-circle"
-              rightSlot={
-                <Icon
-                  name="chevron-right"
-                  size="sm"
-                  color="inactive"
-                  decorative
-                />
-              }
-            >
-              고객센터
             </MenuItem>
           </Section>
           <div className="h-6" />

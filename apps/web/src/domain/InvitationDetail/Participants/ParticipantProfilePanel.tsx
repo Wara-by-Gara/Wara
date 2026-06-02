@@ -2,7 +2,6 @@
 
 import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal";
 import type { ParticipantsResponse, RsvpStatus } from "@/lib/api/participants";
-import { getParticipantDisplayName } from "@/domain/InvitationDetail/types";
 import type { ParticipantRsvp } from "@/components/organisms/ParticipantItem";
 
 export type ParticipantRow = ParticipantsResponse["participants"][number];
@@ -25,7 +24,7 @@ export function ParticipantProfilePanel({ row, open, onOpenChange }: Props) {
     <ParticipantProfileModal
       open={open}
       onOpenChange={onOpenChange}
-      name={getParticipantDisplayName(row.participant, row.user)}
+      name={row.user.name ?? row.user.nickname ?? '이름 없음'}
       handle={row.user.nickname ?? undefined}
       avatarUrl={row.user.profileImageUrl ?? undefined}
       status={RSVP_TO_PARTICIPANT[row.participant.rsvpStatus]}

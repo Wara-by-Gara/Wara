@@ -13,12 +13,14 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ProviderParamDto, ProviderParamSchema } from './dto/provider.param.dto';
 import { SocialCallbackDto, SocialCallbackSchema } from './dto/social-callback.dto';
+import { MobileTokenDto, MobileTokenSchema } from './dto/mobile-token.dto';
 import { Platform } from './enums/platform.enum';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -122,6 +124,17 @@ export class AuthController {
       });
     }
     return this.authService.socialLogin({ provider, platform, code: body.code, state: body.state });
+  }
+
+  @Public()
+  @Post(':provider/token')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  mobileTokenLogin(
+    @Param(new ZodValidationPipe(ProviderParamSchema)) { provider }: ProviderParamDto,
+    @Body(new ZodValidationPipe(MobileTokenSchema)) body: MobileTokenDto,
+  ) {
+    return this.authService.socialLoginWithProviderToken({ provider, providerToken: body.providerToken });
   }
 
   @Public()

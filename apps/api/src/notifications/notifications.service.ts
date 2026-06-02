@@ -57,6 +57,17 @@ export class NotificationsService {
     return { count };
   }
 
+  async deleteNotification(userId: string, id: string) {
+    const notification = await this.repository.findById(id);
+    if (!notification) {
+      throw new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND);
+    }
+    if (notification.userId !== userId) {
+      throw new ForbiddenException(ErrorCode.NOTIFICATION_FORBIDDEN);
+    }
+    await this.repository.deleteNotification(id);
+  }
+
   async markAsRead(userId: string, id: string) {
     const notification = await this.repository.findById(id);
     if (!notification) {

@@ -21,6 +21,7 @@ import {
   fetchUnreadCount,
   markAsRead,
   markAllAsRead,
+  deleteNotification,
   fetchNotificationSettings,
   updateNotificationSettings,
 } from '@/lib/api/notifications';
@@ -55,6 +56,17 @@ export function useMarkAsRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
+    },
+  });
+}
+
+export function useDeleteNotification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteNotification,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });

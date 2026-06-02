@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { OAuth2Client } from 'google-auth-library';
 import { Platform } from '../enums/platform.enum';
 import { Provider } from '../enums/provider.enum';
 import { SocialUser } from '../types/social-user.type';
@@ -9,11 +10,13 @@ import {
   SocialAuthParams,
   SocialStrategy,
 } from './interfaces/social.strategy.interface';
+import { ErrorCode } from '../../common/constants/error-codes';
 
 @Injectable()
 export class GoogleStrategy implements SocialStrategy {
   readonly provider = Provider.GOOGLE;
-  readonly supportedPlatforms = [Platform.WEB];
+  readonly supportedPlatforms = [Platform.WEB, Platform.MOBILE];
+  private readonly googleClient = new OAuth2Client();
 
   constructor(
     private readonly httpService: HttpService,
@@ -78,5 +81,30 @@ export class GoogleStrategy implements SocialStrategy {
       birthYear: undefined,
       profileImage: user.picture ?? undefined,
     };
+  }
+
+  async authenticateWithProviderToken(idToken: string): Promise<SocialUser> {
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: this.configService.getOrThrow<string>('GOOGLE_MOBILE_CLIENT_ID'),
+      });
+      const payload = ticket.getPayload();
+      if (!payload) throw new Error('empty payload');
+      return {
+        provider: this.provider,
+        providerAccountId: payload.sub,
+        email: payload.email ?? undefined,
+        name: payload.name ?? undefined,
+        gender: undefined,
+        birthYear: undefined,
+        profileImage: payload.picture ?? undefined,
+      };
+    } catch {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_PROVIDER_TOKEN_INVALID,
+        message: '유효하지 않은 Google id_token입니다.',
+      });
+    }
   }
 }

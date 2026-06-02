@@ -11,4 +11,6 @@ export interface SocialStrategy {
   getAuthorizationUrl(platform: Platform, state: string): string;
 
   authenticate(params: SocialAuthParams): Promise<SocialUser>;
+
+  authenticateWithProviderToken?(providerToken: string): Promise<SocialUser>;
 }

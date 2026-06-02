@@ -37,6 +37,7 @@ export type NotificationListItem = {
   description?: string;
   time: string;
   unread?: boolean;
+  onDelete?: () => void;
 };
 
 export interface NotificationsProps {
@@ -213,6 +214,7 @@ export const Notifications = ({
                   description={n.description}
                   time={n.time}
                   unread={n.unread}
+                  onDelete={n.onDelete}
                   onClick={() => onMarkAsRead?.(n.id)}
                 />
               ))}
@@ -228,6 +230,7 @@ export const Notifications = ({
                   title={n.title}
                   description={n.description}
                   time={n.time}
+                  onDelete={n.onDelete}
                   onClick={() => onMarkAsRead?.(n.id)}
                 />
               ))}
@@ -246,6 +249,7 @@ export const Notifications = ({
                 description={n.description}
                 time={n.time}
                 unread={n.unread}
+                onDelete={n.onDelete}
                 onClick={() => onMarkAsRead?.(n.id)}
               />
             ))}

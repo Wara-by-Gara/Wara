@@ -29,6 +29,7 @@
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
 | `AUTH_INVALID_STATE` | 401 | state 위조 또는 만료 |
+| `AUTH_PROVIDER_TOKEN_INVALID` | 401 | 소셜 provider 토큰(access token / id_token) 검증 실패 또는 만료 |
 | `AUTH_INVALID_TOKEN` | 401 | id_token 위조 또는 만료 |
 | `AUTH_USER_NOT_FOUND` | 401 | 유저 조회 실패 |
 | `TOKEN_EXPIRED` | 401 | refresh token 만료 |

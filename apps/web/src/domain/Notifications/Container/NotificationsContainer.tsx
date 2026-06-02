@@ -8,6 +8,7 @@ import {
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
+  useDeleteNotification,
   useNotificationSettings,
   useUpdateNotificationSettings,
   useNotificationSocket,
@@ -28,6 +29,9 @@ const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
   participantLocations: 'invitationUpdated',
   eventLocations: 'invitationUpdated',
   ai_complete: 'albumOpened',
+  vote_reminder: 'eventReminder',
+  vote_tied: 'eventReminder',
+  vote_confirmed: 'eventReminder',
 };
 
 export default function NotificationsContainer() {
@@ -45,6 +49,7 @@ export default function NotificationsContainer() {
   const { data, isLoading, isError, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
   const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
+  const { mutate: deleteNotification } = useDeleteNotification();
   const { data: settings, isLoading: isSettingsLoading } = useNotificationSettings();
   const { mutate: updateSettings, isPending: isSettingsPending } = useUpdateNotificationSettings();
 
@@ -64,6 +69,7 @@ export default function NotificationsContainer() {
       minute: '2-digit',
     }),
     unread: !n.isRead,
+    onDelete: () => deleteNotification(n.id),
   }));
 
   const handleRequestPushPermission = async () => {
@@ -86,12 +92,17 @@ export default function NotificationsContainer() {
     pushPermission === 'default' ? 'pushPermissionGuide' :
     pushPermission === 'denied' ? 'pushDisabledGuide' :
     baseState;
+  const VOTE_NOTIFICATION_TYPES = new Set(['vote_reminder', 'vote_tied', 'vote_confirmed']);
 
   const handleItemClick = (id: string) => {
     markAsRead(id);
     const notification = allItems.find((n) => n.id === id);
     if (notification?.targetType === 'invitation' && notification.targetId) {
-      router.push(ROUTES.INVITATIONS.DETAIL(notification.targetId));
+      if (VOTE_NOTIFICATION_TYPES.has(notification.type)) {
+        router.push(ROUTES.INVITATIONS.VOTE(notification.targetId));
+      } else {
+        router.push(ROUTES.INVITATIONS.DETAIL(notification.targetId));
+      }
     }
   };
 

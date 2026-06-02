@@ -50,7 +50,7 @@ export default function ProfileEditContainer() {
       state={cropImageSrc ? 'imageCrop' : isError ? 'saveFailed' : 'default'}
       isUploading={isPending}
       defaultName={me.name ?? undefined}
-      defaultNickname={me.nickname ?? ''}
+      defaultNickname={me.nickname ?? me.name ?? ''}
       avatarUrl={me.profileImageUrl ?? undefined}
       cropImageSrc={cropImageSrc ?? undefined}
       onBack={() => {
