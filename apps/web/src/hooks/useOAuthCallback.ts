@@ -13,8 +13,10 @@ export function useOAuthCallback() {
   useEffect(() => {
     if (searchParams.get('auth_success') === '1') {
       login();
-      const returnTo = sessionStorage.getItem('wara_oauth_return') ?? '/';
+      const originalReturnTo = sessionStorage.getItem('wara_oauth_return') ?? '/';
       sessionStorage.removeItem('wara_oauth_return');
+      const hasSeenOnboarding = localStorage.getItem('wara_onboarding_done');
+      const returnTo = hasSeenOnboarding ? originalReturnTo : '/onboarding';
       router.replace(`/terms/agree?returnTo=${encodeURIComponent(returnTo)}`);
     }
   }, [searchParams, login, router, pathname]);

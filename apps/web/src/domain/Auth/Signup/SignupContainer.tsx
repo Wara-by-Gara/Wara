@@ -44,7 +44,8 @@ export function SignupContainer() {
   useEffect(() => {
     if (!me) return;
     if (me.name && me.email && me.birthYear) {
-      router.replace(ROUTES.HOME);
+      const dest = localStorage.getItem('wara_onboarding_done') ? ROUTES.HOME : '/onboarding';
+      router.replace(dest);
       return;
     }
     reset({
@@ -57,7 +58,12 @@ export function SignupContainer() {
   function onSubmit(data: FormValues) {
     updateMe(
       { name: data.name, email: data.email, birthYear: parseInt(data.birthYear, 10) },
-      { onSuccess: () => router.push(ROUTES.HOME) },
+      {
+        onSuccess: () => {
+          const dest = localStorage.getItem('wara_onboarding_done') ? ROUTES.HOME : '/onboarding';
+          router.push(dest);
+        },
+      },
     );
   }
 

@@ -191,7 +191,7 @@ function toEventStartAt(date: string, time: string): string | undefined {
 
 export default function InvitationCreateContainer() {
   const router = useRouter();
-  const { isLoggedIn, hydrate, login } = useAuthStore();
+  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
 
   useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -257,31 +257,17 @@ export default function InvitationCreateContainer() {
     placeId: "",
   });
 
-  // 로그인 리다이렉트 후 복귀 처리
   useEffect(() => {
     return () => {
       if (cropSrc) URL.revokeObjectURL(cropSrc);
     };
   }, [cropSrc]);
 
+  // 로그인 완료 후 저장된 폼 상태 복원
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("auth_success") !== "1") return;
-
-    login();
-
-    // 다른 페이지에서 로그인 후 이 페이지에 착지한 경우 → 원래 페이지로 복귀
-    const returnTo = sessionStorage.getItem("wara_oauth_return");
-    if (returnTo) {
-      sessionStorage.removeItem("wara_oauth_return");
-      router.replace(returnTo);
-      return;
-    }
-
-    // 초대장 만들기 흐름에서 로그인 후 복귀 → 폼 상태 복원
+    if (!hydrated || !isLoggedIn) return;
     const raw = localStorage.getItem("wara_invite_pending");
-    if (!raw) { window.history.replaceState({}, "", "/invitations/create"); return; }
+    if (!raw) return;
     try {
       const saved = JSON.parse(raw) as {
         form: FormData; designBgColor: string; designFont: DesignFont;
@@ -310,9 +296,7 @@ export default function InvitationCreateContainer() {
       setShowPublishConfirm(true);
     } catch { /* ignore */ }
     localStorage.removeItem("wara_invite_pending");
-    window.history.replaceState({}, "", "/invitations/create");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hydrated, isLoggedIn]);
 
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
@@ -602,7 +586,7 @@ export default function InvitationCreateContainer() {
                 variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
               />
             ) : (
-              <>
+              <div>
                 {/* 탭: 이미지 업로드 / GIF */}
                 <div className="mb-3 flex gap-2">
                   <button
@@ -736,7 +720,7 @@ export default function InvitationCreateContainer() {
                     ) : null}
                   </>
                 )}
-              </>
+              </div>
             )}
           </FormField>
           <FormField label="어떤 모임인가요?" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "모임 이름을 입력해주세요" : undefined}>
@@ -1268,7 +1252,7 @@ export default function InvitationCreateContainer() {
                   key={provider}
                   type="button"
                   onClick={() => {
-                    sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
+                    sessionStorage.setItem("wara_oauth_return", "/invitations/create");
                     window.location.href = `${apiBase}/auth/${config.path}/redirect`;
                   }}
                   className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}

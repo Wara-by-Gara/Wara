@@ -31,6 +31,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // 실패해도 클라이언트 상태는 초기화
     }
+    document.cookie = "accessToken=; Max-Age=0; path=/";
+    document.cookie = "refreshToken=; Max-Age=0; path=/";
+    document.cookie = "is_logged_in=; Max-Age=0; path=/";
     set({ isLoggedIn: false });
   },
 }));

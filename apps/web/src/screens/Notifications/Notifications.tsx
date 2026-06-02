@@ -48,6 +48,7 @@ export interface NotificationsProps {
   onFilterChange?: (filter: 'all' | 'unread') => void;
   onRetry?: () => void;
   onSettings?: () => void;
+  onRequestPushPermission?: () => void;
   isMarkingAllRead?: boolean;
 }
 
@@ -60,6 +61,7 @@ export const Notifications = ({
   onFilterChange,
   onRetry,
   onSettings,
+  onRequestPushPermission,
   isMarkingAllRead,
 }: NotificationsProps) => {
   const [markAllReadModalOpen, setMarkAllReadModalOpen] = useState(
@@ -122,9 +124,13 @@ export const Notifications = ({
                 : '설정에서 알림을 켜면 새 소식을 받을 수 있어요'
             }
             action={
-              <Button>
-                {state === 'pushPermissionGuide' ? '권한 허용' : '설정 열기'}
-              </Button>
+              state === 'pushPermissionGuide' ? (
+                <Button onClick={onRequestPushPermission}>권한 허용</Button>
+              ) : (
+                <Button variant="outline">
+                  설정 {'>'} 알림에서 직접 켜주세요
+                </Button>
+              )
             }
           />
         </main>

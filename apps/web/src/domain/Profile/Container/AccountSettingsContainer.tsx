@@ -34,7 +34,12 @@ export default function AccountSettingsContainer() {
 
   const handleWithdrawConfirm = () => {
     deleteMe(undefined, {
-      onSuccess: () => setScreen('withdrawComplete'),
+      onSuccess: async () => {
+        localStorage.removeItem('wara_onboarding_done');
+        await logout();
+        queryClient.clear();
+        setScreen('withdrawComplete');
+      },
     });
   };
 
