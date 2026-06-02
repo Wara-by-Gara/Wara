@@ -10,6 +10,7 @@ import type { RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
 import { LocationCard } from "@/components/organisms/LocationCard";
+import { WeatherCard } from "@/components/organisms/WeatherCard";
 import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { CommentItem } from "@/components/organisms/CommentItem";
 import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal";
@@ -71,7 +72,9 @@ export type InvitationDetailGuestState =
   | "alreadyRespondedProfileOpen"
   | "publicMomentLog"
   | "dateVotePending"
-  | "albumWithLikeCount";
+  | "albumWithLikeCount"
+  | "withWeather"
+  | "withWeatherUnavailable";
 
 export interface InvitationDetailGuestProps {
   state?: InvitationDetailGuestState;
@@ -284,6 +287,17 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
             <LocationCard variant="online" onlineLink="https://meet.example.com/wara" />
           ) : (
             <LocationCard variant="unknown" />
+          )}
+
+          {/* 날씨 카드 */}
+          {(state === "withWeather" || state === "withWeatherUnavailable") && (
+            <WeatherCard
+              condition="cloudy"
+              temperatureCelsius={22}
+              rainProbability={30}
+              tip="가벼운 외투 챙기면 좋아요!"
+              unavailable={state === "withWeatherUnavailable"}
+            />
           )}
 
           {state === "public" ? (

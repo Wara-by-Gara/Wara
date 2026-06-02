@@ -48,6 +48,20 @@ export const AlbumWithLikeCount: Story = {
   },
 };
 
+// Weather
+export const WithWeather: Story = {
+  args: { state: "withWeather" },
+  parameters: {
+    docs: { description: { story: "날씨 정보 표시 ON — 모임 날짜 3일 이내, 날씨 카드(구름 많음 22°C, 비 올 확률 30%, 팁)를 초대장에 노출" } },
+  },
+};
+export const WithWeatherUnavailable: Story = {
+  args: { state: "withWeatherUnavailable" },
+  parameters: {
+    docs: { description: { story: "날씨 정보 표시 ON이지만 모임 날짜 3일 이상 남아 기상청 예보 미제공 상태" } },
+  },
+};
+
 // Date Vote
 export const DateVotePending: Story = { args: { state: "dateVotePending" } };
 
