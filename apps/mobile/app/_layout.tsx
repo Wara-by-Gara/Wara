@@ -19,6 +19,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="terms-agree" options={{ headerShown: false }} />
           <Stack.Screen name="invitations/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="photos/map" options={{ title: '사진 지도', headerBackTitle: '뒤로' }} />
         </Stack>

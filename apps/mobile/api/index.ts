@@ -37,3 +37,12 @@ export {
   DEV_USER_EMAILS,
   type DevUserEmail,
 } from './dev-auth';
+export {
+  fetchTerms,
+  fetchMyAgreements,
+  agreeTerms,
+  termsKeys,
+  type TermType,
+  type ServiceTerm,
+  type TermAgreement,
+} from './terms';
