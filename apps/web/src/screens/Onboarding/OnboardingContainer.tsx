@@ -54,7 +54,7 @@ export function OnboardingContainer() {
   const handleNext = () => {
     const idx = INTRO_SEQUENCE.indexOf(step);
     if (idx >= 0 && idx < INTRO_SEQUENCE.length - 1) {
-      setStep(INTRO_SEQUENCE[idx + 1]);
+      setStep(INTRO_SEQUENCE[idx + 1]!);
     } else {
       setStep("permissionNotification");
     }
