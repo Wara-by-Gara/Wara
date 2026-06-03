@@ -44,7 +44,8 @@
 | 기상청 API 타임아웃 | `WEATHER_API_TIMEOUT` | 504 |
 | 기상청 API 실패 | `WEATHER_API_FAILED` | 502 |
 
-> `WEATHER_API_TIMEOUT`, `WEATHER_API_FAILED` → `error-codes.ts` 및 `error-codes.md`에 추가 필요
+> - `WEATHER_API_TIMEOUT`: 10초 초과 시 발생
+> - `WEATHER_API_FAILED`: resultCode ≠ '00' 또는 응답 body 자체 누락 시 발생 (기상청 장애 시 body가 아예 없는 경우 포함)
 
 ---
 

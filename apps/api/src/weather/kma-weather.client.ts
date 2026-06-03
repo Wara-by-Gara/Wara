@@ -55,7 +55,8 @@ export class KmaWeatherClient {
         throw new BadGatewayException(ErrorCode.WEATHER_API_FAILED);
       }
 
-      const items = data.response.body.items.item;
+      const items = data?.response?.body?.items?.item;
+      if (!items) throw new BadGatewayException(ErrorCode.WEATHER_API_FAILED);
 
       return items.filter((item) =>
         ['TMP', 'SKY', 'PTY', 'POP'].includes(item.category),
