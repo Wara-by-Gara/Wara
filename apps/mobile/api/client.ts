@@ -4,7 +4,9 @@ import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './auth-
 import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
 
 // API base URL — app.config.ts의 expo.extra.apiUrl에서 옴.
-// dev: 보통 http://localhost:3000/api/v1, prod: EAS Secret 또는 .env로 주입.
+// dev: origin만 들어옴(예: http://localhost:3001 또는 Android 에뮬레이터의 http://10.0.2.2:3001).
+//      여기서 `/api` prefix를 붙여 NestJS setGlobalPrefix('api')와 맞춤.
+// prod: EAS Secret 또는 .env로 주입.
 function resolveBaseUrl(): string {
   const fromExtra = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
   if (!fromExtra) {

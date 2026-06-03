@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     marginTop: spacing[3],
   },
   emptyBox: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: colors.surfaceBlurred,
     borderRadius: 20,
     paddingHorizontal: spacing[8],
     paddingVertical: spacing[6],
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   sheetBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.overlayBackdrop,
   },
   sheet: {
     backgroundColor: colors.surface,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   detailDate: {
     ...typography.body3,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textInverseMuted,
     flex: 1,
   },
   detailLikeRow: {

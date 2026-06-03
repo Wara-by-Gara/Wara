@@ -7,5 +7,6 @@ import { TermsService } from './terms.service';
 @Module({
   controllers: [TermsController, AdminTermsController],
   providers: [TermsService, TermsRepository],
+  exports: [TermsRepository],
 })
 export class TermsModule {}

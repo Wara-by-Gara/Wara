@@ -87,6 +87,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
 
   exports: [
     AuthService,
+    AuthRepository,
     HostGuard,
     BlocklistGuard,
     ParticipantGuard,

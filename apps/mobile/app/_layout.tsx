@@ -21,6 +21,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+          {__DEV__ && <Stack.Screen name="dev-login" options={{ headerShown: false }} />}
           <Stack.Screen name="terms-agree" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="invitations/[id]" options={{ headerShown: false }} />

@@ -230,25 +230,36 @@ export default function TermsAgreeScreen() {
 
       <View style={styles.footer}>
         {isAgreementsError && (
-          <Text style={styles.errorText}>로그인 후 동의할 수 있습니다.</Text>
+          <Text style={styles.errorText}>
+            로그인이 필요해요. 로그인 후 다시 진행해 주세요.
+          </Text>
         )}
         {submitError !== '' && (
           <Text style={styles.errorText}>{submitError}</Text>
         )}
-        <TouchableOpacity
-          style={[
-            styles.agreeButton,
-            (!requiredAllChecked || isPending || isAgreementsError) &&
-              styles.agreeButtonDisabled,
-          ]}
-          onPress={handleAgree}
-          disabled={!requiredAllChecked || isPending || isAgreementsError}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.agreeButtonText}>
-            {isPending ? '처리 중...' : '동의하고 시작하기'}
-          </Text>
-        </TouchableOpacity>
+        {isAgreementsError ? (
+          <TouchableOpacity
+            style={styles.agreeButton}
+            onPress={() => router.replace('/login')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.agreeButtonText}>로그인하러 가기</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.agreeButton,
+              (!requiredAllChecked || isPending) && styles.agreeButtonDisabled,
+            ]}
+            onPress={handleAgree}
+            disabled={!requiredAllChecked || isPending}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.agreeButtonText}>
+              {isPending ? '처리 중...' : '동의하고 시작하기'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );

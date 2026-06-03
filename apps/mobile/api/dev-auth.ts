@@ -5,11 +5,13 @@ import { apiFetch } from './client';
 
 // 현재 GET /invitations이 host만 반환하므로 host 시드 유저 위주.
 // guest 참가 목록 endpoint가 추가되거나 auth-kakao PR에서 실제 로그인이 들어오면 본 form은 제거.
+// DB seed 패턴(`host${N.padStart(3, '0')}@wara.dev`)과 동기화 필요.
+// apps/api/drizzle/seed/fixtures.ts:238 + apps/api/src/dev/dev-auth.service.ts:DEV_USER_WHITELIST
 export const DEV_USER_EMAILS = [
-  'host1@wara.dev',
-  'host2@wara.dev',
-  'host3@wara.dev',
-  'host4@wara.dev',
+  'host001@wara.dev',
+  'host002@wara.dev',
+  'host003@wara.dev',
+  'host004@wara.dev',
   'admin@wara.dev',
 ] as const;
 

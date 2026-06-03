@@ -1,6 +1,6 @@
 import type { ExpoConfig } from 'expo/config';
 
-const DEFAULT_DEV_API_URL = 'http://localhost:3000';
+const DEFAULT_DEV_API_URL = 'http://localhost:3001';
 
 export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
   const kakaoNativeKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY;

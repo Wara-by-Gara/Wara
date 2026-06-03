@@ -242,4 +242,11 @@ export class AuthRepository {
         and(eq(t.id, userId), isNull(t.deletedAt)),
     });
   }
+
+  async findUserByEmail(email: string) {
+    return await this.db.query.users.findFirst({
+      where: (t, { eq, isNull, and }) =>
+        and(eq(t.email, email), isNull(t.deletedAt)),
+    });
+  }
 }

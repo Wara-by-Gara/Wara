@@ -18,7 +18,8 @@ export type WsParticipantLocation = {
 function resolveWsBase(): string {
   const apiUrl = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
   if (!apiUrl) throw new Error('API_URL이 설정되지 않았습니다.');
-  // http://localhost:3000/api/v1 → http://localhost:3000
+  // extra.apiUrl은 origin만 들어오는 게 정상(예: http://10.0.2.2:3001).
+  // 과거 prefix(/api/vN)가 들어오던 흔적은 방어적으로 제거 + trailing slash 정리.
   return apiUrl.replace(/\/api\/v\d+\/?$/, '').replace(/\/+$/, '');
 }
 
@@ -34,6 +35,7 @@ export function useLocationSocket({ invitationId, enabled = true }: Options) {
   >(new Map());
   const [arrivedParticipantId, setArrivedParticipantId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [authError, setAuthError] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -42,10 +44,15 @@ export function useLocationSocket({ invitationId, enabled = true }: Options) {
 
     async function connect() {
       const token = await getAccessToken();
+      if (!token) {
+        // 토큰 없이 WS 인증 불가 — 재시도해도 의미 없으니 시도조차 안 함.
+        setAuthError(true);
+        return;
+      }
       const wsBase = resolveWsBase();
 
       socket = io(`${wsBase}/locations`, {
-        auth: { token: token ?? '' },
+        auth: { token },
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,
@@ -54,10 +61,21 @@ export function useLocationSocket({ invitationId, enabled = true }: Options) {
 
       socket.on('connect', () => {
         setConnected(true);
+        setAuthError(false);
         socket.emit('location:subscribe', { invitationId });
       });
 
       socket.on('disconnect', () => setConnected(false));
+
+      // 인증 실패는 reconnection으로 해결 안 됨 — 즉시 중단.
+      // socket.io 서버는 middleware에서 reject 시 connect_error로 전달.
+      socket.on('connect_error', (err) => {
+        const msg = (err.message ?? '').toLowerCase();
+        if (msg.includes('unauth') || msg.includes('token') || msg.includes('auth')) {
+          setAuthError(true);
+          socket.disconnect();
+        }
+      });
 
       socket.on('location:updated', (data: WsParticipantLocation) => {
         setParticipantLocations((prev) => {
@@ -93,5 +111,5 @@ export function useLocationSocket({ invitationId, enabled = true }: Options) {
     socketRef.current?.emit('location:update', { invitationId, ...coords });
   }
 
-  return { participantLocations, arrivedParticipantId, connected, sendLocation };
+  return { participantLocations, arrivedParticipantId, connected, authError, sendLocation };
 }
