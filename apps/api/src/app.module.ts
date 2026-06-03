@@ -26,6 +26,7 @@ import { FaqModule } from './faq/faq.module';
 import { AiModule } from './ai/ai.module';
 import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
+import { WeatherModule } from './weather/weather.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { DateVoteModule } from './date-vote/date-vote.module';
     AiModule,
     TermsModule,
     DateVoteModule,
+    WeatherModule,
   ],
   controllers: [AppController],
   providers: [
