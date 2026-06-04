@@ -11,7 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
+import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
+import { ParticipantGuard } from '../common/guards/participant.guard';
 import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -32,6 +34,7 @@ export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Get('location')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
   getEventLocation(@Param('invitationId') invitationId: string) {
     return this.locationsService.getEventLocation(invitationId);
   }
@@ -56,11 +59,13 @@ export class LocationsController {
   }
 
   @Get('participant/locations')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
   getParticipantLocations(@Param('invitationId') invitationId: string) {
     return this.locationsService.getParticipantLocations(invitationId);
   }
 
   @Put('participant/me/location')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
   updateMyLocation(
     @Param('invitationId') invitationId: string,
     @CurrentUser() user: JwtPayload,

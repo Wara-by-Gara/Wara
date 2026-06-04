@@ -13,7 +13,9 @@ import {
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { MemberRole } from '../common/enums/member-role.enum';
+import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { HostGuard } from '../common/guards/host.guard';
+import { ParticipantGuard } from '../common/guards/participant.guard';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
@@ -36,6 +38,7 @@ export class MissionsController {
   constructor(private readonly missionsService: MissionsService) {}
 
   @Get()
+  @UseGuards(BlocklistGuard, ParticipantGuard)
   async list(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
@@ -44,6 +47,7 @@ export class MissionsController {
   }
 
   @Get('me')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
   async getMine(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
