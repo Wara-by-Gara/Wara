@@ -8,10 +8,20 @@ export interface InvitationDetailProps {
 }
 
 export const FONT_CLASS: Record<string, string> = {
+  // 레거시 (기존 초대장 호환)
   default: "font-sans",
   gothic: "font-sans font-bold tracking-tighter",
   serif: "font-serif",
   mono: "font-mono",
+  // 초대장 제목 폰트 (docs/font.md + Pretendard) — globals.css 유틸리티와 1:1
+  pretendard: "font-pretendard",
+  "elegant-serif": "font-elegant-serif",
+  jiptokki: "font-jiptokki",
+  "partial-sans": "font-partial-sans",
+  silla: "font-silla",
+  highteen: "font-highteen",
+  dos: "font-dos",
+  moonhalo: "font-moonhalo",
 };
 
 export const RSVP_LABELS: Record<RsvpStatus, string> = {

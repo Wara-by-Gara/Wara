@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { Icon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 
@@ -89,7 +90,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {(likeCount !== undefined || onLike) && !overflowLabel ? (
           <span
             className={cn(
-              "absolute bottom-1 right-1 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-bold",
+              "absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-semibold",
               liked ? "text-primary" : "text-white",
               onLike && "cursor-pointer",
             )}
@@ -97,7 +98,12 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
             role={onLike ? "button" : undefined}
             aria-label={onLike ? (liked ? "좋아요 취소" : "좋아요") : undefined}
           >
-            ♥ {likeCount ?? 0}
+            {liked ? (
+              <IoHeart className="size-3.5 shrink-0" aria-hidden />
+            ) : (
+              <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+            )}
+            {likeCount ?? 0}
           </span>
         ) : null}
 

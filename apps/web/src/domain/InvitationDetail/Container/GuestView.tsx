@@ -10,6 +10,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
+import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
 import type { getInvitation } from "@/lib/api/invitations";
@@ -87,7 +88,8 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
 
   return (
-    <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", invitation.bgColor, fontClass)}>
+    <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col font-pretendard", invitation.bgColor)}>
+      <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
         className="shrink-0"
         variant="transparent"
@@ -110,7 +112,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
         />
 
         <header className="flex flex-col items-start gap-2">
-          <h1 className="text-[26px] font-extrabold text-text-primary">{invitation.title}</h1>
+          <h1 className={cn("text-[26px] font-extrabold text-text-primary", fontClass)}>{invitation.title}</h1>
           {invitation.host && (
             <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
               <Avatar
@@ -127,7 +129,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
         </header>
 
         {invitation.description ? (
-          <p className="whitespace-pre-line text-left text-[15px] leading-relaxed text-text-primary">
+          <p className={cn("whitespace-pre-line text-left text-[15px] leading-relaxed text-text-primary", fontClass)}>
             {invitation.description}
           </p>
         ) : null}

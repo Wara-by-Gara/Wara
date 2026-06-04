@@ -11,6 +11,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
+import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummaryCard";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { ParticipantItem } from "@/components/organisms/ParticipantItem";
@@ -85,7 +86,8 @@ export default function HostView({ invitationId, invitation, participantsData }:
   });
 
   return (
-    <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", invitation.bgColor, fontClass)}>
+    <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col font-pretendard", invitation.bgColor)}>
+      <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
         className="shrink-0"
         variant="transparent"
@@ -113,10 +115,10 @@ export default function HostView({ invitationId, invitation, participantsData }:
         <header className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Badge variant="host" size="md">호스트</Badge>
-            <h1 className="truncate text-[22px] font-extrabold text-text-primary">{invitation.title}</h1>
+            <h1 className={cn("truncate text-[22px] font-extrabold text-text-primary", fontClass)}>{invitation.title}</h1>
           </div>
           {invitation.description ? (
-            <p className="whitespace-pre-line text-[15px] leading-relaxed text-text-secondary">
+            <p className={cn("whitespace-pre-line text-[15px] leading-relaxed text-text-secondary", fontClass)}>
               {invitation.description}
             </p>
           ) : null}

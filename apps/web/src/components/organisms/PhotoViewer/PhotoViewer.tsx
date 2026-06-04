@@ -117,14 +117,17 @@ function ProfileActions({
         onClick={onLike}
         disabled={isLiking}
         aria-label={liked ? "좋아요 취소" : "좋아요"}
-        className="inline-flex items-center gap-1.5 text-white disabled:opacity-60"
+        className={cn(
+          "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors disabled:opacity-60",
+          liked ? "text-primary" : "text-white/70 hover:text-primary",
+        )}
       >
         {liked ? (
-          <IoHeart className="size-6 shrink-0 text-primary" aria-hidden />
+          <IoHeart className="size-3.5 shrink-0" aria-hidden />
         ) : (
-          <IoHeartOutline className="size-6 shrink-0" aria-hidden />
+          <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
         )}
-        <span className="text-[14px] font-semibold tabular-nums">{formatCount(likeCount ?? 0)}</span>
+        {formatCount(likeCount ?? 0)}
       </button>
       <button
         type="button"

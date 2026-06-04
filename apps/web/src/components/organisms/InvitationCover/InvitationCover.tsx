@@ -69,6 +69,11 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       ((variant === "image" || variant === "template") && imageUrl ? imageUrl : undefined);
     const fit = fitToImage && !!mediaUrl;
     const displayRatio = clampCoverRatio(naturalRatio ?? COVER_DEFAULT_RATIO);
+    const hasCoverMedia = !!(mediaUrl || gifUrl);
+    const showBottomGradient =
+      hasCoverMedia &&
+      !hideBottomGradient &&
+      (variant === "image" || variant === "template");
 
     useEffect(() => {
       setNaturalRatio(null);
@@ -127,7 +132,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         )}
 
         {/* Gradient overlay */}
-        {!hideBottomGradient && (variant === "image" || variant === "template") ? (
+        {showBottomGradient ? (
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
         ) : null}
 
@@ -180,7 +185,12 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
 
         {/* Content */}
         {children ? (
-          <div className="absolute inset-x-0 bottom-0 p-5 text-text-inverse">
+          <div
+            className={cn(
+              "absolute inset-x-0 bottom-0 p-5",
+              hasCoverMedia ? "text-text-inverse" : "text-text-primary",
+            )}
+          >
             {children}
           </div>
         ) : null}
