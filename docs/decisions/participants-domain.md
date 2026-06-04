@@ -136,8 +136,11 @@ ALTER TABLE "participants" ADD COLUMN "is_hidden" boolean NOT NULL DEFAULT false
 
 ### 모듈 등록 전략
 
-`ParticipantGuard`, `RsvpStatusGuard`는 `HostGuard`, `BlocklistGuard`와 동일하게 **`AuthModule`에 통합**.
+`ParticipantGuard`는 `HostGuard`, `BlocklistGuard`와 동일하게 **`AuthModule`에 통합**.
 도메인 모듈은 `AuthModule`을 import하는 것만으로 모든 Guard 사용 가능.
+
+> `RsvpStatusGuard`, `@RequireRsvpStatus` 데코레이터 — **삭제**
+> rsvpStatus 기반 접근 제한을 백엔드에서 하지 않기로 결정 (모임시작 전 absent 포함 전체 허용, 모임시작 후 블러는 프론트 처리)
 
 ### 신규/수정 파일
 
@@ -145,9 +148,7 @@ ALTER TABLE "participants" ADD COLUMN "is_hidden" boolean NOT NULL DEFAULT false
 |------|------|------|
 | `common/repositories/participant.repository.ts` | 수정 | `findByUserAndInvitation()` 메서드 추가 |
 | `common/guards/participant.guard.ts` | 신규 | 초대장 참여자 확인 + `request.participant` 주입 |
-| `common/guards/rsvp-status.guard.ts` | 신규 | `@RequireRsvpStatus` 선언 상태 검증 |
-| `common/decorators/require-rsvp-status.decorator.ts` | 신규 | `@RequireRsvpStatus(...statuses)` 데코레이터 |
-| `auth/auth.module.ts` | 수정 | `ParticipantGuard`, `RsvpStatusGuard` providers + exports 추가 |
+| `auth/auth.module.ts` | 수정 | `ParticipantGuard` providers + exports 추가 |
 
 `common/types/express.d.ts`에 타입 추가:
 ```typescript
@@ -161,8 +162,6 @@ JwtAuthGuard         → 로그인 확인 (APP_GUARD 전역)
   ↓
 ParticipantGuard     → 참여자 확인 + request.participant 주입
   ↓
-RsvpStatusGuard      → @RequireRsvpStatus 선언 있을 때만 상태 체크
-  ↓
 Controller → Service → 복합 비즈니스 로직
 ```
 
@@ -170,11 +169,10 @@ Controller → Service → 복합 비즈니스 로직
 
 ```typescript
 // GET 엔드포인트 (목록/profile/mutual/shared-invitations)
-@UseGuards(JwtAuthGuard, ParticipantGuard, RsvpStatusGuard)
-@RequireRsvpStatus('attending', 'undecided')
+@UseGuards(JwtAuthGuard, ParticipantGuard)
 
-// POST join — 미참여자 호출이므로 ParticipantGuard 없음
-@UseGuards(JwtAuthGuard)
+// POST join — 미참여자 호출이므로 ParticipantGuard 없음. 차단 유저 방지 위해 BlocklistGuard 적용
+@UseGuards(JwtAuthGuard, BlocklistGuard)
 
 // PATCH rsvp, PATCH me/hidden, DELETE — ParticipantGuard로 viewer 주입, 소유권·HOST 체크는 Service
 @UseGuards(JwtAuthGuard, ParticipantGuard)
@@ -186,33 +184,36 @@ Controller → Service → 복합 비즈니스 로직
 
 > HOST는 rsvpStatus와 무관하게 전체 허용 (본인 탈퇴만 불가)
 > 탈퇴(DELETE) = hard delete. 탈퇴 후 row 없음. 재참여는 POST로 신규 등록.
+> **모임시작 전까지** attending/undecided/absent 모두 동일 권한. 모임시작 이후 블러는 프론트 처리.
 
 ### Participants 도메인
 
-| 엔드포인트 | attending | undecided | absent | 탈퇴(row 없음) |
-|-----------|:---------:|:---------:|:------:|:--------------:|
-| GET 목록 | ✅ | ✅ | ❌ | ❌ |
-| GET profile | ✅ | ✅ | ❌ | ❌ |
-| GET mutual | ✅ | ✅ | ❌ | ❌ |
-| GET shared-invitations | ✅ | ✅ | ❌ | ❌ |
-| POST 참가 (신규/재참가) | — | — | — | ✅ |
-| PATCH rsvp | ✅ | ✅ | ✅ | ❌ |
-| PATCH me/hidden | ✅ | ✅ | ✅ | ❌ |
-| DELETE 탈퇴 | ✅ | ✅ | ✅ | ❌ |
+| 엔드포인트 | attending | undecided | absent | 탈퇴(row 없음) | 비고 |
+|-----------|:---------:|:---------:|:------:|:--------------:|------|
+| GET 목록 | ✅ | ✅ | ✅ | ❌ | |
+| GET profile | ✅ | ✅ | ✅ | ❌ | |
+| GET mutual | ✅ | ✅ | ✅ | ❌ | |
+| GET shared-invitations | ✅ | ✅ | ✅ | ❌ | |
+| POST 참가 (신규/재참가) | — | — | — | ✅ | closed면 불가. 시간 제한 없음 |
+| PATCH rsvp | ✅ | ✅ | ✅ | ❌ | GUEST: closed + 모임시작 전까지. HOST: closed만 차단, eventStartAt 이후에도 타인 변경 가능 |
+| PATCH me/hidden | ✅ | ✅ | ✅ | ❌ | |
+| DELETE 탈퇴 | ✅ | ✅ | ✅ | ❌ | |
 
-### 타 도메인 참고 (해당 도메인 구현 시 `@RequireRsvpStatus` 적용)
+### 타 도메인 참고
+
+> rsvpStatus 기반 백엔드 차단 없음. 모임시작 이후 undecided/absent 블러는 프론트 처리.
 
 | 기능 | attending | undecided | absent |
 |------|:---------:|:---------:|:------:|
-| 갤러리 열람 | ✅ | ✅ | ❌ |
-| 사진 업로드 | ✅ | ❌ | ❌ |
-| 댓글 열람 | ✅ | ✅ | ❌ |
-| 댓글 작성 | ✅ | ❌ | ❌ |
-| 미션 열람 | ✅ | ✅ | ❌ |
-| 미션 수행 | ✅ | ❌ | ❌ |
-| GPS 공유 | ✅ | ❌ | ❌ |
-| 위치 지도 열람 | ✅ | ✅ | ❌ |
-| 알림 수신 | ✅ | ✅ | ❌ |
+| 갤러리 열람 | ✅ | ✅ | ✅ |
+| 사진 업로드 | ✅ | ✅ | ✅ |
+| 댓글 열람 | ✅ | ✅ | ✅ |
+| 댓글 작성 | ✅ | ✅ | ✅ |
+| 미션 열람 | ✅ | ✅ | ✅ |
+| 미션 수행 | ✅ | ✅ | ✅ |
+| GPS 공유 | ✅ | ✅ | ✅ |
+| 위치 지도 열람 | ✅ | ✅ | ✅ |
+| 알림 수신 | ✅ | ✅ | ✅ |
 
 ---
 
@@ -220,13 +221,13 @@ Controller → Service → 복합 비즈니스 로직
 
 | 작업 | 규칙 |
 |------|------|
-| POST join | `memberRole: 'GUEST'` 고정. 중복 409. closed 422. rsvpStatus 필수 (attending/undecided/absent 중 택 1) |
-| PATCH rsvp | 본인만. HOST 불가 (항상 attending 고정). closed 422. attending/undecided/absent만 허용 (Zod에서 차단) |
-| PATCH me/hidden | 본인만. closed 여부와 무관하게 토글 가능 |
+| POST join | `memberRole: 'GUEST'` 고정. 중복 409. closed 422. rsvpStatus 필수 (attending/undecided/absent 중 택 1). 시간 제한 없음 (지각 합류·재참가 허용) |
+| PATCH rsvp | GUEST: 본인만. closed 422. `eventStartAt < now` 422. attending/undecided/absent만 허용 (Zod에서 차단). HOST: closed 422. eventStartAt 이후에도 타인 rsvp 변경 가능. HOST 본인 rsvp 변경 불가 403 |
+| PATCH me/hidden | 본인만. closed·시간 여부와 무관하게 토글 가능 |
 | DELETE | 본인 OR HOST. HOST 본인 탈퇴 400. hard delete |
-| GET (목록/profile/mutual/shared) | attending/undecided만. absent 403 |
+| GET (목록/profile/mutual/shared) | 모든 rsvpStatus 허용. 모임시작 이후 블러는 프론트 처리 |
 | HOST 자동 등록 | 초대장 생성(InvitationsService) 책임 — 이 도메인 scope 밖 |
-| closed 체크 | Repository에서 invitations 테이블 직접 조회 (Service↔Service 금지) |
+| closed/시간 체크 | Repository에서 invitations 테이블 직접 조회 (Service↔Service 금지). `eventStartAt`이 null이면 시간 제한 없음 |
 
 ---
 
@@ -239,8 +240,8 @@ Controller → Service → 복합 비즈니스 로직
 | `PARTICIPANT_NOT_FOUND` | 404 | 참가자 조회 실패 |
 | `PARTICIPANT_ALREADY_EXISTS` | 409 | 이미 참가한 초대장 |
 | `HOST_CANNOT_LEAVE` | 400 | HOST 본인 탈퇴 시도 |
-| `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/변경 시도 |
-| `RSVP_PERMISSION_DENIED` | 403 | absent 상태에서 열람 시도 |
+| `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/변경 시도, 또는 모임시작 이후 GUEST의 RSVP 변경 시도 |
+| `RSVP_PERMISSION_DENIED` | 403 | HOST 본인 RSVP 변경 시도, 또는 타인 RSVP를 HOST 권한 없이 변경 시도 |
 
 ---
 
@@ -253,13 +254,13 @@ Controller → Service → 복합 비즈니스 로직
 
 ### 공통 인프라 (신규/수정)
 - `common/guards/participant.guard.ts` — 신규
-- `common/guards/rsvp-status.guard.ts` — 신규
-- `common/decorators/require-rsvp-status.decorator.ts` — 신규
 - `common/repositories/participant.repository.ts` — `findByUserAndInvitation()` 추가
 - `common/enums/rsvp-status.enum.ts` — `CANCELLED` 삭제
 - `common/constants/error-codes.ts` — 5개 추가
 - `common/types/express.d.ts` — `participant?` 타입 추가
-- `auth/auth.module.ts` — `ParticipantGuard`, `RsvpStatusGuard` providers + exports 추가
+- `auth/auth.module.ts` — `ParticipantGuard` providers + exports 추가
+- ~~`common/guards/rsvp-status.guard.ts`~~ — 삭제 (rsvpStatus 기반 백엔드 차단 제거)
+- ~~`common/decorators/require-rsvp-status.decorator.ts`~~ — 삭제
 
 ### Participants 도메인
 - `participants/participants.controller.ts`
@@ -277,15 +278,24 @@ Controller → Service → 복합 비즈니스 로직
 
 ---
 
-## 9. V1.0 제외 항목
+## 9. V1.0 미구현 — 팀 논의 후 추가 예정
+
+| 항목 | 현황 | 비고 |
+|------|------|------|
+| 본인 탈퇴 UI | 백엔드 DELETE 엔드포인트 존재. 웹 `leaveInvitation()` API 함수 존재. UI 미연결 | Partiful: `...` 메뉴 → "Remove me from event". HOST에게 익명 알림. 재참가는 링크로 가능 |
+| blocklist unblock UI | 백엔드 GET/DELETE `/blocklist` 구현됨. 프론트 미연결 | HOST 전용. 차단 해제 후 링크로 재참가 가능 |
+| ParticipantGuard 누락 도메인 | `date-vote`(GET poll/results, PUT responses), `locations`(GET location/participant-locations), `missions`(GET list/me) — 비참가자 접근 가능 | 각 도메인 작업 시 추가 필요 |
+
+---
+
+## 10. V1.0 제외 항목
 
 | 항목 | 이유 |
 |------|------|
-| `dateVotes` | CLAUDE.md 금지 (날짜 투표 = V1.1+) |
+| `dateVotes` | ~~CLAUDE.md 금지~~ → V1.0 구현 완료 (`date-vote` 모듈) |
 | HOST → GUEST rsvpStatus 강제 변경 | api.md "본인만" 명세 충돌 |
 | `isNewUser` auth 응답 | auth/users 도메인 별도 작업 |
 | `GET /invitations` isHidden 필터 | InvitationsModule 구현 시 적용 |
-| `RsvpStatusGuard` 타 도메인 적용 | photos/feedbacks 도메인 작업 시 구현 |
 
 ---
 
@@ -367,10 +377,16 @@ Controller → Service → 복합 비즈니스 로직
 
 ### 현재 결정
 
-**Option A 유지 (시간 제한 없음)** — V1.0에서는 closed 상태만 체크.
+**모임시작(`eventStartAt`) 기준 차단 — GUEST/HOST 비대칭**
 
-친구 모임 특성상 중간 합류가 자연스럽고, `eventEndAt` 필드 추가 없이 가능한 범위에서 시작.
-이벤트 관리 고도화 시 옵션 C 또는 D 재검토 권장.
+| 대상 | PATCH rsvp | POST join |
+|------|:----------:|:---------:|
+| GUEST | closed 422 + `eventStartAt < now` → 422 | closed 422만 (시간 제한 없음) |
+| HOST | closed 422. eventStartAt 이후에도 타인 rsvp 변경 가능 | — |
+
+- POST /join에 eventStartAt 체크 없음 — 지각 합류·실수 탈퇴 후 재참가 허용. HOST가 완전 차단 원하면 closed 처리.
+- `eventStartAt`이 null이면 closed 상태만 체크
+- 모임시작 이후 undecided/absent 페이지 블러는 프론트 처리
 
 ---
 

@@ -87,11 +87,11 @@ export class ParticipantsService {
       throw new ConflictException(ErrorCode.PARTICIPANT_ALREADY_EXISTS);
     }
 
-    const status = await this.repository.findInvitationStatus(invitationId);
-    if (!status) {
+    const info = await this.repository.findInvitationInfo(invitationId);
+    if (!info) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
-    if (status === 'closed') {
+    if (info.status === 'closed') {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
@@ -114,11 +114,15 @@ export class ParticipantsService {
       throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
     }
 
-    const status = await this.repository.findInvitationStatus(invitationId);
-    if (!status) {
+    const info = await this.repository.findInvitationInfo(invitationId);
+    if (!info) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
-    if (status === 'closed') {
+    if (info.status === 'closed') {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+
+    if (viewer.memberRole !== 'HOST' && info.eventStartAt && info.eventStartAt < new Date()) {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
