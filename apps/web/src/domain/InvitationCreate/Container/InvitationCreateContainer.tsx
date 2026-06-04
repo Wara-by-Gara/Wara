@@ -166,7 +166,7 @@ function MissionTemplateSection({
       <p className="mb-2 text-[14px] font-semibold text-text-primary">
         시스템 미션
       </p>
-      <div className="flex h-[150px] flex-col gap-2 overflow-auto">
+      <div className="flex h-37.5 flex-col gap-2 overflow-auto">
         {missionTemplates.map((t) => {
           const isSelected = selectedMissions.some(
             (m) => m.type === 'template' && m.templateId === t.id,
@@ -820,11 +820,11 @@ export default function InvitationCreateContainer() {
                         </div>
                       </div>
                     ) : imageUploading ? (
-                      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
+                      <div className="flex aspect-4/5 w-full items-center justify-center rounded-3xl bg-surface">
                         <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
                       </div>
                     ) : imageUploadError ? (
-                      <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                      <div className="flex aspect-4/5 w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
                         <Icon
                           name="alert-triangle"
                           size="lg"
@@ -844,7 +844,7 @@ export default function InvitationCreateContainer() {
                       <button
                         type="button"
                         className={cn(
-                          'flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed',
+                          'flex aspect-4/5 w-full items-center justify-center rounded-3xl border-2 border-dashed',
                           imageError
                             ? 'border-danger bg-danger-soft'
                             : 'border-border-strong bg-background-soft',
@@ -920,7 +920,7 @@ export default function InvitationCreateContainer() {
                       <button
                         type="button"
                         className={cn(
-                          'flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed',
+                          'flex aspect-4/5 w-full items-center justify-center rounded-3xl border-2 border-dashed',
                           imageError
                             ? 'border-danger bg-danger-soft'
                             : 'border-border-strong bg-background-soft',
@@ -1113,7 +1113,7 @@ export default function InvitationCreateContainer() {
 
           {/* 날짜 미정 → 투표 제안 배너 */}
           {dateUnknown && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-linear-to-br from-primary/5 to-primary/10 p-4">
               <div className="flex items-start gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
                   <Icon name="calendar" size="md" color="primary" decorative />
@@ -1199,12 +1199,12 @@ export default function InvitationCreateContainer() {
             error={locationError ? '장소를 선택해주세요' : undefined}
           />
           {locationMode === 'search' && locationResults.length > 0 && (
-            <div className="flex flex-col overflow-y-auto rounded-2xl border border-border bg-surface h-[150px]">
+            <div className="flex flex-col overflow-y-auto rounded-2xl border border-border bg-surface h-37.5">
               {locationResults.map((place) => (
                 <button
                   key={place.placeId}
                   type="button"
-                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover-emphasis-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+                  className="flex flex-col gap-0.5 px-4 py-3 text-left hover-emphasis-sm not-last:border-b not-last:border-border"
                   onClick={() => {
                     set({
                       placeName: place.placeName,
@@ -1306,7 +1306,7 @@ export default function InvitationCreateContainer() {
                       </span>
                     )}
                   </div>
-                  <div className="flex h-[150px] flex-col gap-2 overflow-auto">
+                  <div className="flex h-37.5 flex-col gap-2 overflow-auto">
                     {selectedMissions.map((m) => {
                       const key =
                         m.type === 'template' ? m.templateId : m.localId;
