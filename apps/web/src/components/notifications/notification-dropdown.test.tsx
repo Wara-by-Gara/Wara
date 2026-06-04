@@ -12,6 +12,7 @@ const makeNotification = (id: string, isRead = false): Notification => ({
   content: `알림 ${id}`,
   targetType: 'feedback',
   targetId: 't1',
+  invitationId: 'i1',
   isRead,
   readAt: null,
   createdAt: '2026-05-20T10:00:00.000Z',

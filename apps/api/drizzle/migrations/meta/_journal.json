@@ -15,6 +15,13 @@
       "when": 1780281438260,
       "tag": "0001_add_deleted_at_to_event_locations",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780545233846,
+      "tag": "0003_add_notification_invitation_id",
+      "breakpoints": true
     }
   ]
 }

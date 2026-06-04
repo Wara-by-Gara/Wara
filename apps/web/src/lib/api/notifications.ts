@@ -29,6 +29,8 @@ export type Notification = {
   content: string;
   targetType: NotificationTargetType | null;
   targetId: string | null;
+  /** 알림이 속한 초대장 ID — photo/mission/feedback 등 sub-resource 알림의 라우팅 구성용 */
+  invitationId: string | null;
   isRead: boolean;
   readAt: string | null;
   createdAt: string;

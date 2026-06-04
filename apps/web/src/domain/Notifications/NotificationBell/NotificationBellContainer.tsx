@@ -11,7 +11,6 @@ import {
   useDeleteNotification,
   useNotificationSettings,
   useUpdateNotificationSettings,
-  useNotificationSocket,
 } from '@/hooks/useNotifications';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
@@ -42,8 +41,6 @@ export function NotificationBellContainer() {
   const { mutate: updateSettings, isPending: isSettingsPending } =
     useUpdateNotificationSettings();
 
-  useNotificationSocket();
-
   const notifications = data?.pages.flatMap((p) => p.items) ?? [];
 
   useEffect(() => {
@@ -72,13 +69,31 @@ export function NotificationBellContainer() {
           onMarkAsRead={(id) => {
             markAsRead(id);
             const n = notifications.find((item) => item.id === id);
-            if (n?.targetType === 'invitation' && n.targetId) {
+            if (!n?.targetId) return;
+
+            if (n.targetType === 'invitation') {
               setOpen(false);
               if (VOTE_NOTIFICATION_TYPES.has(n.type)) {
                 router.push(ROUTES.INVITATIONS.VOTE(n.targetId));
               } else {
                 router.push(ROUTES.INVITATIONS.DETAIL(n.targetId));
               }
+              return;
+            }
+            if (n.targetType === 'participantLocations') {
+              setOpen(false);
+              router.push(ROUTES.INVITATIONS.LOCATION(n.targetId));
+              return;
+            }
+            const invId = n.invitationId;
+            if (!invId) return;
+            setOpen(false);
+            if (n.targetType === 'photo') {
+              router.push(ROUTES.INVITATIONS.PHOTO_DETAIL(invId, n.targetId));
+            } else if (n.targetType === 'mission') {
+              router.push(ROUTES.INVITATIONS.MISSION_DETAIL(invId, n.targetId));
+            } else if (n.targetType === 'feedback') {
+              router.push(ROUTES.INVITATIONS.FEEDBACKS(invId));
             }
           }}
           onMarkAllAsRead={() => markAllAsRead()}

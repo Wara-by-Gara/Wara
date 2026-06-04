@@ -176,6 +176,7 @@ export class FeedbacksService {
             content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
             targetType: 'feedback',
             targetId: feedback.id,
+            invitationId,
           }),
         ),
       );
@@ -225,6 +226,7 @@ export class FeedbacksService {
             content: `${actorNickname}님이 댓글에서 회원님을 언급했습니다`,
             targetType: 'feedback',
             targetId: feedback.id,
+            invitationId,
           }),
         ),
       );

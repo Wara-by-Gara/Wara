@@ -268,11 +268,12 @@ export class DateVoteService {
       const nonVoters = await this.repo.findNonVotersByPoll(poll.id);
       for (const participant of nonVoters) {
         await this.notificationsService.notify({
-          userId:     participant.userId,
-          type:       'vote_reminder',
-          content:    `[${title}] 투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!`,
-          targetType: 'invitation',
-          targetId:   poll.invitationId,
+          userId:       participant.userId,
+          type:         'vote_reminder',
+          content:      `[${title}] 투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!`,
+          targetType:   'invitation',
+          targetId:     poll.invitationId,
+          invitationId: poll.invitationId,
         });
       }
       await this.repo.updatePoll(poll.id, { reminderSentAt: new Date() });
@@ -318,12 +319,13 @@ export class DateVoteService {
         allUserIds.map((userId) =>
           this.notificationsService.notify({
             userId,
-            type:       'vote_tied',
-            content:    userId === hostUserId
+            type:         'vote_tied',
+            content:      userId === hostUserId
               ? `[${title}] 투표가 마감됐어요. 동점이 발생해 날짜를 직접 선택해주세요.`
               : `[${title}] 일정 투표가 마감됐어요. 호스트가 날짜를 선택할 예정이에요.`,
-            targetType: 'invitation',
-            targetId:   invitationId,
+            targetType:   'invitation',
+            targetId:     invitationId,
+            invitationId,
           }),
         ),
       );
@@ -366,10 +368,11 @@ export class DateVoteService {
       userIds.map((userId) =>
         this.notificationsService.notify({
           userId,
-          type:       'vote_confirmed',
-          content:    `${title} 날짜가 확정됐어요! ${formattedDate}`,
-          targetType: 'invitation',
-          targetId:   invitationId,
+          type:         'vote_confirmed',
+          content:      `${title} 날짜가 확정됐어요! ${formattedDate}`,
+          targetType:   'invitation',
+          targetId:     invitationId,
+          invitationId,
         }),
       ),
     );

@@ -13,11 +13,15 @@ export const notifications = pgTable('notifications', {
   content: text('content').notNull(),
   targetType: notificationTargetTypeEnum('target_type'),
   targetId: text('target_id'),
+  // 알림이 속한 초대장 — 클라이언트 라우팅(예: 사진/미션 알림 → 초대장 상세) 구성용.
+  // 알림 종류에 따라 null 가능 (시스템 공지 등).
+  invitationId: text('invitation_id').references(() => invitations.id, { onDelete: 'cascade' }),
   isRead: boolean('is_read').notNull().default(false),
   readAt: timestamp('read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   check('check_notification_target', sql`(${t.targetType} IS NOT NULL AND ${t.targetId} IS NOT NULL) OR (${t.targetType} IS NULL AND ${t.targetId} IS NULL)`),
+  index('idx_notifications_invitation').on(t.invitationId),
 ]);
 
 export const notificationSettings = pgTable('notification_settings', {

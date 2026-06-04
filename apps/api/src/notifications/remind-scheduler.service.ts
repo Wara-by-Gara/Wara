@@ -47,6 +47,7 @@ export class RemindSchedulerService {
             content: contentFn(invitation.title),
             targetType: 'invitation',
             targetId: invitation.id,
+            invitationId: invitation.id,
           }),
         ),
       );

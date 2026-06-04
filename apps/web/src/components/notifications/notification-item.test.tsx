@@ -12,6 +12,7 @@ const base: Notification = {
   content: '새 피드백이 도착했어요',
   targetType: 'feedback',
   targetId: 't1',
+  invitationId: 'i1',
   isRead: false,
   readAt: null,
   createdAt: '2026-05-20T10:00:00.000Z',
