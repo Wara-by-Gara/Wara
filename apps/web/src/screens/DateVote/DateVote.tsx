@@ -68,6 +68,12 @@ export const RESPONSE_RMAP: Record<'good' | 'maybe' | 'bad', VoteResponse> = {
   bad: 'cross',
 };
 
+const RESPONSE_MAP: Record<VoteResponse, 'good' | 'maybe' | 'bad'> = {
+  circle: 'good',
+  triangle: 'maybe',
+  cross: 'bad',
+};
+
 export function formatApiTime(hhmm: string): string {
   const [hStr, mStr] = hhmm.split(':');
   const h = Number(hStr);
@@ -211,8 +217,8 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
                 <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 px-4 py-3">
                   <div className="flex flex-col gap-0.5">
                     {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ 현재 최다</span>}
-                    <span className="text-[15px] font-bold text-text-primary">{slot.time}</span>
-                    <span className="text-[11px] text-text-tertiary">응답 {total}명</span>
+                    <span className={cn("text-[15px] font-bold", isTop ? "text-emerald-700" : "text-text-primary")}>{slot.time}</span>
+                    <span className={cn("text-[11px]", isTop ? "text-emerald-700/80" : "text-text-tertiary")}>응답 {total}명</span>
                   </div>
                   {TYPES.map((t) => (
                     <div key={t} className="flex flex-col items-center gap-1">
@@ -477,20 +483,23 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
       }))
     : [];
 
+  // Storybook 폴백: 실제 페이지(invitationId 존재) / Create 모달(onDraftComplete 존재) / 복원(initialDraft) 모두 아닐 때만 mock 사용
+  const useMockDefaults = !invitationId && !isDraftMode && !initialDraft;
+
   const [selectedDates, setSelectedDates] = useState<Set<string>>(
     initialDraft ? new Set(initialDraft.slots.map((s) => s.date))
-    : isDraftMode ? new Set()
-    : new Set(["2026-06-14", "2026-06-15"]),
+    : useMockDefaults ? new Set(["2026-06-14", "2026-06-15"])
+    : new Set(),
   );
   const [focusedDate, setFocusedDate] = useState<string | null>(
     initialDraft ? (initialDraft.slots[0]?.date ?? null)
-    : isDraftMode ? null
-    : "2026-06-14",
+    : useMockDefaults ? "2026-06-14"
+    : null,
   );
   const [slots, setSlots] = useState<DraftSlot[]>(
     initialDraft ? restoredSlots
-    : isDraftMode ? []
-    : INITIAL_DRAFT,
+    : useMockDefaults ? INITIAL_DRAFT
+    : [],
   );
   const [isPublic, setIsPublic] = useState(initialDraft ? !initialDraft.isAnonymous : true);
   const [step, setStep] = useState<"date" | "settings">("date");
@@ -805,7 +814,8 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   const enabled = !!invitationId;
   const { data: invitation } = useInvitation(invitationId ?? '');
   const { data: pollData } = usePoll(invitationId ?? '', { enabled });
-  const { data: resultsData } = useVoteResults(invitationId ?? '', { enabled });
+  const hasPoll = !!pollData?.poll;
+  const { data: resultsData } = useVoteResults(invitationId ?? '', { enabled: enabled && hasPoll });
   const { data: myParticipant } = useMyParticipant(invitationId ?? '', { enabled });
   const { data: participantsData } = useParticipants(invitationId ?? '');
   const submitMutation = useSubmitResponses(invitationId ?? '');
@@ -836,7 +846,11 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
     myResponses.map((r) => [r.slotId, RESPONSE_RMAP[r.response]])
   );
   const [myVotes, setMyVotes] = useState<MyVotes>(
-    invitationId ? initialVotes : (stateProp === "guestVoted" || stateProp === "hostView" ? INITIAL_VOTES : {})
+    invitationId
+      ? initialVotes
+      : stateProp === "guestVoted" || stateProp === "hostView"
+        ? INITIAL_VOTES
+        : {},
   );
 
   useEffect(() => {
@@ -847,27 +861,18 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   }, [pollData]);
 
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [confirmSlotId, setConfirmSlotId] = useState<string | null>(null);
 
   if (state === "hostCreating") return <HostCreatingView invitationId={invitationId} onBack={goBack} />;
 
   const handleVote = (id: string, type: VoteResponse) => {
-    setHasInteracted(true);
-    setMyVotes((prev) => ({ ...prev, [id]: prev[id] === type ? null : type }));
-  };
-
-  const handleSubmit = () => {
+    const nextMyVotes = { ...myVotes, [id]: myVotes[id] === type ? null : type };
+    setMyVotes(nextMyVotes);
     if (!invitationId) return;
-    const responses = Object.entries(myVotes)
-      .filter(([, v]) => v !== null)
-      .map(([slotId, v]) => ({
-        slotId,
-        response: v === 'circle' ? 'good' : v === 'triangle' ? 'maybe' : 'bad' as 'good' | 'maybe' | 'bad',
-      }));
-    submitMutation.mutate(responses, {
-      onSuccess: () => setHasInteracted(false),
-    });
+    const responses = Object.entries(nextMyVotes)
+      .filter((entry): entry is [string, VoteResponse] => entry[1] !== null)
+      .map(([slotId, v]) => ({ slotId, response: RESPONSE_MAP[v] }));
+    submitMutation.mutate(responses);
   };
 
   const canVote = state === "guestVoting" || state === "guestVoted" || state === "hostView";
@@ -880,7 +885,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
     ? new Set(displaySlots.filter((s) => s.votes.circle === maxCircle).map((s) => s.id))
     : new Set<string>();
 
-  // 마감 시간 표시
+  // 마감 시간 표시 — 서버는 "마감 없음"을 2099-12-31로 저장 (date-vote.service.ts:52)
   const isNoDeadline = poll?.closesAt && new Date(poll.closesAt).getFullYear() >= 2099;
   const deadlineText = (() => {
     if (!poll?.closesAt || isNoDeadline) return null;
@@ -1011,8 +1016,18 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
 
         {canVote && (
           <>
-            <VoteTable slots={displaySlots} myVotes={myVotes} onVote={handleVote} topSlotIds={topSlotIds} showVoters={!poll?.isAnonymous} />
-            <p className="text-center text-[12px] text-text-tertiary">같은 날짜의 여러 시간대에 동시에 응답할 수 있어요</p>
+            <VoteTable
+              slots={displaySlots}
+              myVotes={myVotes}
+              onVote={handleVote}
+              topSlotIds={topSlotIds}
+              showVoters={!poll?.isAnonymous}
+            />
+            <p className="text-center text-[12px] text-text-tertiary">
+              {submitMutation.isPending
+                ? "저장 중..."
+                : "응답이 자동 저장됩니다 · 같은 날짜의 여러 시간대에 동시에 응답할 수 있어요"}
+            </p>
           </>
         )}
 
@@ -1030,16 +1045,6 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
           </div>
         )}
       </main>
-
-      {canVote && (
-        <div className="relative z-10 shrink-0">
-          <StickyCTA primary={{
-            label: submitMutation.isPending ? "제출 중..." : (state === "guestVoted" || state === "hostView" ? "응답 수정하기" : "투표 제출하기"),
-            disabled: submitMutation.isPending || !hasInteracted,
-            onClick: invitationId ? handleSubmit : () => {},
-          }} />
-        </div>
-      )}
 
       <ConfirmModal contained open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}
         title="투표를 지금 종료할까요?"
@@ -1062,6 +1067,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
           });
         }}
       />
+
     </div>
   );
 };
