@@ -34,6 +34,10 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${beVietnamPro.variable} ${notoSerif.variable} h-full antialiased`}
+      // Trancy/Grammarly 등 번역·문법 확장이 hydration 전에 <html>에
+      // attribute를 주입해 mismatch가 발생. <html>에만 한정하면 자식
+      // 트리의 실제 hydration 버그는 그대로 노출된다.
+      suppressHydrationWarning
     >
       <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
         <OAuthCallbackHandler />
