@@ -82,6 +82,10 @@ export interface MapPageProps {
 
   /** 내 위치 버튼 */
   onLocate?: () => void;
+
+  /** selectedPlace 상태에서 "이 장소로 설정하기" 버튼 표시 — 호스트가 검색 후 확정할 때 사용 */
+  onConfirmSelectedPlace?: () => void;
+  isSavingPlace?: boolean;
 }
 
 const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
@@ -114,6 +118,8 @@ export const MapPage = ({
   isHost,
   onSetLocation,
   onLocate,
+  onConfirmSelectedPlace,
+  isSavingPlace,
 }: MapPageProps) => {
   const placeName = eventLocation?.placeName ?? '';
   const address = eventLocation?.address ?? '';
@@ -284,13 +290,23 @@ export const MapPage = ({
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
         <div className="relative flex-1">
           {mapSlot ?? <MapPlaceholder />}
-          <div className="absolute inset-x-0 bottom-0 z-30 p-4">
+          <div className="absolute inset-x-0 bottom-0 z-30 flex flex-col gap-2 p-4">
             <LocationCard
               variant="preview"
               placeName={placeName}
               address={state === "manualAddress" ? "직접 입력한 주소" : address}
-              onGetDirections={onGetDirections}
+              onGetDirections={onConfirmSelectedPlace ? undefined : onGetDirections}
             />
+            {onConfirmSelectedPlace && (
+              <Button
+                fullWidth
+                size="lg"
+                disabled={isSavingPlace}
+                onClick={onConfirmSelectedPlace}
+              >
+                {isSavingPlace ? "저장 중..." : "이 장소로 설정하기"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
