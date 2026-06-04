@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, updateMe, type UpdateMeInput } from '@/lib/api/users';
+import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, updateMe, type DeleteMeInput, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { isLoggedInCookieSet } from '@/lib/auth-cookie';
 
@@ -39,7 +39,7 @@ export function useUpdateMe() {
 export function useDeleteMe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => deleteMe(),
+    mutationFn: (payload: DeleteMeInput = {}) => deleteMe(payload),
     onSuccess: () => queryClient.clear(),
   });
 }

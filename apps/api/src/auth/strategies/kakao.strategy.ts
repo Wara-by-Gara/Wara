@@ -26,6 +26,10 @@ export class KakaoStrategy implements SocialStrategy {
       client_id: this.configService.getOrThrow<string>('KAKAO_CLIENT_ID'),
       redirect_uri: this.configService.getOrThrow<string>('KAKAO_REDIRECT_URI'),
       response_type: 'code',
+      // 본명(name) 추가 동의 — 가입 시 닉네임 대신 실명을 prefill 하기 위함.
+      // kakao_account.name 응답을 받으려면 카카오 개발자 콘솔에서도 "이름" 항목을
+      // 사용 설정해야 한다. 미설정 시 응답에 name이 빠지므로 fallback으로 nickname 사용.
+      scope: 'name,profile_nickname,profile_image,account_email,gender,birthyear',
       state,
     });
 
@@ -91,7 +95,8 @@ export class KakaoStrategy implements SocialStrategy {
       return {
         provider: this.provider,
         providerAccountId: String(user.id),
-        name: user.properties?.nickname ?? undefined,
+        // 본명(name) 우선, 없으면 nickname (profile_nickname scope만 받은 경우)
+        name: user.kakao_account?.name ?? user.properties?.nickname ?? undefined,
         gender: user.kakao_account?.gender ?? undefined,
         birthYear: user.kakao_account?.birthyear ?? undefined,
         email: user.kakao_account?.email ?? undefined,

@@ -14,8 +14,19 @@ import { ROUTES } from "@/constants/routes";
 
 const currentYear = new Date().getFullYear();
 
+// 본명 검증: 한글/영문/공백/하이픈/아포스트로피만 허용, 2~30자.
+// - 한글 자모만(ㅎㅇㅎㅇ) / 이모지 / 한 글자 입력을 차단해 닉네임형 가입을 방지
+// - 외국인 본명의 하이픈·아포스트로피·공백은 허용 (예: O'Connor, Jean-Luc)
+const NAME_PATTERN = /^(?=.{2,30}$)[가-힣A-Za-z][가-힣A-Za-z\s'-]*[가-힣A-Za-z]$/;
+
 const schema = z.object({
-  name: z.string().min(1, "이름을 입력해주세요").max(100),
+  name: z
+    .string()
+    .min(1, "이름을 입력해주세요")
+    .refine(
+      (v) => NAME_PATTERN.test(v.trim()),
+      "한글 또는 영문으로 2자 이상 입력해주세요",
+    ),
   email: z.string().email("유효한 이메일을 입력해주세요"),
   birthYear: z
     .string()
@@ -56,7 +67,11 @@ export function SignupContainer() {
 
   function onSubmit(data: FormValues) {
     updateMe(
-      { name: data.name, email: data.email, birthYear: parseInt(data.birthYear, 10) },
+      {
+        name: data.name.trim().replace(/\s+/g, " "),
+        email: data.email,
+        birthYear: parseInt(data.birthYear, 10),
+      },
       { onSuccess: () => router.push(ROUTES.HOME) },
     );
   }

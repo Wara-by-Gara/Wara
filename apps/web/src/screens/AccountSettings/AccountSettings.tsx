@@ -4,6 +4,7 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Radio, RadioGroup } from "@/components/primitives/Radio";
 import { Textarea } from "@/components/primitives/Textarea";
+import { TextInput } from "@/components/primitives/TextInput";
 import { MenuItem } from "@/components/molecules/MenuItem";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { ConfirmModal } from "@/components/molecules/Modal";
@@ -21,6 +22,15 @@ export type AccountScreen =
   | "withdrawFinalConfirm"
   | "withdrawComplete";
 
+export type WithdrawalReasonKey =
+  | "rarely"
+  | "alternative"
+  | "missing"
+  | "privacy"
+  | "etc";
+
+const WITHDRAW_CONFIRM_PHRASE = "탈퇴";
+
 export interface AccountSettingsProps {
   screen?: AccountScreen;
   onBack?: () => void;
@@ -36,9 +46,14 @@ export interface AccountSettingsProps {
   onDisconnectRequest?: (provider: string) => void;
   onDisconnectConfirm?: () => void;
   isDisconnecting?: boolean;
+  // 탈퇴 사유 — Container에서 끌어올린 state를 props로 받는다
+  withdrawReason?: WithdrawalReasonKey;
+  withdrawDetail?: string;
+  onWithdrawReasonChange?: (reason: WithdrawalReasonKey) => void;
+  onWithdrawDetailChange?: (detail: string) => void;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
     screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
   );
@@ -142,7 +157,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           </ul>
         </main>
         <div className="relative z-10 shrink-0">
-      <StickyCTA primary={{ label: "계속 진행", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
+      <StickyCTA primary={{ label: "계속 진행", variant: "primary", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
       </div>
       </div>
     );
@@ -153,7 +168,10 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="떠나시는 이유를 알려주세요" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <RadioGroup defaultValue="rarely">
+          <RadioGroup
+            value={withdrawReason ?? "rarely"}
+            onValueChange={(v) => onWithdrawReasonChange?.(v as WithdrawalReasonKey)}
+          >
             {[
               { value: "rarely", label: "거의 사용하지 않아서" },
               { value: "alternative", label: "다른 서비스를 사용해요" },
@@ -167,7 +185,14 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
               </label>
             ))}
           </RadioGroup>
-          <Textarea className="mt-4" placeholder="더 들려주실 이야기가 있다면…" rows={4} />
+          <Textarea
+            className="mt-4"
+            placeholder="더 들려주실 이야기가 있다면…"
+            rows={4}
+            maxLength={500}
+            value={withdrawDetail ?? ""}
+            onChange={(e) => onWithdrawDetailChange?.(e.target.value)}
+          />
         </main>
         <div className="relative z-10 shrink-0">
       <StickyCTA primary={{ label: "계속", variant: "danger", onClick: onWithdrawContinue }} secondary={{ label: "취소", onClick: onWithdrawCancel }} />
@@ -178,19 +203,12 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "withdrawFinalConfirm") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-        <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
-        <ConfirmModal
-          open
-          onOpenChange={(open) => { if (!open) onWithdrawCancel?.(); }}
-          title="정말 탈퇴할까요?"
-          description="복구할 수 없어요"
-          confirmLabel="탈퇴"
-          confirmVariant="danger"
-          onConfirm={onWithdrawConfirm}
-          loading={isWithdrawing}
-        />
-      </div>
+      <WithdrawFinalConfirm
+        onBack={onBack}
+        onWithdrawCancel={onWithdrawCancel}
+        onWithdrawConfirm={onWithdrawConfirm}
+        isWithdrawing={isWithdrawing}
+      />
     );
   }
 
@@ -207,3 +225,48 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
     </div>
   );
 };
+
+// 최종 탈퇴 확인 — "탈퇴" 문구 직접 입력 게이트로 오클릭 방지.
+interface WithdrawFinalConfirmProps {
+  onBack?: () => void;
+  onWithdrawCancel?: () => void;
+  onWithdrawConfirm?: () => void;
+  isWithdrawing?: boolean;
+}
+
+function WithdrawFinalConfirm({ onBack, onWithdrawCancel, onWithdrawConfirm, isWithdrawing }: WithdrawFinalConfirmProps) {
+  const [phrase, setPhrase] = useState("");
+  const canConfirm = phrase.trim() === WITHDRAW_CONFIRM_PHRASE;
+
+  return (
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
+      <main className="min-h-0 flex-1 overflow-y-auto px-6 py-8">
+        <h1 className="text-[20px] font-bold text-text-primary">정말 탈퇴할까요?</h1>
+        <p className="mt-2 text-[14px] text-text-secondary">
+          탈퇴하면 모든 데이터가 즉시 삭제되고 복구할 수 없어요.
+          확인을 위해 아래에 <span className="font-bold">‘{WITHDRAW_CONFIRM_PHRASE}’</span> 을(를) 입력해주세요.
+        </p>
+        <TextInput
+          className="mt-6"
+          value={phrase}
+          onChange={(e) => setPhrase(e.target.value)}
+          placeholder={WITHDRAW_CONFIRM_PHRASE}
+          autoFocus
+          disabled={isWithdrawing}
+        />
+      </main>
+      <div className="relative z-10 shrink-0">
+        <StickyCTA
+          primary={{
+            label: isWithdrawing ? "처리 중..." : "탈퇴",
+            variant: "danger",
+            onClick: onWithdrawConfirm,
+            disabled: !canConfirm || isWithdrawing,
+          }}
+          secondary={{ label: "취소", onClick: onWithdrawCancel }}
+        />
+      </div>
+    </div>
+  );
+}

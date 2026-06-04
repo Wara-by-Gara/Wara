@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { UpdateUserDto } from './dto/update-user.dto';
+import type { DeleteUserDto } from './dto/delete-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 import type { ProfileImagePresignedUrlDto } from './dto/profile-image-presigned-url.dto';
 import { S3Service } from '../s3/s3.service';
@@ -45,10 +46,13 @@ export class UsersService {
     return updated;
   }
 
-  async deleteMe(userId: string) {
+  async deleteMe(userId: string, dto: DeleteUserDto = {}) {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    await this.repository.softDeleteUser(userId);
+    await this.repository.softDeleteUser(userId, {
+      reason: dto.reason,
+      detail: dto.detail,
+    });
     await this.repository.deleteSocialAccountsByUserId(userId);
   }
 
