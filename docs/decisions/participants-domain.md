@@ -285,6 +285,8 @@ Controller → Service → 복합 비즈니스 로직
 | 본인 탈퇴 UI | 백엔드 DELETE 엔드포인트 존재. 웹 `leaveInvitation()` API 함수 존재. UI 미연결 | Partiful: `...` 메뉴 → "Remove me from event". HOST에게 익명 알림. 재참가는 링크로 가능 |
 | blocklist unblock UI | 백엔드 GET/DELETE `/blocklist` 구현됨. 프론트 미연결 | HOST 전용. 차단 해제 후 링크로 재참가 가능 |
 | ParticipantGuard 누락 도메인 | `date-vote`(GET poll/results, PUT responses), `locations`(GET location/participant-locations), `missions`(GET list/me) — 비참가자 접근 가능 | 각 도메인 작업 시 추가 필요 |
+| [프론트] 차단 유저 join 에러 처리 | `BlocklistGuard` 추가로 차단 유저 join 시 403(`INVITATION_ACCESS_REVOKED`) 반환. 프론트 `useJoinInvitation`에 `onError` 없어 무응답 | 웹/모바일 join `onError`에 `INVITATION_ACCESS_REVOKED` 처리 추가 필요 |
+| [프론트] 모임시작 후 RSVP 변경 에러 처리 | 모임시작 이후 GUEST RSVP 변경 시 422(`INVITATION_CLOSED`) 반환. `useUpdateRsvp`에 `onError` 없어 버튼 눌러도 무응답 | 웹/모바일 `useUpdateRsvp`에 `onError` 추가 + RSVP 버튼 `eventStartAt` 기준 비활성화 필요 |
 
 ---
 

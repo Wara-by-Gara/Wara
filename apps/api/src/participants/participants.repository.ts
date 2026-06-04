@@ -133,7 +133,6 @@ export class ParticipantsRepository {
     userId: string;
     invitationId: string;
     rsvpStatus: RsvpStatus;
-    displayName?: string;
     note?: string;
   }): Promise<Participant> {
     const rows = await this.db

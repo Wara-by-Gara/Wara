@@ -8,6 +8,7 @@ import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { useJoinInvitation, useMyParticipant, useUpdateRsvp } from "@/hooks/useParticipants";
+import { useUpdateMe } from "@/hooks/useUsers";
 import { getMe } from "@/lib/api/users";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
@@ -28,7 +29,6 @@ const RSVP_MAP: Record<RSVPValue, RsvpStatus> = {
 };
 
 const schema = z.object({
-  displayName: z.string().min(1, "이름을 입력해주세요").max(100),
   note: z.string().max(200).optional(),
 });
 type FormValues = z.infer<typeof schema>;
@@ -45,9 +45,12 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
   const [isEditing, setIsEditing] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
+  const [nickname, setNickname] = useState("");
+  const originalNickname = useRef("");
   const { mutate: join, isPending: isJoining } = useJoinInvitation(invitation.id);
   const { mutate: updateMyRsvp, isPending: isUpdatingRsvp } = useUpdateRsvp(invitation.id);
-  const isPending = isJoining || isUpdatingRsvp;
+  const { mutateAsync: updateNickname, isPending: isUpdatingNickname } = useUpdateMe();
+  const isPending = isJoining || isUpdatingRsvp || isUpdatingNickname;
   const prefilled = useRef(false);
 
   const { data: myParticipant, isLoading: isCheckingParticipant } = useMyParticipant(
@@ -55,17 +58,16 @@ export default function PublicInvitationContainer({ invitation }: Props) {
     { enabled: hydrated && isLoggedIn },
   );
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { displayName: "", note: "" },
+    defaultValues: { note: "" },
   });
 
   useEffect(() => {
     hydrate();
     const saved = sessionStorage.getItem(FORM_STORAGE_KEY(invitation.id));
     if (saved) {
-      const { displayName, note, rsvp: savedRsvp } = JSON.parse(saved) as FormValues & { rsvp: RSVPValue };
-      setValue("displayName", displayName);
+      const { note, rsvp: savedRsvp } = JSON.parse(saved) as FormValues & { rsvp: RSVPValue };
       setValue("note", note ?? "");
       setRsvp(savedRsvp);
       sessionStorage.removeItem(FORM_STORAGE_KEY(invitation.id));
@@ -83,12 +85,11 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   useEffect(() => {
     if (!hydrated || !isLoggedIn || prefilled.current) return;
     getMe().then((me) => {
-      if (!prefilled.current) {
-        setValue("displayName", me.nickname ?? me.name ?? "");
-        prefilled.current = true;
-      }
+      const name = me.nickname ?? me.name ?? "";
+      setNickname(name);
+      originalNickname.current = name;
     });
-  }, [hydrated, isLoggedIn, setValue]);
+  }, [hydrated, isLoggedIn]);
 
   if (!hydrated) return null;
   if (isLoggedIn && (isCheckingParticipant || (myParticipant && myParticipant.rsvpStatus !== "absent"))) return null;
@@ -111,7 +112,7 @@ export default function PublicInvitationContainer({ invitation }: Props) {
 
   const noteValue = watch("note") ?? "";
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     if (rsvp === "declined" && !myParticipant) {
       setIsDeclined(true);
       return;
@@ -122,6 +123,16 @@ export default function PublicInvitationContainer({ invitation }: Props) {
       sessionStorage.setItem(FORM_STORAGE_KEY(invitation.id), JSON.stringify({ ...data, rsvp }));
       router.push(ROUTES.LOGIN);
       return;
+    }
+
+    const trimmed = nickname.trim();
+    if (trimmed && trimmed !== originalNickname.current) {
+      try {
+        await updateNickname({ nickname: trimmed });
+        originalNickname.current = trimmed;
+      } catch {
+        // nickname 업데이트 실패해도 참가는 진행
+      }
     }
 
     if (myParticipant) {
@@ -141,7 +152,7 @@ export default function PublicInvitationContainer({ invitation }: Props) {
     }
 
     join(
-      { rsvpStatus: RSVP_MAP[rsvp], displayName: data.displayName, note: data.note || undefined },
+      { rsvpStatus: RSVP_MAP[rsvp], note: data.note || undefined },
       {
         onSuccess: () => router.push(ROUTES.INVITATIONS.DETAIL(invitation.id)),
         onError: (err: unknown) => {
@@ -185,11 +196,12 @@ export default function PublicInvitationContainer({ invitation }: Props) {
 
         {rsvp !== "declined" && (
           <>
-            <FormField label="이름" required error={errors.displayName?.message}>
+            <FormField label="이름">
               <TextInput
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
                 placeholder="이름을 입력해주세요"
                 disabled={isPending}
-                {...register("displayName")}
               />
             </FormField>
 

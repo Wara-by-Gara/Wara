@@ -36,7 +36,7 @@ export function useUpdateRsvp(invitationId: string) {
 export function useJoinInvitation(invitationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string }) =>
+    mutationFn: (payload: { rsvpStatus: RsvpStatus; note?: string }) =>
       joinInvitation(invitationId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });

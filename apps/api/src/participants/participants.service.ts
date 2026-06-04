@@ -10,7 +10,6 @@ import { type Participant } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
-import { UsersRepository } from '../users/users.repository';
 import { S3Service } from '../s3/s3.service';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
@@ -20,7 +19,6 @@ export class ParticipantsService {
   constructor(
     private readonly repository: ParticipantsRepository,
     private readonly blocklistRepository: BlocklistRepository,
-    private readonly usersRepository: UsersRepository,
     private readonly s3Service: S3Service,
   ) {}
 
@@ -95,10 +93,7 @@ export class ParticipantsService {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
-    const user = await this.usersRepository.findById(userId);
-    const displayName = dto.displayName ?? user?.nickname ?? user?.name ?? undefined;
-
-    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, displayName, note: dto.note });
+    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, note: dto.note });
   }
 
   async updateRsvp(

@@ -11,7 +11,6 @@ export interface Participant {
   memberRole: MemberRole;
   rsvpStatus: RsvpStatus;
   isHidden: boolean;
-  displayName: string | null;
   createdAt: string;
   note: string | null;
   hostMemo: string | null;
@@ -51,7 +50,7 @@ export function getMyParticipant(invitationId: string): Promise<Participant | nu
 
 export function joinInvitation(
   invitationId: string,
-  payload: { rsvpStatus: RsvpStatus; displayName?: string; note?: string },
+  payload: { rsvpStatus: RsvpStatus; note?: string },
 ): Promise<Participant> {
   return apiPost<Participant>(`/invitations/${invitationId}/participants`, payload);
 }
