@@ -28,7 +28,7 @@ const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
   invitation_date: 'invitationUpdated',
   participantLocations: 'invitationUpdated',
   eventLocations: 'invitationUpdated',
-  ai_complete: 'albumOpened',
+  ai_complete: 'newPhoto',
   vote_reminder: 'eventReminder',
   vote_tied: 'eventReminder',
   vote_confirmed: 'eventReminder',

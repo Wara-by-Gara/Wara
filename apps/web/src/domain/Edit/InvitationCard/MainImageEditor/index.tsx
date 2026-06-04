@@ -7,6 +7,7 @@ import type { MainImageFrame } from '@/lib/api/invitations';
 import {
   getInvitationImagePresignedUrl,
   applyAiToMainImage,
+  getAiJobStatus,
 } from '@/lib/api/invitations';
 import type { AiCompleteEventDetail } from '@/hooks/useNotifications';
 import ImageCropEditor from './ImageCropEditor';
@@ -29,6 +30,12 @@ interface Props {
 
 const UPLOAD_CONTENT_TYPE = 'image/webp';
 const TEMP_KEY = (id: string) => `wara:inv:${id}:uploadedKey`;
+// AI job 추적용 sessionStorage 키 — 새로고침/탭 이탈 후에도 진행중 job을 복구
+const AI_JOB_KEY = (id: string) => `wara:inv:${id}:aiJob`;
+// AI 처리 타임아웃 (BE 60초 + 네트워크 여유 30초)
+const AI_JOB_TIMEOUT_MS = 90_000;
+// 폴링 주기 — WebSocket이 fallback일 때만 활성화
+const AI_POLL_INTERVAL_MS = 5_000;
 
 export default function MainImageEditor({
   invitationId,
@@ -94,27 +101,112 @@ export default function MainImageEditor({
     };
   }, [uploadedPreviewUrl]);
 
+  // AI job 완료 / 실패 / 타임아웃을 단일 진입점에서 처리
+  // (WebSocket, 폴링, 타임아웃 어느 경로로든 도달 가능)
+  const finishAi = useCallback(
+    (
+      kind: 'success' | 'fail' | 'timeout',
+      payload?: { key: string; url: string },
+    ) => {
+      sessionStorage.removeItem(AI_JOB_KEY(invitationId));
+      setPendingJobId(null);
+      setIsApplyingAi(false);
+
+      if (kind === 'success' && payload) {
+        setAiKey(payload.key);
+        setAiPreviewUrl(payload.url);
+        setShowAiCompletePopup(true);
+      } else if (kind === 'timeout') {
+        setError('AI 처리가 지연되고 있어요. 잠시 후 다시 시도해주세요.');
+      } else {
+        setError('AI 처리에 실패했습니다. 다시 시도해주세요.');
+      }
+    },
+    [invitationId],
+  );
+
   // AI 완료 WebSocket 이벤트 수신 (window 커스텀 이벤트)
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<AiCompleteEventDetail>).detail;
       if (detail.invitationId !== invitationId) return;
 
-      setPendingJobId(null);
-      setIsApplyingAi(false);
-
       if (detail.success && detail.key && detail.url) {
-        setAiKey(detail.key);
-        setAiPreviewUrl(detail.url);
-        setShowAiCompletePopup(true);
+        finishAi('success', { key: detail.key, url: detail.url });
       } else {
-        setError('AI 처리에 실패했습니다. 다시 시도해주세요.');
+        finishAi('fail');
       }
     };
 
     window.addEventListener('ai:complete', handler);
     return () => window.removeEventListener('ai:complete', handler);
+  }, [invitationId, finishAi]);
+
+  // 마운트 시 진행 중이던 AI job 복구 (새로고침/탭 복귀 대응)
+  useEffect(() => {
+    const saved = sessionStorage.getItem(AI_JOB_KEY(invitationId));
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as { jobId: string; startedAt: number };
+      if (Date.now() - parsed.startedAt > AI_JOB_TIMEOUT_MS) {
+        sessionStorage.removeItem(AI_JOB_KEY(invitationId));
+        return;
+      }
+      setPendingJobId(parsed.jobId);
+      setIsApplyingAi(true);
+    } catch {
+      sessionStorage.removeItem(AI_JOB_KEY(invitationId));
+    }
   }, [invitationId]);
+
+  // 진행 중 job 폴링 fallback + 타임아웃 (WebSocket이 먼저 응답하면 finishAi가 pendingJobId를 null로 만들어 cleanup)
+  useEffect(() => {
+    if (!pendingJobId) return;
+
+    // startedAt 복구 (또는 새로 시작)
+    let startedAt = Date.now();
+    const saved = sessionStorage.getItem(AI_JOB_KEY(invitationId));
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as { jobId: string; startedAt: number };
+        if (parsed.jobId === pendingJobId) startedAt = parsed.startedAt;
+      } catch {
+        // 무시
+      }
+    }
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async () => {
+      if (cancelled) return;
+      if (Date.now() - startedAt > AI_JOB_TIMEOUT_MS) {
+        finishAi('timeout');
+        return;
+      }
+      try {
+        const status = await getAiJobStatus(invitationId, pendingJobId);
+        if (cancelled) return;
+        if (status.status === 'completed' && status.resultKey && status.resultUrl) {
+          finishAi('success', { key: status.resultKey, url: status.resultUrl });
+          return;
+        }
+        if (status.status === 'failed') {
+          finishAi('fail');
+          return;
+        }
+      } catch {
+        // 일시 에러는 다음 tick에서 재시도
+      }
+      timeoutId = setTimeout(poll, AI_POLL_INTERVAL_MS);
+    };
+
+    timeoutId = setTimeout(poll, AI_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [pendingJobId, invitationId, finishAi]);
 
   // 파일 선택 → 압축 → 크롭 에디터 열기
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,8 +275,13 @@ export default function MainImageEditor({
 
     try {
       const { jobId } = await applyAiToMainImage(invitationId, uploadedKey);
+      // 새로고침/탭 이탈 대응 — finishAi에서 제거
+      sessionStorage.setItem(
+        AI_JOB_KEY(invitationId),
+        JSON.stringify({ jobId, startedAt: Date.now() }),
+      );
       setPendingJobId(jobId);
-      // isApplyingAi는 WebSocket ai:complete 이벤트 수신 시 해제됨
+      // isApplyingAi는 WebSocket / 폴링 / 타임아웃 어느 경로로든 finishAi에서 해제됨
     } catch (err) {
       // apiPost는 `throw new Error(errorCode)` 형태로 던지므로 코드는 message에 담겨 있음
       const code = err instanceof Error ? err.message : '';

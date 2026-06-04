@@ -11,7 +11,8 @@ export type NotificationType =
   | 'nudge'
   | 'vote_reminder'
   | 'vote_tied'
-  | 'vote_confirmed';
+  | 'vote_confirmed'
+  | 'ai_complete';
 
 export type NotificationTargetType =
   | 'photo'
