@@ -3,8 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ParticipantLocation } from "@/lib/api/locations";
-
-const WS_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { SOCKET_BASE } from "@/lib/env";
 
 export interface LocationUpdate extends ParticipantLocation {
   invitationId: string;
@@ -38,7 +37,7 @@ export function useLocationSocket({
   useEffect(() => {
     if (!enabled || !invitationId) return;
 
-    const socket = io(`${WS_BASE}/locations`, {
+    const socket = io(`${SOCKET_BASE}/locations`, {
       withCredentials: true,
       transports: ["websocket"],
       reconnection: true,

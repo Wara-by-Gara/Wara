@@ -10,6 +10,7 @@ import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNa
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/cn";
+import { API_BASE } from "@/lib/env";
 import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
@@ -19,8 +20,6 @@ const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   friends: ROUTES.FRIENDS.LIST,
   me: ROUTES.PROFILE.ME,
 };
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
 const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create", "/terms/agree"];
 

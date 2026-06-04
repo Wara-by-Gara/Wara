@@ -2,8 +2,7 @@
 
 import { create } from "zustand";
 import { isLoggedInCookieSet } from "@/lib/auth-cookie";
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/api';
+import { API_BASE } from "@/lib/env";
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -24,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" });
+      await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
     } catch {
       // 실패해도 클라이언트 상태는 초기화
     }

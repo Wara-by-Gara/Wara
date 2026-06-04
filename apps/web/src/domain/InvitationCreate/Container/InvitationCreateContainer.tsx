@@ -2,6 +2,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import type { Area } from 'react-easy-crop';
 import { cn } from '@/lib/cn';
+import { API_BASE } from '@/lib/env';
 import { searchPlaces } from '@/lib/api/locations';
 import type { Place } from '@/lib/api/locations';
 import { Chip } from '@/components/primitives/Chip';
@@ -1748,9 +1749,6 @@ export default function InvitationCreateContainer() {
                   path: 'google',
                 },
               }[provider];
-              const apiBase =
-                (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') +
-                '/api';
               return (
                 <button
                   key={provider}
@@ -1760,7 +1758,7 @@ export default function InvitationCreateContainer() {
                       'wara_oauth_return',
                       '/invitations/create?auth_success=1',
                     );
-                    window.location.href = `${apiBase}/auth/${config.path}/redirect`;
+                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
                   }}
                   className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
                 >

@@ -1,13 +1,5 @@
 'use client';
 
-export interface AiCompleteEventDetail {
-  jobId: string;
-  invitationId: string;
-  key: string | null;
-  url: string | null;
-  success: boolean;
-}
-
 import { useEffect } from 'react';
 import {
   useQuery,
@@ -26,6 +18,15 @@ import {
   updateNotificationSettings,
 } from '@/lib/api/notifications';
 import type { UpdateNotificationSettingsDto } from '@/lib/api/notifications';
+import { SOCKET_BASE } from '@/lib/env';
+
+export interface AiCompleteEventDetail {
+  jobId: string;
+  invitationId: string;
+  key: string | null;
+  url: string | null;
+  success: boolean;
+}
 
 export const notificationKeys = {
   all: ['notifications'] as const,
@@ -103,15 +104,7 @@ export function useUpdateNotificationSettings() {
   });
 }
 
-const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/notifications';
-
-export interface AiCompleteEventDetail {
-  jobId: string;
-  invitationId: string;
-  key: string | null;
-  url: string | null;
-  success: boolean;
-}
+const SOCKET_URL = `${SOCKET_BASE}/notifications`;
 
 export function useNotificationSocket() {
   const queryClient = useQueryClient();
