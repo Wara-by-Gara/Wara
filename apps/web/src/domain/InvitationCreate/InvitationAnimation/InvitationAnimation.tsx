@@ -1,0 +1,180 @@
+"use client";
+
+import { useMemo } from "react";
+import { cn } from "@/lib/cn";
+import type { AnimationId } from "../constants";
+
+type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
+type Visual = "petal" | "confetti" | "bubble" | "emoji";
+
+type EffectConfig = {
+  anim: AnimKind;
+  visual: Visual;
+  count: number;
+  size: [number, number];
+  duration: [number, number];
+  drift: [number, number];
+  opacity: [number, number];
+  emojis?: string[];
+  colors?: string[];
+  tilt?: [number, number];
+};
+
+const ANIM_CLASS: Record<AnimKind, string> = {
+  fall: "invite-anim-fall",
+  confetti: "invite-anim-confetti",
+  rise: "invite-anim-rise",
+  drift: "invite-anim-drift",
+  fly: "invite-anim-fly",
+  twinkle: "invite-anim-twinkle",
+};
+
+const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
+  cherry: {
+    anim: "fall", visual: "petal", count: 22, size: [10, 22], duration: [8, 15],
+    drift: [-60, 60], opacity: [0.5, 0.82], colors: ["#ffffff", "#ffe1ef", "#ff9aca", "#ffd6e0"],
+  },
+  leaf: {
+    anim: "fall", visual: "emoji", count: 16, size: [16, 26], duration: [9, 15],
+    drift: [-55, 55], opacity: [0.75, 1], emojis: ["🍂", "🍁", "🍃"],
+  },
+  confetti: {
+    anim: "confetti", visual: "confetti", count: 30, size: [6, 12], duration: [4, 8],
+    drift: [-90, 90], opacity: [0.85, 1],
+    colors: ["#ff6db3", "#ffd43b", "#5bc1ff", "#34d399", "#c084fc", "#fb923c"],
+  },
+  cloud: {
+    anim: "drift", visual: "emoji", count: 7, size: [42, 82], duration: [22, 42],
+    drift: [-40, 40], opacity: [0.7, 0.95], emojis: ["☁️"],
+  },
+  baseball: {
+    anim: "fly", visual: "emoji", count: 5, size: [22, 34], duration: [6, 11],
+    drift: [-70, -20], opacity: [0.95, 1], tilt: [-15, 15], emojis: ["⚾️"],
+  },
+  heart: {
+    anim: "rise", visual: "emoji", count: 16, size: [14, 28], duration: [7, 12],
+    drift: [-45, 45], opacity: [0.7, 1], emojis: ["💕", "💗", "🩷", "💖"],
+  },
+  balloon: {
+    anim: "rise", visual: "emoji", count: 9, size: [26, 46], duration: [12, 20],
+    drift: [-30, 30], opacity: [0.85, 1], emojis: ["🎈"],
+  },
+  plane: {
+    anim: "fly", visual: "emoji", count: 5, size: [20, 30], duration: [7, 12],
+    drift: [-45, -10], opacity: [0.95, 1], tilt: [-10, 12], emojis: ["✈️", "🛩️"],
+  },
+  bubble: {
+    anim: "rise", visual: "bubble", count: 20, size: [10, 28], duration: [8, 16],
+    drift: [-50, 50], opacity: [0.28, 0.55],
+  },
+  star: {
+    anim: "twinkle", visual: "emoji", count: 26, size: [8, 20], duration: [2, 5],
+    drift: [0, 0], opacity: [0.6, 1], emojis: ["✨", "⭐️", "🌟", "💫"],
+  },
+};
+
+/** index 기반 결정론적 의사난수 (SSR 안정) */
+function rand(i: number, salt: number, min: number, max: number): number {
+  const v = ((i * 9301 + salt * 49297 + 233) % 233280) / 233280;
+  return min + v * (max - min);
+}
+
+type Particle = {
+  key: number;
+  className: string;
+  style: React.CSSProperties;
+  content: string | null;
+};
+
+function buildParticles(effect: Exclude<AnimationId, "none">): Particle[] {
+  const c = CONFIG[effect];
+  return Array.from({ length: c.count }, (_, i) => {
+    const size = rand(i, 1, c.size[0], c.size[1]) * 2;
+    const duration = rand(i, 2, c.duration[0], c.duration[1]);
+    const drift = rand(i, 3, c.drift[0], c.drift[1]) * 1.8;
+    const opacity = rand(i, 4, c.opacity[0], c.opacity[1]);
+    const spin = rand(i, 5, 120, 720);
+    const tilt = c.tilt ? rand(i, 6, c.tilt[0], c.tilt[1]) : 0;
+    const x = rand(i, 7, 0, 100);
+    const y = rand(i, 8, 6, 90);
+    const delay = -rand(i, 9, 0, duration); // 음수 delay → 마운트 즉시 진행중
+
+    // 애니메이션 종류별 시작 위치
+    let position: React.CSSProperties;
+    if (c.anim === "rise") position = { left: `${x}%`, top: "100%" };
+    else if (c.anim === "drift" || c.anim === "fly") position = { left: 0, top: `${y}%` };
+    else if (c.anim === "twinkle") position = { left: `${x}%`, top: `${y}%` };
+    else position = { left: `${x}%`, top: 0 };
+
+    const style: React.CSSProperties = {
+      ...position,
+      width: c.visual === "confetti" ? size * 0.6 : size,
+      height: c.visual === "confetti" ? size : c.visual === "petal" ? size * 1.35 : size,
+      fontSize: c.visual === "emoji" ? size : undefined,
+      lineHeight: 1,
+      animationDuration: `${duration}s`,
+      animationDelay: `${delay}s`,
+      ["--drift" as string]: `${drift}px`,
+      ["--spin" as string]: `${spin}deg`,
+      ["--opacity" as string]: String(opacity),
+      ["--tilt" as string]: `${tilt}deg`,
+    };
+
+    let content: string | null = null;
+    if (c.visual === "emoji" && c.emojis) {
+      content = c.emojis[i % c.emojis.length] ?? c.emojis[0] ?? null;
+    } else if (c.visual === "petal") {
+      const color = c.colors?.[i % c.colors.length] ?? "#ffffff";
+      style.backgroundColor = color;
+      style.borderRadius = "50% 0 50% 50%";
+      style.boxShadow = "0 1px 2px rgb(255 79 163 / 0.18)";
+    } else if (c.visual === "confetti") {
+      const color = c.colors?.[i % c.colors.length] ?? "#ff6db3";
+      style.backgroundColor = color;
+      style.borderRadius = "1px";
+    } else if (c.visual === "bubble") {
+      style.borderRadius = "50%";
+      style.background =
+        "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.04) 70%)";
+      style.border = "1px solid rgba(255,255,255,0.45)";
+    }
+
+    return {
+      key: i,
+      className: cn("absolute block origin-center", ANIM_CLASS[c.anim]),
+      style,
+      content,
+    };
+  });
+}
+
+export function InvitationAnimation({
+  effect,
+  className,
+}: {
+  effect: AnimationId;
+  className?: string;
+}) {
+  const particles = useMemo(
+    () => (effect === "none" ? [] : buildParticles(effect)),
+    [effect],
+  );
+
+  if (effect === "none") return null;
+
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      )}
+    >
+      {particles.map((p) => (
+        <span key={p.key} className={p.className} style={p.style}>
+          {p.content}
+        </span>
+      ))}
+    </div>
+  );
+}
