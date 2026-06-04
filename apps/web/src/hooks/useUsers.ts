@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, updateMe, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+import { isLoggedInCookieSet } from '@/lib/auth-cookie';
 
 export function useUserProfile(userId: string | null | undefined) {
   return useQuery({
@@ -17,7 +18,7 @@ export function useMe() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes('is_logged_in=1'));
+    setIsLoggedIn(isLoggedInCookieSet());
   }, []);
 
   return useQuery({

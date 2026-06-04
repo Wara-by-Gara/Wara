@@ -186,7 +186,8 @@ export default function MainImageEditor({
       setPendingJobId(jobId);
       // isApplyingAi는 WebSocket ai:complete 이벤트 수신 시 해제됨
     } catch (err) {
-      const code = (err as { error?: { code?: string } })?.error?.code ?? '';
+      // apiPost는 `throw new Error(errorCode)` 형태로 던지므로 코드는 message에 담겨 있음
+      const code = err instanceof Error ? err.message : '';
       if (code === 'AI_DAILY_LIMIT_EXCEEDED') {
         setShowLimitPopup(true);
       } else if (code === 'AI_SERVICE_UNAVAILABLE') {

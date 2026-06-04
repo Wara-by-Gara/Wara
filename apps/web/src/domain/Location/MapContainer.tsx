@@ -64,11 +64,11 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const { mutate: saveLocation } = useSetEventLocation(invitationId);
   const { data: me } = useMe();
 
-  const isHost =
-    !!me &&
-    participantsData?.participants.some(
-      (p) => p.user.id === me.id && p.participant.memberRole === "HOST",
-    ) === true;
+  const myParticipant = me
+    ? participantsData?.participants.find((p) => p.user.id === me.id)
+    : undefined;
+  const myParticipantId = myParticipant?.participant.id;
+  const isHost = myParticipant?.participant.memberRole === "HOST";
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
   const [participantLocations, setParticipantLocations] = useState<
@@ -119,8 +119,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         next.set(participantId, { ...loc, isArrived: true });
         return next;
       });
-      setIsArrived((prev) => prev || participantId === me?.id);
-    }, [me?.id]),
+      setIsArrived((prev) => prev || participantId === myParticipantId);
+    }, [myParticipantId]),
   });
 
   // ── 페이지 상태 결정 ──────────────────────────────────────────────────
