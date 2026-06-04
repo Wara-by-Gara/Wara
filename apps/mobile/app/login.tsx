@@ -1,6 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -236,10 +236,26 @@ export default function LoginScreen() {
           <Text style={styles.errorMessage}>{errorMessage}</Text>
         )}
 
-        <Text style={styles.termsNotice}>
-          시작하면 <Text style={styles.termsLink} onPress={() => router.push('/terms-agree')}>이용약관</Text> 및{' '}
-          <Text style={styles.termsLink} onPress={() => router.push('/terms-agree')}>개인정보 처리방침</Text>에 동의하게 됩니다.
-        </Text>
+        <View style={styles.termsNoticeWrap}>
+          <Text style={styles.termsNotice}>시작하면 </Text>
+          <Pressable onPress={() => router.push('/terms-agree')} hitSlop={8} accessibilityRole="link">
+            <Text style={styles.termsLink}>이용약관</Text>
+          </Pressable>
+          <Text style={styles.termsNotice}> 및 </Text>
+          <Pressable onPress={() => router.push('/terms-agree')} hitSlop={8} accessibilityRole="link">
+            <Text style={styles.termsLink}>개인정보 처리방침</Text>
+          </Pressable>
+          <Text style={styles.termsNotice}>에 동의하게 됩니다.</Text>
+        </View>
+
+        {__DEV__ && (
+          <Text
+            style={styles.devLink}
+            onPress={() => router.replace('/dev-login')}
+          >
+            DEV 로그인 (시드 유저)
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -317,8 +333,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing[1],
   },
+  termsNoticeWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing[1],
+  },
   termsLink: {
+    ...typography.caption1,
     color: colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  devLink: {
+    ...typography.caption1,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginTop: spacing[2],
   },
 });

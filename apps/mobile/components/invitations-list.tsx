@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   clearAllSocialSessions,
@@ -22,6 +23,7 @@ import { colors, shadow } from '@/constants/tokens';
  */
 export function InvitationsList({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const query = useQuery({
     queryKey: invitationKeys.myList,
     queryFn: ({ signal }) => fetchMyInvitations({ signal }),
@@ -66,7 +68,7 @@ export function InvitationsList({ onLogout }: { onLogout: () => void }) {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <ThemedText type="title">내 초대장</ThemedText>
         <View style={styles.headerActions}>
           <Pressable onPress={() => router.push('/photos/map')}>

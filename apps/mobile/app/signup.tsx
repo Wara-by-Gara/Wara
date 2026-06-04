@@ -116,7 +116,9 @@ export default function SignupScreen() {
     });
   }
 
-  if (isLoading) {
+  // me 완성된 사용자는 redirect 효과 끝나기 전 폼이 한 프레임 보이는 깜박임 방지.
+  const meCompleted = !!me?.name && !!me?.email && !!me?.birthYear;
+  if (isLoading || meCompleted) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingArea}>

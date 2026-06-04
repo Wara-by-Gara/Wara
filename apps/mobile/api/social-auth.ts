@@ -32,11 +32,13 @@ if (extra.naverClientId && extra.naverClientSecret) {
   });
 }
 
-GoogleSignin.configure({
-  webClientId: extra.googleWebClientId ?? '',
-  iosClientId: extra.googleIosClientId,
-  scopes: ['email', 'profile'],
-});
+if (extra.googleWebClientId) {
+  GoogleSignin.configure({
+    webClientId: extra.googleWebClientId,
+    iosClientId: extra.googleIosClientId,
+    scopes: ['email', 'profile'],
+  });
+}
 
 let kakaoInitPromise: Promise<void> | null = null;
 

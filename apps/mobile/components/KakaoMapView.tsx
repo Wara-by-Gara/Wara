@@ -1,7 +1,9 @@
 import Constants from 'expo-constants';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
+
+import { colors, typography } from '@/constants/tokens';
 
 export type ParticipantPin = {
   participantId: string;
@@ -244,6 +246,18 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
     injectJs(`updateMyLocation(${myLocation.lat}, ${myLocation.lng});`);
   }, [myLocation, mapReady]);
 
+  // env 누락 시 SDK가 빈 키로 로드돼 빈 지도 + 알 수 없는 실패. 명시적 안내.
+  if (!kakaoKey) {
+    return (
+      <View style={styles.fallback}>
+        <Text style={styles.fallbackTitle}>지도를 불러올 수 없어요</Text>
+        <Text style={styles.fallbackMsg}>
+          EXPO_PUBLIC_KAKAO_MAP_APP_KEY 환경변수가 설정되지 않았습니다.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <WebView
       ref={webViewRef}
@@ -260,4 +274,22 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
 
 const styles = StyleSheet.create({
   map: { flex: 1 },
+  fallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 8,
+    backgroundColor: colors.surface,
+  },
+  fallbackTitle: {
+    ...typography.title2,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  fallbackMsg: {
+    ...typography.body3,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
 });

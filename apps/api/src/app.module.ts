@@ -26,6 +26,7 @@ import { FaqModule } from './faq/faq.module';
 import { AiModule } from './ai/ai.module';
 import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
+import { DevAuthModule } from './dev/dev-auth.module';
 import { WeatherModule } from './weather/weather.module';
 
 @Module({
@@ -37,6 +38,10 @@ import { WeatherModule } from './weather/weather.module';
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     DatabaseModule,
+    // dev 전용: AuthController의 @Post(':provider/token') 와일드카드가 /auth/dev/token을
+    // 가로채지 않도록 AuthModule보다 먼저 등록 (NestJS는 import 순서대로 controller 등록).
+    // NODE_ENV !== 'production'일 때만 등록 → prod 빌드 시 자동 제외.
+    ...(process.env.NODE_ENV !== 'production' ? [DevAuthModule] : []),
     AuthModule,
     UsersModule,
     TemplatesModule,

@@ -112,5 +112,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  mapButtonText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  mapButtonText: { fontSize: 15, fontWeight: '700', color: colors.textInverse },
 });

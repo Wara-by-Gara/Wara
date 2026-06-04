@@ -111,6 +111,12 @@ export const colors = {
   iconInactive: palette.gray300,
   iconDanger: palette.red500,
   iconInverse: palette.white,
+
+  // Overlay / Surface alpha — modal backdrop, blurred floating box, muted inverse text.
+  // TODO: Web의 globals.css @theme inline에 동일 토큰 미러 필요 (현재 mobile 단독).
+  overlayBackdrop: 'rgba(0,0,0,0.4)',
+  surfaceBlurred: 'rgba(255,255,255,0.92)',
+  textInverseMuted: 'rgba(255,255,255,0.7)',
 } as const;
 
 // ── Radius (DESIGN.md §7) ───────────────────────────────────────────────────
