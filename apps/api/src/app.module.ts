@@ -27,6 +27,7 @@ import { AiModule } from './ai/ai.module';
 import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
 import { DevAuthModule } from './dev/dev-auth.module';
+import { WeatherModule } from './weather/weather.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { DevAuthModule } from './dev/dev-auth.module';
     AiModule,
     TermsModule,
     DateVoteModule,
+    WeatherModule,
   ],
   controllers: [AppController],
   providers: [
