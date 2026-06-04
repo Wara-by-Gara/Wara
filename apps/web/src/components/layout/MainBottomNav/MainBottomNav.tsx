@@ -78,7 +78,7 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
     <>
       <div
         aria-hidden="true"
-        className="shrink-0 h-[calc(4rem+12px+env(safe-area-inset-bottom,0px))]"
+        className="shrink-0 h-[calc(4rem+12px+env(safe-area-inset-bottom))]"
       />
       <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto max-w-md px-4 pb-[max(12px,env(safe-area-inset-bottom))]">
         <BottomNavigation

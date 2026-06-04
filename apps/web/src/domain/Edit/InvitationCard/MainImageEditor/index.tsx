@@ -361,7 +361,7 @@ export default function MainImageEditor({
       ) : isApplyingAi && pendingJobId ? (
         /* AI 백그라운드 처리 중 */
         <div className="flex items-center gap-3 px-4 py-3 bg-background-soft rounded-xl">
-          <div className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          <div className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin shrink-0" />
           <p className="text-sm text-text-secondary">
             AI가 사진을 만들고 있어요. 다른 작업을 계속하셔도 됩니다.
           </p>
