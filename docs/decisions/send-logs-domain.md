@@ -30,8 +30,9 @@ eventType       = opened | login_converted | joined
 | 메서드 | 경로 | 인증 | 권한 | 설명 |
 |--------|------|:----:|:----:|------|
 | GET | `/invitations/:invitationId/logs` | ✅ | HOST만 | 전송 이력 전체 조회 |
-| POST | `/invitations/:invitationId/logs` | ✅ | HOST + GUEST | 공유 로그 기록 + 채널별 메타 응답 |
+| POST | `/invitations/:invitationId/logs` | ✅ | HOST만 | 공유 로그 기록 + 채널별 메타 응답 (프라이버시 정책) |
 | PATCH | `/invitations/:invitationId/logs/:logId/open` | ❌ | 누구나 | 링크 방문 이벤트 기록 |
+| PATCH | `/invitations/:invitationId/logs/:logId/joined` | ✅ | 로그인 유저 | 참가 완료 이벤트 기록. join 성공 후 프론트 fire-and-forget 호출 |
 
 > **GET은 HOST만, POST는 참여자 모두**: HOST가 공유 현황 전체를 보는 건 대시보드 성격. GUEST도 공유는 할 수 있지만 타인의 공유 이력은 볼 필요 없음.
 >
@@ -286,9 +287,10 @@ PATCH /open
 5. 프론트 → PATCH /logs/{logId}/open
 6. 서버 → invitation_link_events INSERT { eventType: 'opened', userId: null }
 
-[참가 — V1.1, participants 도메인 연동]
-7. 방문자 RSVP 시 POST /participants body에 refLogId?: string 포함
-8. participants.service → linkEventsRepository.createEvent({ eventType: 'joined', userId })
+[참가]
+7. 방문자 POST /participants 성공
+8. 프론트 → PATCH /logs/{logId}/joined (fire-and-forget, 실패 무시)
+9. 서버 → invitation_link_events INSERT { eventType: 'joined', userId }
 ```
 
 ---
@@ -342,7 +344,7 @@ PATCH /open
 | 항목 | 이유 |
 |------|------|
 | `login_converted` 이벤트 | WARA RSVP는 무조건 로그인 필요 → `joined`로 충분. 프론트 ref 파라미터 유지 비용 대비 가치 낮음. V1.1+ (§15 참조) |
-| `joined` 이벤트 | participants 도메인 구현 시 연동. 현재 scope 밖 |
+| ~~`joined` 이벤트~~ | `PATCH /logs/:logId/joined` 엔드포인트로 구현 완료. join 성공 후 프론트가 fire-and-forget 호출 |
 | `GET /logs?mine=true` (GUEST 본인 이력 조회) | 수요 확인 후 V1.1+ |
 | 채널별 통계 대시보드 API | admin 도메인으로 분리, V1.1+ (§16 참조) |
 | 캐시 컬럼 (`open_count`, `join_count`) | 현재 트래픽 규모에서 불필요. V1.1+ (추가 방법 §6 참조) |

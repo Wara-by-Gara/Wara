@@ -45,4 +45,15 @@ export class SendLogsService {
       userId: null,
     });
   }
+
+  async recordJoin(logId: string, userId: string) {
+    const log = await this.sendLogsRepository.findById(logId);
+    if (!log) return;
+
+    await this.linkEventsRepository.createEvent({
+      logId,
+      eventType: 'joined',
+      userId,
+    });
+  }
 }

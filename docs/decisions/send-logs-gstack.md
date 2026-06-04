@@ -208,6 +208,18 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 
 ---
 
+## `joined` 이벤트 엔드포인트 — 구현 완료 (`fix-participant-api` 브랜치)
+
+- `send-logs.service.ts` — `recordJoin(logId, userId)` 메서드 추가
+- `send-logs.controller.ts` — `PATCH :logId/joined` 엔드포인트 추가 (JwtAuthGuard)
+
+프론트 연동:
+1. URL에서 `?ref={logId}` 추출
+2. `POST /participants` join 성공 후
+3. `PATCH /logs/{logId}/joined` fire-and-forget 호출 (실패 무시, 참가에 영향 없음)
+
+---
+
 ## 구현 순서 요약
 
 ```
