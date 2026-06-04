@@ -15,7 +15,7 @@ import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummar
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { ParticipantItem } from "@/components/organisms/ParticipantItem";
 import { updateInvitationStatus, deleteInvitation } from "@/lib/api/invitations";
-import type { getInvitation } from "@/lib/api/invitations";
+import type { getInvitation, Invitation as InvitationListItem } from "@/lib/api/invitations";
 import type { getParticipants } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
@@ -65,7 +65,15 @@ export default function HostView({ invitationId, invitation, participantsData }:
 
   const { mutate: submitDelete, isPending: isDeletePending } = useMutation({
     mutationFn: () => deleteInvitation(invitationId),
-    onSuccess: () => router.replace(ROUTES.INVITATIONS.LIST),
+    onSuccess: () => {
+      // 캐시에서 즉시 제거하여 다음 화면에 잔존 카드/깜빡임 없도록
+      const removeFromList = (old: InvitationListItem[] | undefined) =>
+        (old ?? []).filter((inv) => inv.id !== invitationId);
+      queryClient.setQueryData<InvitationListItem[]>(["my-invitations"], removeFromList);
+      queryClient.setQueryData<InvitationListItem[]>(QUERY_KEYS.invitations.all(), removeFromList);
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.invitations.detail(invitationId) });
+      router.replace(ROUTES.HOME);
+    },
     onError: (e) => {
       const code = e instanceof Error ? e.message : "";
       setDeleteError(
