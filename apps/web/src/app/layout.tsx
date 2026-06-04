@@ -33,6 +33,7 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${beVietnamPro.variable} ${notoSerif.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
         <OAuthCallbackHandler />

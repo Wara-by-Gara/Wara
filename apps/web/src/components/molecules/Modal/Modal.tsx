@@ -102,7 +102,7 @@ export const ConfirmModal = ({
   loading,
   contained = false,
 }: ConfirmModalProps) => (
-  <Modal open={open} onOpenChange={onOpenChange}>
+  <Modal open={open} onOpenChange={onOpenChange} modal={!contained}>
     <ModalContent contained={contained}>
       <Dialog.Title className="text-[18px] font-bold text-text-primary">{title}</Dialog.Title>
       {description ? (
