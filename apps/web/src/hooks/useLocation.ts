@@ -35,11 +35,22 @@ export function useParticipantLocations(invitationId: string) {
   });
 }
 
-export function useLocationSearch(query: string) {
+// 카카오 장소 검색은 사용자 위치 기반 거리 정렬이 가능 — 위치가 바뀌면 결과도 바뀌므로
+// queryKey에 좌표를 포함하되, 약 100m(소수점 3자리) 라운드로 캐시 hit rate를 유지한다.
+function roundCoord(v: number | undefined): number | undefined {
+  return v === undefined ? undefined : Math.round(v * 1000) / 1000;
+}
+
+export function useLocationSearch(
+  query: string,
+  origin?: { lat: number; lng: number },
+) {
+  const rLat = roundCoord(origin?.lat);
+  const rLng = roundCoord(origin?.lng);
   return useQuery({
-    queryKey: ["locations", "search", query],
+    queryKey: ["locations", "search", query, rLat, rLng],
     queryFn: () => searchPlaces(query),
     enabled: query.trim().length >= 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
 }

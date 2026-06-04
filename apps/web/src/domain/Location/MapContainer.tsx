@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { MapPage, type MapPageState, type SearchResult } from "@/screens/MapPage/MapPage";
 import { KakaoMap, type KakaoMapHandle, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
+import { useInvitation } from "@/hooks/useInvitations";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocket";
 import { useMe } from "@/hooks/useUsers";
@@ -13,7 +14,10 @@ import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
 
 const ARRIVAL_THRESHOLD_METERS = 10;
-const GPS_INTERVAL_MS = 5000;
+// GPS emit 간격 — 너무 잦으면 서버 부하/배터리 부담.
+const GPS_EMIT_THROTTLE_MS = 5000;
+// 이벤트 시작 N분 전부터 위치 공유 활성. 이전엔 가드 없이 페이지 진입 시 즉시 시작했음.
+const PRE_EVENT_TRACK_WINDOW_MS = 30 * 60 * 1000;
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -50,8 +54,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  const { data: searchData, isFetching: isSearching } = useLocationSearch(debouncedQuery);
-
   // ── 서버 데이터 ───────────────────────────────────────────────────────
   const {
     data: eventLocation,
@@ -59,6 +61,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
     isError: locationError,
     refetch,
   } = useEventLocation(invitationId);
+  const { data: invitation } = useInvitation(invitationId);
   const { data: participantsData } = useParticipants(invitationId);
   const { data: initialLocations } = useParticipantLocations(invitationId);
   const { mutate: saveLocation } = useSetEventLocation(invitationId);
@@ -69,6 +72,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
     : undefined;
   const myParticipantId = myParticipant?.participant.id;
   const isHost = myParticipant?.participant.memberRole === "HOST";
+
+  // 이벤트 시작 30분 전부터 위치 공유 활성. eventStartAt이 없거나(아직 미정)
+  // 매우 먼 미래거나, 이미 지난 행사면 트래킹/소켓 모두 비활성.
+  const eventStartAt = invitation?.eventStartAt ?? null;
+  const inEventWindow = (() => {
+    if (!eventStartAt) return false;
+    const startMs = new Date(eventStartAt).getTime();
+    if (Number.isNaN(startMs)) return false;
+    return Date.now() >= startMs - PRE_EVENT_TRACK_WINDOW_MS;
+  })();
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
   const [participantLocations, setParticipantLocations] = useState<
@@ -86,17 +99,23 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   >("checking");
 
   const watchIdRef = useRef<number | null>(null);
-  const gpsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastEmitAtRef = useRef<number>(0);
   const lastPositionRef = useRef<GeolocationPosition | null>(null);
   const kakaoMapRef = useRef<KakaoMapHandle>(null);
 
   // ── 내 위치 ────────────────────────────────────────────────────────────
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
 
+  // 검색은 내 위치 기반 거리 정렬을 사용하므로 myLocation 선언 뒤에 호출.
+  const { data: searchData, isFetching: isSearching } = useLocationSearch(
+    debouncedQuery,
+    myLocation,
+  );
+
   // ── WebSocket ─────────────────────────────────────────────────────────
   const { sendLocation } = useLocationSocket({
     invitationId,
-    enabled: gpsPermission === "granted" && !isArrived,
+    enabled: gpsPermission === "granted" && !isArrived && inEventWindow,
     onLocationUpdated: useCallback((update: LocationUpdate) => {
       setParticipantLocations((prev) => {
         const next = new Map(prev);
@@ -172,52 +191,51 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   }, []);
 
   // ── GPS 추적 ──────────────────────────────────────────────────────────
+  // watchPosition만 사용. OS가 위치 갱신할 때마다 콜백이 오므로
+  // setInterval 폴링이 필요 없다. 콜백 안에서 시간 throttle로 emit.
   useEffect(() => {
-    if (gpsPermission === "checking" || gpsPermission === "denied" || isArrived) {
+    if (gpsPermission === "checking" || gpsPermission === "denied" || isArrived || !inEventWindow) {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      if (gpsIntervalRef.current) {
-        clearInterval(gpsIntervalRef.current);
-        gpsIntervalRef.current = null;
-      }
       return;
     }
 
-    const startTracking = () => {
+    const handlePosition = (pos: GeolocationPosition) => {
+      lastPositionRef.current = pos;
+      setGpsPermission("granted");
+      setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+
+      const now = Date.now();
+      if (now - lastEmitAtRef.current < GPS_EMIT_THROTTLE_MS) return;
+      lastEmitAtRef.current = now;
+
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      const nearEvent =
+        eventLocation != null &&
+        haversineDistance(lat, lng, eventLocation.lat, eventLocation.lng) <=
+          ARRIVAL_THRESHOLD_METERS;
+      sendLocation(lat, lng, accuracy, nearEvent || undefined);
+      if (nearEvent) setIsArrived(true);
+    };
+
+    const startWatch = () => {
       watchIdRef.current = navigator.geolocation.watchPosition(
-        (pos) => {
-          lastPositionRef.current = pos;
-          setGpsPermission("granted");
-          setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
+        handlePosition,
         () => setGpsPermission("denied"),
         { enableHighAccuracy: true, maximumAge: 0 },
       );
-
-      gpsIntervalRef.current = setInterval(() => {
-        const pos = lastPositionRef.current;
-        if (!pos) return;
-        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-        const nearEvent =
-          eventLocation != null &&
-          haversineDistance(lat, lng, eventLocation.lat, eventLocation.lng) <=
-            ARRIVAL_THRESHOLD_METERS;
-
-        sendLocation(lat, lng, accuracy, nearEvent || undefined);
-        if (nearEvent) setIsArrived(true);
-      }, GPS_INTERVAL_MS);
     };
 
     if (gpsPermission === "granted") {
-      startTracking();
+      startWatch();
     } else {
       // "prompt" — 권한 팝업 유도
       navigator.geolocation.getCurrentPosition(
         () => {
           setGpsPermission("granted");
-          startTracking();
+          startWatch();
         },
         () => setGpsPermission("denied"),
         { enableHighAccuracy: true },
@@ -229,29 +247,32 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      if (gpsIntervalRef.current) {
-        clearInterval(gpsIntervalRef.current);
-        gpsIntervalRef.current = null;
-      }
     };
-  }, [gpsPermission, isArrived, sendLocation, eventLocation]);
+  }, [gpsPermission, isArrived, sendLocation, eventLocation, inEventWindow]);
 
   // ── 참가자 핀 빌드 ────────────────────────────────────────────────────
-  const participantMap = new Map(
-    participantsData?.participants.map((p) => [p.participant.id, p.user]) ?? [],
+  // 참가자 50명 이상 모임에서 매 렌더마다 Map/Array를 새로 만들면 비싸므로 메모화.
+  const participantMap = useMemo(
+    () =>
+      new Map(
+        participantsData?.participants.map((p) => [p.participant.id, p.user]) ?? [],
+      ),
+    [participantsData],
   );
-  const participantPins: ParticipantPin[] = Array.from(participantLocations.values()).map(
-    (loc) => {
-      const user = participantMap.get(loc.participantId);
-      return {
-        participantId: loc.participantId,
-        lat: loc.lat,
-        lng: loc.lng,
-        profileImageUrl: user?.profileImageUrl ?? null,
-        nickname: user?.nickname ?? null,
-        isArrived: loc.isArrived,
-      };
-    },
+  const participantPins: ParticipantPin[] = useMemo(
+    () =>
+      Array.from(participantLocations.values()).map((loc) => {
+        const user = participantMap.get(loc.participantId);
+        return {
+          participantId: loc.participantId,
+          lat: loc.lat,
+          lng: loc.lng,
+          profileImageUrl: user?.profileImageUrl ?? null,
+          nickname: user?.nickname ?? null,
+          isArrived: loc.isArrived,
+        };
+      }),
+    [participantLocations, participantMap],
   );
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
@@ -273,6 +294,22 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   };
 
   const handleGetDirections = () => setIsDirectionOpen(true);
+
+  // 브라우저별 위치 권한 설정 화면 진입.
+  // - iOS Safari WebKit: app-settings: 스킴이 시스템 설정 앱을 열어줌
+  // - 그 외(Android, 데스크톱 브라우저, in-app webview 등): 시스템 스킴 미지원 →
+  //   사용자에게 브라우저 권한을 직접 조정하도록 안내
+  const handleOpenSettings = () => {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isIOSSafari = /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS/.test(ua);
+    if (isIOSSafari) {
+      window.location.href = "app-settings:";
+      return;
+    }
+    alert(
+      "브라우저 주소창 옆 자물쇠 아이콘을 눌러 위치 권한을 허용으로 변경해주세요.",
+    );
+  };
 
   const handleOpenKakaoMap = () => {
     if (!eventLocation) return;
@@ -371,7 +408,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
             () => setGpsPermission("denied"),
           );
         }}
-        onOpenSettings={() => window.open("app-settings:", "_self")}
+        onOpenSettings={handleOpenSettings}
         isHost={isHost}
         onSetLocation={() => setPageState("searchInitial")}
         onLocate={handleLocate}
