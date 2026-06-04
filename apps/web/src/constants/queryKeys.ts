@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
     participantLocations: (id: string) => ["invitations", id, "participantLocations"] as const,
     vote: (id: string) => ["invitations", id, "vote"] as const,
     voteResults: (id: string) => ["invitations", id, "vote", "results"] as const,
+    weather: (id: string) => ["invitations", id, "weather"] as const,
   },
   notifications: {
     all: () => ["notifications"] as const,

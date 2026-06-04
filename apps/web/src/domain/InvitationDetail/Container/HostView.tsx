@@ -23,6 +23,9 @@ import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
+import { WeatherCard } from "@/components/organisms/WeatherCard";
+import { useWeather } from "@/hooks/useWeather";
+import { toWeatherCardCondition } from "@/lib/api/weather";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type ParticipantsData = Awaited<ReturnType<typeof getParticipants>>;
@@ -39,6 +42,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
+  const { data: weather } = useWeather(invitationId, invitation.eventStartAt);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -133,6 +137,15 @@ export default function HostView({ invitationId, invitation, participantsData }:
           invitationId={invitationId}
           voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
         />
+
+        {weather && (
+          <WeatherCard
+            condition={toWeatherCardCondition(weather.condition)}
+            temperatureCelsius={weather.temperature}
+            rainProbability={weather.precipProbability}
+            tip={weather.message}
+          />
+        )}
 
         {recentParticipants.length > 0 ? (
           <section className="rounded-3xl border border-border bg-surface p-4">
