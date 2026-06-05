@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv } from '@keyv/redis';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -36,6 +38,13 @@ import { WeatherModule } from './weather/weather.module';
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
     ScheduleModule.forRoot(),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        stores: [createKeyv(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379')],
+      }),
+    }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     DatabaseModule,
     // dev 전용: AuthController의 @Post(':provider/token') 와일드카드가 /auth/dev/token을
