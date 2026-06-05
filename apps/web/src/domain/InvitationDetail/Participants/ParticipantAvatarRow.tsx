@@ -6,7 +6,6 @@ type Props = {
       id: string;
       userId: string;
       memberRole?: "HOST" | "GUEST";
-      displayName?: string | null;
     };
     user: { name: string | null; nickname: string | null; profileImageUrl: string | null };
   }[];

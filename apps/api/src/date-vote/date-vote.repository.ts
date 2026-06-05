@@ -182,7 +182,6 @@ export class DateVoteRepository {
         slotId:        schema.dateVoteResponses.slotId,
         participantId: schema.dateVoteResponses.participantId,
         response:      schema.dateVoteResponses.response,
-        displayName:   schema.participants.displayName,
         userId:        schema.participants.userId,
         nickname:      schema.users.nickname,
       })

@@ -48,6 +48,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   // ── 장소 검색 ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [pendingPlace, setPendingPlace] = useState<SearchResult | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 400);
@@ -64,7 +65,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const { data: invitation } = useInvitation(invitationId);
   const { data: participantsData } = useParticipants(invitationId);
   const { data: initialLocations } = useParticipantLocations(invitationId);
-  const { mutate: saveLocation } = useSetEventLocation(invitationId);
+  const { mutate: saveLocation, isPending: isSavingPlace } = useSetEventLocation(invitationId);
   const { data: me } = useMe();
 
   const myParticipant = me
@@ -152,10 +153,19 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       setPageState("noLocation");
       return;
     }
-    if (!pageState.startsWith("search") && pageState !== "directionBottomSheet") {
+    if (!pageState.startsWith("search") && pageState !== "directionBottomSheet" && pageState !== "selectedPlace") {
       setPageState("fullscreen");
     }
   }, [locationLoading, locationError]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── 호스트가 미설정 상태로 들어오면 곧바로 검색창 진입 ───────────────
+  useEffect(() => {
+    if (!isHost) return;
+    if (locationLoading) return;
+    if (eventLocation) return;
+    if (pageState !== "noLocation") return;
+    setPageState("searchInitial");
+  }, [isHost, locationLoading, eventLocation, pageState]);
 
   // ── 검색 상태 동기화 ──────────────────────────────────────────────────
   useEffect(() => {
@@ -333,15 +343,28 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   };
 
   const handleSelectPlace = (place: SearchResult) => {
-    saveLocation({
-      address: place.address,
-      placeName: place.placeName,
-      lat: place.lat,
-      lng: place.lng,
-      placeId: place.placeId,
-    });
-    setSearchQuery("");
-    setPageState("fullscreen");
+    setPendingPlace(place);
+    setPageState("selectedPlace");
+  };
+
+  const handleConfirmSelectedPlace = () => {
+    if (!pendingPlace) return;
+    saveLocation(
+      {
+        address: pendingPlace.address,
+        placeName: pendingPlace.placeName,
+        lat: pendingPlace.lat,
+        lng: pendingPlace.lng,
+        placeId: pendingPlace.placeId,
+      },
+      {
+        onSuccess: () => {
+          setPendingPlace(null);
+          setSearchQuery("");
+          setPageState("fullscreen");
+        },
+      },
+    );
   };
 
   const handleSearchQueryChange = (q: string) => {
@@ -349,6 +372,15 @@ export function MapContainer({ invitationId }: MapContainerProps) {
     if (!pageState.startsWith("search")) {
       setPageState("searchInitial");
     }
+  };
+
+  const handleBack = () => {
+    if (pageState === "selectedPlace" && pendingPlace) {
+      setPendingPlace(null);
+      setPageState(searchData && searchData.places.length > 0 ? "searchResults" : "searchInitial");
+      return;
+    }
+    router.back();
   };
 
   const searchResultsForPage: SearchResult[] =
@@ -362,13 +394,30 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   const resolvedState: MapPageState = isDirectionOpen ? "directionBottomSheet" : pageState;
 
+  // 선택 중인 후보 우선, 없으면 저장된 행사 장소
+  const effectiveLocation = pendingPlace
+    ? {
+        placeName: pendingPlace.placeName,
+        address: pendingPlace.address,
+        lat: pendingPlace.lat,
+        lng: pendingPlace.lng,
+      }
+    : eventLocation
+      ? {
+          placeName: eventLocation.placeName,
+          address: eventLocation.address,
+          lat: eventLocation.lat,
+          lng: eventLocation.lng,
+        }
+      : null;
+
   const mapSlot = (
     <KakaoMap
       ref={kakaoMapRef}
       ready={mapSdkReady}
       eventLocation={
-        eventLocation
-          ? { lat: eventLocation.lat, lng: eventLocation.lng, placeName: eventLocation.placeName }
+        effectiveLocation
+          ? { lat: effectiveLocation.lat, lng: effectiveLocation.lng, placeName: effectiveLocation.placeName }
           : undefined
       }
       participants={participantPins}
@@ -388,8 +437,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       />
       <MapPage
         state={resolvedState}
-        onBack={() => router.back()}
-        eventLocation={eventLocation ?? null}
+        onBack={handleBack}
+        eventLocation={effectiveLocation}
         onGetDirections={handleGetDirections}
         onRetry={() => refetch()}
         mapSlot={mapSlot}
@@ -412,6 +461,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         isHost={isHost}
         onSetLocation={() => setPageState("searchInitial")}
         onLocate={handleLocate}
+        onConfirmSelectedPlace={isHost ? handleConfirmSelectedPlace : undefined}
+        isSavingPlace={isSavingPlace}
       />
     </>
   );

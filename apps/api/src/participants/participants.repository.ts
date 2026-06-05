@@ -69,15 +69,15 @@ export class ParticipantsRepository {
     return rows[0] ?? null;
   }
 
-  async findInvitationStatus(
+  async findInvitationInfo(
     invitationId: string,
-  ): Promise<'active' | 'closed' | null> {
+  ): Promise<{ status: 'active' | 'closed'; eventStartAt: Date | null } | null> {
     const rows = await this.db
-      .select({ status: invitations.status })
+      .select({ status: invitations.status, eventStartAt: invitations.eventStartAt })
       .from(invitations)
       .where(eq(invitations.id, invitationId))
       .limit(1);
-    return rows[0]?.status ?? null;
+    return rows[0] ?? null;
   }
 
   async getMutualParticipants(myUserId: string, targetUserId: string) {
@@ -133,7 +133,6 @@ export class ParticipantsRepository {
     userId: string;
     invitationId: string;
     rsvpStatus: RsvpStatus;
-    displayName?: string;
     note?: string;
   }): Promise<Participant> {
     const rows = await this.db

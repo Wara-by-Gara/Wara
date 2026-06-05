@@ -21,7 +21,7 @@ const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   me: ROUTES.PROFILE.ME,
 };
 
-const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create", "/terms/agree"];
+const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create", "/terms/agree", "/onboarding"];
 
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";

@@ -13,8 +13,8 @@ export type WeatherCondition =
   | "foggy";
 
 export interface WeatherCardProps {
-  condition: WeatherCondition;
-  temperatureCelsius: number;
+  condition?: WeatherCondition;
+  temperatureCelsius?: number;
   rainProbability?: number;
   tip?: string;
   /** 날씨 정보를 표시할지 여부 (호스트가 OFF 시 숨김) */
@@ -49,7 +49,7 @@ export function WeatherCard({
 }: WeatherCardProps) {
   if (!enabled) return null;
 
-  const meta = WEATHER_META[condition];
+  const meta = condition ? WEATHER_META[condition] : null;
 
   return (
     <div className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4">
@@ -69,7 +69,7 @@ export function WeatherCard({
           </p>
           <p className="text-[13px] text-text-tertiary">조금만 기다려주세요!</p>
         </div>
-      ) : (
+      ) : meta ? (
         /* 날씨 정보 표시 */
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -86,7 +86,7 @@ export function WeatherCard({
           </div>
           <span className="text-[64px] leading-none select-none">{meta.emoji}</span>
         </div>
-      )}
+      ) : null}
 
       {!unavailable && tip && (
         <>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Notifications } from '@/screens/Notifications';
 import type { NotificationsState } from '@/screens/Notifications';
@@ -37,6 +37,13 @@ export default function NotificationsContainer() {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | null>(null);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') {
+      setPushPermission(Notification.permission);
+    }
+  }, []);
 
   const { data, isLoading, isError, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
@@ -62,7 +69,13 @@ export default function NotificationsContainer() {
     onDelete: () => deleteNotification(n.id),
   }));
 
-  const state: NotificationsState = isLoading
+  const handleRequestPushPermission = async () => {
+    if (typeof Notification === 'undefined') return;
+    const result = await Notification.requestPermission();
+    setPushPermission(result);
+  };
+
+  const baseState: NotificationsState = isLoading
     ? 'loading'
     : isError
       ? 'error'
@@ -72,6 +85,10 @@ export default function NotificationsContainer() {
           ? 'unreadOnly'
           : 'default';
 
+  const state: NotificationsState =
+    pushPermission === 'default' ? 'pushPermissionGuide' :
+    pushPermission === 'denied' ? 'pushDisabledGuide' :
+    baseState;
   const VOTE_NOTIFICATION_TYPES = new Set(['vote_reminder', 'vote_tied', 'vote_confirmed']);
 
   const handleItemClick = (id: string) => {
@@ -113,6 +130,7 @@ export default function NotificationsContainer() {
         onFilterChange={setFilter}
         onRetry={() => refetch()}
         onSettings={() => setSettingsOpen(true)}
+        onRequestPushPermission={handleRequestPushPermission}
         isMarkingAllRead={isMarkingAllRead}
       />
       <NotificationSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)}>

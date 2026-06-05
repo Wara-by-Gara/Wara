@@ -68,14 +68,18 @@ export const BottomSheetContent = forwardRef<
               <Drawer.Title className="text-[18px] font-bold text-text-primary">
                 {title}
               </Drawer.Title>
-            ) : null}
+            ) : (
+              <Drawer.Title className="sr-only">바텀시트</Drawer.Title>
+            )}
             {description ? (
               <Drawer.Description className="mt-1 text-[14px] text-text-secondary">
                 {description}
               </Drawer.Description>
             ) : null}
           </div>
-        ) : null}
+        ) : (
+          <Drawer.Title className="sr-only">바텀시트</Drawer.Title>
+        )}
         <div className="overflow-y-auto px-5 pb-5 pt-2">{children}</div>
       </Drawer.Content>
     </>
