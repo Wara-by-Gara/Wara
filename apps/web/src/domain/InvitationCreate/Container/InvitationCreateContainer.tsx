@@ -613,7 +613,7 @@ export default function InvitationCreateContainer() {
               fitToImage
             />
           ) : (
-            <>
+            <div>
               {/* 탭: 이미지 업로드 / GIF */}
               <div className="mb-3 flex gap-2">
                 <button
@@ -671,11 +671,11 @@ export default function InvitationCreateContainer() {
                       </div>
                     </div>
                   ) : imageUploading ? (
-                    <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
+                    <div className="flex aspect-3/2 w-full items-center justify-center rounded-3xl bg-surface">
                       <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
                     </div>
                   ) : imageUploadError ? (
-                    <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                    <div className="flex aspect-3/2 w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
                       <Icon name="alert-triangle" size="lg" color="danger" decorative />
                       <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
                     </div>
@@ -683,7 +683,7 @@ export default function InvitationCreateContainer() {
                     <button
                       type="button"
                       className={cn(
-                        "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                        "flex aspect-3/2 w-full items-center justify-center rounded-3xl border-2 border-dashed",
                         imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                       )}
                       onClick={() => { fileInputRef.current?.click(); }}
@@ -725,7 +725,7 @@ export default function InvitationCreateContainer() {
                     <button
                       type="button"
                       className={cn(
-                        "flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                        "flex aspect-3/2 w-full items-center justify-center rounded-3xl border-2 border-dashed",
                         imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                       )}
                       onClick={() => setGifPickerOpen(true)}
@@ -748,7 +748,7 @@ export default function InvitationCreateContainer() {
                   ) : null}
                 </>
               )}
-            </>
+            </div>
           )}
         </FormField>
 
