@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Docker 프로덕션 빌드 시 최소 실행 파일만 추출 (standalone 폴더 생성)
   output: "standalone",
+  // /api/* 를 백엔드로 프록시 → 프론트와 same-origin 으로 만들어
+  // 인증 쿠키(httpOnly, SameSite=lax)가 정상 공유되게 한다.
+  // 배열 반환(afterFiles)이라 Next 자체 라우트(/api/gifs/*)가 우선 매칭된다.
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+    return [
+      { source: "/api/:path*", destination: `${apiUrl}/api/:path*` },
+    ];
+  },
   images: {
     remotePatterns: [
       // AWS S3 (ap-northeast-2) — 사진 presigned URL

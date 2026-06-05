@@ -1,4 +1,5 @@
 import { API_BASE } from "../env";
+import { useAuthStore } from "@/stores/authStore";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -45,6 +46,8 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
       if (refreshed) {
         res = await fetchFn();
       } else {
+        // refresh 실패 = 세션 종료. zustand 상태까지 동기화 후 로그인으로
+        await useAuthStore.getState().logout();
         window.location.href = '/login';
         throw new Error(code);
       }

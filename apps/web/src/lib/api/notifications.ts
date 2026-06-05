@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { apiGet, apiPatch, apiDelete } from './client';
 
 export type NotificationType =
   | 'remind'
@@ -72,35 +72,30 @@ export type UpdateNotificationSettingsDto = Partial<
 export function fetchNotifications(cursor?: string, limit = 20) {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set('cursor', cursor);
-  return apiClient<NotificationsPage>(`/notifications?${params}`);
+  return apiGet<NotificationsPage>(`/notifications?${params}`);
 }
 
 export function fetchUnreadCount() {
-  return apiClient<{ count: number }>('/notifications/unread');
+  return apiGet<{ count: number }>('/notifications/unread');
 }
 
 export function deleteNotification(id: string) {
-  return apiClient<void>(`/notifications/${id}`, { method: 'DELETE' });
+  return apiDelete(`/notifications/${id}`);
 }
 
 export function markAsRead(id: string) {
-  return apiClient<Notification>(`/notifications/${id}/read`, {
-    method: 'PATCH',
-  });
+  return apiPatch<Notification>(`/notifications/${id}/read`, undefined);
 }
 
 export function markAllAsRead() {
-  return apiClient<void>('/notifications/readAll', { method: 'PATCH' });
+  return apiPatch<void>('/notifications/readAll', undefined);
 }
 
 export async function fetchNotificationSettings(): Promise<NotificationSettings | null> {
-  const result = await apiClient<NotificationSettings | null>('/notifications/settings');
+  const result = await apiGet<NotificationSettings | null>('/notifications/settings');
   return result ?? null;
 }
 
 export function updateNotificationSettings(dto: UpdateNotificationSettingsDto) {
-  return apiClient<NotificationSettings>('/notifications/settings', {
-    method: 'PATCH',
-    body: JSON.stringify(dto),
-  });
+  return apiPatch<NotificationSettings>('/notifications/settings', dto);
 }
