@@ -20,6 +20,7 @@ import {
 import type { UpdateNotificationSettingsDto, NotificationsPage } from '@/lib/api/notifications';
 import { SOCKET_BASE } from '@/lib/env';
 import { useNotificationSocketStore } from '@/stores/notificationSocketStore';
+import { QUERY_KEYS } from '@/constants/queryKeys';
 
 export interface AiCompleteEventDetail {
   jobId: string;
@@ -29,16 +30,9 @@ export interface AiCompleteEventDetail {
   success: boolean;
 }
 
-export const notificationKeys = {
-  all: ['notifications'] as const,
-  lists: () => [...notificationKeys.all, 'list'] as const,
-  unread: () => [...notificationKeys.all, 'unread'] as const,
-  settings: () => [...notificationKeys.all, 'settings'] as const,
-};
-
 export function useNotifications() {
   return useInfiniteQuery({
-    queryKey: notificationKeys.lists(),
+    queryKey: QUERY_KEYS.notifications.list(),
     queryFn: ({ pageParam }) =>
       fetchNotifications(pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
@@ -50,7 +44,7 @@ export function useUnreadCount() {
   // 소켓이 연결되어 있으면 푸시로 알림이 들어오므로 폴링 불필요
   const socketConnected = useNotificationSocketStore((s) => s.connected);
   return useQuery({
-    queryKey: notificationKeys.unread(),
+    queryKey: QUERY_KEYS.notifications.unread(),
     queryFn: fetchUnreadCount,
     refetchInterval: socketConnected ? false : 60_000,
   });
@@ -80,32 +74,32 @@ export function useMarkAsRead() {
   return useMutation({
     mutationFn: markAsRead,
     onMutate: async (id: string) => {
-      await queryClient.cancelQueries({ queryKey: notificationKeys.lists() });
-      await queryClient.cancelQueries({ queryKey: notificationKeys.unread() });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.notifications.unread() });
 
-      const prevUnread = queryClient.getQueryData<{ count: number }>(notificationKeys.unread());
-      const prevList = queryClient.getQueryData<InfiniteNotifications>(notificationKeys.lists());
+      const prevUnread = queryClient.getQueryData<{ count: number }>(QUERY_KEYS.notifications.unread());
+      const prevList = queryClient.getQueryData<InfiniteNotifications>(QUERY_KEYS.notifications.list());
 
       // 리스트의 해당 알림이 unread였을 때만 카운트 감소
       const wasUnread = prevList?.pages.some((p) =>
         p.items.some((n) => n.id === id && !n.isRead),
       );
       if (wasUnread && prevUnread && prevUnread.count > 0) {
-        queryClient.setQueryData(notificationKeys.unread(), { count: prevUnread.count - 1 });
+        queryClient.setQueryData(QUERY_KEYS.notifications.unread(), { count: prevUnread.count - 1 });
       }
-      queryClient.setQueryData<InfiniteNotifications>(notificationKeys.lists(), (old) =>
+      queryClient.setQueryData<InfiniteNotifications>(QUERY_KEYS.notifications.list(), (old) =>
         markItemRead(old, id),
       );
 
       return { prevUnread, prevList };
     },
     onError: (_err, _id, ctx) => {
-      if (ctx?.prevUnread) queryClient.setQueryData(notificationKeys.unread(), ctx.prevUnread);
-      if (ctx?.prevList) queryClient.setQueryData(notificationKeys.lists(), ctx.prevList);
+      if (ctx?.prevUnread) queryClient.setQueryData(QUERY_KEYS.notifications.unread(), ctx.prevUnread);
+      if (ctx?.prevList) queryClient.setQueryData(QUERY_KEYS.notifications.list(), ctx.prevList);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.unread() });
     },
   });
 }
@@ -115,8 +109,8 @@ export function useDeleteNotification() {
   return useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.unread() });
     },
   });
 }
@@ -126,24 +120,24 @@ export function useMarkAllAsRead() {
   return useMutation({
     mutationFn: markAllAsRead,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: notificationKeys.unread() });
-      const prevUnread = queryClient.getQueryData<{ count: number }>(notificationKeys.unread());
-      queryClient.setQueryData(notificationKeys.unread(), { count: 0 });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.notifications.unread() });
+      const prevUnread = queryClient.getQueryData<{ count: number }>(QUERY_KEYS.notifications.unread());
+      queryClient.setQueryData(QUERY_KEYS.notifications.unread(), { count: 0 });
       return { prevUnread };
     },
     onError: (_err, _v, ctx) => {
-      if (ctx?.prevUnread) queryClient.setQueryData(notificationKeys.unread(), ctx.prevUnread);
+      if (ctx?.prevUnread) queryClient.setQueryData(QUERY_KEYS.notifications.unread(), ctx.prevUnread);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.unread() });
     },
   });
 }
 
 export function useNotificationSettings() {
   return useQuery({
-    queryKey: notificationKeys.settings(),
+    queryKey: QUERY_KEYS.notifications.settings(),
     queryFn: fetchNotificationSettings,
   });
 }
@@ -154,7 +148,7 @@ export function useUpdateNotificationSettings() {
     mutationFn: (dto: UpdateNotificationSettingsDto) =>
       updateNotificationSettings(dto),
     onSuccess: (data) => {
-      queryClient.setQueryData(notificationKeys.settings(), data);
+      queryClient.setQueryData(QUERY_KEYS.notifications.settings(), data);
     },
   });
 }
@@ -171,8 +165,8 @@ export function useNotificationSocket() {
     });
 
     function invalidateNotifications() {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unread() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.unread() });
     }
 
     socket.on('connect', () => {

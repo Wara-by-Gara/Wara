@@ -112,11 +112,11 @@ export default function NotificationsContainer() {
     const invId = notification.invitationId;
     if (!invId) return;
     if (notification.targetType === 'photo') {
-      router.push(ROUTES.INVITATIONS.PHOTO_DETAIL(invId, notification.targetId));
+      router.push(ROUTES.INVITATIONS.DETAIL(invId));
     } else if (notification.targetType === 'mission') {
-      router.push(ROUTES.INVITATIONS.MISSION_DETAIL(invId, notification.targetId));
+      router.push(ROUTES.INVITATIONS.DETAIL(invId));
     } else if (notification.targetType === 'feedback') {
-      router.push(ROUTES.INVITATIONS.FEEDBACKS(invId));
+      router.push(ROUTES.INVITATIONS.COMMENTS(invId));
     }
   };
 

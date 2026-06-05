@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { Button } from "@/components/primitives/Button";
+import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
+import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { NotificationBellContainer } from "@/domain/Notifications/NotificationBell/NotificationBellContainer";
 import { InvitationListSection } from "@/domain/InvitationList/InvitationListSection";
 import {
@@ -19,6 +19,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { getMyInvitations } from "@/lib/api/invitations";
 import { getMe } from "@/lib/api/users";
 import { ROUTES } from "@/constants/routes";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 export default function HomeContainer() {
   const router = useRouter();
@@ -30,14 +31,14 @@ export default function HomeContainer() {
   }, [hydrate]);
 
   const { data: me } = useQuery({
-    queryKey: ["me"],
+    queryKey: QUERY_KEYS.users.me(),
     queryFn: getMe,
     enabled: hydrated && isLoggedIn,
     retry: 1,
   });
 
   const { data: invitations, isLoading, isError } = useQuery({
-    queryKey: ["my-invitations"],
+    queryKey: QUERY_KEYS.invitations.myList(),
     queryFn: getMyInvitations,
     enabled: hydrated && isLoggedIn,
     retry: 1,
