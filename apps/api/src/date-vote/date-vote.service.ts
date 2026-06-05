@@ -62,6 +62,21 @@ export class DateVoteService {
       })),
     );
 
+    // 투표 생성 직후: 해당 초대장의 전체 참가자에게 투표 시작 알림을 보낸다.
+    const allUserIds = await this.repo.findAllParticipantUserIds(invitationId);
+    await Promise.all(
+      allUserIds.map((userId) =>
+        this.notificationsService.notify({
+          userId,
+          type: 'vote_reminder',
+          content: `[${invitation.title}] 일정 투표가 시작됐어요. 원하는 시간을 선택해주세요!`,
+          targetType: 'invitation',
+          targetId: invitationId,
+          invitationId,
+        }),
+      ),
+    );
+
     return { poll, slots };
   }
 
