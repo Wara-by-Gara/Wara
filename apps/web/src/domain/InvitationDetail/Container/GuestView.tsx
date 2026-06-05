@@ -53,7 +53,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
-  const { data: weather, within10Days, isFuture } = useWeather(
+  const { data: weather, within3Days, isFuture } = useWeather(
     invitationId,
     invitation.eventStartAt,
     { enabled: isLoggedIn },
@@ -147,13 +147,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           />
 
           {isLoggedIn && invitation.eventStartAt && isFuture && (
-            within10Days
+            within3Days
               ? weather && (
                   <WeatherCard
                     condition={toWeatherCardCondition(weather.condition)}
                     temperatureCelsius={weather.temperature}
-                    temperatureMin={weather.temperatureMin}
-                    temperatureMax={weather.temperatureMax}
                     rainProbability={weather.precipProbability}
                     tip={weather.message}
                   />

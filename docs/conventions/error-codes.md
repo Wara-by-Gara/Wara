@@ -94,6 +94,12 @@
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 
+## Friends
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `FRIEND_NOT_FOUND` | 404 | 친구 관계 없음 또는 상대 유저 없음 |
+
 ## Inquiries
 
 | 코드 | 상태코드 | 상황 |

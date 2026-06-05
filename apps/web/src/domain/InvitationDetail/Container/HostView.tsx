@@ -43,7 +43,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
-  const { data: weather, within10Days, isFuture } = useWeather(invitationId, invitation.eventStartAt);
+  const { data: weather, within3Days, isFuture } = useWeather(invitationId, invitation.eventStartAt);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -149,13 +149,11 @@ export default function HostView({ invitationId, invitation, participantsData }:
         />
 
         {invitation.eventStartAt && isFuture && (
-          within10Days
+          within3Days
             ? weather && (
                 <WeatherCard
                   condition={toWeatherCardCondition(weather.condition)}
                   temperatureCelsius={weather.temperature}
-                  temperatureMin={weather.temperatureMin}
-                  temperatureMax={weather.temperatureMax}
                   rainProbability={weather.precipProbability}
                   tip={weather.message}
                 />
