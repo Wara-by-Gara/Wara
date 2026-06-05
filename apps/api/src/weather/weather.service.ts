@@ -8,18 +8,11 @@ import { getBaseDateTime, getForecastTime, getForecastDate } from './utils/base-
 import { toCondition, toMessage } from './utils/condition-mapper';
 import { WeatherResponseDto } from './dto/weather-response.dto';
 import { ErrorCode } from '../common/constants/error-codes';
+import { withTimeout } from '../common/utils/with-timeout';
 
 const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3시간 (base_time 발표 주기)
 const FORECAST_WINDOW_MS = 72 * 60 * 60 * 1000; // 단기예보 최대 제공 범위 3일
 const CACHE_OP_TIMEOUT_MS = 500; // Redis 다운 시 빠르게 KMA fallback으로 전환하기 위한 타임아웃
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  let timer: NodeJS.Timeout;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
 
 @Injectable()
 export class WeatherService {
