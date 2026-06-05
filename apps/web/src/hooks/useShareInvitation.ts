@@ -64,7 +64,7 @@ export function useShareInvitation(invitationId: string, title?: string, descrip
 
   const shareViaSms = async () => {
     const { smsUri } = await createSendLog(invitationId, { channel: "sms" });
-    window.location.href = smsUri ?? `sms:?body=${encodeURIComponent(`${window.location.origin}/i/${invitationId}`)}`;
+    window.location.href = smsUri ?? `sms:?body=${encodeURIComponent(`${window.location.origin}/invitations/${invitationId}`)}`;
   };
 
   const shareViaInstagram = async () => {

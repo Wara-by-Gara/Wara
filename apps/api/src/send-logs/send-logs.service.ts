@@ -14,7 +14,7 @@ export class SendLogsService {
 
   async create(userId: string, invitationId: string, dto: CreateSendLogDto) {
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
-    const inviteUrl = `${frontendUrl}/i/${invitationId}`;
+    const inviteUrl = `${frontendUrl}/invitations/${invitationId}`;
 
     const log = await this.sendLogsRepository.create({
       invitationId,
