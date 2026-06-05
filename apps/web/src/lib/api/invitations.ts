@@ -45,12 +45,21 @@ interface UpdateInvitationPayload {
   title?: string;
   description?: string;
   mainImageKey?: string;
+  mainGifUrl?: string;
   mainImageFrame?: MainImageFrame;
   uploadedImageKey?: string | null;
   templateId?: string | null;
   eventStartAt?: string | null;
   isMissionEnabled?: boolean;
   status?: 'active' | 'closed';
+  bgColor?: string;
+  font?: string;
+  rsvpAttendingEmoji?: string;
+  rsvpAttendingLabel?: string;
+  rsvpMaybeEmoji?: string;
+  rsvpMaybeLabel?: string;
+  rsvpDeclinedEmoji?: string;
+  rsvpDeclinedLabel?: string;
 }
 
 export interface CreatedInvitation {

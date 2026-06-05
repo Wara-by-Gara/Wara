@@ -43,7 +43,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
-  const { data: weather, within3Days, isFuture } = useWeather(invitationId, invitation.eventStartAt);
+  const { data: weather, within10Days, isFuture } = useWeather(invitationId, invitation.eventStartAt);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
       // 캐시에서 즉시 제거하여 다음 화면에 잔존 카드/깜빡임 없도록
       const removeFromList = (old: InvitationListItem[] | undefined) =>
         (old ?? []).filter((inv) => inv.id !== invitationId);
-      queryClient.setQueryData<InvitationListItem[]>(["my-invitations"], removeFromList);
+      queryClient.setQueryData<InvitationListItem[]>(QUERY_KEYS.invitations.myList(), removeFromList);
       queryClient.setQueryData<InvitationListItem[]>(QUERY_KEYS.invitations.all(), removeFromList);
       queryClient.removeQueries({ queryKey: QUERY_KEYS.invitations.detail(invitationId) });
       router.replace(ROUTES.HOME);
@@ -149,11 +149,13 @@ export default function HostView({ invitationId, invitation, participantsData }:
         />
 
         {invitation.eventStartAt && isFuture && (
-          within3Days
+          within10Days
             ? weather && (
                 <WeatherCard
                   condition={toWeatherCardCondition(weather.condition)}
                   temperatureCelsius={weather.temperature}
+                  temperatureMin={weather.temperatureMin}
+                  temperatureMax={weather.temperatureMax}
                   rainProbability={weather.precipProbability}
                   tip={weather.message}
                 />

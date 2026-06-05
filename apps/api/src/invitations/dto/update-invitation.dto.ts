@@ -18,6 +18,8 @@ export const UpdateInvitationSchema = z
   eventStartAt: z.coerce.date().optional().nullable(),
   isMissionEnabled: z.boolean().optional(),
   status: z.enum(['active', 'closed']).optional(),
+  bgColor: z.string().max(50).optional(),
+  font: z.string().max(50).optional(),
   rsvpAttendingEmoji: z.string().max(10).optional(),
   rsvpAttendingLabel: z.string().max(20).optional(),
   rsvpMaybeEmoji: z.string().max(10).optional(),
