@@ -52,5 +52,8 @@ pids
 *.seed
 *.pid.lock
 
+# Seed tokens (contains JWT) — 부하테스트용, 절대 커밋 금지
+drizzle/seed/seed-tokens.json
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

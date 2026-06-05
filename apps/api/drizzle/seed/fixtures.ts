@@ -37,6 +37,8 @@ const templatePreviewUrl = (seedKey: string) =>
   `https://picsum.photos/seed/${encodeURIComponent(seedKey)}/600/400`;
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
+// 기본은 dev 작업용 작은 규모. 부하 테스트 시 일시적으로 늘려 사용.
+// (참고: loadtest/REPORT.md — 중규모/대규모 측정 결과)
 const HOST_COUNT = 40;
 const GUEST_COUNT = 160;
 const INVITATION_COUNT = 100;
