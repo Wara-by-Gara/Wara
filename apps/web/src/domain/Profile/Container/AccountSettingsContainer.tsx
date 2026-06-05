@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { useDeleteMe, useDeleteMySocial, useGetMySocials } from '@/hooks/useUsers';
-import { AccountSettings, type AccountScreen } from '@/screens/AccountSettings';
+import { AccountSettings, type AccountScreen, type WithdrawalReasonKey } from '@/screens/AccountSettings';
 import { ROUTES } from '@/constants/routes';
 
 export default function AccountSettingsContainer() {
   const router = useRouter();
   const [screen, setScreen] = useState<AccountScreen>('connectedSocial');
   const [pendingProvider, setPendingProvider] = useState<string | null>(null);
+  // 탈퇴 사유 — withdrawReason 화면의 라디오/textarea 값.
+  // 이슈 #150에 따라 deleteMe payload로 전달해 BE 분석에 활용.
+  const [withdrawReason, setWithdrawReason] = useState<WithdrawalReasonKey>('rarely');
+  const [withdrawDetail, setWithdrawDetail] = useState<string>('');
 
   const { logout } = useAuthStore();
   const queryClient = useQueryClient();
@@ -33,14 +37,17 @@ export default function AccountSettingsContainer() {
   };
 
   const handleWithdrawConfirm = () => {
-    deleteMe(undefined, {
-      onSuccess: async () => {
-        localStorage.removeItem('wara_onboarding_done');
-        await logout();
-        queryClient.clear();
-        setScreen('withdrawComplete');
+    deleteMe(
+      { reason: withdrawReason, detail: withdrawDetail.trim() || undefined },
+      {
+        onSuccess: async () => {
+          localStorage.removeItem('wara_onboarding_done');
+          await logout();
+          queryClient.clear();
+          setScreen('withdrawComplete');
+        },
       },
-    });
+    );
   };
 
   const handleDisconnectRequest = (provider: string) => {
@@ -81,6 +88,10 @@ export default function AccountSettingsContainer() {
       onDisconnectRequest={handleDisconnectRequest}
       onDisconnectConfirm={handleDisconnectConfirm}
       isDisconnecting={isDisconnecting}
+      withdrawReason={withdrawReason}
+      withdrawDetail={withdrawDetail}
+      onWithdrawReasonChange={setWithdrawReason}
+      onWithdrawDetailChange={setWithdrawDetail}
     />
   );
 }

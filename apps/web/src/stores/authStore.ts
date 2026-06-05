@@ -1,8 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/api';
+import { isLoggedInCookieSet } from "@/lib/auth-cookie";
+import { API_BASE } from "@/lib/env";
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -16,18 +16,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
   hydrated: false,
   hydrate: () => {
-    // 서버가 심어주는 accessToken 쿠키 기준으로 로그인 상태 판단
-    const hasToken =
-      typeof window !== "undefined" &&
-      document.cookie.split("; ").some((row) => row.startsWith("is_logged_in="));
-    set({ isLoggedIn: hasToken, hydrated: true });
+    set({ isLoggedIn: isLoggedInCookieSet(), hydrated: true });
   },
   login: () => {
     set({ isLoggedIn: true });
   },
   logout: async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" });
+      await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
     } catch {
       // 실패해도 클라이언트 상태는 초기화
     }

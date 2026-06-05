@@ -46,8 +46,20 @@ export function updateMe(data: UpdateMeInput): Promise<Me> {
   return apiPatch<Me>("/users/me", data);
 }
 
-export function deleteMe(): Promise<void> {
-  return apiDelete("/users/me");
+export type WithdrawalReason =
+  | "rarely"
+  | "alternative"
+  | "missing"
+  | "privacy"
+  | "etc";
+
+export interface DeleteMeInput {
+  reason?: WithdrawalReason;
+  detail?: string;
+}
+
+export function deleteMe(payload: DeleteMeInput = {}): Promise<void> {
+  return apiDelete("/users/me", payload);
 }
 
 export interface MySocial {

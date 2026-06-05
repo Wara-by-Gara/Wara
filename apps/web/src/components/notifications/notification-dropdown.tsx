@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { NotificationItem } from './notification-item';
 import type { Notification } from '@/lib/api/notifications';
 
@@ -28,6 +29,25 @@ export function NotificationDropdown({
   onLoadMore,
   onOpenSettings,
 }: Props) {
+  // sentinel(더 보기 버튼)이 화면에 들어오면 다음 페이지 자동 로드.
+  // 버튼은 클릭 가능한 fallback도 겸함.
+  const sentinelRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMore();
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+
   return (
     <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-2xl shadow-lg border border-border overflow-hidden z-50">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -72,6 +92,7 @@ export function NotificationDropdown({
         ))}
         {hasNextPage && (
           <button
+            ref={sentinelRef}
             type="button"
             onClick={onLoadMore}
             disabled={isFetchingNextPage}

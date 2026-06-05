@@ -18,6 +18,9 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  // 탈퇴 사유 — soft delete 시 함께 기록. 분석/개선 피드백 용도이므로 nullable.
+  withdrawalReason: varchar('withdrawal_reason', { length: 32 }),
+  withdrawalDetail: text('withdrawal_detail'),
 });
 
 export const socialAccounts = pgTable('social_accounts', {

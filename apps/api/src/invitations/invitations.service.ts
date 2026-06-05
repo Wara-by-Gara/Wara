@@ -334,6 +334,7 @@ export class InvitationsService {
       content,
       targetType: 'invitation',
       targetId: invitationId,
+      invitationId,
     });
   }
 }

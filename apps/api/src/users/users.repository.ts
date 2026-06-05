@@ -39,10 +39,17 @@ export class UsersRepository {
     return updated;
   }
 
-  async softDeleteUser(id: string) {
+  async softDeleteUser(
+    id: string,
+    options: { reason?: string; detail?: string } = {},
+  ) {
     await this.db
       .update(users)
-      .set({ deletedAt: new Date() })
+      .set({
+        deletedAt: new Date(),
+        withdrawalReason: options.reason ?? null,
+        withdrawalDetail: options.detail ?? null,
+      })
       .where(and(eq(users.id, id), isNull(users.deletedAt)));
   }
 

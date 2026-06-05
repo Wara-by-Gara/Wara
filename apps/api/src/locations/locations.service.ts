@@ -135,6 +135,7 @@ export class LocationsService {
       content: '모임 장소로 출발해주세요!',
       targetType: 'invitation',
       targetId: invitationId,
+      invitationId,
     });
   }
 
@@ -157,6 +158,7 @@ export class LocationsService {
         content: '모임 장소 근처에 도착했어요. 위치 공유를 종료합니다.',
         targetType: 'participantLocations',
         targetId: invitationId,
+        invitationId,
       }),
     ];
 
@@ -169,6 +171,7 @@ export class LocationsService {
           content: `${arrivedName}님이 도착했어요!`,
           targetType: 'participantLocations',
           targetId: invitationId,
+          invitationId,
         }),
       );
     }

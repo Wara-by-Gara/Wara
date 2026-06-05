@@ -101,6 +101,7 @@ export class NotificationsService {
     content: string;
     targetType?: NotificationTargetType;
     targetId?: string;
+    invitationId?: string;
   }) {
     const settingKey = TYPE_TO_SETTING[data.type];
     if (settingKey) {

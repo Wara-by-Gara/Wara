@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { API_BASE } from "@/lib/env";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
@@ -84,7 +85,6 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
     ({ participant }) => participant.rsvpStatus === "attending",
   );
 
-  const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
 
   return (
     <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col", invitation.bgColor, fontClass)}>
@@ -253,7 +253,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
                   type="button"
                   onClick={() => {
                     sessionStorage.setItem("wara_oauth_return", window.location.pathname);
-                    window.location.href = `${apiBase}/auth/${config.path}/redirect`;
+                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
                   }}
                   className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
                 >

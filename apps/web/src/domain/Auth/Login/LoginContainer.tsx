@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Login, type LoginState } from '@/screens/Login';
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/api';
+import { API_BASE } from '@/lib/env';
 
 const AUTH_ERROR_STATE: Record<string, LoginState> = {
   cancelled: 'socialCancelled',

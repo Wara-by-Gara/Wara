@@ -15,6 +15,7 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   vote_reminder: '투표',
   vote_tied: '투표',
   vote_confirmed: '날짜 확정',
+  ai_complete: 'AI 사진',
 };
 
 type Props = {

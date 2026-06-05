@@ -11,7 +11,6 @@ import {
   useDeleteNotification,
   useNotificationSettings,
   useUpdateNotificationSettings,
-  useNotificationSocket,
 } from '@/hooks/useNotifications';
 import { ROUTES } from '@/constants/routes';
 import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
@@ -28,7 +27,7 @@ const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
   invitation_date: 'invitationUpdated',
   participantLocations: 'invitationUpdated',
   eventLocations: 'invitationUpdated',
-  ai_complete: 'albumOpened',
+  ai_complete: 'newPhoto',
   vote_reminder: 'eventReminder',
   vote_tied: 'eventReminder',
   vote_confirmed: 'eventReminder',
@@ -52,8 +51,6 @@ export default function NotificationsContainer() {
   const { mutate: deleteNotification } = useDeleteNotification();
   const { data: settings, isLoading: isSettingsLoading } = useNotificationSettings();
   const { mutate: updateSettings, isPending: isSettingsPending } = useUpdateNotificationSettings();
-
-  useNotificationSocket();
 
   const allItems = data?.pages.flatMap((p) => p.items) ?? [];
   const items = filter === 'unread' ? allItems.filter((n) => !n.isRead) : allItems;
@@ -97,12 +94,29 @@ export default function NotificationsContainer() {
   const handleItemClick = (id: string) => {
     markAsRead(id);
     const notification = allItems.find((n) => n.id === id);
-    if (notification?.targetType === 'invitation' && notification.targetId) {
+    if (!notification?.targetId) return;
+
+    if (notification.targetType === 'invitation') {
       if (VOTE_NOTIFICATION_TYPES.has(notification.type)) {
         router.push(ROUTES.INVITATIONS.VOTE(notification.targetId));
       } else {
         router.push(ROUTES.INVITATIONS.DETAIL(notification.targetId));
       }
+      return;
+    }
+    if (notification.targetType === 'participantLocations') {
+      router.push(ROUTES.INVITATIONS.LOCATION(notification.targetId));
+      return;
+    }
+    // sub-resource 라우팅 — invitationId가 있을 때만
+    const invId = notification.invitationId;
+    if (!invId) return;
+    if (notification.targetType === 'photo') {
+      router.push(ROUTES.INVITATIONS.PHOTO_DETAIL(invId, notification.targetId));
+    } else if (notification.targetType === 'mission') {
+      router.push(ROUTES.INVITATIONS.MISSION_DETAIL(invId, notification.targetId));
+    } else if (notification.targetType === 'feedback') {
+      router.push(ROUTES.INVITATIONS.FEEDBACKS(invId));
     }
   };
 

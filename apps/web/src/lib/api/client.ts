@@ -1,4 +1,4 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001') + '/api';
+import { API_BASE } from "../env";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -18,7 +18,7 @@ async function tryRefresh(): Promise<boolean> {
 
   refreshPromise = (async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/refresh`, {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });
@@ -71,13 +71,13 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
 
 export function apiGet<T>(path: string): Promise<T> {
   return request<T>(
-    () => fetch(`${API_URL}${path}`, { credentials: "include" }),
+    () => fetch(`${API_BASE}${path}`, { credentials: "include" }),
   );
 }
 
 export function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return request<T>(
-    () => fetch(`${API_URL}${path}`, {
+    () => fetch(`${API_BASE}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -88,7 +88,7 @@ export function apiPost<T>(path: string, body?: unknown): Promise<T> {
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>(
-    () => fetch(`${API_URL}${path}`, {
+    () => fetch(`${API_BASE}${path}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -99,7 +99,7 @@ export function apiPatch<T>(path: string, body: unknown): Promise<T> {
 
 export function apiPut<T>(path: string, body: unknown): Promise<T> {
   return request<T>(
-    () => fetch(`${API_URL}${path}`, {
+    () => fetch(`${API_BASE}${path}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -108,10 +108,12 @@ export function apiPut<T>(path: string, body: unknown): Promise<T> {
   );
 }
 
-export async function apiDelete(path: string): Promise<void> {
+export async function apiDelete(path: string, body?: unknown): Promise<void> {
   await request<null>(
-    () => fetch(`${API_URL}${path}`, {
+    () => fetch(`${API_BASE}${path}`, {
       method: "DELETE",
+      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: "include",
     }),
   );

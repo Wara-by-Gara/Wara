@@ -14,6 +14,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { UpdateUserSchema, UpdateUserDto } from './dto/update-user.dto';
+import { DeleteUserSchema, type DeleteUserDto } from './dto/delete-user.dto';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { SocialProviderSchema } from '../common/types/social-provider.type';
 import type { SocialProvider } from '../common/types/social-provider.type';
@@ -46,8 +47,11 @@ export class UsersController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteMe(@CurrentUser() user: JwtPayload) {
-    return this.usersService.deleteMe(user.id);
+  deleteMe(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(DeleteUserSchema)) dto: DeleteUserDto,
+  ) {
+    return this.usersService.deleteMe(user.id, dto);
   }
 
   @Get('me/socials')
