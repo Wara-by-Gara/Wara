@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { API_BASE } from "@/lib/env";
+import { recordLogOpen, recordLogJoined } from "@/lib/api/sendLogs";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
+import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
+import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
@@ -45,14 +48,21 @@ type Props = {
 
 export default function GuestView({ invitationId, invitation, me, participantsData }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
   const isLoggedIn = !!me;
 
-  const { data: pollData } = usePoll(invitationId);
+  useEffect(() => {
+    if (!ref) return;
+    recordLogOpen(invitationId, ref).catch(() => {});
+  }, [invitationId, ref]);
+
+  const { data: pollData } = usePoll(invitationId, { enabled: isLoggedIn });
   const hasPoll = !!pollData?.poll;
-  const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
+  const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
   const { data: weather, within3Days, isFuture } = useWeather(
     invitationId,
     invitation.eventStartAt,
@@ -74,7 +84,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
     if (myParticipant) {
       updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus });
     } else {
-      joinInvitation.mutate({ rsvpStatus });
+      joinInvitation.mutate({ rsvpStatus }, {
+        onSuccess: () => {
+          if (ref) recordLogJoined(invitationId, ref).catch(() => {});
+        },
+      });
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
@@ -95,9 +109,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
         variant="transparent"
         onBack={() => router.back()}
         rightSlot={
-          <button type="button" aria-label="공유" onClick={() => setShareSheetOpen(true)} className="inline-flex size-11 items-center justify-center text-text-secondary">
-            <Icon name="share" size="lg" color="currentColor" decorative />
-          </button>
+          isLoggedIn ? (
+            <button type="button" aria-label="공유" onClick={() => setShareSheetOpen(true)} className="inline-flex size-11 items-center justify-center text-text-secondary">
+              <Icon name="share" size="lg" color="currentColor" decorative />
+            </button>
+          ) : undefined
         }
       />
 
@@ -183,17 +199,15 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
         </div>
 
-        {isLoggedIn && (
-          <RsvpSection
-            value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
-            onValueChange={handleRsvp}
-            options={rsvpOptions}
-            closed={invitation.status === "closed"}
-            loading={updateRsvp.isPending || joinInvitation.isPending}
-          />
-        )}
+        <RsvpSection
+          value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
+          onValueChange={isLoggedIn ? handleRsvp : () => setLoginSheetOpen(true)}
+          options={rsvpOptions}
+          closed={invitation.status === "closed"}
+          loading={isLoggedIn && (updateRsvp.isPending || joinInvitation.isPending)}
+        />
 
-        {isLoggedIn ? (
+        {isLoggedIn && !!myParticipant ? (
           <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="relative overflow-hidden rounded-3xl">
@@ -220,49 +234,46 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/60 backdrop-blur-sm">
-              <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
-              <button
-                type="button"
-                onClick={() => setLoginSheetOpen(true)}
-                className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
-              >
-                로그인하기
-              </button>
+              {isLoggedIn ? (
+                <p className="text-[15px] font-semibold text-text-primary">참여하면 앨범과 댓글을 볼 수 있어요</p>
+              ) : (
+                <>
+                  <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
+                  <button
+                    type="button"
+                    onClick={() => setLoginSheetOpen(true)}
+                    className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
+                  >
+                    로그인하기
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {!isLoggedIn && (
+      {(!isLoggedIn || !myParticipant) && (
         <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
-          로그인하면 댓글·앨범 사진을 남길 수 있어요
+          {isLoggedIn ? "참여하면 댓글·앨범 사진을 남길 수 있어요" : "로그인하면 댓글·앨범 사진을 남길 수 있어요"}
         </div>
       )}
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
-          <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver"] as const).map((provider) => {
-              const config = {
-                kakao: { label: "카카오로 시작하기", cls: "bg-[#FEE500] text-[#181600]", path: "kakao" },
-                naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
-              }[provider];
-              return (
-                <button
-                  key={provider}
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem("wara_oauth_return", window.location.pathname);
-                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
-                  }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+        <BottomSheetContent title="로그인이 필요해요" description="이 기능을 쓰려면 먼저 로그인해주세요">
+          <div className="flex flex-col gap-2 pt-2">
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                onClick={() => {
+                  sessionStorage.setItem("wara_oauth_return", window.location.pathname);
+                  window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+                }}
+              />
+            ))}
           </div>
         </BottomSheetContent>
       </BottomSheet>

@@ -30,7 +30,7 @@ eventType       = opened | login_converted | joined
 | 메서드 | 경로 | 인증 | 권한 | 설명 |
 |--------|------|:----:|:----:|------|
 | GET | `/invitations/:invitationId/logs` | ✅ | HOST만 | 전송 이력 전체 조회 |
-| POST | `/invitations/:invitationId/logs` | ✅ | HOST만 | 공유 로그 기록 + 채널별 메타 응답 (프라이버시 정책) |
+| POST | `/invitations/:invitationId/logs` | ✅ | 참가자(HOST·GUEST) | 공유 로그 기록 + 채널별 메타 응답 |
 | PATCH | `/invitations/:invitationId/logs/:logId/open` | ❌ | 누구나 | 링크 방문 이벤트 기록 |
 | PATCH | `/invitations/:invitationId/logs/:logId/joined` | ✅ | 로그인 유저 | 참가 완료 이벤트 기록. join 성공 후 프론트 fire-and-forget 호출 |
 
@@ -243,7 +243,7 @@ PATCH /open
   @Public() — JwtAuthGuard 우회. userId 항상 null.
 ```
 
-신규 Guard 없음. 기존 `HostGuard` 재사용.
+신규 Guard 없음. `ParticipantGuard`는 기존 공통 Guard 재사용.
 
 ---
 
@@ -356,7 +356,7 @@ PATCH /open
 
 | 항목 | 파일 | 내용 |
 |------|------|------|
-| `ParticipantGuard` 추가 시 | `send-logs.controller.ts` | `@UseGuards(HostGuard) + @RequireMemberRole(HOST, GUEST)` → `@UseGuards(ParticipantGuard)`로 교체. `@RequireMemberRole` 제거 |
+| ~~`ParticipantGuard` 추가 시~~ | ~~`send-logs.controller.ts`~~ | ~~완료~~ |
 
 ---
 

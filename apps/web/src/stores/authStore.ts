@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { isLoggedInCookieSet } from "@/lib/auth-cookie";
 import { API_BASE } from "@/lib/env";
+import { getQueryClient } from "@/lib/query-client";
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -30,6 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     document.cookie = "accessToken=; Max-Age=0; path=/";
     document.cookie = "refreshToken=; Max-Age=0; path=/";
     document.cookie = "is_logged_in=; Max-Age=0; path=/";
+    getQueryClient().clear();
     set({ isLoggedIn: false });
   },
 }));

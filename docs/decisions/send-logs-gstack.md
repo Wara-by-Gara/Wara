@@ -174,11 +174,11 @@ Drizzle 정상 처리. 생성된 SQL 검토 후 실행.
 | 엔드포인트 | Guards | 비고 |
 |-----------|--------|------|
 | ~~`GET /invitations/:invitationId/logs`~~ | — | V1.0 제외. 팀 논의 후 추가 |
-| `POST /invitations/:invitationId/logs` | `@UseGuards(HostGuard)` + `@RequireMemberRole(MemberRole.HOST, MemberRole.GUEST)` | ZodValidationPipe(CreateSendLogSchema). 201 |
+| `POST /invitations/:invitationId/logs` | `@UseGuards(ParticipantGuard)` | ZodValidationPipe(CreateSendLogSchema). 201 |
 | `PATCH /invitations/:invitationId/logs/:logId/open` | `@Public()` | `@HttpCode(204)`. userId 항상 null |
 
-> POST /logs에 `HostGuard + @RequireMemberRole(MemberRole.HOST, MemberRole.GUEST)` 사용.
-> HostGuard의 `requiredRoles.includes(memberRole)` 로직이 HOST·GUEST 모두 처리하므로 별도 ParticipantGuard 불필요.
+> POST /logs에 `ParticipantGuard` 단독 사용. HOST·GUEST 모두 허용, 비참가자 차단.
+> participants 테이블은 hard delete 방식이므로 탈퇴 참가자도 자동 차단.
 > JwtAuthGuard는 AuthModule에서 `APP_GUARD`로 전역 등록되어 있으므로 Controller에서 `@UseGuards(JwtAuthGuard)` 명시 불필요 (locations.controller.ts 패턴 참고).
 
 ---

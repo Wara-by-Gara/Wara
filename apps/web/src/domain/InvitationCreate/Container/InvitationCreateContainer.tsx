@@ -27,10 +27,10 @@ import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSh
 import { createInvitation, getInvitationImagePresignedUrl } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
-import { ROUTES } from "@/constants/routes";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
 import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
+import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { createPoll } from "@/lib/api/dateVote";
 import ImageCropEditor from "@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor";
 import { getCroppedImageBlob } from "@/utils/cropImage";
@@ -172,7 +172,7 @@ export default function InvitationCreateContainer() {
   const [publishError, setPublishError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
-  const [shareCopied, setShareCopied] = useState(false);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
   // vote draft
   const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
@@ -496,18 +496,6 @@ export default function InvitationCreateContainer() {
 
   // publishComplete
   if (published) {
-    const shareUrl = typeof window !== "undefined"
-      ? `${window.location.origin}${ROUTES.PUBLIC.INVITATION(createdInvitationId)}`
-      : "";
-    const handleShare = async () => {
-      if (typeof navigator !== "undefined" && "share" in navigator) {
-        navigator.share({ url: shareUrl }).catch(() => {});
-        return;
-      }
-      await window.navigator.clipboard.writeText(shareUrl).catch(() => {});
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 1500);
-    };
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" title="초대장 만들기" />
@@ -516,8 +504,8 @@ export default function InvitationCreateContainer() {
           <p className="text-[20px] font-bold text-text-primary">초대장이 만들어졌어요!</p>
           <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
           <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
-            <Button size="lg" variant="primary" fullWidth onClick={handleShare}>
-              {shareCopied ? "링크 복사됨!" : "공유하기"}
+            <Button size="lg" variant="primary" fullWidth onClick={() => setShareSheetOpen(true)}>
+              공유하기
             </Button>
             <Button
               size="lg"
@@ -537,6 +525,11 @@ export default function InvitationCreateContainer() {
             </Button>
           </div>
         </main>
+        <ShareBottomSheet
+          invitationId={createdInvitationId}
+          open={shareSheetOpen}
+          onOpenChange={setShareSheetOpen}
+        />
       </div>
     );
   }
