@@ -19,6 +19,9 @@ import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/Partici
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
+import { WeatherCard } from "@/components/organisms/WeatherCard";
+import { useWeather } from "@/hooks/useWeather";
+import { toWeatherCardCondition } from "@/lib/api/weather";
 import {
   RsvpSection,
   toRsvpButtonValue,
@@ -43,11 +46,16 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
+  const isLoggedIn = !!me;
+
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
-
-  const isLoggedIn = !!me;
+  const { data: weather, within3Days, isFuture } = useWeather(
+    invitationId,
+    invitation.eventStartAt,
+    { enabled: isLoggedIn },
+  );
 
   const { data: myParticipant } = useMyParticipant(invitationId, { enabled: isLoggedIn });
   const updateRsvp = useUpdateRsvp(invitationId);
@@ -135,6 +143,19 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             invitationId={invitationId}
             voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
           />
+
+          {isLoggedIn && invitation.eventStartAt && isFuture && (
+            within3Days
+              ? weather && (
+                  <WeatherCard
+                    condition={toWeatherCardCondition(weather.condition)}
+                    temperatureCelsius={weather.temperature}
+                    rainProbability={weather.precipProbability}
+                    tip={weather.message}
+                  />
+                )
+              : <WeatherCard unavailable />
+          )}
 
           {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
             <section className="rounded-3xl border border-border bg-surface p-4">

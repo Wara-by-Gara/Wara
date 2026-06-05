@@ -1118,7 +1118,7 @@ export default function InvitationCreateContainer() {
                   color="primary"
                   decorative
                 />
-                <span className="text-[12px] text-text-secondary">
+                <span className="text-[12px] text-gray-700">
                   최대 30개 날짜·시간 후보 등록
                 </span>
               </div>
@@ -1129,7 +1129,7 @@ export default function InvitationCreateContainer() {
                   color="primary"
                   decorative
                 />
-                <span className="text-[12px] text-text-secondary">
+                <span className="text-[12px] text-gray-700">
                   👍 🤔 👎 로 간편 응답, 결과 자동 집계
                 </span>
               </div>

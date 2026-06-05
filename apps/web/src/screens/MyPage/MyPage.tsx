@@ -123,18 +123,17 @@ export const MyPage = ({
         {recentInvitations.length === 0 ? (
           <p className="px-5 py-6 text-center text-[13px] text-text-tertiary">최근 초대장이 없어요</p>
         ) : (
-          <div className="flex gap-3 overflow-x-auto px-5">
+          <div className="grid grid-cols-2 gap-3 px-5">
             {recentInvitations.map((inv) => (
-              <div key={inv.id} className="w-56 shrink-0">
-                <InvitationCard
-                  variant={inv.variant ?? "default"}
-                  title={inv.title}
-                  date={inv.date}
-                  dateClassName="text-[11px]"
-                  imageUrl={inv.imageUrl}
-                  onClick={onInvitationClick ? () => onInvitationClick(inv.id) : undefined}
-                />
-              </div>
+              <InvitationCard
+                key={inv.id}
+                variant={inv.variant ?? "default"}
+                title={inv.title}
+                date={inv.date}
+                dateClassName="text-[11px]"
+                imageUrl={inv.imageUrl}
+                onClick={onInvitationClick ? () => onInvitationClick(inv.id) : undefined}
+              />
             ))}
           </div>
         )}
