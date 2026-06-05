@@ -202,7 +202,7 @@ export class DateVoteService {
           ? undefined
           : responses.map((r) => ({
               participantId: r.participantId,
-              displayName:   r.displayName ?? r.nickname ?? null,
+              displayName:   r.nickname ?? null,
               response:      r.response,
             })),
       };

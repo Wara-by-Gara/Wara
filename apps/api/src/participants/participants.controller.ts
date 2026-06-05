@@ -17,14 +17,12 @@ import { UpdateHiddenSchema, UpdateHiddenDto } from './dto/update-hidden.dto';
 import { UpdateHostMemoSchema, UpdateHostMemoDto } from './dto/update-host-memo.dto';
 import { ParticipantGuard } from '../common/guards/participant.guard';
 import { HostGuard } from '../common/guards/host.guard';
-import { RsvpStatusGuard } from '../common/guards/rsvp-status.guard';
-import { RequireRsvpStatus } from '../common/decorators/require-rsvp-status.decorator';
+import { BlocklistGuard } from '../common/guards/blocklist.guard';
 import { RequireMemberRole } from '../common/decorators/member-role.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CurrentParticipant } from '../common/decorators/current-participant.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 import { MemberRole } from '../common/enums/member-role.enum';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 import type { Participant } from '../database/schema';
@@ -49,8 +47,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/profile')
-  @UseGuards(ParticipantGuard, RsvpStatusGuard)
-  @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
+  @UseGuards(ParticipantGuard)
   getProfile(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('participantId', ParseUlidPipe) participantId: string,
@@ -59,8 +56,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/mutual')
-  @UseGuards(ParticipantGuard, RsvpStatusGuard)
-  @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
+  @UseGuards(ParticipantGuard)
   getMutual(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('participantId', ParseUlidPipe) participantId: string,
@@ -70,8 +66,7 @@ export class ParticipantsController {
   }
 
   @Get(':participantId/shared-invitations')
-  @UseGuards(ParticipantGuard, RsvpStatusGuard)
-  @RequireRsvpStatus(RsvpStatus.ATTENDING, RsvpStatus.UNDECIDED)
+  @UseGuards(ParticipantGuard)
   getSharedInvitations(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @Param('participantId', ParseUlidPipe) participantId: string,
@@ -81,6 +76,7 @@ export class ParticipantsController {
   }
 
   @Post()
+  @UseGuards(BlocklistGuard)
   join(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,

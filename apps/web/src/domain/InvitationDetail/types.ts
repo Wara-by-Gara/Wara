@@ -45,11 +45,8 @@ export function getCommentAuthorName(
 }
 
 export function getParticipantDisplayName(
-  participant: { displayName?: string | null },
   user: UserNameFields | null | undefined,
   fallback = "이름 없음",
 ): string {
-  const displayName = participant.displayName?.trim();
-  if (displayName) return displayName;
   return getUserDisplayName(user, fallback);
 }
