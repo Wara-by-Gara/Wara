@@ -29,6 +29,13 @@
       "when": 1780547134548,
       "tag": "0004_add_user_withdrawal_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780648180952,
+      "tag": "0005_gifted_zaladane",
+      "breakpoints": true
     }
   ]
 }

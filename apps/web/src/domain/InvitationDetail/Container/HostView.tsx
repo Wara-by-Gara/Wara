@@ -9,7 +9,7 @@ import { Button } from "@/components/primitives/Button";
 import { Badge } from "@/components/primitives/Badge";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import ShareBottomSheet from "@/domain/InvitationDetail/Informations/ShareBottomSheet";
+import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummaryCard";

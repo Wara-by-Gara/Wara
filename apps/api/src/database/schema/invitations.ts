@@ -45,6 +45,7 @@ export const invitations = pgTable('invitations', {
 }, (t) => [
   check('check_cover_type_image', sql`${t.mainCoverType} <> 'image' OR (${t.mainImageKey} IS NOT NULL AND ${t.mainGifUrl} IS NULL)`),
   check('check_cover_type_gif', sql`${t.mainCoverType} <> 'gif' OR (${t.mainGifUrl} IS NOT NULL AND ${t.mainImageKey} IS NULL)`),
+  index('idx_invitations_user_id').on(t.userId),
 ]);
 
 export const participants = pgTable('participants', {
@@ -60,6 +61,9 @@ export const participants = pgTable('participants', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex('uq_participants_user_invitation').on(t.userId, t.invitationId),
+  // (user_id, invitation_id) uniqueIndex는 leftmost 규칙상 invitation_id 단독 조회에 못 씀.
+  // "초대장의 참가자 목록" 쿼리 가속용 단독 인덱스.
+  index('idx_participants_invitation_id').on(t.invitationId),
 ]);
 
 export const invitationSendLogs = pgTable('invitation_send_logs', {

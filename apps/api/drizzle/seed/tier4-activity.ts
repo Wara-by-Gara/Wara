@@ -1,10 +1,23 @@
 import { participantLocations, missions, missionAssignments, photos } from '../../src/database/schema';
 import type { DrizzleDB } from '../../src/database/database.module';
 import { SEEDS } from './fixtures';
+import { chunkedInsert } from './util';
 
 export async function seedTier4(db: DrizzleDB) {
-  await db.insert(participantLocations).values(SEEDS.participantLocations).onConflictDoNothing();
-  await db.insert(missions).values(SEEDS.missions).onConflictDoNothing();
-  await db.insert(missionAssignments).values(SEEDS.missionAssignments).onConflictDoNothing();
-  await db.insert(photos).values(SEEDS.photos).onConflictDoNothing();
+  await chunkedInsert(
+    (chunk) => db.insert(participantLocations).values(chunk).onConflictDoNothing(),
+    SEEDS.participantLocations,
+  );
+  await chunkedInsert(
+    (chunk) => db.insert(missions).values(chunk).onConflictDoNothing(),
+    SEEDS.missions,
+  );
+  await chunkedInsert(
+    (chunk) => db.insert(missionAssignments).values(chunk).onConflictDoNothing(),
+    SEEDS.missionAssignments,
+  );
+  await chunkedInsert(
+    (chunk) => db.insert(photos).values(chunk).onConflictDoNothing(),
+    SEEDS.photos,
+  );
 }
