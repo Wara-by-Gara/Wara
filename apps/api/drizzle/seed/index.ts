@@ -1,5 +1,8 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { writeFileSync } from 'fs';
+import path from 'path';
+import { sign } from 'jsonwebtoken';
 import * as schema from '../../src/database/schema';
 import { seedTier0 } from './tier0-users';
 import { seedTier1 } from './tier1-user-deps';
@@ -9,6 +12,49 @@ import { seedTier4 } from './tier4-activity';
 import { seedTier5 } from './tier5-engagement';
 import { seedTier6 } from './tier6-extras';
 import { SEEDS } from './fixtures';
+
+const TOKEN_USER_PICK = 50;
+const TOKEN_EXPIRES_DAYS = 7;
+
+function writeSeedTokens(log: (msg: string) => void): void {
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) {
+    log('⚠️  JWT_ACCESS_SECRET 없음 → seed-tokens.json 생성 건너뜀');
+    return;
+  }
+
+  const hosts = SEEDS.users.filter((u) => u.email?.startsWith('host')).slice(0, TOKEN_USER_PICK);
+  const guests = SEEDS.users.filter((u) => u.email?.startsWith('guest')).slice(0, TOKEN_USER_PICK);
+
+  // userId → invitationId[] (k6 시나리오에서 "내가 참여한 초대장" lookup용)
+  const invitationIdsByUser = new Map<string, string[]>();
+  for (const p of SEEDS.participants) {
+    const list = invitationIdsByUser.get(p.userId);
+    if (list) list.push(p.invitationId);
+    else invitationIdsByUser.set(p.userId, [p.invitationId]);
+  }
+
+  const issue = (userId: string, role: string) =>
+    sign({ id: userId, role, scope: [] }, secret, { expiresIn: `${TOKEN_EXPIRES_DAYS}d` });
+
+  const pack = (u: typeof hosts[number]) => ({
+    id: u.id,
+    email: u.email,
+    token: issue(u.id, u.role),
+    invitationIds: invitationIdsByUser.get(u.id) ?? [],
+  });
+
+  const tokens = {
+    generatedAt: new Date().toISOString(),
+    expiresInDays: TOKEN_EXPIRES_DAYS,
+    hosts: hosts.map(pack),
+    guests: guests.map(pack),
+  };
+
+  const out = path.resolve(__dirname, 'seed-tokens.json');
+  writeFileSync(out, JSON.stringify(tokens, null, 2), 'utf8');
+  log(`✓ seed-tokens.json — hosts ${hosts.length}, guests ${guests.length} (${TOKEN_EXPIRES_DAYS}일 만료)`);
+}
 
 async function main() {
   const url = process.env.DATABASE_URL;
@@ -44,6 +90,8 @@ async function main() {
   await seedTier6(db);
   log(`✓ Tier 6 — faq_items: ${SEEDS.faqItems.length}건, user_term_agreements: ${SEEDS.userTermAgreements.length}건, remind_logs: ${SEEDS.remindLogs.length}건, ai_image_jobs: ${SEEDS.aiImageJobs.length}건`);
   log(`           date_vote_polls: ${SEEDS.dateVotePolls.length}건, date_vote_slots: ${SEEDS.dateVoteSlots.length}건, date_vote_responses: ${SEEDS.dateVoteResponses.length}건`);
+
+  writeSeedTokens(log);
 
   log('시드 완료!');
   await client.end();

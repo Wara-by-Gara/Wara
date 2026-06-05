@@ -36,7 +36,12 @@ import { WeatherModule } from './weather/weather.module';
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: Number(process.env.THROTTLER_TTL_MS) || 60000,
+        limit: Number(process.env.THROTTLER_LIMIT) || 60,
+      },
+    ]),
     DatabaseModule,
     // dev 전용: AuthController의 @Post(':provider/token') 와일드카드가 /auth/dev/token을
     // 가로채지 않도록 AuthModule보다 먼저 등록 (NestJS는 import 순서대로 controller 등록).
