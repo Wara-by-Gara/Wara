@@ -1,4 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { KmaWeatherClient, KmaForecastItem } from './kma-weather.client';
 import { WeatherRepository } from './weather.repository';
 import { latLngToGrid } from './utils/grid-converter';
@@ -9,15 +11,24 @@ import { ErrorCode } from '../common/constants/error-codes';
 
 const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3시간 (base_time 발표 주기)
 const FORECAST_WINDOW_MS = 72 * 60 * 60 * 1000; // 단기예보 최대 제공 범위 3일
+const CACHE_OP_TIMEOUT_MS = 500; // Redis 다운 시 빠르게 KMA fallback으로 전환하기 위한 타임아웃
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 @Injectable()
 export class WeatherService {
   private readonly logger = new Logger(WeatherService.name);
-  private readonly cache = new Map<string, { data: KmaForecastItem[]; expiresAt: number }>();
 
   constructor(
     private readonly weatherRepository: WeatherRepository,
     private readonly kmaClient: KmaWeatherClient,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
 
   async getWeather(invitationId: string): Promise<WeatherResponseDto | null> {
@@ -40,16 +51,15 @@ export class WeatherService {
     const fcstDate = getForecastDate(eventStartAt);
 
     const cacheKey = `weather:${nx}:${ny}:${baseDate}:${baseTime}`;
-    let cacheHit = false;
+    const cached = await this.tryGetCache(cacheKey);
+    const cacheHit = cached !== null;
     let items: KmaForecastItem[];
 
-    const cached = this.cache.get(cacheKey);
-    if (cached && cached.expiresAt > now) {
-      items = cached.data;
-      cacheHit = true;
+    if (cached) {
+      items = cached;
     } else {
       items = await this.kmaClient.getForecast({ nx, ny, base_date: baseDate, base_time: baseTime });
-      this.cache.set(cacheKey, { data: items, expiresAt: now + CACHE_TTL_MS });
+      await this.trySetCache(cacheKey, items);
     }
 
     this.logger.debug(
@@ -73,5 +83,25 @@ export class WeatherService {
       precipProbability: Number(pop),
       message: toMessage(condition),
     };
+  }
+
+  // Redis 장애 시 KMA 직접 호출로 degrade — 캐시 자체는 옵셔널 레이어.
+  // @keyv/redis는 연결 실패 시 hang 가능성 있어 timeout으로 강제 fallback.
+  private async tryGetCache(key: string): Promise<KmaForecastItem[] | null> {
+    try {
+      const cached = await withTimeout(this.cache.get<KmaForecastItem[]>(key), CACHE_OP_TIMEOUT_MS);
+      return cached ?? null;
+    } catch (err) {
+      this.logger.warn(`cache get 실패 (fallback): ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  private async trySetCache(key: string, value: KmaForecastItem[]): Promise<void> {
+    try {
+      await withTimeout(this.cache.set(key, value, CACHE_TTL_MS), CACHE_OP_TIMEOUT_MS);
+    } catch (err) {
+      this.logger.warn(`cache set 실패 (무시): ${(err as Error).message}`);
+    }
   }
 }
