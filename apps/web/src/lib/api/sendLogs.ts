@@ -1,4 +1,4 @@
-import { apiPost } from "./client";
+import { apiPatch, apiPost } from "./client";
 
 type CreateSendLogPayload = {
   channel: "kakao" | "link" | "sms" | "email" | "dm" | "instagram";
@@ -17,4 +17,12 @@ export function createSendLog(
     `/invitations/${invitationId}/logs`,
     payload,
   );
+}
+
+export function recordLogOpen(invitationId: string, logId: string): Promise<void> {
+  return apiPatch<void>(`/invitations/${invitationId}/logs/${logId}/open`, {});
+}
+
+export function recordLogJoined(invitationId: string, logId: string): Promise<void> {
+  return apiPatch<void>(`/invitations/${invitationId}/logs/${logId}/joined`, {});
 }

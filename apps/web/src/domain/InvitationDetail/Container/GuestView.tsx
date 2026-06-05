@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { API_BASE } from "@/lib/env";
+import { recordLogOpen, recordLogJoined } from "@/lib/api/sendLogs";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
@@ -46,10 +48,17 @@ type Props = {
 
 export default function GuestView({ invitationId, invitation, me, participantsData }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
   const isLoggedIn = !!me;
+
+  useEffect(() => {
+    if (!ref) return;
+    recordLogOpen(invitationId, ref).catch(() => {});
+  }, [invitationId, ref]);
 
   const { data: pollData } = usePoll(invitationId, { enabled: isLoggedIn });
   const hasPoll = !!pollData?.poll;
@@ -75,7 +84,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
     if (myParticipant) {
       updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus });
     } else {
-      joinInvitation.mutate({ rsvpStatus });
+      joinInvitation.mutate({ rsvpStatus }, {
+        onSuccess: () => {
+          if (ref) recordLogJoined(invitationId, ref).catch(() => {});
+        },
+      });
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
@@ -194,7 +207,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           loading={isLoggedIn && (updateRsvp.isPending || joinInvitation.isPending)}
         />
 
-        {isLoggedIn ? (
+        {isLoggedIn && !!myParticipant ? (
           <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="relative overflow-hidden rounded-3xl">
@@ -221,22 +234,28 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/60 backdrop-blur-sm">
-              <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
-              <button
-                type="button"
-                onClick={() => setLoginSheetOpen(true)}
-                className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
-              >
-                로그인하기
-              </button>
+              {isLoggedIn ? (
+                <p className="text-[15px] font-semibold text-text-primary">참여하면 앨범과 댓글을 볼 수 있어요</p>
+              ) : (
+                <>
+                  <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
+                  <button
+                    type="button"
+                    onClick={() => setLoginSheetOpen(true)}
+                    className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-bold text-text-inverse"
+                  >
+                    로그인하기
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {!isLoggedIn && (
+      {(!isLoggedIn || !myParticipant) && (
         <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
-          로그인하면 댓글·앨범 사진을 남길 수 있어요
+          {isLoggedIn ? "참여하면 댓글·앨범 사진을 남길 수 있어요" : "로그인하면 댓글·앨범 사진을 남길 수 있어요"}
         </div>
       )}
 
