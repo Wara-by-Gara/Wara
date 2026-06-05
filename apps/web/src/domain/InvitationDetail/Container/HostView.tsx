@@ -42,7 +42,7 @@ export default function HostView({ invitationId, invitation, participantsData }:
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
-  const { data: weather } = useWeather(invitationId, invitation.eventStartAt);
+  const { data: weather, within3Days, isFuture } = useWeather(invitationId, invitation.eventStartAt);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -146,13 +146,17 @@ export default function HostView({ invitationId, invitation, participantsData }:
           voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
         />
 
-        {weather && (
-          <WeatherCard
-            condition={toWeatherCardCondition(weather.condition)}
-            temperatureCelsius={weather.temperature}
-            rainProbability={weather.precipProbability}
-            tip={weather.message}
-          />
+        {invitation.eventStartAt && isFuture && (
+          within3Days
+            ? weather && (
+                <WeatherCard
+                  condition={toWeatherCardCondition(weather.condition)}
+                  temperatureCelsius={weather.temperature}
+                  rainProbability={weather.precipProbability}
+                  tip={weather.message}
+                />
+              )
+            : <WeatherCard unavailable />
         )}
 
         {recentParticipants.length > 0 ? (
