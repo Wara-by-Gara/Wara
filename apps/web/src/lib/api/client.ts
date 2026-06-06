@@ -12,9 +12,9 @@ interface ApiErrorBody {
 }
 
 // 동시에 여러 요청이 401을 받아도 refresh는 한 번만 실행
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<boolean | 'suspicious'> | null = null;
 
-async function tryRefresh(): Promise<boolean> {
+async function tryRefresh(): Promise<boolean | 'suspicious'> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
@@ -23,7 +23,10 @@ async function tryRefresh(): Promise<boolean> {
         method: "POST",
         credentials: "include",
       });
-      return res.ok;
+      if (res.ok) return true;
+      const body: ApiErrorBody = await res.clone().json().catch(() => ({ success: false } as ApiErrorBody));
+      if (body.error?.code === 'SUSPICIOUS_REFRESH') return 'suspicious';
+      return false;
     } catch {
       return false;
     } finally {
@@ -43,14 +46,18 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
     // TOKEN_EXPIRED: 토큰 만료 / TOKEN_INVALID: 쿠키 소멸 — 둘 다 refresh 시도
     if (code === "TOKEN_EXPIRED" || code === "TOKEN_INVALID") {
       const refreshed = await tryRefresh();
-      if (refreshed) {
+      if (refreshed === true) {
         res = await fetchFn();
       } else {
-        // refresh 실패 = 세션 종료. zustand 상태까지 동기화 후 로그인으로
+        // refresh 실패 = 세션 종료. zustand 상태까지 동기화 후 로그인으로.
+        // 도난 의심 시에는 사유를 query로 전달해 LoginContainer가 안내 toast를 띄움.
         await useAuthStore.getState().logout();
-        window.location.href = '/login';
+        window.location.href = refreshed === 'suspicious' ? '/login?reason=suspicious' : '/login';
         throw new Error(code);
       }
+    } else if (code === 'SUSPICIOUS_REFRESH') {
+      window.location.href = '/login?reason=suspicious';
+      throw new Error(code);
     }
   }
 

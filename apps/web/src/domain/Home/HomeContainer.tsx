@@ -76,12 +76,19 @@ export default function HomeContainer() {
         rightSlot={
           <>
             <NotificationBellContainer />
-            <Avatar
-              size="sm"
-              src={me?.profileImageUrl ?? undefined}
-              alt={me?.name ?? me?.nickname ?? ""}
-              name={me?.name ?? me?.nickname ?? undefined}
-            />
+            <button
+              type="button"
+              onClick={() => router.push(ROUTES.PROFILE.ME)}
+              aria-label="마이페이지로 이동"
+              className="rounded-full"
+            >
+              <Avatar
+                size="sm"
+                src={me?.profileImageUrl ?? undefined}
+                alt={me?.name ?? me?.nickname ?? ""}
+                name={me?.name ?? me?.nickname ?? undefined}
+              />
+            </button>
           </>
         }
       />

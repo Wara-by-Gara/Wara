@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Login, type LoginState } from '@/screens/Login';
+import { toast } from '@/components/molecules/Toast';
 import { API_BASE } from '@/lib/env';
 
 const AUTH_ERROR_STATE: Record<string, LoginState> = {
@@ -15,8 +16,12 @@ export default function LoginContainer() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const authError = params.get('auth_error');
+    const reason = params.get('reason');
     if (authError) {
       setState(AUTH_ERROR_STATE[authError] ?? 'socialFailed');
+      window.history.replaceState({}, '', '/login');
+    } else if (reason === 'suspicious') {
+      toast.error('의심스러운 활동이 감지돼 자동 로그아웃됐어요. 다시 로그인해주세요.');
       window.history.replaceState({}, '', '/login');
     }
   }, []);

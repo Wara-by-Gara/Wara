@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { users, socialAccounts } from '../database/schema';
+import { users, socialAccounts, refreshTokens, invitations } from '../database/schema';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 
@@ -51,6 +51,58 @@ export class UsersRepository {
         withdrawalDetail: options.detail ?? null,
       })
       .where(and(eq(users.id, id), isNull(users.deletedAt)));
+  }
+
+  // 회원 탈퇴 시 user soft delete + social 삭제 + refresh token 전부 revoke를 하나의 트랜잭션으로.
+  // 일관성 보장 + 다른 디바이스 잔존 세션 즉시 무효화.
+  async softDeleteUserWithCleanup(
+    id: string,
+    options: { reason?: string; detail?: string } = {},
+  ) {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(users)
+        .set({
+          deletedAt: new Date(),
+          withdrawalReason: options.reason ?? null,
+          withdrawalDetail: options.detail ?? null,
+        })
+        .where(and(eq(users.id, id), isNull(users.deletedAt)));
+      await tx.delete(socialAccounts).where(eq(socialAccounts.userId, id));
+      await tx
+        .update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(
+          and(
+            eq(refreshTokens.userId, id),
+            isNull(refreshTokens.revokedAt),
+          ),
+        );
+    });
+  }
+
+  async countSocialsByUserId(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(socialAccounts)
+      .where(eq(socialAccounts.userId, userId));
+    return row?.count ?? 0;
+  }
+
+  // 탈퇴 차단용 — active 상태이면서 deletedAt 없는 초대장의 호스트인지 확인.
+  // closed/soft-deleted 초대장은 사용자 정리 책임이 없으므로 카운트 제외.
+  async countActiveHostedInvitationsByUserId(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.userId, userId),
+          eq(invitations.status, 'active'),
+          isNull(invitations.deletedAt),
+        ),
+      );
+    return row?.count ?? 0;
   }
 
   async findSocialsByUserId(userId: string) {

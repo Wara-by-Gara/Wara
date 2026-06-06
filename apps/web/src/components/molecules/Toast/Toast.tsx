@@ -12,7 +12,7 @@ export type ToasterProps = React.ComponentPropsWithoutRef<typeof SonnerToaster>;
 export const Toaster = ({ className, ...props }: ToasterProps) => (
   <SonnerToaster
     position="top-center"
-    duration={2500}
+    duration={5000}
     expand={false}
     visibleToasts={1}
     toastOptions={{

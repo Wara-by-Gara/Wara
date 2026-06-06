@@ -10,6 +10,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AuthService } from '../auth/auth.service';
+import { Provider } from '../auth/enums/provider.enum';
+import { MobileTokenDto, MobileTokenSchema } from '../auth/dto/mobile-token.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -22,7 +25,10 @@ import { ProfileImagePresignedUrlSchema, type ProfileImagePresignedUrlDto } from
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Post('me/presigned-url')
   generatePresignedUrl(
@@ -66,6 +72,38 @@ export class UsersController {
     @Param('provider', new ZodValidationPipe(SocialProviderSchema)) provider: SocialProvider,
   ) {
     return this.usersService.deleteMySocial(user.id, provider);
+  }
+
+  @Post('me/socials/:provider/link/url')
+  @HttpCode(HttpStatus.OK)
+  linkSocialUrl(
+    @CurrentUser() user: JwtPayload,
+    @Param('provider', new ZodValidationPipe(SocialProviderSchema)) provider: SocialProvider,
+  ) {
+    return this.authService.getLinkAuthorizationUrl(provider as Provider, user.id);
+  }
+
+  @Post('me/socials/:provider/link/token')
+  @HttpCode(HttpStatus.OK)
+  linkSocialWithToken(
+    @CurrentUser() user: JwtPayload,
+    @Param('provider', new ZodValidationPipe(SocialProviderSchema)) provider: SocialProvider,
+    @Body(new ZodValidationPipe(MobileTokenSchema)) body: MobileTokenDto,
+  ) {
+    return this.authService.linkSocialAccountWithProviderToken({
+      userId: user.id,
+      provider: provider as Provider,
+      providerToken: body.providerToken,
+    });
+  }
+
+  @Post('me/merge')
+  @HttpCode(HttpStatus.OK)
+  mergeAccounts(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { mergeToken: string },
+  ) {
+    return this.authService.mergeAccounts(user.id, body.mergeToken);
   }
 
   @Get(':id')

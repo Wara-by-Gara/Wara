@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ErrorCode } from './common/constants/error-codes';
 
 async function bootstrap() {
   // JWT_SECRET 없으면 서버 시작 즉시 종료
@@ -13,8 +15,17 @@ async function bootstrap() {
   if (!process.env.JWT_ACCESS_SECRET) {
     throw new Error('[보안] JWT_ACCESS_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
+  // HS256 권장 최소 길이 32바이트(256bit). 짧으면 brute force 위험 — prod 진입 차단.
+  if (process.env.JWT_ACCESS_SECRET.length < 32) {
+    throw new Error(
+      `[보안] JWT_ACCESS_SECRET 길이가 ${process.env.JWT_ACCESS_SECRET.length}자입니다. 최소 32자(256bit) 이상이어야 합니다.`,
+    );
+  }
   if (!process.env.FRONTEND_URL) {
     throw new Error('[보안] FRONTEND_URL 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
+  }
+  if (!process.env.COOKIE_SECRET) {
+    throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
 
   const app = await NestFactory.create(AppModule);
@@ -54,6 +65,35 @@ async function bootstrap() {
     throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
   app.use(cookieParser(cookieSecret));
+
+  // CSRF 방어 — 쿠키 인증 요청에만 적용. 모바일(Bearer 헤더 인증)은 면제.
+  // 변경 작업(POST/PUT/PATCH/DELETE)에서 Origin/Referer가 FRONTEND_URL과 일치해야 함.
+  // GET은 OAuth callback 등 외부 redirect 호환을 위해 검증하지 않음.
+  const allowedOrigin = process.env.FRONTEND_URL!.replace(/\/$/, '');
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const method = req.method.toUpperCase();
+    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      return next();
+    }
+    const cookies = req.cookies as Record<string, string> | undefined;
+    const hasCookieAuth = !!cookies?.accessToken || !!cookies?.refreshToken;
+    if (!hasCookieAuth) {
+      return next();
+    }
+    const origin = req.headers.origin;
+    const referer = req.headers.referer;
+    const isAllowed =
+      origin === allowedOrigin || referer?.startsWith(allowedOrigin) === true;
+    if (!isAllowed) {
+      return next(
+        new ForbiddenException({
+          code: ErrorCode.CSRF_INVALID_ORIGIN,
+          message: '요청 출처가 유효하지 않습니다.',
+        }),
+      );
+    }
+    next();
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()

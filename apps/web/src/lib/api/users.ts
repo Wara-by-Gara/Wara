@@ -76,3 +76,11 @@ export function getMySocials(): Promise<MySocial[]> {
 export function deleteMySocial(provider: string): Promise<void> {
   return apiDelete(`/users/me/socials/${provider}`);
 }
+
+export function linkSocialUrl(provider: string): Promise<{ url: string; state: string }> {
+  return apiPost<{ url: string; state: string }>(`/users/me/socials/${provider}/link/url`);
+}
+
+export function mergeAccounts(mergeToken: string): Promise<{ mergedUserId: string }> {
+  return apiPost<{ mergedUserId: string }>('/users/me/merge', { mergeToken });
+}
