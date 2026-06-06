@@ -51,6 +51,8 @@
 | `MERGE_TOKEN_INVALID` | 401 | merge token 위조/만료 또는 현재 로그인 user와 mergeToken의 targetUserId 불일치 |
 | `USER_SOCIAL_LAST_LINKED` | 400 | 마지막 소셜 계정 해제 시도 (계정 lockout 방지) |
 | `SUSPICIOUS_REFRESH` | 401 | 이미 revoke된 refresh token 재사용 감지. 해당 user의 모든 활성 토큰 무효화 후 응답 |
+| `CSRF_INVALID_ORIGIN` | 403 | 쿠키 인증 요청의 Origin/Referer가 FRONTEND_URL과 불일치 (CSRF 방어) |
+| `USER_HAS_HOSTED_INVITATIONS` | 400 | 호스트로 진행 중인(active) 초대장이 있어 탈퇴 불가. 호스트 권한 이전 후 재시도 |
 
 ## Participants
 

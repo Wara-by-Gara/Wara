@@ -102,6 +102,8 @@ export function describeLoginError(err: unknown): string {
         return '계정 합치기 요청이 만료됐어요. 다시 시도해 주세요.';
       case 'SUSPICIOUS_REFRESH':
         return '의심스러운 활동이 감지돼 자동 로그아웃됐어요. 다시 로그인해 주세요.';
+      case 'USER_HAS_HOSTED_INVITATIONS':
+        return '호스트로 진행 중인 초대장이 있어요. 다른 멤버에게 호스트 권한을 넘긴 뒤 탈퇴해 주세요.';
     }
   }
   return '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.';

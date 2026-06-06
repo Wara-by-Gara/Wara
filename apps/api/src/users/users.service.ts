@@ -49,6 +49,16 @@ export class UsersService {
   async deleteMe(userId: string, dto: DeleteUserDto = {}) {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    // 호스트로 진행 중인 초대장이 있으면 탈퇴 거부. 강제 탈퇴는 추후 호스트 이전 기능 구현 후.
+    const hostedCount =
+      await this.repository.countActiveHostedInvitationsByUserId(userId);
+    if (hostedCount > 0) {
+      throw new BadRequestException({
+        code: ErrorCode.USER_HAS_HOSTED_INVITATIONS,
+        message:
+          '호스트로 진행 중인 초대장이 있어요. 다른 멤버에게 호스트 권한을 넘긴 뒤 탈퇴해주세요.',
+      });
+    }
     await this.repository.softDeleteUserWithCleanup(userId, {
       reason: dto.reason,
       detail: dto.detail,

@@ -15,7 +15,6 @@ export type AccountScreen =
   | "connectedSocial"
   | "connectAdditional"
   | "disconnectModal"
-  | "logoutModal"
   | "logoutComplete"
   | "withdrawGuide"
   | "withdrawReason"
@@ -119,22 +118,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           confirmVariant="danger"
           onConfirm={screen === "disconnectModal" ? onDisconnectConfirm : onLogout}
           loading={screen === "disconnectModal" ? isDisconnecting : undefined}
-        />
-      </div>
-    );
-  }
-
-  if (screen === "logoutModal") {
-    return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-        <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
-        <ConfirmModal contained
-          open
-          onOpenChange={() => {}}
-          title="로그아웃 할까요?"
-          description="다시 들어오려면 다시 로그인해야 해요"
-          confirmLabel="로그아웃"
-          confirmVariant="danger"
         />
       </div>
     );

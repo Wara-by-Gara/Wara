@@ -111,6 +111,15 @@ export default function AccountSettingsContainer() {
           queryClient.clear();
           setScreen('withdrawComplete');
         },
+        onError: (err) => {
+          const code = err instanceof Error ? err.message : '';
+          if (code === 'USER_HAS_HOSTED_INVITATIONS') {
+            toast.error('호스트로 진행 중인 초대장이 있어요. 다른 멤버에게 호스트 권한을 넘긴 뒤 탈퇴해주세요.');
+            setScreen('connectedSocial');
+          } else {
+            toast.error('탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.');
+          }
+        },
       },
     );
   };

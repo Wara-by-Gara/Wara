@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { users, socialAccounts, refreshTokens } from '../database/schema';
+import { users, socialAccounts, refreshTokens, invitations } from '../database/schema';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 
@@ -86,6 +86,22 @@ export class UsersRepository {
       .select({ count: count() })
       .from(socialAccounts)
       .where(eq(socialAccounts.userId, userId));
+    return row?.count ?? 0;
+  }
+
+  // 탈퇴 차단용 — active 상태이면서 deletedAt 없는 초대장의 호스트인지 확인.
+  // closed/soft-deleted 초대장은 사용자 정리 책임이 없으므로 카운트 제외.
+  async countActiveHostedInvitationsByUserId(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.userId, userId),
+          eq(invitations.status, 'active'),
+          isNull(invitations.deletedAt),
+        ),
+      );
     return row?.count ?? 0;
   }
 
