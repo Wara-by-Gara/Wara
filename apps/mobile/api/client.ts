@@ -32,12 +32,18 @@ async function doRefreshAccessToken(): Promise<boolean> {
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({ refreshToken }),
     });
-    if (!res.ok) return false;
-    const raw = (await res.json()) as {
+    const raw = (await res.json().catch(() => null)) as {
       success?: boolean;
       data?: { accessToken?: string; refreshToken?: string };
-    };
-    if (!raw.success || !raw.data?.accessToken) return false;
+      error?: { code?: string };
+    } | null;
+    // SUSPICIOUS_REFRESH는 호출 측에서 분기할 수 있도록 false 반환 외에 토큰 제거까지 수행
+    if (raw?.error?.code === 'SUSPICIOUS_REFRESH') {
+      await clearTokens();
+      return false;
+    }
+    if (!res.ok) return false;
+    if (!raw?.success || !raw.data?.accessToken) return false;
     await setTokens({ accessToken: raw.data.accessToken, refreshToken: raw.data.refreshToken });
     return true;
   } catch {
@@ -176,13 +182,22 @@ export async function apiFetch<T>(
     return json.data;
   }
 
-  // access token 만료 → refresh 시도 후 원 요청 1회 재시도
-  if (json.error.code === 'TOKEN_EXPIRED' && res.status === 401 && authenticated) {
+  // access token 만료/소실 → refresh 시도 후 원 요청 1회 재시도 (웹과 일관성)
+  if (
+    (json.error.code === 'TOKEN_EXPIRED' || json.error.code === 'TOKEN_INVALID') &&
+    res.status === 401 &&
+    authenticated
+  ) {
     const refreshed = await tryRefreshAccessToken();
     if (refreshed) {
       return apiFetch<T>(path, options);
     }
     // refresh도 실패하면 저장된 토큰 제거 (로그인 화면으로 자연스럽게 떨어지도록)
+    await clearTokens();
+  }
+
+  // 도난 의심 토큰 재사용 감지 → 즉시 모든 토큰 제거. UI 라우팅/Alert은 호출 측에서 error.code로 분기.
+  if (json.error.code === 'SUSPICIOUS_REFRESH') {
     await clearTokens();
   }
 
