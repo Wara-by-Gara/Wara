@@ -91,7 +91,11 @@ export class FriendsRepository {
         id: invitations.id,
         title: invitations.title,
         eventStartAt: invitations.eventStartAt,
+        status: invitations.status,
+        hostUserId: invitations.userId,
+        mainCoverType: invitations.mainCoverType,
         mainImageKey: invitations.mainImageKey,
+        mainGifUrl: invitations.mainGifUrl,
       })
       .from(invitations)
       .innerJoin(

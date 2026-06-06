@@ -17,6 +17,7 @@ import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { InvitationPresignedUrlDto } from './dto/invitation-presigned-url.dto';
+import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
 import { ulid } from 'ulid';
 import { S3Service } from '../s3/s3.service';
 import { S3_CLIENT } from '../s3/s3.constants';
@@ -73,9 +74,67 @@ export class InvitationsService {
     };
   }
 
+  private async resolveProfileImageUrl(
+    key: string | null,
+  ): Promise<string | null> {
+    if (!key) return null;
+    return this.s3Service.getViewPresignedUrl(key);
+  }
+
   async findAll(userId: string) {
     const invitations = await this.repository.findAllByUserId(userId);
-    return invitations.map((invitation) => this.toResponse(invitation));
+    const invitationIds = invitations.map((inv) => inv.id);
+    const previewMap =
+      await this.repository.findParticipantPreviewsByInvitationIds(invitationIds);
+
+    return Promise.all(
+      invitations.map(async (invitation) => {
+        const bundle = previewMap.get(invitation.id);
+        const participantAvatars = bundle
+          ? await Promise.all(
+              bundle.previews.map(async (p) => ({
+                id: p.userId,
+                name: p.name,
+                avatarUrl: await this.resolveProfileImageUrl(p.profileImageUrl),
+                isHost: p.memberRole === 'HOST',
+              })),
+            )
+          : [];
+
+        return {
+          ...this.toResponse(invitation),
+          participantAvatars,
+          participantTotal: bundle?.total ?? 0,
+        };
+      }),
+    );
+  }
+
+  async findPublicExplore(dto: ListPublicInvitationsDto) {
+    const { rows, nextCursor } = await this.repository.findPublicExplore(dto);
+    const items = await Promise.all(
+      rows.map(async (inv) => {
+        const participantCount = await this.repository.countPublicParticipants(inv.id);
+        return {
+          id: inv.id,
+          title: inv.title,
+          description: inv.description,
+          category: inv.category,
+          eventStartAt: inv.eventStartAt,
+          mainImageUrl: inv.mainImageKey
+            ? this.s3Service.getPublicUrl(inv.mainImageKey)
+            : null,
+          location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? null,
+          participantCount,
+          host: inv.host,
+        };
+      }),
+    );
+    return {
+      items,
+      nextCursor,
+      hasNext: nextCursor !== null,
+    };
   }
 
   async findOne(id: string) {

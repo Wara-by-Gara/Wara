@@ -19,9 +19,11 @@ export const CreateFeedbackSchema = z
     attachedPhotoId: z.string().optional(),
     mentionedUserIds: z.array(z.string()).optional(),
   })
-  .refine((d) => (d.content && d.content.length > 0) || !!d.gifUrl, {
-    message: 'content or gifUrl is required',
-  })
+  .refine(
+    (d) =>
+      (d.content && d.content.length > 0) || !!d.gifUrl || !!d.attachedPhotoId,
+    { message: 'content, gifUrl, or attachedPhotoId is required' },
+  )
   .refine((d) => !d.gifUrl || !d.attachedPhotoId, {
     message: 'gifUrl and attachedPhotoId are mutually exclusive',
   });
