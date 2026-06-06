@@ -1,26 +1,11 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { Be_Vietnam_Pro, Noto_Serif } from 'next/font/google';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Toaster } from '@/components/molecules/Toast';
-// sonner의 기본 스타일(--width, position, z-index 등). 미import 시 토스트 너비가 0으로 잡혀 화면에 안 보임.
-import 'sonner/dist/styles.css';
 import './globals.css';
-
-const beVietnamPro = Be_Vietnam_Pro({
-  variable: '--font-be-vietnam-pro',
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-});
-
-const notoSerif = Noto_Serif({
-  variable: '--font-noto-serif',
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-});
 
 export const metadata: Metadata = {
   title: 'WARA',
@@ -35,7 +20,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${beVietnamPro.variable} ${notoSerif.variable} h-full antialiased`}
+      className="h-full antialiased"
       // Trancy/Grammarly 등 번역·문법 확장이 hydration 전에 <html>에
       // attribute를 주입해 mismatch가 발생. <html>에만 한정하면 자식
       // 트리의 실제 hydration 버그는 그대로 노출된다.
