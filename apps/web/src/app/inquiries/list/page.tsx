@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { usePublicInquiries } from '@/hooks/useInquiries';
+import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { InquiryType, InquiryStatus, PublicInquiry } from '@/lib/api/inquiries';
 
@@ -46,7 +47,7 @@ export default function InquiryListPage() {
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         <Section title={`전체 문의 ${data ? `(${data.total}건)` : ''}`}>
           {isLoading ? (
-            <p className="py-6 text-center text-[13px] text-text-tertiary">불러오는 중...</p>
+            <InquiryListSkeleton count={5} />
           ) : !data?.items.length ? (
             <p className="py-6 text-center text-[13px] text-text-tertiary">
               접수된 문의가 없습니다
@@ -59,7 +60,7 @@ export default function InquiryListPage() {
                   key={inquiry.id}
                   type="button"
                   onClick={() => router.push(ROUTES.INQUIRIES.DETAIL(inquiry.id))}
-                  className="flex w-full flex-col gap-1 px-4 py-4 text-left hover-emphasis-sm"
+                  className="flex w-full flex-col gap-1 px-4 py-4 text-left hover:bg-gray-50 transition-colors duration-150"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[12px] text-text-tertiary">

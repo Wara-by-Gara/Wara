@@ -1,6 +1,9 @@
 export const ROUTES = {
   HOME: "/",
-  CALENDAR: "/calendar",
+  MEETINGS: "/meetings",
+  EXPLORE: "/explore",
+  /** @deprecated MEETINGS 사용 */
+  CALENDAR: "/meetings",
   FRIENDS: {
     LIST: "/friends",
     DETAIL: (id: string) => `/friends/${id}`,
@@ -45,5 +48,7 @@ export const ROUTES = {
   },
   TERMS: {
     AGREE: "/terms/agree",
+    SERVICE: "/terms/service",
+    PRIVACY: "/terms/privacy",
   },
 } as const;

@@ -5,6 +5,7 @@ import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { MenuItem } from '@/components/molecules/MenuItem';
 import { Icon } from '@/components/icons';
 import { useAdminInquiries } from '@/hooks/useInquiries';
+import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 
@@ -47,9 +48,7 @@ export default function AdminInquiriesPage() {
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         <Section title={`전체 문의${data ? ` (${data.total})` : ''}`}>
-          {isLoading && (
-            <p className="px-4 py-3 text-[14px] text-text-tertiary">불러오는 중...</p>
-          )}
+          {isLoading && <InquiryListSkeleton count={5} />}
           {!isLoading && !data?.items.length && (
             <p className="px-4 py-3 text-[14px] text-text-tertiary">문의 내역이 없습니다</p>
           )}

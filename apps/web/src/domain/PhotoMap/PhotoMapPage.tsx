@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Script from "next/script";
 import { useQuery } from "@tanstack/react-query";
+import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
+import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
 import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
 import { getMyPhotoLocations, type PhotoLocation } from "@/lib/api/photos";
 import dynamic from "next/dynamic";
@@ -86,7 +87,7 @@ function clusterPhotos(photos: PhotoLocation[]): Cluster[] {
 
 // ── 컴포넌트 ──────────────────────────────────────────────────────────────────
 export function PhotoMapPage() {
-  const [mapSdkReady, setMapSdkReady] = useState(false);
+  const mapSdkReady = useKakaoMapsSdk();
 
   // 선택된 클러스터 (핀 클릭 시 설정)
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
@@ -141,14 +142,6 @@ export function PhotoMapPage() {
 
   return (
     <>
-      <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY}&autoload=false`}
-        strategy="afterInteractive"
-        onLoad={() => {
-          window.kakao.maps.load(() => setMapSdkReady(true));
-        }}
-      />
-
       <div className="relative h-full w-full">
         {/* 지도 */}
         <KakaoMap
@@ -159,19 +152,12 @@ export function PhotoMapPage() {
         />
 
         {/* 로딩 오버레이 */}
-        {(isLoading || !mapSdkReady) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary" />
-              <p className="text-[14px] text-text-secondary">지도 불러오는 중...</p>
-            </div>
-          </div>
-        )}
+        {(isLoading || !mapSdkReady) && <MapLoadingSkeleton />}
 
         {/* 사진 없음 */}
         {!isLoading && mapSdkReady && photoLocations.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-2xl bg-white/90 px-8 py-6 text-center shadow-md">
+            <div className="rounded-xs bg-white/90 px-8 py-6 text-center shadow-md">
               <p className="text-[16px] font-bold text-text-primary">위치 정보가 있는 사진이 없어요</p>
               <p className="mt-1 text-[13px] text-text-secondary">
                 GPS 정보가 담긴 사진을 업로드하면<br />여기서 확인할 수 있어요
@@ -188,8 +174,8 @@ export function PhotoMapPage() {
             className="absolute inset-0 bg-black/40"
             onClick={closeAll}
           />
-          <div className="relative w-full rounded-t-3xl bg-surface pb-safe pt-4">
-            <div className="flex items-center justify-between px-5 pb-3">
+          <div className="relative w-full rounded-t-xs bg-surface pb-safe pt-4">
+            <div className="flex items-center justify-between px-page pb-3">
               <span className="text-[16px] font-bold text-text-primary">
                 이 장소의 사진 {selectedCluster.count}장
               </span>

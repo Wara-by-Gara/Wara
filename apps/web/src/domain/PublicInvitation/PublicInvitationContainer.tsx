@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/organisms/EmptyState";
 import { Button } from "@/components/primitives/Button";
 import type { Invitation } from "@/lib/api/invitations";
 import type { RsvpStatus } from "@/lib/api/participants";
+import { RsvpPageSkeleton } from "@/components/organisms/Skeleton";
 
 const RSVP_MAP: Record<RSVPValue, RsvpStatus> = {
   attending: "attending",
@@ -60,9 +61,7 @@ export default function PublicInvitationContainer({ invitationId }: { invitation
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <TopAppBar title="응답하기" />
-        <p className="flex flex-1 items-center justify-center text-text-tertiary">
-          불러오는 중...
-        </p>
+        <RsvpPageSkeleton />
       </div>
     );
   }
@@ -71,7 +70,7 @@ export default function PublicInvitationContainer({ invitationId }: { invitation
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <TopAppBar title="응답하기" />
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">초대장을 찾을 수 없어요</p>
           <p className="text-[14px] text-text-tertiary">링크가 올바른지 확인해주세요</p>
@@ -223,7 +222,7 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
     <div className="flex flex-col min-h-screen bg-background">
       <TopAppBar title="응답하기" />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 px-5 pt-5 pb-32">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 px-page pt-5 pb-32">
         {invitation.eventStartAt && (
           <InvitationInfoCard
             variant="datetime"

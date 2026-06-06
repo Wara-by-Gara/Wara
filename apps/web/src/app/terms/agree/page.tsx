@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAgreeTerms, useMyAgreements, useTerms } from '@/hooks/useTerms';
 import { useAuthStore } from '@/stores/authStore';
+import { TermsAgreeSkeleton } from '@/components/organisms/Skeleton';
 import type { ServiceTerm } from '@/lib/api/terms';
 
 function TermItem({
@@ -18,7 +19,7 @@ function TermItem({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
+    <div className="border border-border rounded-xs overflow-hidden">
       <label className="flex items-center gap-3 px-4 py-3 cursor-pointer">
         <input
           type="checkbox"
@@ -137,7 +138,7 @@ function TermsAgreeContent() {
   }
 
   if (termsLoading || agreementsLoading) {
-    return <p className="text-center text-text-tertiary py-10">불러오는 중...</p>;
+    return <TermsAgreeSkeleton />;
   }
 
   if (pendingRequired.length === 0) return null;
@@ -150,7 +151,7 @@ function TermsAgreeContent() {
           서비스 이용을 위해 아래 약관에 동의해주세요.
         </p>
 
-        <label className="flex items-center gap-3 p-4 border border-border rounded-lg mb-3 cursor-pointer bg-background-soft">
+        <label className="flex items-center gap-3 p-4 border border-border rounded-xs mb-3 cursor-pointer bg-background-soft">
           <input
             type="checkbox"
             checked={allChecked}
@@ -189,7 +190,7 @@ function TermsAgreeContent() {
           type="button"
           onClick={handleAgree}
           disabled={!isLoggedIn || !requiredAllChecked || isPending}
-          className="w-full py-3 bg-primary text-white text-sm font-medium rounded-lg disabled:opacity-50 hover:bg-primary-hover transition-colors"
+          className="w-full py-3 bg-primary text-white text-sm font-medium rounded-xs disabled:opacity-50 hover:bg-primary-hover transition-colors"
         >
           {isPending ? '처리 중...' : '동의하고 시작하기'}
         </button>
@@ -200,7 +201,7 @@ function TermsAgreeContent() {
 
 export default function TermsAgreePage() {
   return (
-    <Suspense fallback={<p className="text-center text-text-tertiary py-10">불러오는 중...</p>}>
+    <Suspense fallback={<TermsAgreeSkeleton />}>
       <TermsAgreeContent />
     </Suspense>
   );

@@ -7,6 +7,7 @@ import { ConfirmModal } from '@/components/molecules/Modal';
 import { IconButton } from '@/components/primitives/IconButton';
 import { useMyInquiries, useDeleteInquiry } from '@/hooks/useInquiries';
 import { useAuthStore } from '@/stores/authStore';
+import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { Inquiry, InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 
@@ -61,7 +62,7 @@ export default function MyInquiriesPage() {
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         <Section title="나의 문의">
           {isLoading ? (
-            <p className="py-6 text-center text-[13px] text-text-tertiary">불러오는 중...</p>
+            <InquiryListSkeleton count={5} />
           ) : !data?.items.length ? (
             <p className="py-6 text-center text-[13px] text-text-tertiary">
               문의 내역이 없습니다

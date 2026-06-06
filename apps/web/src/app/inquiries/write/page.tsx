@@ -60,7 +60,7 @@ export default function InquiryWritePage() {
         onBack={() => router.push(ROUTES.INQUIRIES.HOME)}
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-6">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-6">
         <FormField label="문의 유형" required>
           <div className="flex flex-wrap gap-2 pt-1">
             {INQUIRY_TYPES.map((type) => (
@@ -124,7 +124,7 @@ export default function InquiryWritePage() {
         )}
       </main>
 
-      <footer className="px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3">
+      <footer className="px-page pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3">
         <Button
           variant="primary"
           size="lg"

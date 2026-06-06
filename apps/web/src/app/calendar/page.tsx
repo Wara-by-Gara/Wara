@@ -1,5 +1,6 @@
-import { Calendar } from "@/screens/Calendar/Calendar";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 export default function CalendarPage() {
-  return <Calendar />;
+  redirect(ROUTES.MEETINGS);
 }

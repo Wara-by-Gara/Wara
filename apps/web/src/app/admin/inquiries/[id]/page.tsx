@@ -7,6 +7,7 @@ import { Divider } from '@/components/primitives/Divider';
 import { Button } from '@/components/primitives/Button';
 import { useAdminInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
+import { InquiryDetailSkeleton } from '@/components/organisms/Skeleton';
 import { ROUTES } from '@/constants/routes';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
@@ -42,7 +43,7 @@ export default function AdminInquiryDetailPage() {
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         {isLoading ? (
-          <p className="py-10 text-center text-[13px] text-text-tertiary">불러오는 중...</p>
+          <InquiryDetailSkeleton />
         ) : !inquiry ? (
           <p className="py-10 text-center text-[13px] text-text-tertiary">
             문의를 찾을 수 없습니다
@@ -50,7 +51,7 @@ export default function AdminInquiryDetailPage() {
         ) : (
           <>
             {/* ── 헤더 ── */}
-            <div className="px-5 pb-5 pt-6">
+            <div className="px-page pb-5 pt-6">
               <div className="mb-3 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex h-6 items-center rounded-full bg-gray-100 px-2 text-[11px] font-medium text-gray-600">
                   {INQUIRY_TYPE_LABELS[inquiry.inquiryType]}
@@ -80,7 +81,7 @@ export default function AdminInquiryDetailPage() {
             <Divider />
 
             {/* ── 본문 ── */}
-            <div className="px-5 py-5">
+            <div className="px-page py-5">
               <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-secondary">
                 {inquiry.content}
               </p>
@@ -90,7 +91,7 @@ export default function AdminInquiryDetailPage() {
             {inquiry.answer && (
               <>
                 <Divider strength="strong" />
-                <div className="bg-blue-50 px-5 py-5">
+                <div className="bg-blue-50 px-page py-5">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-blue-700">답변</span>
                     {inquiry.answeredAt && (
@@ -108,7 +109,7 @@ export default function AdminInquiryDetailPage() {
 
             {/* ── 답변 작성 / 수정 ── */}
             <Divider />
-            <div className="px-5 py-5">
+            <div className="px-page py-5">
               {!isAnswering ? (
                 <Button
                   variant="primary"
@@ -170,7 +171,7 @@ function AnswerForm({
         rows={5}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-surface px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-2">
         <select
@@ -179,7 +180,7 @@ function AnswerForm({
             setForm((f) => ({ ...f, status: e.target.value as AnswerInquiryInput['status'] }))
           }
           disabled={isPending}
-          className="rounded-lg border border-border px-3 py-1.5 text-[14px] disabled:opacity-50"
+          className="rounded-xs border border-border px-3 py-1.5 text-[14px] disabled:opacity-50"
         >
           <option value="in_progress">답변 중</option>
           <option value="resolved">해결됨</option>
