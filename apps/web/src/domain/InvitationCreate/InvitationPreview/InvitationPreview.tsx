@@ -73,7 +73,7 @@ export function InvitationPreview({
           미리보기
         </span>
 
-        <div className="relative z-[2] flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-8 pt-14">
+        <div className="relative z-[2] flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-8 pt-14">
           <h1 className={cn("text-center text-[30px] font-extrabold leading-normal text-text-primary line-clamp-3", fontClass)}>
             {title || "초대장 제목"}
           </h1>
@@ -94,7 +94,7 @@ export function InvitationPreview({
           ) : null}
 
           {(dateLabel || placeName) && (
-            <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface/70 px-4 py-3.5">
+            <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface/70 px-4 py-3.5">
               {dateLabel ? (
                 <div className="flex items-center gap-2.5">
                   <Icon name="calendar" size="sm" color="primary" decorative />
@@ -117,7 +117,7 @@ export function InvitationPreview({
             {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
               <div
                 key={type}
-                className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface/80 px-3 py-3"
+                className="flex flex-col items-center gap-1.5 rounded-md border border-border bg-surface/80 px-3 py-3"
               >
                 <span className="text-[28px] leading-none">{rsvp[type].emoji}</span>
                 <span className="text-[13px] text-text-secondary">{rsvp[type].label}</span>

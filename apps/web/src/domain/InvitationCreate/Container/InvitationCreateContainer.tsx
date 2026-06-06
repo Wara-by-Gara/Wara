@@ -6,7 +6,6 @@ import type { Area } from "react-easy-crop";
 import { cn } from "@/lib/cn";
 import { searchPlaces } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
-import { Chip } from "@/components/primitives/Chip";
 import { Switch } from "@/components/primitives/Switch";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
@@ -19,7 +18,6 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
-import { TemplateCard } from "@/components/organisms/TemplateCard";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
@@ -29,6 +27,7 @@ import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
+import { ROUTES } from "@/constants/routes";
 import { HostCreatingView, type VoteDraft } from "@/screens/DateVote/DateVote";
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { createPoll } from "@/lib/api/dateVote";
@@ -44,7 +43,7 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { InvitationPreview } from "@/domain/InvitationCreate/InvitationPreview";
 import {
   DEFAULT_COVER_KEY,
-  DESIGN_BG_SOLIDS,
+  DEFAULT_BG_COLOR,
   DESIGN_BG_THEMES,
   DESIGN_FONTS,
   DEFAULT_FONT,
@@ -96,7 +95,7 @@ function MissionTemplateSection({
   });
 
   if (isLoading) {
-    return <div className="h-24 animate-pulse rounded-2xl bg-surface" />;
+    return <div className="h-24 animate-pulse rounded-md bg-surface" />;
   }
 
   if (missionTemplates.length === 0) return null;
@@ -117,12 +116,12 @@ function MissionTemplateSection({
               disabled={disabled}
               onClick={() => onToggle(t)}
               className={cn(
-                "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",
+                "flex items-center gap-3 rounded-md border px-4 py-3 text-left transition-colors",
                 isSelected
                   ? "border-primary bg-primary-soft"
                   : disabled
                   ? "border-border bg-background-soft opacity-50"
-                  : "border-border bg-surface hover-emphasis-sm",
+                  : "border-border bg-surface hover:bg-gray-50 transition-colors duration-150",
               )}
             >
               <span className={cn("flex-1 text-[14px]", isSelected ? "font-semibold text-primary" : "text-text-primary")}>
@@ -163,7 +162,6 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
 
   useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [titleError, setTitleError] = useState(false);
   const [titleFocused, setTitleFocused] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -190,7 +188,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
   const [voteDraft, setVoteDraft] = useState<VoteDraft | null>(null);
   // design
-  const [designBgColor, setDesignBgColor] = useState("bg-white");
+  const [designBgColor, setDesignBgColor] = useState(DEFAULT_BG_COLOR);
   const [designFont, setDesignFont] = useState<DesignFont>(DEFAULT_FONT);
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationId>("none");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -328,6 +326,20 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
     queryKey: ["templates"],
     queryFn: getTemplates,
   });
+
+  useEffect(() => {
+    if (editInvitation || templates.length === 0 || typeof window === "undefined") return;
+    const tid = new URLSearchParams(window.location.search).get("templateId");
+    if (!tid) return;
+    const t = templates.find((item) => item.id === tid);
+    if (!t) return;
+    setForm((prev) => ({
+      ...prev,
+      templateId: t.id,
+      mainImageKey: t.previewImageKey ?? prev.mainImageKey,
+    }));
+    window.history.replaceState({}, "", ROUTES.INVITATIONS.CREATE);
+  }, [templates, editInvitation]);
 
   const { mutate: publish, isPending } = useMutation({
     mutationFn: async () => {
@@ -593,7 +605,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" title="초대장 만들기" />
-        <main className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+        <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">초대장이 만들어졌어요!</p>
           <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
@@ -628,11 +640,6 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
     );
   }
 
-  const categories = [...new Set(templates.map((t) => t.theme))].filter(Boolean);
-  const filteredTemplates = selectedCategory
-    ? templates.filter((t) => t.theme === selectedCategory)
-    : templates;
-
   const previewCoverImageUrl = mainGifUrl
     ? undefined
     : localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined);
@@ -650,48 +657,8 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         }
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-5 py-5">
-        {/* 1. 템플릿 / 빈 화면 */}
-        <FormField label="템플릿 (선택 안 하면 빈 화면에서 시작)">
-          {categories.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              <Chip variant="filter" selected={selectedCategory === ""} onClick={() => setSelectedCategory("")}>
-                전체
-              </Chip>
-              {categories.map((c) => (
-                <Chip key={c} variant="filter" selected={selectedCategory === c} onClick={() => setSelectedCategory(c)}>
-                  {c}
-                </Chip>
-              ))}
-            </div>
-          )}
-          {filteredTemplates.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              {filteredTemplates.map((t) => (
-                <TemplateCard
-                  key={t.id}
-                  name={t.name}
-                  imageUrl={t.previewImageKey}
-                  variant={form.templateId === t.id ? "selected" : "basic"}
-                  onClick={() => {
-                    if (form.templateId === t.id) {
-                      set({ templateId: "", mainImageKey: DEFAULT_COVER_KEY });
-                      setLocalPreviewUrl(null);
-                    } else {
-                      set({ templateId: t.id, mainImageKey: t.previewImageKey ?? DEFAULT_COVER_KEY });
-                      setLocalPreviewUrl(null);
-                      setMainGifUrl("");
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-[13px] text-text-tertiary">사용 가능한 템플릿이 없어요. 빈 화면에서 시작해보세요.</p>
-          )}
-        </FormField>
-
-        {/* 2. 대표 이미지 */}
+      <main className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5">
+        {/* 1. 대표 이미지 */}
         <FormField label="대표 이미지" required>
           {form.templateId ? (
             <InvitationCover
@@ -758,11 +725,11 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                       </div>
                     </div>
                   ) : imageUploading ? (
-                    <div className="flex aspect-3/2 w-full items-center justify-center rounded-3xl bg-surface">
+                    <div className="flex aspect-3/2 w-full items-center justify-center rounded-lg bg-surface">
                       <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
                     </div>
                   ) : imageUploadError ? (
-                    <div className="flex aspect-3/2 w-full flex-col items-center justify-center gap-2 rounded-3xl bg-red-50">
+                    <div className="flex aspect-3/2 w-full flex-col items-center justify-center gap-2 rounded-md bg-red-50">
                       <Icon name="alert-triangle" size="lg" color="danger" decorative />
                       <Button variant="text" size="sm" onClick={() => fileInputRef.current?.click()}>다시 시도</Button>
                     </div>
@@ -770,7 +737,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     <button
                       type="button"
                       className={cn(
-                        "flex aspect-3/2 w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                        "flex aspect-3/2 w-full items-center justify-center rounded-lg border-2 border-dashed",
                         imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                       )}
                       onClick={() => { fileInputRef.current?.click(); }}
@@ -812,7 +779,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     <button
                       type="button"
                       className={cn(
-                        "flex aspect-3/2 w-full items-center justify-center rounded-3xl border-2 border-dashed",
+                        "flex aspect-3/2 w-full items-center justify-center rounded-lg border-2 border-dashed",
                         imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
                       )}
                       onClick={() => setGifPickerOpen(true)}
@@ -858,7 +825,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     type="button"
                     onClick={() => setDesignFont(id)}
                     className={cn(
-                      "flex shrink-0 flex-col items-center gap-1 rounded-2xl border-2 px-3 py-3 transition-colors",
+                      "flex shrink-0 flex-col items-center gap-1 rounded-md border-2 px-3 py-3 transition-colors",
                       designFont === id ? "border-primary bg-primary-soft" : "border-border bg-surface",
                     )}
                   >
@@ -918,9 +885,9 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
 
         {/* 날짜 미정 → 투표 제안 배너 */}
         {dateUnknown && (
-          <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+          <div className="flex flex-col gap-3 rounded-md border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15">
                 <Icon name="calendar" size="md" color="primary" decorative />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -930,16 +897,16 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+            <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
               <Icon name="check-circle" size="sm" color="primary" decorative />
               <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+            <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
               <Icon name="check-circle" size="sm" color="primary" decorative />
               <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
             </div>
             {voteDraft ? (
-              <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2.5">
+              <div className="flex items-center justify-between rounded-sm bg-white/80 px-3 py-2.5">
                 <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
                 <button type="button" onClick={() => setSubScreen("dateVoteSetup")}
                   className="text-[12px] text-text-tertiary underline">수정</button>
@@ -966,12 +933,12 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           error={locationError ? "장소를 선택해주세요" : undefined}
         />
         {locationMode === "search" && locationResults.length > 0 && (
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+          <div className="flex flex-col overflow-hidden rounded-md border border-border bg-surface">
             {locationResults.map((place) => (
               <button
                 key={place.placeId}
                 type="button"
-                className="flex flex-col gap-0.5 px-4 py-3 text-left hover-emphasis-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+                className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
                 onClick={() => {
                   set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
                   setLocationMode("selected");
@@ -991,7 +958,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         <div className="h-px bg-border" />
 
         {/* 7. 미션 */}
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5">
+        <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3.5">
           <div>
             <p className="text-[15px] font-semibold text-text-primary">미션 사용하기</p>
             <p className="text-[13px] text-text-tertiary">게스트에게 미션을 부여할 수 있어요</p>
@@ -1041,7 +1008,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                   {selectedMissions.map((m) => {
                     const key = m.type === "template" ? m.templateId : m.localId;
                     return (
-                      <div key={key} className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+                      <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
                         <span className="flex-1 text-[14px] text-text-primary">{m.content}</span>
                         <button type="button" onClick={() => removeMission(key)} className="shrink-0 text-text-tertiary hover:text-danger">
                           <Icon name="x" size="sm" color="currentColor" decorative />
@@ -1065,22 +1032,6 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         <section className="flex flex-col gap-3">
           <p className="text-[15px] font-semibold text-text-primary">배경</p>
           <div className="grid grid-cols-5 gap-2">
-            {DESIGN_BG_SOLIDS.map(({ cls, hex }) => (
-              <button
-                key={cls}
-                type="button"
-                onClick={() => setDesignBgColor(cls)}
-                className={cn(
-                  "aspect-square rounded-2xl border-2",
-                  cls,
-                  designBgColor === cls ? "border-primary" : "border-transparent",
-                )}
-                style={{ boxShadow: cls === "bg-white" ? "inset 0 0 0 1px #e5e7eb" : undefined }}
-                aria-label={hex}
-              />
-            ))}
-          </div>
-          <div className="grid grid-cols-5 gap-2">
             {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
               <button
                 key={id}
@@ -1091,7 +1042,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
               >
                 <span
                   className={cn(
-                    "aspect-square w-full rounded-2xl border-2",
+                    "aspect-square w-full rounded-md border-2",
                     cls,
                     designBgColor === cls ? "border-primary" : "border-border",
                   )}
@@ -1119,7 +1070,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                 type="button"
                 onClick={() => setSelectedAnimation(id)}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-2xl border-2 px-2 py-3 transition-colors",
+                  "flex flex-col items-center gap-1 rounded-md border-2 px-2 py-3 transition-colors",
                   selectedAnimation === id ? "border-primary bg-primary-soft" : "border-border bg-surface",
                 )}
               >
@@ -1149,7 +1100,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
             <button
               type="button"
               onClick={() => setPackDropdownOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 hover-emphasis-sm"
+              className="flex w-full items-center justify-between rounded-md border border-border bg-surface px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
             >
               <div className="flex items-center gap-2">
                 <span className="text-[20px] leading-none">
@@ -1165,7 +1116,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
             </button>
 
             {packDropdownOpen && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-surface shadow-lg">
                 {RSVP_PACKS.map((pack) => (
                   <button
                     key={pack.id}
@@ -1182,7 +1133,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     }}
                     className={cn(
                       "flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors",
-                      selectedPackId === pack.id ? "bg-surface" : "hover-emphasis-sm",
+                      selectedPackId === pack.id ? "bg-surface" : "hover:bg-gray-50 transition-colors duration-150",
                     )}
                   >
                     <span className="text-[20px] leading-none">{pack.attending}</span>
@@ -1204,7 +1155,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                 type="button"
                 onClick={() => setEditingRsvp(editingRsvp === type ? null : type)}
                 className={cn(
-                  "flex flex-col items-center gap-2 rounded-2xl border-2 px-3 py-4 transition-colors",
+                  "flex flex-col items-center gap-2 rounded-md border-2 px-3 py-4 transition-colors",
                   editingRsvp === type ? "border-primary bg-primary-soft" : "border-border bg-surface",
                 )}
               >
@@ -1217,7 +1168,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           </div>
 
           {editingRsvp && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+            <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
               <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
               <TextInput
                 value={rsvpOptions[editingRsvp].label}
@@ -1296,7 +1247,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
                     window.location.href = `${apiBase}/auth/${config.path}/redirect`;
                   }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
+                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-xs text-[16px] font-bold ${config.cls}`}
                 >
                   {config.label}
                 </button>
