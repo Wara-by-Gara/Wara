@@ -22,6 +22,8 @@ export type SharedInvitation = {
   id: string;
   title: string;
   eventStartAt: string | null;
+  status: 'active' | 'closed';
+  isHostedByMe: boolean;
   imageUrl: string | null;
 };
 

@@ -21,14 +21,26 @@ export function useMyParticipant(invitationId: string, options?: { enabled?: boo
   });
 }
 
+function invalidateParticipantFeedQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  invitationId: string,
+) {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myParticipant(invitationId) });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.photos(invitationId) });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.feedbacks(invitationId) });
+  queryClient.invalidateQueries({ queryKey: ["myParticipant", invitationId] });
+}
+
 export function useUpdateRsvp(invitationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ participantId, rsvpStatus }: { participantId: string; rsvpStatus: RsvpStatus }) =>
       updateRsvp(invitationId, participantId, rsvpStatus),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myParticipant(invitationId) });
+    onSuccess: (participant) => {
+      queryClient.setQueryData(QUERY_KEYS.invitations.myParticipant(invitationId), participant);
+      queryClient.setQueryData(["myParticipant", invitationId], participant);
+      invalidateParticipantFeedQueries(queryClient, invitationId);
     },
   });
 }
@@ -38,9 +50,10 @@ export function useJoinInvitation(invitationId: string) {
   return useMutation({
     mutationFn: (payload: { rsvpStatus: RsvpStatus; note?: string }) =>
       joinInvitation(invitationId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.participants(invitationId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myParticipant(invitationId) });
+    onSuccess: (participant) => {
+      queryClient.setQueryData(QUERY_KEYS.invitations.myParticipant(invitationId), participant);
+      queryClient.setQueryData(["myParticipant", invitationId], participant);
+      invalidateParticipantFeedQueries(queryClient, invitationId);
     },
   });
 }

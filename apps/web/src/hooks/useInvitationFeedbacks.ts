@@ -33,9 +33,12 @@ export function useInvitationFeedback(invitationId: string) {
     queryFn: ({ pageParam }) =>
       getInvitationFeedbacks(invitationId, pageParam, INVITATION_FEEDBACK_PAGE_SIZE),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage, allPages) => {
+      const total = allPages[0]?.total;
+      const loaded = allPages.reduce((sum, page) => sum + page.rows.length, 0);
+      if (total != null && loaded >= total) return undefined;
       if (!lastPage?.nextCursor) return undefined;
-      if (lastPage.rows.length === 0) return undefined;
+      if (lastPage.rows.length < INVITATION_FEEDBACK_PAGE_SIZE) return undefined;
       return lastPage.nextCursor;
     },
     enabled: !!invitationId,
@@ -105,5 +108,23 @@ export function useInvitationFeedback(invitationId: string) {
   const getLiked = (id: string, serverVal: boolean) => likedMap.has(id) ? likedMap.get(id)! : serverVal;
   const getLikeCount = (id: string, serverVal: number) => likeCountMap.has(id) ? likeCountMap.get(id)! : serverVal;
 
-  return { ...query, submitComment, removeComment, editComment, isSubmitting, toggleLike, getLiked, getLikeCount };
+  const total = query.data?.pages[0]?.total;
+  const loadedCount = query.data?.pages.flatMap((p) => p.rows).length ?? 0;
+  const canLoadMore =
+    (query.hasNextPage ?? false) &&
+    (total == null || loadedCount < total);
+
+  return {
+    ...query,
+    total,
+    loadedCount,
+    canLoadMore,
+    submitComment,
+    removeComment,
+    editComment,
+    isSubmitting,
+    toggleLike,
+    getLiked,
+    getLikeCount,
+  };
 }
