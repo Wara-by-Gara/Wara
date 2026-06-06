@@ -33,3 +33,10 @@ export const AnalyticsPeriodSchema = z
   );
 
 export type AnalyticsPeriodDto = z.infer<typeof AnalyticsPeriodSchema>;
+
+/** Retention 코호트 주 수 (기본 8주, 최대 52주). */
+export const RetentionQuerySchema = z.object({
+  weeks: z.coerce.number().int().min(1).max(52).optional(),
+});
+
+export type RetentionQueryDto = z.infer<typeof RetentionQuerySchema>;
