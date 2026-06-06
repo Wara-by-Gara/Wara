@@ -46,3 +46,6 @@ coverage/
 
 # Drizzle
 drizzle/migrations/meta/
+
+# Personal work notes (개인 작업 계획)
+TODO.md
