@@ -46,6 +46,10 @@ export interface AccountSettingsProps {
   onDisconnectRequest?: (provider: string) => void;
   onDisconnectConfirm?: () => void;
   isDisconnecting?: boolean;
+  onLinkRequest?: (provider: string) => void;
+  isLinking?: boolean;
+  linkingProvider?: string | null;
+  onLastConnectedClick?: () => void;
   // 탈퇴 사유 — Container에서 끌어올린 state를 props로 받는다
   withdrawReason?: WithdrawalReasonKey;
   withdrawDetail?: string;
@@ -53,7 +57,7 @@ export interface AccountSettingsProps {
   onWithdrawDetailChange?: (detail: string) => void;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, onLinkRequest, isLinking, linkingProvider, onLastConnectedClick, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
     screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
   );
@@ -69,18 +73,23 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const isConnected = connectedProviders?.includes(provider);
               const isLastConnected = isConnected && (connectedProviders?.length ?? 0) === 1;
+              const isThisLinking = isLinking && linkingProvider === provider;
               const label = { kakao: "카카오", naver: "네이버", google: "Google" }[provider];
               const icon = { kakao: "kakao-logo", naver: "naver-logo", google: "google-logo" }[provider] as "kakao-logo" | "naver-logo" | "google-logo";
+              const handleClick = isConnected
+                ? (isLastConnected ? () => onLastConnectedClick?.() : () => onDisconnectRequest?.(provider))
+                : (isLinking ? undefined : () => onLinkRequest?.(provider));
+              const rightText = isThisLinking
+                ? "연결 중..."
+                : isConnected
+                  ? "연결됨"
+                  : "연결하기";
               return (
                 <MenuItem
                   key={provider}
                   leftIcon={icon}
-                  onClick={isConnected && !isLastConnected ? () => onDisconnectRequest?.(provider) : undefined}
-                  rightSlot={
-                    isLastConnected
-                      ? <span className="text-[13px] text-text-tertiary">최소 1개 필요</span>
-                      : <span className="text-[13px] text-text-tertiary">{isConnected ? "연결됨" : "미연결"}</span>
-                  }
+                  onClick={handleClick}
+                  rightSlot={<span className="text-[13px] text-text-tertiary">{rightText}</span>}
                 >
                   {label}
                 </MenuItem>

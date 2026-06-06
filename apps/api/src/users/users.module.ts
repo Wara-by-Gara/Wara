@@ -3,9 +3,10 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UsersRepository } from './users.repository';
 import { S3Module } from '../s3/s3.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [S3Module],
+  imports: [S3Module, AuthModule],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
   exports: [UsersService, UsersRepository],

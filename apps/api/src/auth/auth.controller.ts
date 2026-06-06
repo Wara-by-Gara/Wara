@@ -22,6 +22,7 @@ import { ProviderParamDto, ProviderParamSchema } from './dto/provider.param.dto'
 import { SocialCallbackDto, SocialCallbackSchema } from './dto/social-callback.dto';
 import { MobileTokenDto, MobileTokenSchema } from './dto/mobile-token.dto';
 import { Platform } from './enums/platform.enum';
+import { Provider } from './enums/provider.enum';
 import { ErrorCode } from '../common/constants/error-codes';
 
 const ACCESS_TOKEN_COOKIE = 'accessToken';
@@ -86,6 +87,11 @@ export class AuthController {
   ) {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
+    // state가 link 모드면 별도 처리. 콘솔 redirect URI를 추가 등록하지 않기 위함.
+    if (state && this.authService.isLinkState(state)) {
+      return this.handleLinkCallback(provider, code, state, error, res, frontendUrl);
+    }
+
     if (error || !code) {
       return res.redirect(`${frontendUrl}/login?auth_error=cancelled`);
     }
@@ -106,6 +112,35 @@ export class AuthController {
     } catch (err) {
       this.logger.error(`OAuth callback failed for ${provider}`, err);
       return res.redirect(`${frontendUrl}/login?auth_error=failed`);
+    }
+  }
+
+  private async handleLinkCallback(
+    provider: Provider,
+    code: string,
+    state: string,
+    error: string,
+    res: Response,
+    frontendUrl: string,
+  ): Promise<void> {
+    const accountUrl = `${frontendUrl}/profile/account`;
+
+    if (error || !code) {
+      res.redirect(`${accountUrl}?link_error=cancelled`);
+      return;
+    }
+
+    try {
+      await this.authService.linkSocialAccountWithCode({ provider, code, state });
+      res.redirect(`${accountUrl}?link_success=${provider}`);
+    } catch (err) {
+      this.logger.error(`OAuth link callback failed for ${provider}`, err);
+      const response = (err as { response?: { code?: string; mergeToken?: string } })?.response;
+      const errCode = response?.code ?? 'failed';
+      const mergeToken = response?.mergeToken;
+      const params = new URLSearchParams({ link_error: errCode, provider });
+      if (mergeToken) params.set('mergeToken', mergeToken);
+      res.redirect(`${accountUrl}?${params.toString()}`);
     }
   }
 

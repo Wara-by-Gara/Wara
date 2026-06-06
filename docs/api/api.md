@@ -51,6 +51,9 @@
 | DELETE | `/users/me` | 회원 탈퇴 | ✅ | soft delete |
 | GET | `/users/me/socials` | 연결된 소셜 계정 목록 | ✅ | |
 | DELETE | `/users/me/socials/:provider` | 소셜 계정 연결 해제 | ✅ | provider: kakao \| naver \| apple |
+| POST | `/users/me/socials/:provider/link/url` | 추가 소셜 연결용 OAuth URL 발급 | ✅ | Web flow. state에 userId 인코딩. callback은 `/auth/:provider/callback`이 link state로 분기 처리 |
+| POST | `/users/me/socials/:provider/link/token` | 추가 소셜 연결 (providerToken) | ✅ | Mobile flow. body: `{ providerToken }`. 응답: `{ provider }` |
+| POST | `/users/me/merge` | 분리된 다른 wara 계정과 통합 | ✅ | body: `{ mergeToken }`. SOCIAL_ALREADY_LINKED 시 발급된 token으로 source user 데이터 전체를 현재 user로 이전 후 source soft delete |
 
 ---
 

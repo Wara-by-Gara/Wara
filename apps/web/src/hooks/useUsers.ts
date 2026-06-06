@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, updateMe, type DeleteMeInput, type UpdateMeInput } from '@/lib/api/users';
+import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, linkSocialUrl, mergeAccounts, updateMe, type DeleteMeInput, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { isLoggedInCookieSet } from '@/lib/auth-cookie';
 
@@ -57,6 +57,23 @@ export function useDeleteMySocial() {
     mutationFn: (provider: string) => deleteMySocial(provider),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.socials() });
+    },
+  });
+}
+
+export function useLinkSocialUrl() {
+  return useMutation({
+    mutationFn: (provider: string) => linkSocialUrl(provider),
+  });
+}
+
+export function useMergeAccounts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (mergeToken: string) => mergeAccounts(mergeToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.socials() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() });
     },
   });
 }
