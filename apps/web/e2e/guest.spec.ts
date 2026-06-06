@@ -11,7 +11,7 @@ test.describe("guest", () => {
   });
 
   test("주요 페이지 스모크(캘린더/알림/프로필)", async ({ page, pageErrors }) => {
-    for (const path of ["/calendar", "/notifications", "/profile"]) {
+    for (const path of ["/meetings", "/notifications", "/profile"]) {
       await smokeVisit(page, pageErrors, path);
     }
   });
@@ -31,7 +31,7 @@ test.describe("guest", () => {
       await page.goto(`/friends/${firstFriend.id}`, { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(800);
       await expectNotCrashed(page);
-      await expect(page.getByText("함께 참여했던 초대")).toBeVisible();
+      await expect(page.getByText("함께한 초대")).toBeVisible();
     }
     expectNoPageErrors(pageErrors);
   });

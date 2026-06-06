@@ -1,22 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { Icon } from "@/components/icons";
+import { Avatar } from "@/components/primitives/Avatar";
 import { FormField } from "@/components/molecules/FormField";
 import { TextInput } from "@/components/primitives/TextInput";
 import { Button } from "@/components/primitives/Button";
 import { useMe, useUpdateMe } from "@/hooks/useUsers";
+import { getProfileImagePresignedUrl } from "@/lib/api/users";
+import { SignupFormSkeleton } from "@/components/organisms/Skeleton";
 import { ROUTES } from "@/constants/routes";
 
 const currentYear = new Date().getFullYear();
 
-// 본명 검증: 한글/영문/공백/하이픈/아포스트로피만 허용, 2~30자.
-// - 한글 자모만(ㅎㅇㅎㅇ) / 이모지 / 한 글자 입력을 차단해 닉네임형 가입을 방지
-// - 외국인 본명의 하이픈·아포스트로피·공백은 허용 (예: O'Connor, Jean-Luc)
 const NAME_PATTERN = /^(?=.{2,30}$)[가-힣A-Za-z][가-힣A-Za-z\s'-]*[가-힣A-Za-z]$/;
 
 const schema = z.object({
@@ -42,8 +42,16 @@ type FormValues = z.infer<typeof schema>;
 
 export function SignupContainer() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: me, isLoading } = useMe();
   const { mutate: updateMe, isPending, error } = useUpdateMe();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const randomAvatarSeed = useMemo(
+    () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    [],
+  );
 
   const {
     register,
@@ -55,7 +63,7 @@ export function SignupContainer() {
   useEffect(() => {
     if (!me) return;
     if (me.name && me.email && me.birthYear) {
-      const dest = localStorage.getItem('wara_onboarding_done') ? ROUTES.HOME : '/onboarding';
+      const dest = localStorage.getItem("wara_onboarding_done") ? ROUTES.HOME : "/onboarding";
       router.replace(dest);
       return;
     }
@@ -64,7 +72,22 @@ export function SignupContainer() {
       email: me.email ?? "",
       birthYear: me.birthYear ? String(me.birthYear) : "",
     });
+    if (me.profileImageUrl) {
+      setProfileImageUrl(me.profileImageUrl);
+    }
   }, [me, router, reset]);
+
+  async function handleImageSelect(file: File) {
+    setIsUploadingImage(true);
+    try {
+      const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
+      const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, contentType);
+      await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": contentType }, body: file });
+      setProfileImageUrl(key);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
 
   function onSubmit(data: FormValues) {
     updateMe(
@@ -72,10 +95,11 @@ export function SignupContainer() {
         name: data.name.trim().replace(/\s+/g, " "),
         email: data.email,
         birthYear: parseInt(data.birthYear, 10),
+        ...(profileImageUrl ? { profileImageUrl } : {}),
       },
       {
         onSuccess: () => {
-          const dest = localStorage.getItem('wara_onboarding_done') ? ROUTES.HOME : '/onboarding';
+          const dest = localStorage.getItem("wara_onboarding_done") ? ROUTES.HOME : "/onboarding";
           router.push(dest);
         },
       },
@@ -84,84 +108,111 @@ export function SignupContainer() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
-        <TopAppBar title="추가 정보 입력" />
-        <main className="flex flex-1 items-center justify-center">
-          <p className="text-[14px] text-text-tertiary">불러오는 중...</p>
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background">
+        <main className="relative z-10 flex flex-1">
+          <SignupFormSkeleton />
         </main>
       </div>
     );
   }
 
+  const isSaving = isPending || isUploadingImage;
+
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
-      <TopAppBar title="추가 정보 입력" />
-
-      <main className="flex-1 px-6 py-6">
-        <section className="flex flex-col gap-4">
-          <h1 className="text-[22px] font-extrabold text-text-primary">
-            추가 정보를 입력해주세요
-          </h1>
-          <p className="text-[14px] text-text-secondary">
-            서비스 이용을 위해 아래 정보가 필요해요
-          </p>
-
-          <form
-            id="signup-form"
-            onSubmit={handleSubmit(onSubmit)}
-            className="mt-2 flex flex-col gap-5"
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background">
+      <main className="relative z-10 flex flex-1 flex-col px-page py-8">
+        <section className="flex flex-col items-center gap-5">
+          <button
+            type="button"
+            className="relative"
+            disabled={isSaving}
+            onClick={() => fileInputRef.current?.click()}
           >
-            <FormField label="이름" required error={errors.name?.message}>
-              <TextInput
-                {...register("name")}
-                placeholder="이름을 입력해주세요"
-                disabled={isPending}
-                error={errors.name?.message}
-              />
-            </FormField>
+            <Avatar
+              size="xl"
+              src={profileImageUrl ?? undefined}
+              name={randomAvatarSeed}
+              className="size-28"
+            />
+            <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse shadow-sm">
+              <Icon name="camera" size="sm" color="currentColor" decorative />
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleImageSelect(file);
+              e.target.value = "";
+            }}
+          />
 
-            <FormField label="이메일" required error={errors.email?.message}>
-              <TextInput
-                {...register("email")}
-                type="email"
-                placeholder="이메일을 입력해주세요"
-                disabled={isPending}
-                error={errors.email?.message}
-              />
-            </FormField>
-
-            <FormField label="출생연도" required error={errors.birthYear?.message}>
-              <TextInput
-                {...register("birthYear")}
-                type="number"
-                placeholder="예) 1995"
-                disabled={isPending}
-                error={errors.birthYear?.message}
-              />
-            </FormField>
-
-            {error && (
-              <p
-                role="alert"
-                className="rounded-2xl bg-red-50 px-3 py-2 text-center text-[13px] font-medium text-danger"
-              >
-                정보 저장에 실패했어요. 다시 시도해주세요.
-              </p>
-            )}
-          </form>
+          <div className="flex w-full flex-col gap-1.5 text-center">
+            <h1 className="text-[22px] font-extrabold text-text-primary">프로필 설정</h1>
+            <p className="text-[14px] text-text-secondary">
+              나를 소개하는 내용을 입력해주세요.
+            </p>
+          </div>
         </section>
+
+        <form
+          id="signup-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="mt-8 flex flex-col gap-5"
+        >
+          <FormField label="이름" required error={errors.name?.message}>
+            <TextInput
+              {...register("name")}
+              placeholder="이름을 입력해주세요"
+              disabled={isSaving}
+              error={errors.name?.message}
+            />
+          </FormField>
+
+          <FormField label="이메일" required error={errors.email?.message}>
+            <TextInput
+              {...register("email")}
+              type="email"
+              placeholder="이메일을 입력해주세요"
+              disabled={isSaving}
+              error={errors.email?.message}
+            />
+          </FormField>
+
+          <FormField label="출생연도" required error={errors.birthYear?.message}>
+            <TextInput
+              {...register("birthYear")}
+              type="number"
+              placeholder="예) 1995"
+              disabled={isSaving}
+              error={errors.birthYear?.message}
+            />
+          </FormField>
+
+          {error && (
+            <p
+              role="alert"
+              className="rounded-md bg-red-50 px-3 py-2 text-center text-[13px] font-medium text-danger"
+            >
+              정보 저장에 실패했어요. 다시 시도해주세요.
+            </p>
+          )}
+        </form>
       </main>
 
-      <footer className="px-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      <footer className="relative z-10 px-page pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <Button
           type="submit"
           form="signup-form"
           variant="primary"
           size="lg"
           fullWidth
-          disabled={isPending}
+          disabled={isSaving}
         >
-          {isPending ? "저장 중..." : "완료"}
+          {isSaving ? "저장 중..." : "저장하기"}
         </Button>
       </footer>
     </div>
