@@ -41,7 +41,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         type="button"
         aria-pressed={status === "selected" || hostManageMode}
         className={cn(
-          "group relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100",
+          "group relative aspect-square w-full overflow-hidden rounded-sm bg-gray-100",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           status === "selected" && "ring-4 ring-primary",
           className,
@@ -49,7 +49,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {...props}
       >
         {overflowLabel ? (
-          <span className="flex size-full items-center justify-center bg-gray-200 text-[17px] font-bold text-text-secondary">
+          <span className="flex size-full items-center justify-center bg-gray-200 text-[17px] font-semibold text-text-secondary">
             {overflowLabel}
           </span>
         ) : src ? (
@@ -59,7 +59,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
 
         {/* Video badge */}
         {status === "video" ? (
-          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-black/55 px-1.5 py-0.5 text-[11px] font-bold text-white">
+          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-xs bg-black/55 px-1.5 py-0.5 text-[11px] font-semibold text-white">
             <Icon name="camera" size="xs" color="currentColor" decorative /> 영상
           </span>
         ) : null}
@@ -75,13 +75,13 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {status === "failed" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-danger/85 text-text-inverse">
             <Icon name="alert-circle" size="md" color="currentColor" decorative />
-            <span className="text-[11px] font-bold">실패</span>
+            <span className="text-[11px] font-semibold">실패</span>
           </div>
         ) : null}
 
         {/* Owner indicator */}
         {isOwner && !hostManageMode ? (
-          <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 text-[10px] font-bold text-text-inverse">
+          <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 text-[10px] font-semibold text-text-inverse">
             나
           </span>
         ) : null}
@@ -90,8 +90,8 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {(likeCount !== undefined || onLike) && !overflowLabel ? (
           <span
             className={cn(
-              "absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[11px] font-semibold",
-              liked ? "text-primary" : "text-white",
+              "absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-xs bg-black/50 px-1.5 py-0.5 text-[11px] font-semibold",
+              liked ? "text-brand" : "text-white hover:text-brand",
               onLike && "cursor-pointer",
             )}
             onClick={onLike ? (e) => { e.stopPropagation(); onLike(); } : undefined}

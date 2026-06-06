@@ -2,37 +2,46 @@
 
 import * as RAvatar from "@radix-ui/react-avatar";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, useMemo, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import { cn } from "@/lib/cn";
-import { avatarGradientStyle } from "@/lib/avatar-gradient";
+import { createDicebearAvatarDataUri } from "@/lib/dicebear-avatar";
+import { getAvatarInitials, resolveAvatarDisplay } from "@/lib/profile-image";
 
 const avatarVariants = cva(
   "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-800 text-text-primary",
   {
     variants: {
       size: {
-        xs: "size-6 text-[10px]",
-        sm: "size-8 text-xs",
-        md: "size-10 text-sm",
-        lg: "size-12 text-base",
-        xl: "size-16 text-lg",
+        xs: "size-7 text-[10px]",
+        sm: "size-9 text-xs",
+        md: "size-[52px] text-sm",
+        lg: "size-[60px] text-base",
+        xl: "size-[76px] text-lg",
       },
     },
     defaultVariants: { size: "md" },
   },
 );
 
+const FALLBACK_ICON_SIZE = {
+  xs: "xs",
+  sm: "xs",
+  md: "sm",
+  lg: "sm",
+  xl: "md",
+} as const;
+
 export interface AvatarProps
   extends Omit<React.ComponentPropsWithoutRef<typeof RAvatar.Root>, "asChild">,
     VariantProps<typeof avatarVariants> {
-  /** 이미지 URL — 없으면 fallback */
+  /** 이미지 URL — 없으면 DiceBear fallback */
   src?: string;
   /** 이미지 alt (접근성용) */
   alt?: string;
-  /** 이니셜 계산용 실명 — 제공 시 alt 대신 이니셜 계산에 사용 */
+  /** DiceBear 시드 — 없으면 name/alt 사용 */
   name?: string;
-  /** 이니셜 강제 지정 ("+3" 같은 특수 케이스) */
+  /** "+3" 같은 오버플로우 배지 텍스트 */
   initial?: string;
   /** 아이콘 fallback */
   fallbackIcon?: ReactNode;
@@ -40,54 +49,70 @@ export interface AvatarProps
   host?: boolean;
 }
 
-const getInitials = (name: string): string => {
-  const trimmed = name.trim();
-  if (!trimmed) return "?";
-  const code = trimmed.charCodeAt(0);
-  if (code >= 0xac00 && code <= 0xd7a3) {
-    return trimmed.slice(1) || trimmed[0]!;
-  }
-  return trimmed.split(" ")[0]!.slice(0, 2);
-};
-
 export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(function Avatar(
   { className, size, src, alt, name, initial, fallbackIcon, host, ...props },
   ref,
 ) {
-  const initialSource = name ?? alt;
-  const gradientKey = initialSource ?? initial ?? "anonymous";
-  const showGradient = !src && !!(initial ?? initialSource) && !(typeof initial === "string" && initial.startsWith("+"));
+  const isOverflowBadge = typeof initial === "string" && initial.startsWith("+");
+  const { imageSrc: remoteImageSrc, dicebearSeed } = isOverflowBadge
+    ? { imageSrc: undefined, dicebearSeed: undefined }
+    : resolveAvatarDisplay(src, name ?? alt);
+
+  const dicebearUri = useMemo(
+    () => (dicebearSeed ? createDicebearAvatarDataUri(dicebearSeed) : undefined),
+    [dicebearSeed],
+  );
+
+  const imageSrc = remoteImageSrc ?? dicebearUri;
+  const showDicebearInitials = !remoteImageSrc && Boolean(dicebearUri);
+  const { initials, isCompact } = showDicebearInitials
+    ? getAvatarInitials(name ?? alt)
+    : { initials: "", isCompact: false };
 
   return (
     <div ref={ref} className="relative inline-flex shrink-0">
       <RAvatar.Root
-        className={cn(avatarVariants({ size }), className)}
+        className={cn(avatarVariants({ size }), "relative", className)}
         {...props}
       >
-        {src ? (
+        {imageSrc ? (
           <RAvatar.Image
-            src={src}
+            src={imageSrc}
             alt={alt ?? ""}
             className="size-full object-cover"
           />
         ) : null}
+        {initials ? (
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-0 z-10 flex items-center justify-center font-semibold text-white drop-shadow-sm",
+              isCompact && "text-[0.9em] tracking-tight",
+            )}
+          >
+            {initials}
+          </span>
+        ) : null}
         <RAvatar.Fallback
-          delayMs={src ? 200 : 0}
+          delayMs={imageSrc ? 200 : 0}
           className="flex size-full items-center justify-center font-semibold"
-          style={showGradient ? avatarGradientStyle(gradientKey) : undefined}
         >
-          {initial
+          {isOverflowBadge
             ? initial
-            : initialSource
-              ? getInitials(initialSource)
-              : fallbackIcon ?? <Icon name="user" size="sm" color="currentColor" decorative />
-          }
+            : fallbackIcon ?? (
+              <Icon
+                name="user"
+                size={FALLBACK_ICON_SIZE[size ?? "md"]}
+                color="currentColor"
+                decorative
+              />
+            )}
         </RAvatar.Fallback>
       </RAvatar.Root>
       {host ? (
         <span
           aria-hidden
-          className="absolute -right-0.5 -bottom-0.5 inline-flex size-[38%] min-w-4 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-border"
+          className="absolute -right-0.5 -bottom-0.5 inline-flex size-[37%] min-w-[18px] items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-border"
         >
           <Icon name="crown-yellow" size="xs" className="text-yellow-500" decorative />
         </span>
@@ -116,7 +141,7 @@ export const AvatarGroup = ({
     <div
       className={cn(
         "flex shrink-0",
-        variant === "overlap" ? "-space-x-2" : "gap-1.5",
+        variant === "overlap" ? "-space-x-2.5" : "gap-1.5",
       )}
     >
       {children}

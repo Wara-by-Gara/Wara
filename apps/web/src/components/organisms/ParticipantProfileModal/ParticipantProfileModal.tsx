@@ -67,7 +67,7 @@ export const ParticipantProfileModal = ({
     contained ? "absolute inset-0" : "fixed inset-0",
   );
   const contentClass = cn(
-    "z-50 flex w-[calc(100%-40px)] max-w-sm flex-col overflow-hidden rounded-3xl bg-surface shadow-xl focus:outline-none",
+    "z-50 flex w-[calc(100%-40px)] max-w-sm flex-col overflow-hidden rounded-lg bg-surface shadow-xl focus:outline-none",
     "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
     "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
     contained ? "absolute" : "fixed",
@@ -82,13 +82,13 @@ export const ParticipantProfileModal = ({
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label="닫기"
-          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover-emphasis-sm"
+          className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-full bg-black/10 text-text-secondary hover:bg-black/20 transition-colors duration-150"
         >
           <Icon name="x" size="sm" color="currentColor" decorative />
         </button>
 
         {/* 상단 배경 그라데이션 + 아바타 */}
-        <div className="relative flex flex-col items-center bg-gradient-to-b from-primary-soft to-surface px-5 pb-4 pt-10">
+        <div className="relative flex flex-col items-center bg-gradient-to-b from-primary-soft to-surface px-page pb-4 pt-10">
           <Avatar
             src={avatarUrl}
             alt={name}
@@ -105,7 +105,7 @@ export const ParticipantProfileModal = ({
             </ModalPrimitive.Title>
             <div className="flex items-center gap-1.5">
               {isHost ? (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-2 py-0.5 text-[12px] font-bold text-yellow-500">
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-2 py-0.5 text-[12px] font-semibold text-yellow-600">
                   <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
                 </span>
               ) : null}
@@ -115,9 +115,9 @@ export const ParticipantProfileModal = ({
         </div>
 
         {/* 상세 정보 */}
-        <div className="flex flex-col gap-3 px-5 py-4">
+        <div className="flex flex-col gap-3 px-page py-4">
           {bio ? (
-            <div className="rounded-2xl bg-background-soft px-4 py-3">
+            <div className="rounded-lg bg-background-soft px-4 py-3">
               <p className="text-[14px] text-text-secondary">{bio}</p>
             </div>
           ) : null}
@@ -130,7 +130,7 @@ export const ParticipantProfileModal = ({
           ) : null}
 
           {requestPreview ? (
-            <div className="flex items-start gap-2 rounded-2xl border border-border px-4 py-3">
+            <div className="flex items-start gap-2 rounded-lg border border-border px-4 py-3">
               <Icon name="message-circle" size="sm" color="inactive" decorative className="mt-0.5 shrink-0" />
               <p className="text-[14px] text-text-secondary">&ldquo;{requestPreview}&rdquo;</p>
             </div>
@@ -138,7 +138,7 @@ export const ParticipantProfileModal = ({
         </div>
 
         {/* DM 버튼 */}
-        <div className="border-t border-border px-5 py-4">
+        <div className="border-t border-border px-page py-4">
           <Button
             fullWidth
             size="lg"

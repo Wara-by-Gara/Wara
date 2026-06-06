@@ -42,7 +42,7 @@ export const ModalContent = forwardRef<
   );
   const contentClass = cn(
     "left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-    "rounded-3xl bg-surface p-5 shadow-lg",
+    "rounded-lg bg-surface p-5 shadow-lg",
     "focus:outline-none",
     "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
     contained

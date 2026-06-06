@@ -49,8 +49,8 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="QR 코드" onBack={onBack ?? (() => {})} />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6">
-          <div className="size-64 rounded-3xl bg-surface grid place-items-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page">
+          <div className="size-64 rounded-lg bg-surface grid place-items-center">
             <Icon name="qrcode" size="xl" color="default" decorative className="size-32" />
           </div>
           <p className="text-[14px] text-text-secondary">이 QR로 초대장을 공유할 수 있어요</p>
@@ -64,8 +64,8 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="초대 링크" onBack={onBack ?? (() => {})} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-5">
-          <section className="rounded-2xl border border-border bg-surface p-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-5">
+          <section className="rounded-md border border-border bg-surface p-4">
             <p className="text-[13px] text-text-tertiary">초대 링크</p>
             <p className="mt-1 break-all text-[14px] text-text-primary">https://wara.app/i/01HZX</p>
             <div className="mt-3 flex gap-2">
@@ -104,7 +104,7 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
         }
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page">
         <InvitationCover
           variant="image"
           imageUrl={mockInvitation.coverImageUrl}
@@ -134,19 +134,19 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
         <InvitationInfoCard variant="rsvp" title={`${attending}명 참석 · ${maybe}명 미정`} description={`총 ${mockParticipants.length}명 응답`} chevron />
 
         {state === "withManagementSummary" || state === "statsSummary" || state === "rsvpResponseRate" ? (
-          <section className="rounded-3xl border border-border bg-surface p-4">
+          <section className="rounded-md border border-border bg-surface p-4">
             <h3 className="text-[14px] font-bold text-text-primary">관리</h3>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div>
-                <p className="text-[20px] font-extrabold text-primary">{Math.round((attending + maybe + declined) / mockParticipants.length * 100)}%</p>
+                <p className="text-[20px] font-bold text-primary">{Math.round((attending + maybe + declined) / mockParticipants.length * 100)}%</p>
                 <p className="text-[12px] text-text-tertiary">응답률</p>
               </div>
               <div>
-                <p className="text-[20px] font-extrabold text-text-primary">{noResponse}</p>
+                <p className="text-[20px] font-bold text-text-primary">{noResponse}</p>
                 <p className="text-[12px] text-text-tertiary">미응답</p>
               </div>
               <div>
-                <p className="text-[20px] font-extrabold text-text-primary">12</p>
+                <p className="text-[20px] font-bold text-text-primary">12</p>
                 <p className="text-[12px] text-text-tertiary">조회</p>
               </div>
             </div>
@@ -154,13 +154,13 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
         ) : null}
 
         {state === "noParticipants" ? (
-          <section className="rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center">
+          <section className="rounded-md border border-dashed border-border-strong bg-background-soft p-5 text-center">
             <p className="text-[15px] font-semibold text-text-primary">아직 참석자가 없어요</p>
             <p className="mt-1 text-[13px] text-text-tertiary">링크를 공유해 친구들을 초대해보세요</p>
             <Button variant="primary" size="md" className="mt-3">공유하기</Button>
           </section>
         ) : (
-          <section className="rounded-3xl border border-border bg-surface p-4">
+          <section className="rounded-md border border-border bg-surface p-4">
             <h3 className="mb-2 text-[14px] font-bold text-text-primary">최근 응답</h3>
             <div className="divide-y divide-border">
               {(state === "unrespondedParticipants"
@@ -207,8 +207,8 @@ export const InvitationDetailHost = ({ state = "default", onBack }: InvitationDe
           <div className="flex flex-col gap-1">
             <ShareOptionItem icon="link" title="링크 복사" iconBg="bg-surface" />
             <ShareOptionItem icon="message-circle" title="카카오톡 공유" iconBg="bg-yellow-300" iconColor="text-gray-900" />
-            <ShareOptionItem icon="qrcode" title="QR 코드" iconBg="bg-sky-100" iconColor="text-sky-500" />
-            <ShareOptionItem icon="download" title="이미지로 저장" iconBg="bg-pink-100" iconColor="text-pink-600" />
+            <ShareOptionItem icon="qrcode" title="QR 코드" iconBg="bg-blue-100" iconColor="text-blue-500" />
+            <ShareOptionItem icon="download" title="이미지로 저장" iconBg="bg-cranberry-10" iconColor="text-cranberry-60" />
           </div>
         </BottomSheetContent>
       </BottomSheet>

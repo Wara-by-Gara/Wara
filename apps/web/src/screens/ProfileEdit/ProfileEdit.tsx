@@ -81,7 +81,7 @@ export const ProfileEdit = ({
             onCropComplete={handleCropAreaChange}
           />
         </main>
-        <footer className="shrink-0 p-5">
+        <footer className="shrink-0 px-page py-5">
           <input
             type="range"
             min={1}
@@ -136,10 +136,10 @@ export const ProfileEdit = ({
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-6">
+      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-page py-6">
         <section className="flex flex-col items-center gap-3">
           <button type="button" className="relative" onClick={() => fileInputRef.current?.click()}>
-            <Avatar size="xl" src={avatarUrl} alt={defaultNickname} name={defaultName ?? defaultNickname} className="size-24" />
+            <Avatar size="xl" src={avatarUrl} alt={defaultNickname} name={defaultName ?? defaultNickname} className="size-28" />
             <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
               <Icon name="camera" size="sm" color="currentColor" decorative />
             </span>

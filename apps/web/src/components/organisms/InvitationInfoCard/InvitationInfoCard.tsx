@@ -50,12 +50,12 @@ export const InvitationInfoCard = forwardRef<HTMLDivElement, InvitationInfoCardP
       <div
         ref={ref}
         className={cn(
-          "flex items-start gap-3 rounded-3xl border border-border bg-surface p-4",
+          "flex items-start gap-3 rounded-lg border border-border bg-surface p-4",
           className,
         )}
         {...props}
       >
-        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
           <Icon name={ICON_MAP[variant]} size="md" color="currentColor" decorative />
         </span>
         <div className="flex-1 min-w-0">
@@ -63,7 +63,7 @@ export const InvitationInfoCard = forwardRef<HTMLDivElement, InvitationInfoCardP
             <p className="text-[12px] font-medium text-text-tertiary">{LABEL_MAP[variant]}</p>
             {badge ? <span className="ml-auto">{badge}</span> : null}
           </div>
-          <p className="mt-0.5 text-[16px] font-bold text-text-primary truncate">{title}</p>
+          <p className="mt-0.5 text-[16px] font-semibold text-text-primary truncate">{title}</p>
           {variant === "datetime" && (time || description) ? (
             <p className="mt-0.5 text-[13px] text-text-secondary">
               {time ? <span className="font-medium text-text-primary">{time}</span> : null}

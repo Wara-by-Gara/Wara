@@ -52,14 +52,14 @@ export function MonthCalendar({
   const isEventMode = !!getDayThumbnails;
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
+    <div className="rounded-md border border-border bg-surface p-4">
       {/* Month nav */}
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
           onClick={onPrevMonth}
           aria-label="이전 달"
-          className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
+          className="flex size-8 items-center justify-center rounded-full hover:bg-gray-50 transition-colors duration-150"
         >
           <Icon name="chevron-left" size="sm" color="inactive" decorative />
         </button>
@@ -71,7 +71,7 @@ export function MonthCalendar({
             <button
               type="button"
               onClick={onToday}
-              className="rounded-full border border-border px-2.5 py-0.5 text-[12px] font-semibold text-text-secondary hover-emphasis-sm"
+              className="rounded-full border border-border px-2.5 py-0.5 text-[12px] font-semibold text-text-secondary hover:bg-gray-50 transition-colors duration-150"
             >
               오늘
             </button>
@@ -81,7 +81,7 @@ export function MonthCalendar({
           type="button"
           onClick={onNextMonth}
           aria-label="다음 달"
-          className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
+          className="flex size-8 items-center justify-center rounded-full hover:bg-gray-50 transition-colors duration-150"
         >
           <Icon name="chevron-right" size="sm" color="inactive" decorative />
         </button>
@@ -120,17 +120,33 @@ export function MonthCalendar({
                 key={key}
                 type="button"
                 onClick={() => onDayClick(key)}
-                className="flex min-h-[46px] items-center justify-center rounded-xl p-1 hover-emphasis-sm"
+                className="flex min-h-[46px] items-center justify-center rounded-sm p-1 hover:bg-gray-50 transition-colors duration-150"
               >
                 {hasThumb ? (
                   <span
                     className={cn(
-                      "aspect-square w-full overflow-hidden rounded-lg",
-                      isSelected && "ring-2 ring-primary ring-offset-1",
+                      "relative mx-auto aspect-square w-[88%]",
+                      isSelected && "rounded-md ring-2 ring-primary ring-offset-1",
                     )}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={thumbs[0]} alt="" className="h-full w-full object-cover" />
+                    {thumbs.slice(0, 3).map((src, idx, arr) => (
+                      <span
+                        key={`${key}-${idx}`}
+                        className="absolute inset-0 overflow-hidden rounded-md border border-white shadow-sm"
+                        style={{
+                          transform: `rotate(${(idx - (arr.length - 1) / 2) * 7}deg) scale(${1 - idx * 0.05})`,
+                          zIndex: idx,
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={src} alt="" className="h-full w-full object-cover" />
+                      </span>
+                    ))}
+                    {thumbs.length > 1 ? (
+                      <span className="absolute -right-0.5 -top-0.5 z-10 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
+                        {thumbs.length}
+                      </span>
+                    ) : null}
                   </span>
                 ) : (
                   <span
@@ -162,7 +178,7 @@ export function MonthCalendar({
               onClick={() => onDayClick(key)}
               className={cn(
                 "mx-auto flex size-9 items-center justify-center rounded-full text-[14px] font-semibold",
-                !(disablePast && isPast) && "hover-emphasis-sm",
+                !(disablePast && isPast) && "hover:bg-gray-50 transition-colors duration-150",
                 disablePast && isPast
                   ? "cursor-not-allowed text-gray-300 line-through opacity-50"
                   : isSelected

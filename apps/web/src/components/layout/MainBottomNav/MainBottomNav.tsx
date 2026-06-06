@@ -9,26 +9,35 @@ import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNav";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
-import { cn } from "@/lib/cn";
 import { API_BASE } from "@/lib/env";
 import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  calendar: ROUTES.CALENDAR,
+  explore: ROUTES.EXPLORE,
   create: ROUTES.INVITATIONS.CREATE,
   friends: ROUTES.FRIENDS.LIST,
-  me: ROUTES.PROFILE.ME,
+  profile: ROUTES.PROFILE.ME,
 };
 
-const HIDDEN_PATHS = ["/login", "/signup", "/edit", "/invitations/create", "/terms/agree", "/onboarding"];
+const HIDDEN_PATHS = [
+  "/login",
+  "/signup",
+  "/edit",
+  "/invitations/create",
+  "/terms/agree",
+  "/terms/service",
+  "/terms/privacy",
+  "/onboarding",
+];
 
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";
   if (pathname.startsWith("/invitations/create")) return "create";
-  if (pathname.startsWith("/calendar")) return "calendar";
+  if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/friends")) return "friends";
-  return "me";
+  if (pathname.startsWith("/profile")) return "profile";
+  return "home";
 }
 
 export interface MainBottomNavProps {
@@ -47,13 +56,13 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
 
 
   const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
-    item.key === "me" && hydrated && !isLoggedIn
+    item.key === "profile" && hydrated && !isLoggedIn
       ? { ...item, label: "로그인", icon: "user-plus" as const }
       : item,
   );
 
   function renderItem(item: BottomNavItem, content: ReactNode) {
-    if (item.key === "me" && hydrated && !isLoggedIn) {
+    if (item.key === "profile" && hydrated && !isLoggedIn) {
       return (
         <button
           type="button"
@@ -78,20 +87,14 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
     <>
       <div
         aria-hidden="true"
-        className="shrink-0 h-[calc(4rem+12px+env(safe-area-inset-bottom))]"
+        className="shrink-0 h-[calc(4rem+env(safe-area-inset-bottom))]"
       />
-      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto max-w-md px-4 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto w-full max-w-md pb-[env(safe-area-inset-bottom)]">
         <BottomNavigation
           items={items}
           activeKey={activeKey}
           renderItem={renderItem}
-          showLabels={false}
-          className={cn(
-            "border border-white/15",
-            "bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(28,28,30,0.28)_100%)]",
-            "shadow-[0_8px_32px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.14)]",
-            "backdrop-blur-2xl backdrop-saturate-150",
-          )}
+          showLabels
         />
       </div>
 

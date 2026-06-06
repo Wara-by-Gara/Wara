@@ -24,11 +24,9 @@ const LOCATION_PERMISSION_OFF = {
 
 const ONBOARDING_KEY = "wara_onboarding_done";
 
-const INTRO_SEQUENCE: OnboardingStep[] = ["intro1", "intro2", "intro3", "intro4", "intro5"];
-
 export function OnboardingContainer() {
   const router = useRouter();
-  const [step, setStep] = useState<OnboardingStep>("intro1");
+  const [step, setStep] = useState<OnboardingStep>("permissionNotification");
   const { mutate: disableNotifications } = useMutation({
     mutationFn: () => updateNotificationSettings(NOTIFICATION_PERMISSION_OFF),
   });
@@ -51,16 +49,12 @@ export function OnboardingContainer() {
     setTimeout(() => router.replace("/"), 1500);
   };
 
-  const handleNext = () => {
-    const idx = INTRO_SEQUENCE.indexOf(step);
-    if (idx >= 0 && idx < INTRO_SEQUENCE.length - 1) {
-      setStep(INTRO_SEQUENCE[idx + 1]!);
-    } else {
-      setStep("permissionNotification");
-    }
+  const handleSkip = () => {
+    disableNotifications();
+    disablePhotoNotifications();
+    disableLocationNotifications();
+    complete();
   };
-
-  const handleSkip = () => setStep("permissionNotification");
 
   const handleDeny = () => {
     if (step === "permissionNotification") {
@@ -83,17 +77,28 @@ export function OnboardingContainer() {
     if (step === "permissionNotification") {
       if (typeof Notification !== "undefined") {
         const result = await Notification.requestPermission();
-        if (result === "denied") { disableNotifications(); setStep("permissionDenied"); return; }
+        if (result === "denied") {
+          disableNotifications();
+          setStep("permissionDenied");
+          return;
+        }
       }
       setStep("permissionPhoto");
     } else if (step === "permissionPhoto") {
       setStep("permissionLocation");
     } else if (step === "permissionLocation") {
       await new Promise<void>((resolve) => {
-        if (!navigator.geolocation) { disableLocationNotifications(); resolve(); return; }
+        if (!navigator.geolocation) {
+          disableLocationNotifications();
+          resolve();
+          return;
+        }
         navigator.geolocation.getCurrentPosition(
           () => resolve(),
-          () => { disableLocationNotifications(); resolve(); },
+          () => {
+            disableLocationNotifications();
+            resolve();
+          },
         );
       });
       complete();
@@ -105,7 +110,6 @@ export function OnboardingContainer() {
   return (
     <Onboarding
       step={step}
-      onNext={handleNext}
       onSkip={handleSkip}
       onAllow={handleAllow}
       onDeny={handleDeny}

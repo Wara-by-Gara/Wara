@@ -37,7 +37,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
         <section className="flex flex-col gap-4">
           <h1 className="text-[22px] font-extrabold text-text-primary">서비스 약관에 동의해주세요</h1>
           <div className="flex flex-col gap-1">
-            <label className="flex items-center gap-3 rounded-2xl border border-border-strong px-4 py-3.5">
+            <label className="flex items-center gap-3 rounded-md border border-border-strong px-4 py-3.5">
               <Checkbox checked={checks.all} onCheckedChange={(v) => toggleAll(!!v)} />
               <span className="text-[15px] font-semibold text-text-primary">모두 동의</span>
             </label>
@@ -69,7 +69,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
       return (
         <section className="flex flex-col gap-3">
           <h1 className="text-[22px] font-extrabold text-text-primary">{title}</h1>
-          <p className="rounded-2xl bg-gray-50 p-4 text-[13px] leading-relaxed text-text-secondary">
+          <p className="rounded-md bg-gray-50 p-4 text-[13px] leading-relaxed text-text-secondary">
             (약관 본문 발췌) 본 약관은 Wara(이하 &ldquo;회사&rdquo;)가 제공하는 서비스를 이용함에 있어 회사와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다…
           </p>
         </section>
@@ -100,15 +100,15 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
           {step === "profileImageSelect" ? (
             <button
               type="button"
-              className="relative inline-flex size-32 items-center justify-center rounded-full bg-gray-100"
+              className="relative inline-flex size-36 items-center justify-center rounded-full bg-gray-100"
             >
-              <Avatar size="xl" initial="와" className="size-32 text-3xl" />
+              <Avatar size="xl" initial="와" className="size-36 text-3xl" />
               <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
                 <Icon name="camera" size="sm" color="currentColor" decorative />
               </span>
             </button>
           ) : (
-            <div className="relative size-64 overflow-hidden rounded-2xl bg-gray-900">
+            <div className="relative size-64 overflow-hidden rounded-lg bg-gray-900">
               <div className="absolute inset-4 rounded-full border-4 border-dashed border-white/60" />
               <div className="absolute inset-x-4 bottom-4 text-center text-[12px] text-white/80">
                 원하는 영역을 맞춰주세요
@@ -149,8 +149,8 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
       <TopAppBar title="회원가입" onBack={step === "complete" ? undefined : onBack} />
-      <main className={step === "complete" || step === "failed" ? "flex flex-1 items-center justify-center px-6 py-6" : "flex-1 px-6 py-6"}>{renderBody()}</main>
-      <footer className="px-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      <main className={step === "complete" || step === "failed" ? "flex flex-1 items-center justify-center px-page py-6" : "flex-1 px-page py-6"}>{renderBody()}</main>
+      <footer className="px-page pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <Button variant="primary" size="lg" fullWidth onClick={onNext}>{ctaLabel}</Button>
       </footer>
     </div>

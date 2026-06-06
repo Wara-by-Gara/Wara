@@ -19,7 +19,7 @@ export const Checkbox = forwardRef<
     <RCheckbox.Root
       ref={ref}
       className={cn(
-        "peer inline-flex size-5 shrink-0 items-center justify-center rounded-md border-2 bg-surface transition-colors",
+        "peer inline-flex size-5 shrink-0 items-center justify-center rounded-xs border-2 bg-surface transition-colors",
         "border-border-strong hover:border-primary",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary",
         "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary",

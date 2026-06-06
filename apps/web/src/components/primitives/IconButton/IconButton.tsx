@@ -9,17 +9,17 @@ import { cn } from "@/lib/cn";
 const iconButtonVariants = cva(
   [
     "relative inline-flex items-center justify-center rounded-full",
-    "transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter] select-none",
+    "transition-colors select-none",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
     "disabled:opacity-40 disabled:cursor-not-allowed",
   ],
   {
     variants: {
       variant: {
-        default: "bg-transparent text-text-primary hover-emphasis-sm",
+        default: "bg-transparent text-text-primary hover:bg-gray-100 transition-colors duration-150",
         filled: "bg-primary text-text-inverse hover:bg-primary-hover",
-        ghost: "bg-transparent text-text-secondary hover-emphasis-sm",
-        danger: "bg-transparent text-danger hover-emphasis-sm",
+        ghost: "bg-transparent text-text-secondary hover:bg-gray-100 transition-colors duration-150",
+        danger: "bg-transparent text-danger hover:bg-gray-100 transition-colors duration-150",
       },
       size: {
         sm: "size-9",

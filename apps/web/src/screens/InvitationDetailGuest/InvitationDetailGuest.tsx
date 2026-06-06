@@ -105,7 +105,7 @@ function ParticipantAvatarStrip() {
         <Avatar
           size="lg"
           initial={`+${overflowCount}`}
-          className="bg-pink-100 text-[11px] font-bold text-pink-600"
+          className="bg-cranberry-10 text-[11px] font-bold text-cranberry-60"
         />
       ) : null}
     </AvatarGroup>
@@ -128,7 +128,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6 pt-2">
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2">
           <InvitationDetailSkeleton />
         </main>
       </div>
@@ -150,7 +150,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="비공개 초대장" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page text-center">
           <Icon name="lock-keyhole" size="xl" color="primary" decorative />
           <p className="text-[18px] font-bold text-text-primary">비밀번호를 입력해주세요</p>
           <p className="text-[13px] text-text-secondary">호스트에게 받은 비밀번호를 입력하세요</p>
@@ -221,7 +221,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
         }
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6">
+      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6">
         {showCover ? (
           <InvitationCover
             variant="image"
@@ -257,9 +257,9 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
           {state === "dateVotePending" ? (
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-left transition-colors active:bg-amber-100"
+              className="flex w-full items-center gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-left transition-colors active:bg-amber-100"
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-amber-100">
                 <Icon name="clock" size="md" color="currentColor" decorative className="text-amber-500" />
               </div>
               <div className="min-w-0 flex-1">
@@ -281,7 +281,8 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
               variant="preview"
               placeName={mockInvitation.location}
               address={mockInvitation.address}
-              mapPreviewUrl="/jeonju-map-preview.png"
+              mapLat={35.8242}
+              mapLng={127.148}
             />
           ) : showOnline ? (
             <LocationCard variant="online" onlineLink="https://meet.example.com/wara" />
@@ -302,7 +303,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
 
           {state === "public" ? (
             <>
-              <section className="rounded-3xl border border-border bg-surface p-4">
+              <section className="rounded-md border border-border bg-surface p-4">
                 <h3 className="text-[15px] font-bold text-text-primary">참석자 명단</h3>
                 <div className="mt-3">
                   <ParticipantAvatarStrip />
@@ -312,7 +313,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
           ) : null}
 
           {state === "participantPreview" || state === "alreadyResponded" || state === "alreadyRespondedProfileOpen" || state === "withCoverImage" ? (
-            <section className="rounded-3xl border border-border bg-surface p-4">
+            <section className="rounded-md border border-border bg-surface p-4">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-text-primary">참석 {mockInvitation.rsvp?.current}명</h3>
                 <button className="text-[13px] text-primary">전체보기</button>
@@ -329,7 +330,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
                     status={p.status}
                     isHost={p.isHost}
                     onClick={() => openProfile(idx)}
-                    className="cursor-pointer rounded-xl hover-emphasis-sm active:opacity-80"
+                    className="cursor-pointer rounded-sm hover:bg-gray-50 transition-colors duration-150 active:opacity-80"
                   />
                 ))}
               </div>
@@ -352,7 +353,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
             <button
               type="button"
               onClick={onMomentLog}
-              className="group w-full overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 to-rose-400 p-4 text-left shadow-md transition-opacity active:opacity-80"
+              className="group w-full overflow-hidden rounded-md bg-brand p-4 text-left shadow-sm transition-colors hover:bg-brand-hover active:opacity-90"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col gap-0.5">
@@ -362,7 +363,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
                   {mockRemindPhotos.slice(0, 3).map((p) => (
                     <div
                       key={p.id}
-                      className="size-14 overflow-hidden rounded-xl ring-2 ring-white/40"
+                      className="size-14 overflow-hidden rounded-sm ring-2 ring-white/40"
                     >
                       {p.src ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -377,7 +378,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
             </button>
           ) : null}
 
-          <section className="rounded-3xl border border-border bg-surface p-4">
+          <section className="rounded-md border border-border bg-surface p-4">
             <div className="mb-2 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="text-[15px] font-bold text-text-primary">사진 앨범</h3>
@@ -419,7 +420,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
 
           <section
             className={cn(
-              "rounded-3xl border border-border bg-surface",
+              "rounded-xs border border-border bg-surface",
               isPublicDetail ? "px-2 py-4" : "p-4",
             )}
           >
@@ -468,7 +469,7 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
       />
 
       {state === "loggedOut" ? (
-        <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
+        <div className="shrink-0 border-t border-border bg-surface px-page py-3 text-center text-[13px] text-text-secondary">
           로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       ) : null}

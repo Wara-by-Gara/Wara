@@ -85,7 +85,7 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
         }
       />
 
-      <div className="px-5 py-3">
+      <div className="px-page py-3">
         <ParticipantSummaryCard
           variant={isHost || state === "hostManageView" ? "host" : "guest"}
           summary={{
@@ -100,12 +100,12 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
       </div>
 
       {state === "search" || state === "searchResult" || state === "searchEmpty" ? (
-        <div className="px-5 pb-2">
+        <div className="px-page pb-2">
           <SearchBar showCancel placeholder="이름으로 검색" defaultValue={state !== "search" ? "박" : ""} />
         </div>
       ) : null}
 
-      <div className="flex gap-1.5 overflow-x-auto px-5 py-2">
+      <div className="flex gap-1.5 overflow-x-auto px-page py-2">
         {(Object.keys(TAB_LABELS) as ParticipantsTab[]).map((t) => (
           <Chip key={t} variant="filter" selected={t === tab}>{TAB_LABELS[t]}</Chip>
         ))}
@@ -121,7 +121,7 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
         ) : state === "searchEmpty" ? (
           <EmptyState icon="search" title="검색 결과가 없어요" />
         ) : (
-          <div className="rounded-3xl bg-surface px-2 py-1">
+          <div className="rounded-xs bg-surface px-2 py-1">
             <div className="divide-y divide-border">
               {filteredByTab.map((p) => (
                 <ParticipantItem
@@ -147,7 +147,7 @@ export const Participants = ({ tab = "all", state = "default", isHost = false, o
             <ShareOptionItem icon="user-check" title="참석만" iconBg="bg-green-50" iconColor="text-green-600" />
             <ShareOptionItem icon="hourglass" title="미정" iconBg="bg-yellow-50" iconColor="text-yellow-400" />
             <ShareOptionItem icon="user-x" title="불참" iconBg="bg-surface" />
-            <ShareOptionItem icon="memo" title="메모 있음" iconBg="bg-pink-100" iconColor="text-pink-600" />
+            <ShareOptionItem icon="memo" title="메모 있음" iconBg="bg-cranberry-10" iconColor="text-cranberry-60" />
           </div>
         </BottomSheetContent>
       </BottomSheet>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
+import { stickyMainTopSpacious } from "@/lib/mobilePageLayout";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { MonthCalendar } from "@/components/organisms/MonthCalendar";
 import { useMyInvitations } from "@/hooks/useInvitations";
@@ -103,7 +104,7 @@ export function Calendar() {
       <StickyHeader title="캘린더" />
 
       {!isLoading && !hasAnyEvent ? (
-        <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-5">
+        <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-page">
           <EmptyState
             icon="calendar"
             title="아직 일정이 없어요"
@@ -111,7 +112,7 @@ export function Calendar() {
           />
         </main>
       ) : (
-        <main className="relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4 pt-[72px]">
+        <main className={`relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-4 ${stickyMainTopSpacious}`}>
           <MonthCalendar
             year={year}
             month={month}
@@ -123,13 +124,13 @@ export function Calendar() {
             getDayThumbnails={getDayThumbnails}
           />
 
-          <section className="rounded-2xl border border-border bg-surface p-4">
+          <section className="rounded-md border border-border bg-surface p-4">
             <div className="mb-3 flex items-center justify-between">
               <button
                 type="button"
                 aria-label="이전 날"
                 onClick={() => shiftDay(-1)}
-                className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
+                className="flex size-8 items-center justify-center rounded-full hover:bg-gray-50 transition-colors duration-150"
               >
                 <Icon name="chevron-left" size="sm" color="inactive" decorative />
               </button>
@@ -140,7 +141,7 @@ export function Calendar() {
                 type="button"
                 aria-label="다음 날"
                 onClick={() => shiftDay(1)}
-                className="flex size-8 items-center justify-center rounded-full hover-emphasis-sm"
+                className="flex size-8 items-center justify-center rounded-full hover:bg-gray-50 transition-colors duration-150"
               >
                 <Icon name="chevron-right" size="sm" color="inactive" decorative />
               </button>
@@ -157,9 +158,9 @@ export function Calendar() {
                     key={ev.id}
                     type="button"
                     onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
-                    className="flex items-center gap-3 rounded-xl p-2 text-left hover-emphasis-sm"
+                    className="flex items-center gap-3 rounded-sm p-2 text-left hover:bg-gray-50 transition-colors duration-150"
                   >
-                    <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                    <div className="size-14 shrink-0 overflow-hidden rounded-sm bg-gray-100">
                       {coverUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={coverUrl} alt="" className="h-full w-full object-cover" />

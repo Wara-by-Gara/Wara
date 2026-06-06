@@ -36,7 +36,7 @@ export const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-      <section ref={ref} className={cn("flex flex-col gap-2", className)} {...props}>
+      <section ref={ref} className={cn("flex flex-col gap-1.5", className)} {...props}>
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
@@ -48,7 +48,7 @@ export const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(
             )}
             aria-expanded={collapsible ? open : undefined}
           >
-            <h2 className="text-[18px] font-bold text-text-primary">{heading}</h2>
+            <h2 className="type-section-title">{heading}</h2>
             {collapsible ? (
               <Icon
                 name="chevron-down"
@@ -62,7 +62,7 @@ export const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(
           {action ? <div className="shrink-0">{action}</div> : null}
         </div>
         {description ? (
-          <p className="text-[14px] text-text-secondary">{description}</p>
+          <p className="type-section-desc">{description}</p>
         ) : null}
         {children && (!collapsible || open) ? <div>{children}</div> : null}
       </section>

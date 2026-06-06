@@ -8,6 +8,7 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { cn } from "@/lib/cn";
 import {
   clampCoverRatio,
+  clampDetailCoverRatio,
   COVER_DEFAULT_RATIO,
 } from "@/utils/invitationCoverAspect";
 
@@ -36,10 +37,12 @@ export interface InvitationCoverProps extends React.HTMLAttributes<HTMLDivElemen
   hideBottomGradient?: boolean;
   /** 이미지/GIF 원본 비율에 맞춰 높이 가변(1.91:1~3:4 clamp). 상세 페이지 전용 */
   fitToImage?: boolean;
+  /** 초대장 상세 — 최대 1:1, rounded-lg (8px) */
+  detailMode?: boolean;
 }
 
 const containerBase =
-  "relative overflow-hidden rounded-3xl aspect-[4/5] min-h-72";
+  "relative overflow-hidden rounded-lg aspect-[4/5] min-h-72";
 
 export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
   function InvitationCover(
@@ -57,6 +60,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       children,
       hideBottomGradient = false,
       fitToImage = false,
+      detailMode = false,
       style,
       ...props
     },
@@ -67,8 +71,10 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
     const mediaUrl =
       gifUrl ??
       ((variant === "image" || variant === "template") && imageUrl ? imageUrl : undefined);
-    const fit = fitToImage && !!mediaUrl;
-    const displayRatio = clampCoverRatio(naturalRatio ?? COVER_DEFAULT_RATIO);
+    const fit = detailMode || (fitToImage && !!mediaUrl);
+    const displayRatio = detailMode
+      ? clampDetailCoverRatio(naturalRatio ?? 1)
+      : clampCoverRatio(naturalRatio ?? COVER_DEFAULT_RATIO);
     const hasCoverMedia = !!(mediaUrl || gifUrl);
     const showBottomGradient =
       hasCoverMedia &&
@@ -90,7 +96,9 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       <div
         ref={ref}
         className={cn(
-          fit ? "relative w-full overflow-hidden rounded-3xl" : containerBase,
+          fit
+            ? cn("relative w-full overflow-hidden rounded-lg")
+            : containerBase,
           !fit && variant === "color" && (backgroundClass ?? "bg-white"),
           !fit && variant === "no-image" && "bg-gray-100",
           fit && variant === "color" && (backgroundClass ?? "bg-white"),
@@ -145,7 +153,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
               size="sm"
               aria-label="뒤로가기"
               onClick={onBack}
-              className="bg-black/40 text-white hover-emphasis-sm"
+              className="bg-black/40 text-white hover:bg-black/50 transition-colors duration-150"
             />
           ) : (
             <span />
@@ -158,7 +166,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="공유"
                 onClick={onShare}
-                className="bg-black/40 text-white hover-emphasis-sm"
+                className="bg-black/40 text-white hover:bg-black/50 transition-colors duration-150"
               />
             ) : null}
             {isHost && onMore ? (
@@ -168,7 +176,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
                 size="sm"
                 aria-label="더보기"
                 onClick={onMore}
-                className="bg-black/40 text-white hover-emphasis-sm"
+                className="bg-black/40 text-white hover:bg-black/50 transition-colors duration-150"
               />
             ) : null}
           </div>

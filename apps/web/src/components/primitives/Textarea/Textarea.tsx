@@ -49,7 +49,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           }}
           {...(isControlled ? { value } : { defaultValue })}
           className={cn(
-            "w-full rounded-[14px] border bg-surface p-4 text-[16px] text-text-primary placeholder:text-text-tertiary transition-colors resize-y",
+            "w-full rounded-sm border bg-surface p-4 text-[16px] text-text-primary placeholder:text-text-tertiary transition-colors resize-y",
             "outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
             "disabled:bg-background-soft disabled:cursor-not-allowed",
             error

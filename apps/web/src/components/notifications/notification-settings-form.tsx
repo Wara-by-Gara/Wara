@@ -1,5 +1,6 @@
 'use client';
 
+import { SettingsToggleListSkeleton } from '@/components/organisms/Skeleton';
 import { Switch } from '@/components/primitives/Switch';
 import type { NotificationSettings } from '@/lib/api/notifications';
 
@@ -54,11 +55,7 @@ export function NotificationSettingsForm({
   onToggle,
 }: Props) {
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-sm text-text-tertiary">
-        로딩 중...
-      </div>
-    );
+    return <SettingsToggleListSkeleton />;
   }
 
   return (

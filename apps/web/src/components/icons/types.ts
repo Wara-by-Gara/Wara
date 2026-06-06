@@ -51,6 +51,7 @@ export type IconName =
   | "clock"
   | "map-pin"
   | "navigation"
+  | "compass"
   | "link"
   | "copy"
   | "share"

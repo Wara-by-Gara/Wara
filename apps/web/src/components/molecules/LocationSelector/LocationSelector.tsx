@@ -109,7 +109,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               <p className="text-[13px] text-text-tertiary">검색 결과가 없어요</p>
             )}
             {state === "permission-required" && (
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-background-soft p-3">
+              <div className="flex items-center justify-between gap-3 rounded-md bg-background-soft p-3">
                 <p className="text-[14px] text-text-primary">위치 권한이 필요해요</p>
                 <Button size="sm" variant="text" className="shrink-0">
                   권한 허용
@@ -120,7 +120,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
         )}
 
         {mode === "selected" && selected && (
-          <div className="flex items-start gap-2 rounded-2xl border border-border bg-surface p-3">
+          <div className="flex items-start gap-2 rounded-md border border-border bg-surface p-3">
             <Icon name="map-pin" size="md" color="primary" decorative className="mt-0.5 shrink-0" />
             <div className="flex-1">
               <p className="text-[15px] font-semibold text-text-primary">{selected.name}</p>
@@ -138,7 +138,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
           />
         )}
 
-        <label className="flex items-center justify-between gap-3 rounded-2xl bg-background-soft px-4 py-2.5">
+        <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
           <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
           <Switch
             checked={effectiveUnknown}

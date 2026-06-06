@@ -205,7 +205,7 @@ function InlineCommentEditor({
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
           if (e.key === "Escape") onCancel();
         }}
-        className="w-full rounded-lg bg-gray-100 px-3 py-1.5 text-[14px] text-text-primary outline-none"
+        className="w-full rounded-md bg-gray-100 px-3 py-1.5 text-[14px] text-text-primary outline-none"
       />
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="text-[12px] text-text-tertiary hover:text-text-secondary">

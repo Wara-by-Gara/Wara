@@ -23,7 +23,7 @@ export interface WeatherCardProps {
   unavailable?: boolean;
 }
 
-const WEATHER_META: Record<
+export const WEATHER_META: Record<
   WeatherCondition,
   { emoji: string; label: string }
 > = {
@@ -39,6 +39,27 @@ const WEATHER_META: Record<
   foggy:        { emoji: "🌫️", label: "안개" },
 };
 
+export function LocationWeatherInline({
+  condition,
+  temperatureCelsius,
+}: {
+  condition?: WeatherCondition;
+  temperatureCelsius?: number;
+}) {
+  if (condition === undefined || temperatureCelsius === undefined) return null;
+  const meta = WEATHER_META[condition];
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1 pt-0.5">
+      <span className="text-[20px] leading-none" aria-hidden>
+        {meta.emoji}
+      </span>
+      <span className="text-[13px] font-medium text-text-secondary">
+        {temperatureCelsius}°C
+      </span>
+    </div>
+  );
+}
+
 export function WeatherCard({
   condition,
   temperatureCelsius,
@@ -52,7 +73,7 @@ export function WeatherCard({
   const meta = condition ? WEATHER_META[condition] : null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
       {/* Header */}
       <div className="flex items-center gap-2">
         <span className="text-[18px]">🌤️</span>

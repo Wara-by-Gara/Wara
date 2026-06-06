@@ -59,7 +59,7 @@ export function AutoSlide({
       <div
         className={cn(
           "relative overflow-hidden bg-gray-100",
-          rounded && "rounded-3xl",
+          rounded && "rounded-lg",
           aspectClassName,
           className,
         )}
@@ -75,7 +75,7 @@ export function AutoSlide({
       aria-label="슬라이드"
       className={cn(
         "relative w-full overflow-hidden",
-        rounded && "rounded-3xl",
+        rounded && "rounded-lg",
         aspectClassName,
         className,
       )}

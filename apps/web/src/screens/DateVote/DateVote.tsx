@@ -112,9 +112,9 @@ function slotResultToDateSlot(sr: SlotResult): DateSlot {
 
 // ── Vote constants ─────────────────────────────────────────────────────────
 const VOTE_CFG = {
-  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-surface text-emerald-500 border-emerald-200 hover-emphasis-sm", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
-  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-surface text-amber-500 border-amber-200 hover-emphasis-sm",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
-  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-surface text-rose-400 border-rose-200 hover-emphasis-sm",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
+  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-surface text-emerald-500 border-emerald-200 hover:bg-gray-50 transition-colors duration-150", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
+  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-surface text-amber-500 border-amber-200 hover:bg-gray-50 transition-colors duration-150",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
+  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-surface text-rose-400 border-rose-200 hover:bg-gray-50 transition-colors duration-150",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
 } as const;
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
@@ -169,7 +169,7 @@ function VoteBtn({ type, active, onClick }: { type: VoteResponse; active: boolea
   const cfg = VOTE_CFG[type];
   return (
     <button type="button" onClick={onClick}
-      className={cn("flex size-11 items-center justify-center rounded-full border text-[20px] font-black transition-all active:scale-90", active ? cfg.active : cfg.passive)}
+      className={cn("flex size-11 items-center justify-center rounded-full border text-[20px] font-black transition-colors", active ? cfg.active : cfg.passive)}
     >{cfg.symbol}</button>
   );
 }
@@ -193,7 +193,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
 }) {
   const groups = groupByDate(slots);
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <div className="overflow-hidden rounded-md border border-border bg-surface">
       <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-background-soft px-4 py-3">
         <span className="text-[12px] font-bold text-text-tertiary">날짜 · 시간</span>
         {TYPES.map((t) => (
@@ -245,7 +245,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
 function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: DateSlot; showNames: boolean; isConfirmed: boolean; isTop: boolean; onConfirm?: () => void }) {
   const total = slot.votes.circle + slot.votes.triangle + slot.votes.cross;
   return (
-    <div className={cn("rounded-2xl border p-4", isConfirmed ? "border-primary bg-primary/5 ring-2 ring-primary/20" : isTop ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-surface")}>
+    <div className={cn("rounded-md border p-4", isConfirmed ? "border-primary bg-primary/5 ring-2 ring-primary/20" : isTop ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-surface")}>
       <div className="flex items-start justify-between gap-2">
         <div>
           {isConfirmed && <span className="text-[11px] font-extrabold uppercase tracking-widest text-primary">✓ 확정</span>}
@@ -259,7 +259,7 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: 
             <button
               type="button"
               onClick={onConfirm}
-              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover-emphasis-sm active:scale-95 transition-[transform,box-shadow]"
+              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover:bg-gray-50 transition-colors duration-150"
             >
               이 날짜로 확정
             </button>
@@ -351,7 +351,7 @@ function WheelColumn({
     <div className="relative flex flex-1 flex-col items-center" style={{ height: ITEM_H * VISIBLE }}>
       {/* 선택 영역 하이라이트 */}
       <div
-        className="pointer-events-none absolute inset-x-0 rounded-xl bg-primary/10"
+        className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary/10"
         style={{ top: ITEM_H * 2, height: ITEM_H }}
       />
       {/* 위 페이드 */}
@@ -420,13 +420,13 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
   const preview = formatTimeLabel(ampm, hour, minute);
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-2.5 rounded-md border border-border bg-surface p-4">
 
       {/* 오전/오후 플립 바 */}
       <button
         type="button"
         onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
-        className="flex w-full items-center overflow-hidden rounded-lg border border-border bg-background-soft"
+        className="flex w-full items-center overflow-hidden rounded-xs border border-border bg-background-soft"
       >
         {(["오전", "오후"] as const).map((v) => (
           <span
@@ -440,7 +440,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       </button>
 
       {/* 시 · 분 휠 */}
-      <div className="flex items-center gap-0 rounded-xl border border-border bg-background-soft px-2" style={{ height: 120, overflow: "hidden" }}>
+      <div className="flex items-center gap-0 rounded-sm border border-border bg-background-soft px-2" style={{ height: 120, overflow: "hidden" }}>
         <WheelColumn items={HOURS} value={hour} onChange={setHour} />
         <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
         <WheelColumn items={MINUTES} value={minute} onChange={setMinute} />
@@ -573,9 +573,9 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="투표 설정" onBack={() => setStep("date")} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
           {/* Summary */}
-          <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-2 text-[13px] font-bold text-text-primary">선택된 후보 ({slots.length}개)</p>
             <div className="flex flex-col gap-1">
               {Array.from(slotsByDate.entries()).map(([, daySlots]) =>
@@ -590,7 +590,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
           </div>
 
           {/* Deadline */}
-          <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-3 text-[13px] font-bold text-text-primary">투표 마감 시간</p>
             <div className="flex gap-3">
               {([
@@ -602,7 +602,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                   type="button"
                   onClick={() => setDeadlineMode(mode)}
                   className={cn(
-                    "flex flex-1 flex-col gap-0.5 rounded-2xl border p-3 text-left transition-all",
+                    "flex flex-1 flex-col gap-0.5 rounded-md border p-3 text-left transition-all",
                     deadlineMode === mode ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
@@ -612,26 +612,26 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
               ))}
             </div>
             {deadlineMode === "custom" && (
-              <div className="mt-3 flex gap-2 rounded-xl border border-border bg-background-soft p-3">
+              <div className="mt-3 flex gap-2 rounded-sm border border-border bg-background-soft p-3">
                 <input
                   type="date"
                   value={customDeadlineDate}
                   min={todayStr}
                   onChange={(e) => setCustomDeadlineDate(e.target.value)}
-                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
+                  className="flex-1 rounded-xs border border-border bg-surface px-3 py-2 text-[13px]"
                 />
                 <input
                   type="time"
                   value={customDeadlineTime}
                   onChange={(e) => setCustomDeadlineTime(e.target.value)}
-                  className="w-28 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
+                  className="w-28 rounded-xs border border-border bg-surface px-3 py-2 text-[13px]"
                 />
               </div>
             )}
           </div>
 
           {/* Public/private */}
-          <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-3 text-[13px] font-bold text-text-primary">투표자 공개 설정</p>
             <div className="flex gap-3">
               {[{ v: true, label: "공개", desc: "누가 어떤 응답인지 표시" }, { v: false, label: "비공개", desc: "통계만 표시, 이름 숨김" }].map(({ v, label, desc }) => (
@@ -640,7 +640,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                   type="button"
                   onClick={() => setIsPublic(v)}
                   className={cn(
-                    "flex flex-1 flex-col gap-0.5 rounded-2xl border p-3 text-left transition-all",
+                    "flex flex-1 flex-col gap-0.5 rounded-md border p-3 text-left transition-all",
                     isPublic === v ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
@@ -680,7 +680,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="일정 투표 만들기" onBack={onBack ?? (() => {})} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* Step indicator */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
@@ -743,14 +743,14 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
         {/* 30개 초과 메시지 */}
         {slotLimitMsg && (
-          <div className="rounded-xl bg-rose-50 px-4 py-2.5 text-[13px] font-medium text-rose-600">
+          <div className="rounded-sm bg-rose-50 px-4 py-2.5 text-[13px] font-medium text-rose-600">
             후보는 최대 30개까지 추가할 수 있어요
           </div>
         )}
 
         {/* Added slots list */}
         {slots.length > 0 && (
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          <div className="overflow-hidden rounded-md border border-border bg-surface">
             <div className="sticky top-0 z-10 bg-surface px-4 pb-2 pt-4">
               <p className="text-[13px] font-bold text-text-primary">추가된 후보 ({slots.length}개)</p>
               {slots.length >= 30 && (
@@ -773,7 +773,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                       type="button"
                       onClick={() => removeSlot(slots.indexOf(s))}
                       aria-label="삭제"
-                      className="flex size-7 items-center justify-center rounded-full text-text-tertiary hover-emphasis-sm"
+                      className="flex size-7 items-center justify-center rounded-full text-text-tertiary hover:bg-gray-50 transition-colors duration-150"
                     >
                       <Icon name="x" size="xs" color="currentColor" decorative />
                     </button>
@@ -907,11 +907,11 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="일정 투표" onBack={goBack} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pb-6 pt-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* 초대장 정보 */}
         {invitationId && invitation && (
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-surface p-3.5">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/10">
               <Icon name="ticket" size="md" color="primary" decorative />
             </div>
             <div className="min-w-0 flex-1">
@@ -926,18 +926,18 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
         {/* 상태 배너 */}
         {!isClosed ? (
           deadlineText ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
               <Icon name="clock" size="sm" color="currentColor" decorative className="shrink-0 text-amber-500" />
               <span className="text-[13px] font-medium text-amber-700">투표 마감 · {deadlineText}</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+            <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
               <Icon name="calendar" size="sm" color="inactive" decorative className="shrink-0" />
               <span className="text-[13px] text-text-secondary">투표 진행 중 · 마감일 없음</span>
             </div>
           )
         ) : isConfirmedView ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-primary bg-primary/5 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-md border border-primary bg-primary/5 px-4 py-3">
             <Icon name="check-circle" size="md" color="primary" decorative className="shrink-0" />
             <div>
               <p className="text-[13px] font-bold text-primary">날짜가 확정됐어요!</p>
@@ -947,7 +947,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
             <Icon name="lock" size="sm" color="inactive" decorative className="shrink-0" />
             <p className="text-[13px] text-text-secondary">투표가 마감되었어요 · 최종 결과</p>
           </div>
@@ -955,7 +955,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
 
         {/* 호스트 관리 패널 */}
         {state === "hostView" && (
-          <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-2.5 text-[13px] font-bold text-text-primary">호스트 관리</p>
             <div className="mt-2.5 flex gap-2">
               <Button variant="outline" size="sm"
@@ -973,7 +973,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
         {/* 참여 현황 */}
         {invitationId ? (
           totalCount > 0 && (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
+            <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {allParticipants.slice(0, 4).map(({ participant, user }) => (
@@ -998,7 +998,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             </div>
           )
         ) : (
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {["김", "윤", "최", "박"].map((initial, i) => (

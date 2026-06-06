@@ -32,9 +32,9 @@ const defaultProps = {
 };
 
 describe('NotificationDropdown', () => {
-  it('isLoading일 때 로딩 텍스트를 표시한다', () => {
-    render(<NotificationDropdown {...defaultProps} isLoading={true} />);
-    expect(screen.getByText('로딩 중...')).toBeInTheDocument();
+  it('isLoading일 때 스켈레톤을 표시한다', () => {
+    const { container } = render(<NotificationDropdown {...defaultProps} isLoading={true} />);
+    expect(container.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0);
   });
 
   it('알림이 없을 때 빈 상태 메시지를 표시한다', () => {

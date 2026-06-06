@@ -43,10 +43,10 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
             <Icon name="plus" size="lg" color="currentColor" decorative />
           </button>
         } />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-4">
           <div className="flex flex-col gap-2">
             {SAMPLE_LIST.map((n) => (
-              <article key={n.id} className="rounded-2xl border border-border bg-surface p-4">
+              <article key={n.id} className="rounded-md border border-border bg-surface p-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-text-primary">{n.title}</h3>
                   <span className="text-[12px] text-text-tertiary">{n.sentAt}</span>
@@ -84,7 +84,7 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
             <Icon name="more-horizontal" size="lg" color="currentColor" decorative />
           </button>
         } />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6">
           <h1 className="text-[20px] font-bold text-text-primary">주차장 안내</h1>
           <p className="mt-1 text-[13px] text-text-tertiary">1시간 전 · 호스트 김와라</p>
           <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-text-primary">
@@ -100,7 +100,7 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={screen === "edit" ? "공지 수정" : "공지 작성"} onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-4">
           <div className="flex flex-col gap-4">
             <FormField label="제목" required>
               <TextInput defaultValue={filled ? "주차장 안내" : ""} placeholder="공지 제목" />
@@ -148,7 +148,7 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="공지" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-5 text-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page text-center">
           <Icon name="badge-check" size="xl" color="success" decorative />
           <p className="text-[18px] font-bold text-text-primary">공지를 보냈어요</p>
           <p className="text-[14px] text-text-secondary">12명에게 알림이 도착했어요</p>
@@ -180,9 +180,9 @@ export const HostNotice = ({ screen = "list", onBack }: HostNoticeProps) => {
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="공지" onBack={onBack} />
-      <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-page py-4">
         {SAMPLE_LIST.map((n) => (
-          <article key={n.id} className="rounded-2xl border border-border bg-surface p-4">
+          <article key={n.id} className="rounded-md border border-border bg-surface p-4">
             <h3 className="text-[15px] font-bold text-text-primary">{n.title}</h3>
             <p className="mt-1 text-[13px] text-text-secondary">{n.body}</p>
             <p className="mt-2 text-[12px] text-text-tertiary">{n.sentAt}</p>

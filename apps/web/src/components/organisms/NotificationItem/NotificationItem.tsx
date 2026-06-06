@@ -18,11 +18,11 @@ export type NotificationType =
 const ICON_MAP: Record<NotificationType, { icon: IconName; bg: string; color: string }> = {
   newRsvp: { icon: "user-check", bg: "bg-green-50", color: "text-green-600" },
   rsvpChanged: { icon: "user-x", bg: "bg-yellow-50", color: "text-yellow-400" },
-  newComment: { icon: "message-circle", bg: "bg-sky-100", color: "text-sky-500" },
-  newPhoto: { icon: "image", bg: "bg-pink-100", color: "text-pink-600" },
+  newComment: { icon: "message-circle", bg: "bg-blue-100", color: "text-blue-500" },
+  newPhoto: { icon: "image", bg: "bg-cranberry-10", color: "text-cranberry-60" },
   invitationUpdated: { icon: "edit", bg: "bg-gray-100", color: "text-gray-700" },
   eventReminder: { icon: "calendar-clock", bg: "bg-primary-soft", color: "text-primary" },
-  albumOpened: { icon: "retro-camera", bg: "bg-pink-100", color: "text-pink-600" },
+  albumOpened: { icon: "camera", bg: "bg-cranberry-10", color: "text-cranberry-60" },
   hostNotice: { icon: "megaphone", bg: "bg-yellow-100", color: "text-yellow-400" },
 };
 
@@ -45,12 +45,12 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
   ) {
     const meta = ICON_MAP[type];
     return (
-      <div className={cn("relative flex items-start", unread && "bg-pink-50/60", "rounded-2xl")}>
+      <div className={cn("relative flex items-start", unread && "bg-cranberry-5/60", "rounded-xs")}>
         <button
           ref={ref}
           type="button"
           className={cn(
-            "flex flex-1 items-start gap-3 rounded-2xl px-4 py-3 text-left hover-emphasis-sm",
+            "flex flex-1 items-start gap-3 rounded-xs px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             className,
           )}
@@ -58,7 +58,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
         >
           <span
             className={cn(
-              "relative inline-flex size-10 shrink-0 items-center justify-center rounded-2xl",
+              "relative inline-flex size-10 shrink-0 items-center justify-center rounded-xs",
               meta.bg,
               meta.color,
             )}

@@ -7,17 +7,17 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { cn } from "@/lib/cn";
 
 const barVariants = cva(
-  "grid h-14 w-full items-center gap-2 px-4 transition-colors",
+  "grid min-h-[60px] w-full items-center gap-2 px-page pt-6 transition-colors",
   {
     variants: {
       variant: {
         solid: "bg-surface border-b border-border",
         transparent: "bg-transparent",
         scrolled: "bg-surface border-b border-border shadow-xs",
-        glass: "bg-surface/70 backdrop-blur-xl border-b border-border/50",
+        glass: "bg-surface/95 border-b border-border",
       },
     },
-    defaultVariants: { variant: "glass" },
+    defaultVariants: { variant: "solid" },
   },
 );
 
@@ -32,7 +32,7 @@ export interface TopAppBarProps
   title?: ReactNode;
   /** 큰 제목 모드 — 좌측 정렬, 22px */
   largeTitle?: boolean;
-  /** WARA 브랜드 로고 — Gmarket 폰트 적용 */
+  /** WARA 브랜드 로고 */
   brandLogo?: boolean;
   /** 헤더 바 좌측용 작은 WARA 로고 (알림 아이콘 높이에 맞춤) */
   brandLogoCompact?: boolean;
@@ -61,10 +61,10 @@ export const TopAppBar = forwardRef<HTMLElement, TopAppBarProps>(
   ) {
     const logoTitleClass = brandLogo
       ? cn(
-          "font-gmarket font-bold tracking-wide leading-none",
+          "font-bold tracking-wide leading-none",
           brandLogoCompact
             ? "ml-[4px] text-[20px] text-white"
-            : cn("text-wara-black", largeTitle ? "text-[32px]" : "text-[28px]"),
+            : cn("text-text-primary", largeTitle ? "text-[32px]" : "text-[28px]"),
         )
       : undefined;
 

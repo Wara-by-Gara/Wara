@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 
 const wrapperVariants = cva(
   [
-    "flex items-center gap-2 w-full h-[52px] rounded-[14px] border bg-surface transition-colors px-4",
+    "flex items-center gap-2 w-full h-[52px] rounded-xs border bg-surface transition-colors px-4",
     "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20",
   ],
   {
@@ -95,7 +95,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             onClick={() => setShow((v) => !v)}
             aria-label={show ? "비밀번호 숨기기" : "비밀번호 보기"}
             aria-pressed={show}
-            className="inline-flex size-8 items-center justify-center rounded-full text-text-tertiary hover-emphasis-sm"
+            className="inline-flex size-8 items-center justify-center rounded-full text-text-tertiary hover:bg-gray-100 transition-colors duration-150"
           >
             <Icon name={show ? "eye-off" : "eye"} size="sm" color="currentColor" decorative />
           </button>
