@@ -13,7 +13,6 @@ type Story = StoryObj<typeof AccountSettings>;
 export const ConnectedSocial: Story = { args: { screen: "connectedSocial" } };
 export const ConnectAdditional: Story = { args: { screen: "connectAdditional" } };
 export const DisconnectModal: Story = { args: { screen: "disconnectModal" } };
-export const LogoutModal: Story = { args: { screen: "logoutModal" } };
 export const LogoutComplete: Story = { args: { screen: "logoutComplete" } };
 export const WithdrawGuide: Story = { args: { screen: "withdrawGuide" } };
 export const WithdrawReason: Story = { args: { screen: "withdrawReason" } };

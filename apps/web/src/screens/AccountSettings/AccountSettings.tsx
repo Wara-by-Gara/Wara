@@ -58,7 +58,7 @@ export interface AccountSettingsProps {
 
 export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, onLinkRequest, isLinking, linkingProvider, onLastConnectedClick, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
-    screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
+    screen === "disconnectModal" || screen === "withdrawFinalConfirm",
   );
 
   if (screen === "connectedSocial" || screen === "connectAdditional" || screen === "disconnectModal") {
