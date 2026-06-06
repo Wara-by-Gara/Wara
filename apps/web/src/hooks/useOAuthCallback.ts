@@ -17,7 +17,8 @@ export function useOAuthCallback() {
       sessionStorage.removeItem('wara_oauth_return');
       const hasSeenOnboarding = localStorage.getItem('wara_onboarding_done');
       const returnTo = hasSeenOnboarding ? originalReturnTo : '/onboarding';
-      router.replace(`/terms/agree?returnTo=${encodeURIComponent(returnTo)}`);
+      // 약관 미동의 사용자는 lib/api/client.ts의 403 인터셉터가 /terms/agree로 보냄
+      router.replace(returnTo);
     }
   }, [searchParams, login, router, pathname]);
 }
