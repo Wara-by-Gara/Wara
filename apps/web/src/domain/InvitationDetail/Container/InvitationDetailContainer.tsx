@@ -25,7 +25,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" onBack={() => router.back()} />
-        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6 pt-2">
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2">
           <InvitationDetailSkeleton />
         </main>
       </div>
@@ -36,7 +36,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
         <TopAppBar className="shrink-0" onBack={() => router.back()} />
-        <main className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+        <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">초대장을 불러오지 못했어요</p>
           <Button variant="outline" onClick={() => router.back()}>돌아가기</Button>

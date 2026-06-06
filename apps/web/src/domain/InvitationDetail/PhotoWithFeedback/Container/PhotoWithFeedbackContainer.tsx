@@ -18,7 +18,7 @@ function isMomentLogVisible(eventStartAt: string | null): boolean {
 }
 
 export default function PhotoWithFeedbackContainer({ invitationId }: InvitationDetailProps) {
-  const { data, isLoading, hasNextPage } =
+  const { data, isLoading, hasNextPage, fetchAllPages, isFetchingNextPage } =
     usePhotos(invitationId);
   const total = data?.pages[0]?.total ?? 0;
   const photos = data?.pages.flatMap((p) => p.rows) ?? [];
@@ -37,7 +37,7 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
         <button
           type="button"
           onClick={() => setShowMomentLogModal(true)}
-          className="mb-3 w-full flex items-center justify-between rounded-3xl bg-linear-to-r from-primary to-purple-500 px-5 py-4 text-white"
+          className="mb-3 w-full flex items-center justify-between rounded-lg bg-linear-to-r from-primary to-purple-500 px-page py-4 text-white"
         >
           <div className="text-left">
             <p className="text-[13px] font-semibold opacity-80">
@@ -53,6 +53,8 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
         photos={photos}
         total={total}
         hasNextPage={!!hasNextPage}
+        fetchAllPages={fetchAllPages}
+        isFetchingNextPage={isFetchingNextPage}
       />
       <InvitationFeedbacks invitationId={invitationId} />
       {showMomentLogModal && (

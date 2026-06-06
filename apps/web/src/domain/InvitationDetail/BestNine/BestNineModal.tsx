@@ -46,7 +46,7 @@ export default function BestNineModal({ invitationId, onClose }: Props) {
       <TopAppBar className="shrink-0" title="리마인드 앨범" onBack={onClose} />
 
       {hasPhotos && (
-        <div className="shrink-0 border-b border-border bg-surface px-5 py-4">
+        <div className="shrink-0 border-b border-border bg-surface px-page py-4">
           <div className="flex items-center gap-3">
             <Avatar
               src={invitation?.host?.profileImageUrl ?? undefined}

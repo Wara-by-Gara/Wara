@@ -27,7 +27,7 @@ export function RsvpSection({
   helperText,
 }: RsvpSectionProps) {
   return (
-    <section className="rounded-3xl border border-border bg-surface p-4">
+    <section>
       <h3 className="text-[15px] font-bold text-text-primary">참석 여부</h3>
       <p className="mt-0.5 text-[12px] text-text-secondary">원하는 응답을 선택해주세요</p>
       <div className="mt-3">

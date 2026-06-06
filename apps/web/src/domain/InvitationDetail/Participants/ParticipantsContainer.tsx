@@ -196,19 +196,19 @@ export default function ParticipantsContainer() {
           )}
           <div className="flex gap-2">
             <button
-              className="flex-1 rounded-2xl border border-border py-3 text-sm font-semibold text-text-primary"
+              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
               onClick={() => { setMemoInput(selectedRow?.participant.hostMemo ?? ""); setSheetMode("memo"); }}
             >
               메모
             </button>
             <button
-              className="flex-1 rounded-2xl border border-border py-3 text-sm font-semibold text-text-primary"
+              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
               onClick={() => setSheetMode("rsvp")}
             >
               상태 변경
             </button>
             <button
-              className="flex-1 rounded-2xl bg-danger py-3 text-sm font-semibold text-white"
+              className="flex-1 rounded-xs bg-danger py-3 text-sm font-semibold text-white"
               onClick={() => setSheetMode("kick")}
             >
               내보내기
@@ -224,7 +224,7 @@ export default function ParticipantsContainer() {
           description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
         >
           <textarea
-            className="w-full resize-none rounded-2xl border border-border bg-surface p-4 text-sm text-text-primary outline-none"
+            className="w-full resize-none rounded-md border border-border bg-surface p-4 text-sm text-text-primary outline-none"
             rows={4}
             placeholder="메모를 입력하세요"
             maxLength={500}
@@ -289,7 +289,7 @@ export default function ParticipantsContainer() {
         onConfirm={() => kickMutation.mutate({ participantId: selectedRow!.participant.id })}
       />
 
-      <div className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-4 px-page py-5">
         <ParticipantSummaryCard
           summary={{
             total: summary?.totalCount ?? 0,
@@ -337,7 +337,7 @@ export default function ParticipantsContainer() {
             />
           )
         ) : (
-          <div className="rounded-3xl bg-surface px-2 py-1">
+          <div>
             <div className="divide-y divide-border">
               {filtered.map(({ participant, user }) => (
                 <ParticipantItem
@@ -352,7 +352,7 @@ export default function ParticipantsContainer() {
                   memo={isHost ? (participant.hostMemo ?? undefined) : undefined}
                   onClick={() => openProfile({ participant, user })}
                   onMore={isHost && participant.memberRole !== "HOST" ? () => openActionSheet({ participant, user }) : undefined}
-                  className="cursor-pointer rounded-xl hover-emphasis-sm active:opacity-80"
+                  className="cursor-pointer rounded-sm hover:bg-gray-50 transition-colors duration-150 active:opacity-80"
                 />
               ))}
             </div>

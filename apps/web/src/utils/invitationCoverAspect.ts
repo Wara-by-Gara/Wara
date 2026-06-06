@@ -9,6 +9,14 @@ export function clampCoverRatio(ratio: number): number {
   return Math.min(COVER_MAX_RATIO, Math.max(COVER_MIN_RATIO, ratio));
 }
 
+/** 상세 페이지 — 최대 1:1, 가로가 긴 이미지는 높이 축소 */
+export const DETAIL_COVER_MAX_RATIO = 1;
+export const DETAIL_COVER_MIN_RATIO = COVER_MAX_RATIO;
+
+export function clampDetailCoverRatio(ratio: number): number {
+  return Math.min(DETAIL_COVER_MIN_RATIO, Math.max(DETAIL_COVER_MAX_RATIO, ratio));
+}
+
 export function isCoverRatioOutOfBounds(ratio: number): boolean {
   return ratio > COVER_MAX_RATIO || ratio < COVER_MIN_RATIO;
 }

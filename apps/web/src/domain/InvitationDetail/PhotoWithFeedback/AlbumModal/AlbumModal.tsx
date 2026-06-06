@@ -7,6 +7,8 @@ import PhotoDetailModal from '@/domain/InvitationDetail/PhotoWithFeedback/PhotoD
 
 interface Props {
   photos: Photo[];
+  total: number;
+  isLoadingMore?: boolean;
   onClose: () => void;
   initialLikedMap?: Map<string, boolean>;
   initialLikeCountMap?: Map<string, number>;
@@ -25,7 +27,15 @@ const triggerDownloads = (items: PhotoDownloadItem[]) => {
   });
 };
 
-export default function AlbumModal({ photos, onClose, initialLikedMap, initialLikeCountMap, onLikeChange }: Props) {
+export default function AlbumModal({
+  photos,
+  total,
+  isLoadingMore = false,
+  onClose,
+  initialLikedMap,
+  initialLikeCountMap,
+  onLikeChange,
+}: Props) {
   const invitationId = photos[0]?.invitationId;
 
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
@@ -92,6 +102,8 @@ export default function AlbumModal({ photos, onClose, initialLikedMap, initialLi
       <PhotoListModal
         open
         onOpenChange={(o) => { if (!o) onClose(); }}
+        title={`전체 사진 ${total}장`}
+        isLoadingMore={isLoadingMore}
         photos={modalPhotos}
         onPhotoClick={(idx) => setViewingIndex(idx)}
         onPhotoLike={handlePhotoLike}

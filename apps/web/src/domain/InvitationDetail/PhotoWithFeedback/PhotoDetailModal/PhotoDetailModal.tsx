@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode, type ChangeEvent } from 'react';
 import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/photos';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
 import { GifPicker } from '@/components/organisms/GifPicker';
+import { MentionListSkeleton } from '@/components/organisms/Skeleton';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
@@ -243,7 +244,7 @@ export default function PhotoDetailModal({
       onGifClear={() => setPendingGif(null)}
       onGifButtonClick={() => setGifPickerOpen((v) => !v)}
       gifPicker={gifPickerOpen ? (
-        <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10 bg-black/80">
+        <div className="mx-3 mb-1 overflow-hidden rounded-md border border-white/10 bg-black/80">
           <GifPicker
             onSelect={(url) => { setPendingGif(url); setGifPickerOpen(false); }}
             onClose={() => setGifPickerOpen(false)}
@@ -251,9 +252,9 @@ export default function PhotoDetailModal({
         </div>
       ) : undefined}
       mentionDropdown={mentionQuery !== null ? (
-        <div className="mx-3 mb-1 rounded-2xl border border-white/10 bg-black/80 overflow-hidden">
+        <div className="mx-3 mb-1 rounded-md border border-white/10 bg-black/80 overflow-hidden">
           {isParticipantsLoading ? (
-            <p className="px-4 py-3 text-[13px] text-white/50">불러오는 중...</p>
+            <MentionListSkeleton count={3} />
           ) : filteredParticipants.length === 0 ? (
             <p className="px-4 py-3 text-[13px] text-white/50">일치하는 참가자 없음</p>
           ) : (
@@ -266,7 +267,7 @@ export default function PhotoDetailModal({
                       e.preventDefault();
                       handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
                   >
                     <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" name={p.user.nickname ?? undefined} />
                     <span className="text-[14px] text-white">@{p.user.nickname}</span>
@@ -332,7 +333,7 @@ function InlineCommentEditor({
           if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
           if (e.key === 'Escape') onCancel();
         }}
-        className="w-full rounded-lg bg-white/10 px-3 py-1.5 text-[14px] text-white placeholder:text-white/50 outline-none"
+        className="w-full rounded-xs bg-white/10 px-3 py-1.5 text-[14px] text-white placeholder:text-white/50 outline-none"
       />
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="text-[12px] text-white/60 hover:text-white">

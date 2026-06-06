@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { API_BASE } from "@/lib/env";
 import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
@@ -19,11 +18,15 @@ import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
+import { InvitationFeedSkeleton } from "@/components/organisms/Skeleton";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
-import { WeatherCard } from "@/components/organisms/WeatherCard";
-import { useWeather } from "@/hooks/useWeather";
-import { toWeatherCardCondition } from "@/lib/api/weather";
+import { InvitationDetailHero } from "@/domain/InvitationDetail/InvitationDetailHero";
+import { InvitationDescriptionBox } from "@/domain/InvitationDetail/InvitationDescriptionBox";
+import { ImmersiveTopBarButton } from "@/domain/InvitationDetail/ImmersiveTopBarButton";
+import { getInvitationDetailCover } from "@/domain/InvitationDetail/invitationDetailCover";
+import { formatInvitationDetailSchedule } from "@/utils/formatInvitationDetailSchedule";
+import { resolveInvitationBgClass } from "@/utils/resolveInvitationBgClass";
 import {
   RsvpSection,
   toRsvpButtonValue,
@@ -53,15 +56,13 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const { data: pollData } = usePoll(invitationId);
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
-  const { data: weather, within3Days, isFuture } = useWeather(
+  const { data: myParticipant, isLoading: isLoadingMyParticipant } = useMyParticipant(
     invitationId,
-    invitation.eventStartAt,
     { enabled: isLoggedIn },
   );
-
-  const { data: myParticipant } = useMyParticipant(invitationId, { enabled: isLoggedIn });
   const updateRsvp = useUpdateRsvp(invitationId);
   const joinInvitation = useJoinInvitation(invitationId);
+  const canViewFeed = !!myParticipant;
 
   const rsvpOptions = [
     { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
@@ -78,8 +79,8 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
-  const hasGif = invitation.mainCoverType === "gif";
-  const hasImage = invitation.mainCoverType === "image" && !!invitation.mainImageUrl && !(invitation.mainImageKey?.includes("defaults/") ?? false);
+  const cover = getInvitationDetailCover(invitation);
+  const schedule = formatInvitationDetailSchedule(invitation.eventStartAt);
 
   const allParticipants = participantsData?.participants ?? [];
   const attendingParticipants = allParticipants.filter(
@@ -87,54 +88,58 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   );
 
 
+  const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
+
   return (
-    <div className={cn("relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col font-pretendard", invitation.bgColor)}>
+    <div
+      className={cn(
+        "relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard text-text-primary",
+        pageBgClass,
+      )}
+    >
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
         className="shrink-0"
         variant="transparent"
-        onBack={() => router.back()}
+        leftSlot={
+          <ImmersiveTopBarButton aria-label="뒤로가기" onClick={() => router.back()}>
+            <Icon name="chevron-left" size="lg" color="currentColor" decorative />
+          </ImmersiveTopBarButton>
+        }
         rightSlot={
-          <button type="button" aria-label="공유" onClick={() => setShareSheetOpen(true)} className="inline-flex size-11 items-center justify-center text-text-secondary">
+          <ImmersiveTopBarButton aria-label="공유" onClick={() => setShareSheetOpen(true)}>
             <Icon name="share" size="lg" color="currentColor" decorative />
-          </button>
+          </ImmersiveTopBarButton>
         }
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-6">
-        <InvitationCover
-          variant={hasGif || hasImage ? "image" : "color"}
-          imageUrl={hasImage ? (invitation.mainImageUrl ?? undefined) : undefined}
-          gifUrl={hasGif ? (invitation.mainGifUrl ?? undefined) : undefined}
-          backgroundClass={invitation.bgColor}
-          hideBottomGradient
-          fitToImage
-        />
-
-        <header className="flex flex-col items-start gap-2">
-          <h1 className={cn("text-[26px] font-extrabold text-text-primary", fontClass)}>{invitation.title}</h1>
-          {invitation.host && (
-            <span className="flex items-center gap-2 text-[13px] text-text-tertiary">
-              <Avatar
-                src={invitation.host.profileImageUrl ?? undefined}
-                alt={invitation.host.name ?? invitation.host.nickname ?? ""}
-                name={invitation.host.name ?? invitation.host.nickname ?? undefined}
-                size="xs"
+      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6">
+        <div className="flex flex-col gap-2">
+          <InvitationDetailHero
+            title={invitation.title}
+            schedule={schedule}
+            fontClass={fontClass}
+            cover={
+              <InvitationCover
+                variant={cover.variant}
+                imageUrl={cover.imageUrl}
+                gifUrl={cover.gifUrl}
+                backgroundClass={invitation.bgColor}
+                hideBottomGradient
+                detailMode
               />
-              <span>
-                {invitation.host.name}{invitation.host.nickname ? <span className="ml-1 text-text-tertiary">@{invitation.host.nickname}</span> : null}
-              </span>
-            </span>
-          )}
-        </header>
+            }
+          />
 
-        {invitation.description ? (
-          <p className={cn("whitespace-pre-line text-left text-[15px] leading-relaxed text-text-primary", fontClass)}>
-            {invitation.description}
-          </p>
-        ) : null}
+          {invitation.description ? (
+            <InvitationDescriptionBox fontClass={fontClass}>
+              {invitation.description}
+            </InvitationDescriptionBox>
+          ) : null}
+        </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-8">
           {hasPoll && pollData?.poll.status !== 'confirmed' && (
             <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost={false} onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
           )}
@@ -144,30 +149,20 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             isHost={false}
             invitationId={invitationId}
             voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
+            showWeather={isLoggedIn}
+            hideDateInHeader
+            immersive
           />
 
-          {isLoggedIn && invitation.eventStartAt && isFuture && (
-            within3Days
-              ? weather && (
-                  <WeatherCard
-                    condition={toWeatherCardCondition(weather.condition)}
-                    temperatureCelsius={weather.temperature}
-                    rainProbability={weather.precipProbability}
-                    tip={weather.message}
-                  />
-                )
-              : <WeatherCard unavailable />
-          )}
-
           {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
-            <section className="rounded-3xl border border-border bg-surface p-4">
+            <section>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-text-primary">
                   참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
                 </h3>
                 <button
                   type="button"
-                  className="text-[13px] text-primary"
+                  className="text-[13px] text-brand"
                   onClick={() => router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))}
                 >
                   전체보기
@@ -181,32 +176,28 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             </section>
           )}
 
-        </div>
+          {isLoggedIn && (
+            <RsvpSection
+              value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
+              onValueChange={handleRsvp}
+              options={rsvpOptions}
+              closed={invitation.status === "closed"}
+              loading={updateRsvp.isPending || joinInvitation.isPending}
+            />
+          )}
 
-        {isLoggedIn && (
-          <RsvpSection
-            value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
-            onValueChange={handleRsvp}
-            options={rsvpOptions}
-            closed={invitation.status === "closed"}
-            loading={updateRsvp.isPending || joinInvitation.isPending}
-          />
-        )}
-
-        {isLoggedIn ? (
-          <PhotoWithFeedbackContainer invitationId={invitationId} />
-        ) : (
-          <div className="relative overflow-hidden rounded-3xl">
+          {!isLoggedIn ? (
+          <div className="relative overflow-hidden rounded-sm">
             <div className="pointer-events-none select-none blur-sm">
-              <div className="mb-3 rounded-3xl border border-border bg-surface p-4">
+              <div className="mb-3">
                 <div className="mb-3 h-5 w-16 rounded bg-border" />
                 <div className="grid grid-cols-3 gap-1">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="aspect-square rounded-xl bg-border" />
+                    <div key={i} className="aspect-square rounded-sm bg-border" />
                   ))}
                 </div>
               </div>
-              <div className="rounded-3xl border border-border bg-surface p-4">
+              <div>
                 <div className="mb-3 h-5 w-20 rounded bg-border" />
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="mb-3 flex gap-2">
@@ -219,7 +210,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
                 ))}
               </div>
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/60 backdrop-blur-sm">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/70 backdrop-blur-sm">
               <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
               <button
                 type="button"
@@ -230,11 +221,21 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               </button>
             </div>
           </div>
-        )}
+        ) : isLoadingMyParticipant || joinInvitation.isPending || updateRsvp.isPending ? (
+          <InvitationFeedSkeleton />
+        ) : canViewFeed ? (
+          <PhotoWithFeedbackContainer invitationId={invitationId} />
+        ) : (
+          <div className="rounded-md border border-dashed border-border bg-surface px-4 py-8 text-center">
+            <p className="text-[14px] font-medium text-text-primary">참석 여부를 선택하면</p>
+            <p className="mt-1 text-[13px] text-text-secondary">앨범과 댓글을 볼 수 있어요</p>
+          </div>
+          )}
+        </div>
       </main>
 
       {!isLoggedIn && (
-        <div className="shrink-0 border-t border-border bg-surface px-5 py-3 text-center text-[13px] text-text-secondary">
+        <div className="shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] text-text-secondary backdrop-blur-md">
           로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       )}
@@ -257,7 +258,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
                     sessionStorage.setItem("wara_oauth_return", window.location.pathname);
                     window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
                   }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-[18px] text-[16px] font-bold ${config.cls}`}
+                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-xs text-[16px] font-bold ${config.cls}`}
                 >
                   {config.label}
                 </button>
@@ -266,6 +267,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           </div>
         </BottomSheetContent>
       </BottomSheet>
+      </div>
     </div>
   );
 }
