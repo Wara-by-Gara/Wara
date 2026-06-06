@@ -251,7 +251,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: layout.pagePadding, gap: spacing[3] },
-  title: { ...typography.headline1, color: colors.textPrimary, marginBottom: spacing[2] },
+  title: { ...typography.heading1, color: colors.textPrimary, marginBottom: spacing[2] },
   section: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   label: { ...typography.body2, color: colors.textSecondary },
   value: { ...typography.body2, color: colors.textPrimary },
   sectionTitle: {
-    ...typography.label1,
+    ...typography.caption2,
     color: colors.textTertiary,
     marginTop: spacing[4],
     marginBottom: spacing[2],
