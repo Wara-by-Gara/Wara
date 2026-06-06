@@ -30,6 +30,7 @@ import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
 import { DevAuthModule } from './dev/dev-auth.module';
 import { WeatherModule } from './weather/weather.module';
+import { FriendsModule } from './friends/friends.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { WeatherModule } from './weather/weather.module';
     TermsModule,
     DateVoteModule,
     WeatherModule,
+    FriendsModule,
   ],
   controllers: [AppController],
   providers: [

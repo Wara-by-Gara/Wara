@@ -1,4 +1,5 @@
 import { API_BASE } from "../env";
+import { useAuthStore } from "@/stores/authStore";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -48,7 +49,9 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
       if (refreshed === true) {
         res = await fetchFn();
       } else {
-        // 도난 의심 시 강제 로그아웃 사유를 query로 전달
+        // refresh 실패 = 세션 종료. zustand 상태까지 동기화 후 로그인으로.
+        // 도난 의심 시에는 사유를 query로 전달해 LoginContainer가 안내 toast를 띄움.
+        await useAuthStore.getState().logout();
         window.location.href = refreshed === 'suspicious' ? '/login?reason=suspicious' : '/login';
         throw new Error(code);
       }

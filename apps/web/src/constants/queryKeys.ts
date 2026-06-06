@@ -1,6 +1,7 @@
 export const QUERY_KEYS = {
   invitations: {
     all: () => ["invitations"] as const,
+    myList: () => ["my-invitations"] as const,
     detail: (id: string) => ["invitations", id] as const,
     participants: (id: string) => ["invitations", id, "participants"] as const,
     myParticipant: (id: string) => ["invitations", id, "participants", "me"] as const,
@@ -16,12 +17,18 @@ export const QUERY_KEYS = {
   },
   notifications: {
     all: () => ["notifications"] as const,
+    list: () => ["notifications", "list"] as const,
     unread: () => ["notifications", "unread"] as const,
     settings: () => ["notifications", "settings"] as const,
   },
   users: {
     me: () => ["users", "me"] as const,
     socials: () => ["users", "socials"] as const,
+  },
+  friends: {
+    all: () => ["friends"] as const,
+    list: () => ["friends", "list"] as const,
+    detail: (id: string) => ["friends", id] as const,
   },
   templates: {
     all: () => ["templates"] as const,

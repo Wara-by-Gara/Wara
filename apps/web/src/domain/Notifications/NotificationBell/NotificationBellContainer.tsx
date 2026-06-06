@@ -89,11 +89,11 @@ export function NotificationBellContainer() {
             if (!invId) return;
             setOpen(false);
             if (n.targetType === 'photo') {
-              router.push(ROUTES.INVITATIONS.PHOTO_DETAIL(invId, n.targetId));
+              router.push(ROUTES.INVITATIONS.DETAIL(invId));
             } else if (n.targetType === 'mission') {
-              router.push(ROUTES.INVITATIONS.MISSION_DETAIL(invId, n.targetId));
+              router.push(ROUTES.INVITATIONS.DETAIL(invId));
             } else if (n.targetType === 'feedback') {
-              router.push(ROUTES.INVITATIONS.FEEDBACKS(invId));
+              router.push(ROUTES.INVITATIONS.COMMENTS(invId));
             }
           }}
           onMarkAllAsRead={() => markAllAsRead()}
