@@ -1,5 +1,9 @@
 import { createHash } from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import { fakerKO as faker } from '@faker-js/faker';
+import { INV_PRIVATE_INVITATIONS } from './private-invitation-fixtures';
+import { buildPublicInvitationSeeds } from './public-invitation-fixtures';
 
 // ── Deterministic Crockford Base32 ID from SHA-256 ───────────────────────────
 // 동일 seed → 항상 동일 26자 ULID-compatible 문자열 (재실행 idempotency)
@@ -27,14 +31,89 @@ faker.seed(20260527);
 
 // ── 외부 placeholder 이미지 URL 생성기 ───────────────────────────────────────
 // S3Service가 'http(s)://' prefix를 그대로 패스스루하도록 수정되어 있음.
-const profileAvatarUrl = (seedKey: string) =>
-  `https://i.pravatar.cc/300?u=${encodeURIComponent(seedKey)}`;
-const invitationCoverUrl = (seedKey: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seedKey)}/1024/576`;
-const photoUrl = (seedKey: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seedKey)}/1280/853`;
-const templatePreviewUrl = (seedKey: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seedKey)}/600/400`;
+const DICEBEAR_PROFILE_PREFIX = 'dicebear:';
+
+/** 유저별 결정적 랜덤 DiceBear 시드 (재시드 시 동일 아바타) */
+const profileDicebearSeed = (userKey: string) =>
+  `${DICEBEAR_PROFILE_PREFIX}${id(`avatar:${userKey}`).slice(0, 12).toLowerCase()}`;
+const { all: LUMA_IMAGE_PATHS, byFolder: LUMA_IMAGE_PATHS_BY_FOLDER } = collectLumaImagePaths();
+
+function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, string[]> } {
+  const root = path.resolve(__dirname, '../../../web/public/luma_images');
+  if (!fs.existsSync(root)) return { all: [], byFolder: {} };
+
+  const all: string[] = [];
+  const byFolder: Record<string, string[]> = {};
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const categoryDir = path.join(root, entry.name);
+    const folderPaths: string[] = [];
+    for (const file of fs.readdirSync(categoryDir)) {
+      if (!/\.(png|jpe?g|webp)$/i.test(file)) continue;
+      const rel = `/luma_images/${entry.name}/${file}`;
+      folderPaths.push(rel);
+      all.push(rel);
+    }
+    if (folderPaths.length > 0) {
+      byFolder[entry.name] = folderPaths.sort();
+    }
+  }
+  return { all: all.sort(), byFolder };
+}
+
+const lumaUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
+  if (pool.length === 0) {
+    return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
+  }
+  const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
+  const idx = hash.readUInt32BE(0) % pool.length;
+  const rel = pool[idx]!;
+  const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  return `${base}/${urlPath}`;
+};
+
+const lumaCategoryCoverUrl = (folder: string, seedKey: string) =>
+  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-cover:${folder}`, seedKey);
+
+const lumaCategoryPhotoUrl = (folder: string, seedKey: string) =>
+  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-photo:${folder}`, seedKey);
+
+/** luma_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
+const lumaImageUrl = (namespace: string, seedKey: string) => {
+  if (LUMA_IMAGE_PATHS.length === 0) {
+    return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
+  }
+  const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
+  const idx = hash.readUInt32BE(0) % LUMA_IMAGE_PATHS.length;
+  const rel = LUMA_IMAGE_PATHS[idx]!;
+  const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  return `${base}/${urlPath}`;
+};
+const invitationCoverUrl = (seedKey: string) => lumaImageUrl('luma-cover', seedKey);
+const photoUrl = (seedKey: string) => lumaImageUrl('luma-photo', seedKey);
+const templatePreviewUrl = (seedKey: string) => lumaImageUrl('luma-template', seedKey);
+
+const lumaImageUrlFromRel = (rel: string) => {
+  const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  return `${base}/${urlPath}`;
+};
+
+/** luma_images 폴더에서 대표 미리보기 1장 선택 */
+const templatePreviewFromFolder = (
+  folder: string,
+  imageIndex: number,
+  previewFile?: string,
+) => {
+  if (previewFile) {
+    return lumaImageUrlFromRel(`/luma_images/${folder}/${previewFile}`);
+  }
+  const pool = LUMA_IMAGE_PATHS_BY_FOLDER[folder];
+  if (!pool?.length) return templatePreviewUrl(`template-${folder}`);
+  return lumaImageUrlFromRel(pool[imageIndex % pool.length]!);
+};
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
 // 기본은 dev 작업용 작은 규모. 부하 테스트 시 일시적으로 늘려 사용.
@@ -64,13 +143,6 @@ const RSVP_PATTERN: RsvpStatus[] = [
 ];
 const SEND_CHANNELS = ['kakao', 'link', 'sms', 'instagram'] as const;
 
-const INV_TITLES = [
-  '생일 파티', '집들이', '결혼 준비 파티', '승진 축하 모임', '여름 휴가 모임',
-  '한강 피크닉', '바비큐 파티', '워크숍', '동창회', '송년회',
-  '신년회', '벚꽃 나들이', '캠핑 모임', '독서 모임', '게임 나잇',
-  '럭셔리 디너', '신입 환영회', '졸업 축하 파티', '루프탑 칵테일', '주말 브런치',
-];
-
 const FEEDBACK_INV_TEMPLATES = [
   '정말 재미있는 모임이었어요!', '다음에 또 이런 모임 해요',
   '와줘서 정말 고마워요 :)', '오늘 최고의 날이에요!',
@@ -96,10 +168,16 @@ const MISSION_CONTENT_BASE = [
 ];
 
 const TEMPLATE_DEFS = [
-  { key: 'tmpl1', name: '봄 파티',  theme: 'bloom',   font: 'serif',   effect: 'confetti', isActive: true },
-  { key: 'tmpl2', name: '미니멀',   theme: 'minimal', font: 'sans',    effect: null,       isActive: true },
-  { key: 'tmpl3', name: '레트로',   theme: 'retro',   font: 'mono',    effect: 'sparkle',  isActive: true },
-  { key: 'tmpl4', name: '다크',     theme: 'dark',    font: 'display', effect: null,       isActive: false },
+  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티',   previewFile: 'imgi_10_1f5b32e2-8467-4bfd-9048-8dfd0231b7c1.png' },
+  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일',   previewFile: 'imgi_10_8e9ed34a-cc86-4632-83ec-cb4097a80961.png' },
+  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃',     previewFile: 'imgi_10_1074f31e-22b4-471b-b857-8afcb2698179.png' },
+  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름',   previewFile: 'imgi_10_806d0940-d8e2-46e9-9704-f25ae0e49375.png' },
+  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대',   previewFile: 'imgi_10_468d0b37-6b49-491d-a0f5-bb2af2ef9719.png' },
+  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교',   previewFile: 'imgi_10_51ffeb4e-b392-4fc4-b105-a408c1f96987.png' },
+  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식',   previewFile: 'imgi_10_46a752da-c51b-4e24-b8d7-e3844aa37023.png' },
+  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠', previewFile: 'imgi_12_7b6b9201-46c4-43e1-b394-a401b7db95d3.png' },
+  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료',   previewFile: 'imgi_10_5d8e6e58-f50d-40d4-9ba8-feb9b5a1ef72.png' },
+  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI',     previewFile: 'imgi_100_3c3db379-bc3e-493e-8677-d2fb311882f8.png' },
 ] as const;
 
 // ── 실재하는 한국 모임 장소 데이터셋 ──────────────────────────────────────────
@@ -142,6 +220,20 @@ const REAL_EVENT_LOCATIONS = [
 function pick<T>(arr: readonly T[], i: number): T {
   return arr[i % arr.length]!;
 }
+
+/** 초대장 테마 배경 (web DESIGN_BG_THEMES.cls 와 동일) */
+const INVITE_BG_THEMES = [
+  'bg-invite-minimal',
+  'bg-invite-pastel',
+  'bg-invite-sky',
+  'bg-invite-glass',
+  'bg-invite-y2k',
+  'bg-invite-flower',
+  'bg-invite-film',
+  'bg-invite-aurora',
+  'bg-invite-checkdot',
+  'bg-invite-starry',
+] as const;
 function take<T>(arr: readonly T[], n: number, startIdx = 0): T[] {
   return Array.from({ length: n }, (_, i) => arr[(startIdx + i) % arr.length]!);
 }
@@ -319,7 +411,7 @@ type InvDef = {
 const INV_DEFS: InvDef[] = Array.from({ length: INVITATION_COUNT }, (_, i) => {
   const num = String(i + 1).padStart(3, '0');
   const hostKey = HOST_KEYS[i % HOST_KEYS.length]!;
-  const hostName = USER_DEFS.find((u) => u.key === hostKey)!.name;
+  const privateInv = INV_PRIVATE_INVITATIONS[i]!;
   const isClosed = i % 10 === 8 || i % 10 === 9; // 20% closed
   const dayOffset = (i % 90) + 1;
   const baseDate = new Date('2026-06-01T10:00:00Z');
@@ -331,8 +423,8 @@ const INV_DEFS: InvDef[] = Array.from({ length: INVITATION_COUNT }, (_, i) => {
     status: isClosed ? 'closed' : 'active',
     isMissionEnabled: i % 3 === 0,
     templateKey: i % 5 === 4 ? null : pick(TEMPLATE_DEFS, i).key,
-    title: `${hostName.replace(/\s.+/, '')}의 ${pick(INV_TITLES, i)}`,
-    description: `${pick(INV_TITLES, i)}에 초대합니다. 즐거운 시간 보내요!`,
+    title: privateInv.title,
+    description: privateInv.description,
     eventStartAt: eventDate,
     hasLocation: i % 4 !== 3, // 75% 장소 등록
   };
@@ -417,11 +509,11 @@ function buildSeeds() {
   const userIdByKey: Record<string, string> = {};
   for (const u of USER_DEFS) userIdByKey[u.key] = id(`user:${u.key}`);
 
-  // 2. Users (profileImageUrl: 외부 pravatar URL — S3 키 prefix 아니므로 그대로 반환됨)
+  // 2. Users (profileImageUrl: DiceBear 기본 아바타 시드 — 외부 프로필 URL 없음)
   const users = USER_DEFS.map((u) => ({
     id: userIdByKey[u.key]!,
     email: u.email,
-    profileImageUrl: profileAvatarUrl(u.key),
+    profileImageUrl: profileDicebearSeed(u.key),
     name: u.name,
     nickname: u.nickname,
     birthYear: u.birthYear,
@@ -454,14 +546,14 @@ function buildSeeds() {
     isEventLocations: true,
   }));
 
-  // 5. Templates (previewImageKey: picsum URL)
+  // 5. Templates (previewImageKey: luma_images URL)
   const templateIdByKey: Record<string, string> = {};
   for (const t of TEMPLATE_DEFS) templateIdByKey[t.key] = id(`template:${t.key}`);
 
   const templates = TEMPLATE_DEFS.map((t) => ({
     id: templateIdByKey[t.key]!,
     name: t.name,
-    previewImageKey: templatePreviewUrl(`template-${t.key}`),
+    previewImageKey: templatePreviewFromFolder(t.previewFolder, 0, t.previewFile),
     theme: t.theme,
     font: t.font,
     effect: t.effect,
@@ -475,7 +567,7 @@ function buildSeeds() {
     isActive: mt.isActive,
   }));
 
-  // 6. Invitations (mainImageKey: picsum URL — S3Service.getPublicUrl 패스스루)
+  // 6. Invitations (mainImageKey: luma_images URL — S3Service.getPublicUrl 패스스루)
   const invIdByKey: Record<string, string> = {};
   for (const inv of INV_DEFS) invIdByKey[inv.key] = id(`invitation:${inv.key}`);
 
@@ -494,6 +586,9 @@ function buildSeeds() {
       mainGifUrl: isGif ? pick(GIF_POOL, i) : (null as string | null),
       eventStartAt: inv.eventStartAt,
       isMissionEnabled: inv.isMissionEnabled,
+      isPublic: false,
+      category: null as string | null,
+      bgColor: INVITE_BG_THEMES[i % INVITE_BG_THEMES.length]!,
     };
   });
 
@@ -978,25 +1073,46 @@ function buildSeeds() {
       });
     });
 
+  const publicSeeds = buildPublicInvitationSeeds({
+    id,
+    pick,
+    take,
+    userIdByKey,
+    templateIdByKey,
+    hostKeys: HOST_KEYS,
+    guestKeys: GUEST_KEYS,
+    lumaCategoryCoverUrl,
+    lumaCategoryPhotoUrl,
+    realEventLocations: REAL_EVENT_LOCATIONS,
+    feedbackInvTemplates: FEEDBACK_INV_TEMPLATES,
+    feedbackPhotoTemplates: FEEDBACK_PHOTO_TEMPLATES,
+    replyTemplates: REPLY_TEMPLATES,
+    gifPool: GIF_POOL,
+    inviteBgThemes: INVITE_BG_THEMES,
+    rsvpPattern: RSVP_PATTERN,
+    photoLikePattern: PHOTO_LIKE_PATTERN,
+    feedbackLikePattern: FEEDBACK_LIKE_PATTERN,
+  });
+
   return {
     users,
     socialAccounts,
     notificationSettings,
     templates,
     missionTemplates,
-    invitations,
-    participants,
-    eventLocations,
+    invitations: [...invitations, ...publicSeeds.invitations],
+    participants: [...participants, ...publicSeeds.participants],
+    eventLocations: [...eventLocations, ...publicSeeds.eventLocations],
     sendLogs,
     invitationLinkEvents,
     blocklists,
     participantLocations,
     missions,
     missionAssignments,
-    photos,
-    photoLikes,
-    feedbacks,
-    feedbackLikes,
+    photos: [...photos, ...publicSeeds.photos],
+    photoLikes: [...photoLikes, ...publicSeeds.photoLikes],
+    feedbacks: [...feedbacks, ...publicSeeds.feedbacks],
+    feedbackLikes: [...feedbackLikes, ...publicSeeds.feedbackLikes],
     notifications,
     inquiries,
     faqItems,
