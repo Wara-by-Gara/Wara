@@ -50,12 +50,12 @@ export default function FrameSelector({
             disabled={isDisabled}
             onClick={() => onChange(id)}
             className={[
-              'flex flex-col items-center gap-1.5 flex-1 rounded-xl border-2 p-2 transition-colors',
+              'flex flex-col items-center gap-1.5 flex-1 rounded-sm border-2 p-2 transition-colors',
               isSelected ? 'border-black' : 'border-gray-200',
               isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400',
             ].join(' ')}
           >
-            <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
+            <div className="relative w-full aspect-square rounded-sm overflow-hidden bg-gray-100">
               {id === 'ai' && isAiApplying ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
