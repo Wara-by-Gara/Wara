@@ -49,9 +49,18 @@ export {
 export {
   fetchMe,
   updateMe,
+  deleteMe,
+  fetchMySocials,
+  deleteMySocial,
+  linkSocialWithToken,
+  mergeAccounts,
+  logout,
   userKeys,
   type Me,
   type UpdateMeInput,
+  type MySocial,
+  type WithdrawalReason,
+  type DeleteMeInput,
 } from './users';
 export {
   ensureKakaoSDK,

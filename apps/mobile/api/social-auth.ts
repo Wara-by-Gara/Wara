@@ -92,6 +92,16 @@ export function describeLoginError(err: unknown): string {
         return 'Apple 서버 응답이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.';
       case 'AUTH_USER_NOT_FOUND':
         return '사용자 정보를 불러올 수 없어요. 잠시 후 다시 시도해 주세요.';
+      case 'TERMS_AGREEMENT_REQUIRED':
+        return '서비스 이용약관에 먼저 동의해 주세요.';
+      case 'SOCIAL_ALREADY_LINKED':
+        return '이 소셜 계정은 다른 wara 계정에 연결되어 있어요.';
+      case 'USER_SOCIAL_LAST_LINKED':
+        return '마지막 소셜 계정은 해제할 수 없어요.';
+      case 'MERGE_TOKEN_INVALID':
+        return '계정 합치기 요청이 만료됐어요. 다시 시도해 주세요.';
+      case 'SUSPICIOUS_REFRESH':
+        return '의심스러운 활동이 감지돼 자동 로그아웃됐어요. 다시 로그인해 주세요.';
     }
   }
   return '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.';
