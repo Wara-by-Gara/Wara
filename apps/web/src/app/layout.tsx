@@ -6,6 +6,8 @@ import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Toaster } from '@/components/molecules/Toast';
+// sonner의 기본 스타일(--width, position, z-index 등). 미import 시 토스트 너비가 0으로 잡혀 화면에 안 보임.
+import 'sonner/dist/styles.css';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
