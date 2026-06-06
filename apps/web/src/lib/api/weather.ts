@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { apiGet } from './client';
 import type { WeatherCondition } from '@/components/organisms/WeatherCard';
 
 export type WeatherConditionKo =
@@ -32,7 +32,7 @@ export function toWeatherCardCondition(condition: WeatherConditionKo): WeatherCo
 }
 
 export async function getWeather(invitationId: string): Promise<WeatherSummary | null> {
-  const result = await apiClient<WeatherSummary | undefined>(
+  const result = await apiGet<WeatherSummary | undefined>(
     `/invitations/${invitationId}/weather`,
   );
   return result ?? null;

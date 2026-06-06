@@ -10,7 +10,7 @@ import { Chip } from "@/components/primitives/Chip";
 import { Switch } from "@/components/primitives/Switch";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
@@ -24,7 +24,7 @@ import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { createInvitation, getInvitationImagePresignedUrl } from "@/lib/api/invitations";
+import { createInvitation, updateInvitation, getInvitationImagePresignedUrl, type Invitation } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
@@ -40,6 +40,7 @@ import {
   loadImageNaturalRatio,
 } from "@/utils/invitationCoverAspect";
 import { useLightTheme } from "@/hooks/useLightTheme";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { InvitationPreview } from "@/domain/InvitationCreate/InvitationPreview";
 import {
   DEFAULT_COVER_KEY,
@@ -144,10 +145,21 @@ function toEventStartAt(date: string, time: string): string | undefined {
   return time ? new Date(`${iso}T${time}:00`).toISOString() : new Date(iso).toISOString();
 }
 
-export default function InvitationCreateContainer() {
+function parseEventStart(iso: string | null): { date: string; time: string } {
+  if (!iso) return { date: "", time: "" };
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
+export default function InvitationCreateContainer({ editInvitation }: { editInvitation?: Invitation } = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   useLightTheme();
-  const { isLoggedIn, hydrate, login } = useAuthStore();
+  const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
 
   useEffect(() => { hydrate(); }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -220,6 +232,46 @@ export default function InvitationCreateContainer() {
     };
   }, [cropSrc]);
 
+  // 수정 모드: 기존 초대장 데이터로 폼 초기화
+  useEffect(() => {
+    if (!editInvitation) return;
+    const { date, time } = parseEventStart(editInvitation.eventStartAt);
+    setForm({
+      templateId: editInvitation.templateId ?? "",
+      title: editInvitation.title,
+      description: editInvitation.description,
+      mainImageKey: editInvitation.mainImageKey ?? DEFAULT_COVER_KEY,
+      date,
+      time,
+      placeName: editInvitation.eventLocation?.placeName ?? "",
+      address: editInvitation.eventLocation?.address ?? "",
+      lat: editInvitation.eventLocation?.lat ?? null,
+      lng: editInvitation.eventLocation?.lng ?? null,
+      placeId: editInvitation.eventLocation?.placeId ?? "",
+    });
+    setDesignBgColor(editInvitation.bgColor);
+    setDesignFont(editInvitation.font as DesignFont);
+    setRsvpOptions({
+      attending: { emoji: editInvitation.rsvpAttendingEmoji, label: editInvitation.rsvpAttendingLabel },
+      maybe: { emoji: editInvitation.rsvpMaybeEmoji, label: editInvitation.rsvpMaybeLabel },
+      declined: { emoji: editInvitation.rsvpDeclinedEmoji, label: editInvitation.rsvpDeclinedLabel },
+    });
+    if (editInvitation.mainCoverType === "gif" && editInvitation.mainGifUrl) {
+      setMainGifUrl(editInvitation.mainGifUrl);
+    } else if (editInvitation.mainImageUrl) {
+      setLocalPreviewUrl(editInvitation.mainImageUrl);
+    }
+    setMissionEnabled(editInvitation.isMissionEnabled);
+    if (editInvitation.eventLocation) {
+      setLocationMode("selected");
+    } else {
+      setLocationUnknown(true);
+    }
+    setDateUnknown(!editInvitation.eventStartAt);
+    setTimeUnknown(!editInvitation.eventStartAt);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editInvitation?.id]);
+
   // 로그인 리다이렉트 후 복귀 처리
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -279,6 +331,37 @@ export default function InvitationCreateContainer() {
 
   const { mutate: publish, isPending } = useMutation({
     mutationFn: async () => {
+      // 수정 모드
+      if (editInvitation) {
+        const updated = await updateInvitation(editInvitation.id, {
+          title: form.title,
+          description: form.description,
+          ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
+          templateId: form.templateId || null,
+          eventStartAt: toEventStartAt(form.date, form.time) ?? null,
+          bgColor: designBgColor,
+          font: designFont,
+          isMissionEnabled: missionEnabled,
+          rsvpAttendingEmoji: rsvpOptions.attending.emoji,
+          rsvpAttendingLabel: rsvpOptions.attending.label,
+          rsvpMaybeEmoji: rsvpOptions.maybe.emoji,
+          rsvpMaybeLabel: rsvpOptions.maybe.label,
+          rsvpDeclinedEmoji: rsvpOptions.declined.emoji,
+          rsvpDeclinedLabel: rsvpOptions.declined.label,
+        });
+        if (!locationUnknown && form.placeName && form.lat !== null && form.lng !== null) {
+          await setEventLocation(updated.id, {
+            placeName: form.placeName,
+            address: form.address,
+            lat: form.lat,
+            lng: form.lng,
+            placeId: form.placeId,
+          });
+        }
+        return updated;
+      }
+
+      // 생성 모드
       const invitation = await createInvitation({
         title: form.title,
         description: form.description,
@@ -317,6 +400,15 @@ export default function InvitationCreateContainer() {
       return invitation;
     },
     onSuccess: async (data) => {
+      if (editInvitation) {
+        queryClient.setQueryData(QUERY_KEYS.invitations.detail(editInvitation.id), data);
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.invitations.detail(editInvitation.id),
+        });
+        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myList() });
+        router.push(`/invitations/${editInvitation.id}`);
+        return;
+      }
       setCreatedInvitationId(data.id);
       if (voteDraft) {
         try { await createPoll(data.id, voteDraft); } catch { /* invitation은 이미 생성됨 */ }
@@ -452,7 +544,8 @@ export default function InvitationCreateContainer() {
     const hasDateErr = !form.date && !dateUnknown;
     const hasTimeErr = !form.time && !timeUnknown;
     const hasLocErr = !form.placeName && !locationUnknown;
-    const hasMissionErr = missionEnabled && selectedMissions.length === 0;
+    const hasMissionErr =
+      missionEnabled && selectedMissions.length === 0 && !editInvitation;
     setImageError(needsImage);
     setTitleError(!hasTitle);
     setDateError(hasDateErr);
@@ -463,6 +556,7 @@ export default function InvitationCreateContainer() {
   };
 
   const handleSubmit = () => {
+    if (!hydrated) return;
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -547,7 +641,7 @@ export default function InvitationCreateContainer() {
     <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
       <TopAppBar
         className="shrink-0"
-        title="초대장 만들기"
+        title={editInvitation ? "초대장 수정" : "초대장 만들기"}
         onBack={() => router.back()}
         rightSlot={
           <Button variant="text" size="sm" onClick={() => setPreviewOpen(true)}>
@@ -1139,8 +1233,13 @@ export default function InvitationCreateContainer() {
       <div className="relative z-10 shrink-0">
         <StickyCTA
           primary={{
-            label: isLoggedIn ? "초대장 만들기" : "로그인하고 공유하기",
+            label: editInvitation
+              ? "저장"
+              : isLoggedIn
+                ? "초대장 만들기"
+                : "로그인하고 공유하기",
             onClick: handleSubmit,
+            loading: isPending,
           }}
         />
       </div>
@@ -1164,13 +1263,17 @@ export default function InvitationCreateContainer() {
       <ConfirmModal
         open={showPublishConfirm}
         onOpenChange={(v) => { if (!isPending) setShowPublishConfirm(v); }}
-        title="초대장을 만들까요?"
+        title={editInvitation ? "변경사항을 저장할까요?" : "초대장을 만들까요?"}
         description={
           publishError
-            ? "초대장 생성에 실패했어요. 다시 시도해주세요."
-            : "초대장이 만들어지면 참석자 응답을 받을 수 있어요"
+            ? editInvitation
+              ? "변경사항 저장에 실패했어요. 다시 시도해주세요."
+              : "초대장 생성에 실패했어요. 다시 시도해주세요."
+            : editInvitation
+              ? "변경된 내용이 참석자에게 알림으로 전달될 수 있어요"
+              : "초대장이 만들어지면 참석자 응답을 받을 수 있어요"
         }
-        confirmLabel="만들기"
+        confirmLabel={editInvitation ? "저장" : "만들기"}
         loading={isPending}
         onConfirm={() => { setPublishError(false); publish(); }}
       />

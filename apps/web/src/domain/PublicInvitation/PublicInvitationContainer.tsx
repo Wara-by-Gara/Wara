@@ -7,9 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
+import { useInvitation } from "@/hooks/useInvitations";
 import { useJoinInvitation, useMyParticipant, useUpdateRsvp } from "@/hooks/useParticipants";
 import { useUpdateMe } from "@/hooks/useUsers";
+import { getPoll } from "@/lib/api/dateVote";
 import { getMe } from "@/lib/api/users";
+import { Icon } from "@/components/icons";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
 import { FormField } from "@/components/molecules/FormField";
@@ -33,13 +36,54 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-interface Props {
-  invitation: Invitation;
-}
-
 const FORM_STORAGE_KEY = (id: string) => `rsvp_form_${id}`;
 
-export default function PublicInvitationContainer({ invitation }: Props) {
+async function resolvePostRsvpRoute(invitationId: string): Promise<string> {
+  try {
+    const pollData = await getPoll(invitationId);
+    if (pollData.poll.status === "open") {
+      return ROUTES.INVITATIONS.VOTE(invitationId);
+    }
+  } catch (err) {
+    const code = (err as { error?: { code?: string } })?.error?.code;
+    if (code !== "VOTE_POLL_NOT_FOUND" && code !== "PARTICIPANT_NOT_FOUND") {
+      throw err;
+    }
+  }
+  return ROUTES.INVITATIONS.DETAIL(invitationId);
+}
+
+export default function PublicInvitationContainer({ invitationId }: { invitationId: string }) {
+  const { data: invitation, isLoading, isError } = useInvitation(invitationId);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <TopAppBar title="응답하기" />
+        <p className="flex flex-1 items-center justify-center text-text-tertiary">
+          불러오는 중...
+        </p>
+      </div>
+    );
+  }
+
+  if (isError || !invitation) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <TopAppBar title="응답하기" />
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+          <Icon name="alert-triangle" size="xl" color="danger" decorative />
+          <p className="text-[18px] font-bold text-text-primary">초대장을 찾을 수 없어요</p>
+          <p className="text-[14px] text-text-tertiary">링크가 올바른지 확인해주세요</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <PublicInvitationForm invitation={invitation} />;
+}
+
+function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
@@ -78,7 +122,9 @@ export default function PublicInvitationContainer({ invitation }: Props) {
   useEffect(() => {
     if (!hydrated || !isLoggedIn || isCheckingParticipant) return;
     if (myParticipant && myParticipant.rsvpStatus !== "absent") {
-      router.replace(ROUTES.INVITATIONS.DETAIL(invitation.id));
+      void resolvePostRsvpRoute(invitation.id).then((path) => {
+        router.replace(path);
+      });
     }
   }, [hydrated, isLoggedIn, isCheckingParticipant, myParticipant, invitation.id, router]);
 
@@ -143,7 +189,9 @@ export default function PublicInvitationContainer({ invitation }: Props) {
             if (rsvp === "declined") {
               setIsEditing(false);
             } else {
-              router.push(ROUTES.INVITATIONS.DETAIL(invitation.id));
+              void resolvePostRsvpRoute(invitation.id).then((path) => {
+                router.push(path);
+              });
             }
           },
         },
@@ -154,11 +202,17 @@ export default function PublicInvitationContainer({ invitation }: Props) {
     join(
       { rsvpStatus: RSVP_MAP[rsvp], note: data.note || undefined },
       {
-        onSuccess: () => router.push(ROUTES.INVITATIONS.DETAIL(invitation.id)),
+        onSuccess: () => {
+          void resolvePostRsvpRoute(invitation.id).then((path) => {
+            router.push(path);
+          });
+        },
         onError: (err: unknown) => {
           const code = (err as { error?: { code?: string } })?.error?.code;
           if (code === "PARTICIPANT_ALREADY_EXISTS") {
-            router.push(ROUTES.INVITATIONS.DETAIL(invitation.id));
+            void resolvePostRsvpRoute(invitation.id).then((path) => {
+              router.push(path);
+            });
           }
         },
       },

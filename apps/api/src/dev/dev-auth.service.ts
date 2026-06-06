@@ -17,6 +17,9 @@ const DEV_USER_WHITELIST = new Set([
   'host002@wara.dev',
   'host003@wara.dev',
   'host004@wara.dev',
+  'guest001@wara.dev',
+  'guest002@wara.dev',
+  'guest003@wara.dev',
   'admin@wara.dev',
 ]);
 
