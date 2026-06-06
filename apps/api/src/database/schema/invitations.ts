@@ -39,6 +39,10 @@ export const invitations = pgTable('invitations', {
   rsvpMaybeLabel: varchar('rsvp_maybe_label', { length: 20 }).notNull().default('미정'),
   rsvpDeclinedEmoji: varchar('rsvp_declined_emoji', { length: 10 }).notNull().default('😭'),
   rsvpDeclinedLabel: varchar('rsvp_declined_label', { length: 20 }).notNull().default('불참'),
+  /** true: 탐색·추천 이벤트 노출 / false: 비공개(링크 초대만) */
+  isPublic: boolean('is_public').notNull().default(false),
+  /** 탐색 필터용 — tech, fitness, food, art, culture, health */
+  category: varchar('category', { length: 20 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -46,6 +50,7 @@ export const invitations = pgTable('invitations', {
   check('check_cover_type_image', sql`${t.mainCoverType} <> 'image' OR (${t.mainImageKey} IS NOT NULL AND ${t.mainGifUrl} IS NULL)`),
   check('check_cover_type_gif', sql`${t.mainCoverType} <> 'gif' OR (${t.mainGifUrl} IS NOT NULL AND ${t.mainImageKey} IS NULL)`),
   index('idx_invitations_user_id').on(t.userId),
+  index('idx_invitations_public_explore').on(t.isPublic, t.category),
 ]);
 
 export const participants = pgTable('participants', {

@@ -12,4 +12,5 @@ export * from './inquiries';
 export * from './faq';
 export * from './terms';
 export * from './date-votes';
+export * from './activity-events';
 export * from './relations';
