@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
-import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { MapPage, type MapPageState, type SearchResult } from "@/screens/MapPage/MapPage";
 import { KakaoMap, type KakaoMapHandle, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
@@ -37,8 +37,7 @@ interface MapContainerProps {
 
 export function MapContainer({ invitationId }: MapContainerProps) {
   const router = useRouter();
-  // ── SDK 준비 ──────────────────────────────────────────────────────────
-  const [mapSdkReady, setMapSdkReady] = useState(false);
+  const mapSdkReady = useKakaoMapsSdk();
 
   // ── 화면 상태 ─────────────────────────────────────────────────────────
   const [pageState, setPageState] = useState<MapPageState>("loading");
@@ -428,13 +427,6 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   return (
     <>
-      <Script
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY}&autoload=false`}
-        strategy="afterInteractive"
-        onLoad={() => {
-          window.kakao.maps.load(() => setMapSdkReady(true));
-        }}
-      />
       <MapPage
         state={resolvedState}
         onBack={handleBack}

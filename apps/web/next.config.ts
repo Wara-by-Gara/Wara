@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.join(__dirname, "../.."),
+  },
   // Docker 프로덕션 빌드 시 최소 실행 파일만 추출 (standalone 폴더 생성)
   output: "standalone",
   // /api/* 를 백엔드로 프록시 → 프론트와 same-origin 으로 만들어
@@ -25,6 +29,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.pravatar.cc" },
       // Klipy GIF CDN
       { protocol: "https", hostname: "static.klipy.com" },
+      // Placehold — Storybook / dev placeholder
+      { protocol: "https", hostname: "placehold.co" },
     ],
   },
 };

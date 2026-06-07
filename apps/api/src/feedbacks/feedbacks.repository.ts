@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, lt, or, SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, SQL, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import {
@@ -16,41 +16,35 @@ export class FeedbacksRepository {
   //페이지네이션 헬퍼
   private paginate<T extends { id: string }>(rows: T[], limit: number) {
     const hasNext = rows.length > limit;
+    const paged = hasNext ? rows.slice(0, limit) : rows;
     return {
-      rows: rows.slice(0, limit),
-      nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+      rows: paged,
+      nextCursor: hasNext && paged.length > 0 ? (paged.at(-1)!.id) : null,
     };
   }
 
-  //cursor 조건 + LIMIT 계산 헬퍼
-  private async getCursorCondition(dto: ListFeedbacksDto) {
+  // cursor 조건 + LIMIT — (created_at, id) 튜플 비교로 JS Date 바인딩 정밀도 이슈 방지
+  private getCursorCondition(dto: ListFeedbacksDto) {
     const { cursor, limit } = dto;
     const LIMIT = limit ?? 10;
     const cursorConditions: SQL[] = [];
 
     if (cursor) {
-      const [cursorRow] = await this.db
-        .select({ createdAt: feedbacks.createdAt, id: feedbacks.id })
-        .from(feedbacks)
-        .where(eq(feedbacks.id, cursor));
-      if (cursorRow) {
-        cursorConditions.push(
-          or(
-            lt(feedbacks.createdAt, cursorRow.createdAt),
-            and(
-              eq(feedbacks.createdAt, cursorRow.createdAt),
-              lt(feedbacks.id, cursorRow.id),
-            ),
-          ) as SQL,
-        );
-      }
+      cursorConditions.push(
+        sql`(${feedbacks.createdAt}, ${feedbacks.id}) < (
+          SELECT ${feedbacks.createdAt}, ${feedbacks.id}
+          FROM ${feedbacks}
+          WHERE ${feedbacks.id} = ${cursor}
+          LIMIT 1
+        )`,
+      );
     }
     return { LIMIT, cursorConditions };
   }
 
   //초대장댓글 + 사진 댓글 통합 목록
 async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participantId?: string) {
-  const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+  const { LIMIT, cursorConditions } = this.getCursorCondition(dto);
 
   const photoIds = await this.db
     .select({ id: photos.id })
@@ -58,14 +52,23 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
     .where(eq(photos.invitationId, invitationId))
     .then((rows) => rows.map((r) => r.id));
 
-  const conditions = [
+  const baseConditions = [
     or(
       eq(feedbacks.invitationId, invitationId),
       photoIds.length > 0 ? inArray(feedbacks.photoId, photoIds) : sql`false`,
     ),
     isNull(feedbacks.parentId),
-    ...cursorConditions,
+    isNull(feedbacks.deletedAt),
   ];
+
+  const [countRow] = await this.db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(feedbacks)
+    .where(and(...baseConditions));
+
+  const total = countRow?.total ?? 0;
+
+  const conditions = [...baseConditions, ...cursorConditions];
 
   const rawRows = await this.db.query.feedbacks.findMany({
     where: and(...conditions),
@@ -106,7 +109,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
   });
 
   const { rows: paged, nextCursor } = this.paginate(rawRows, LIMIT);
-  if (!participantId || paged.length === 0) return { rows: paged, nextCursor };
+  if (!participantId || paged.length === 0) return { rows: paged, nextCursor, total };
 
   const allIds = paged.flatMap(r => [r.id, ...r.replies.map(rep => rep.id)]);
   const likes = await this.db
@@ -120,12 +123,12 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
     likedByMe: likedSet.has(r.id),
     replies: r.replies.map(rep => ({ ...rep, likedByMe: likedSet.has(rep.id) })),
   }));
-  return { rows, nextCursor };
+  return { rows, nextCursor, total };
 }
 
   //사진 댓글 목록
   async findAllByPhoto(photoId: string, dto: ListFeedbacksDto, participantId?: string) {
-    const { LIMIT, cursorConditions } = await this.getCursorCondition(dto);
+    const { LIMIT, cursorConditions } = this.getCursorCondition(dto);
 
     const conditions = [
       or(

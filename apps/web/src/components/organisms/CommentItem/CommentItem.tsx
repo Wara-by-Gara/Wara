@@ -118,12 +118,12 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                     ) : null}
                   </p>
                   {variant === "host" ? (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-semibold text-yellow-400">
                       <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
                     </span>
                   ) : null}
                   {variant === "mine" ? (
-                    <span className="rounded-full bg-primary-soft px-1.5 text-[11px] font-bold text-primary">나</span>
+                    <span className="rounded-full bg-primary-soft px-1.5 text-[11px] font-semibold text-primary">나</span>
                   ) : null}
                   <span className="text-[12px] text-text-tertiary">· {createdAt}</span>
                 </div>
@@ -137,7 +137,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       </p>
                     ) : null}
                     {gifUrl ? (
-                      <div className="relative mt-1 w-[200px] overflow-hidden rounded-xl bg-gray-100" style={{ aspectRatio: "4/3" }}>
+                      <div className="relative mt-1 w-[200px] overflow-hidden rounded-sm bg-gray-100" style={{ aspectRatio: "4/3" }}>
                         <Image
                           src={gifUrl}
                           alt="GIF"
@@ -165,7 +165,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       onClick={onLike}
                       className={cn(
                         "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
-                        liked ? "text-primary" : "text-text-tertiary hover:text-primary",
+                        liked ? "text-brand" : "text-text-tertiary hover:text-brand",
                       )}
                     >
                       {liked ? (
@@ -182,12 +182,12 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 <button
                   type="button"
                   onClick={handleImageClick}
-                  className="relative shrink-0 size-[52px] overflow-hidden rounded-xl ring-1 ring-border"
+                  className="relative shrink-0 size-[52px] overflow-hidden rounded-sm ring-1 ring-border"
                   aria-label="첨부 사진 확대 보기"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imageUrl} alt="첨부 사진" className="size-full object-cover" />
-                  <span className="absolute inset-0 bg-black/0 transition-[transform,box-shadow] hover-emphasis-sm" />
+                  <span className="absolute inset-0 bg-transparent hover:bg-black/10 transition-colors duration-150" />
                 </button>
               ) : null}
             </div>
@@ -207,12 +207,12 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 }}
               />
               {menuOpen && moreMenuItems && (
-                <div className="absolute right-0 top-8 z-10 min-w-[80px] rounded-xl border border-border bg-surface shadow-md">
+                <div className="absolute right-0 top-8 z-10 min-w-[80px] rounded-sm border border-border bg-surface shadow-md">
                   {moreMenuItems.map((item) => (
                     <button
                       key={item.label}
                       type="button"
-                      className={cn("w-full px-4 py-2 text-left text-[13px] hover-emphasis-sm", item.className)}
+                      className={cn("w-full px-4 py-2 text-left text-[13px] hover:bg-gray-50 transition-colors duration-150", item.className)}
                       onClick={() => {
                         item.onClick();
                         setMenuOpen(false);
@@ -231,7 +231,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
           <Modal open={expandedImage} onOpenChange={setExpandedImage}>
             <ModalOverlay className="fixed inset-0 z-50 bg-black/80" />
             <ModalPrimitive.Content
-              className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl focus:outline-none"
+              className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-md focus:outline-none"
               aria-describedby={undefined}
             >
               <ModalPrimitive.Title className="sr-only">사진 확대 보기</ModalPrimitive.Title>

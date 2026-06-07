@@ -14,6 +14,7 @@ export interface CommentInputBarProps {
   value?: string;
   onValueChange?: (value: string) => void;
   placement?: 'top' | 'bottom';
+  variant?: 'default' | 'glass';
   className?: string;
   /** 선택된 GIF URL (미리보기용) */
   pendingGif?: string | null;
@@ -23,6 +24,8 @@ export interface CommentInputBarProps {
   onGifButtonClick?: () => void;
   /** 사진 버튼 클릭 → file input 트리거 */
   onPhotoButtonClick?: () => void;
+  /** 사진 첨부됨 — 텍스트 없이도 등록 가능 */
+  hasPendingPhoto?: boolean;
 }
 
 export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
@@ -35,11 +38,13 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       value: controlledValue,
       onValueChange,
       placement = 'bottom',
+      variant = 'default',
       className,
       pendingGif,
       onGifClear,
       onGifButtonClick,
       onPhotoButtonClick,
+      hasPendingPhoto = false,
     },
     ref,
   ) {
@@ -52,16 +57,28 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
     };
     const isSubmittingRef = useRef(false);
     const isTop = placement === 'top';
-    const edgeBorder = isTop
-      ? 'border-b border-border'
-      : 'border-t border-border';
+    const isGlass = variant === 'glass';
+    const edgeBorder = isGlass
+      ? isTop
+        ? 'border-b border-border/40'
+        : 'border-t border-border/40'
+      : isTop
+        ? 'border-b border-border'
+        : 'border-t border-border';
+    const shellClass = isGlass
+      ? 'bg-transparent backdrop-blur-md'
+      : 'bg-surface';
+    const fieldClass = isGlass
+      ? 'rounded-sm border border-white/50 bg-white/45 shadow-xs backdrop-blur-md'
+      : 'rounded-sm bg-border';
 
     if (state === 'loginRequired') {
       return (
         <div
           ref={ref}
           className={cn(
-            'flex w-full items-center justify-center gap-2 bg-surface px-4 py-3 text-[14px] text-text-secondary',
+            'flex w-full items-center justify-center gap-2 px-4 py-3 text-[14px] text-text-secondary',
+            shellClass,
             edgeBorder,
             className,
           )}
@@ -74,7 +91,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
 
     const handleSubmit = async () => {
       const trimmed = value.trim();
-      if (!trimmed && !pendingGif) return;
+      if (!trimmed && !pendingGif && !hasPendingPhoto) return;
       if (isSubmittingRef.current) return;
       isSubmittingRef.current = true;
       setValue('');
@@ -88,15 +105,16 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       <div
         ref={ref}
         className={cn(
-          'flex w-full flex-col bg-surface',
+          'flex w-full flex-col',
+          shellClass,
           edgeBorder,
-          !isTop && 'pb-[calc(env(safe-area-inset-bottom)+8px)]',
+          !isTop && 'pb-[env(safe-area-inset-bottom)]',
           className,
         )}
       >
         {pendingGif ? (
-          <div className="flex items-center gap-2 px-3 pt-2">
-            <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="relative size-14 shrink-0 overflow-hidden rounded-sm bg-gray-100">
               <Image
                 src={pendingGif}
                 alt="선택된 GIF"
@@ -116,10 +134,11 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
           </div>
         ) : null}
 
-        <div className="flex items-center gap-2 px-3 py-2">
+        <div className="flex items-center gap-2">
           <div
             className={cn(
-              'flex flex-1 items-center gap-1 rounded-full bg-border px-3',
+              'flex flex-1 items-center gap-1 px-3',
+              fieldClass,
               state === 'error' && 'ring-2 ring-danger',
             )}
           >
@@ -150,7 +169,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 onClick={onGifButtonClick}
                 disabled={disabled}
                 aria-label="GIF 선택"
-                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold text-text-tertiary ring-1 ring-border hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-text-tertiary ring-1 ring-border hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-40"
               >
                 GIF
               </button>
@@ -170,7 +189,9 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={disabled || (!value.trim() && !pendingGif)}
+            disabled={
+              disabled || (!value.trim() && !pendingGif && !hasPendingPhoto)
+            }
             aria-label="댓글 등록"
             className={cn(
               'inline-flex size-10 items-center justify-center rounded-full bg-primary text-text-inverse transition-opacity',

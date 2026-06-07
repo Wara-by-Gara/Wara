@@ -22,6 +22,8 @@ export interface FriendProfile {
     id: string;
     title: string;
     eventStartAt: Date | null;
+    status: 'active' | 'closed';
+    isHostedByMe: boolean;
     imageUrl: string | null;
   }[];
 }
@@ -36,6 +38,17 @@ export class FriendsService {
   private resolveImageUrl(key: string | null): Promise<string | null> {
     if (!key) return Promise.resolve(null);
     return this.s3Service.getViewPresignedUrl(key);
+  }
+
+  private async resolveInvitationCoverUrl(inv: {
+    mainCoverType: string;
+    mainImageKey: string | null;
+    mainGifUrl: string | null;
+  }): Promise<string | null> {
+    if (inv.mainCoverType === 'gif' && inv.mainGifUrl) {
+      return inv.mainGifUrl;
+    }
+    return this.resolveImageUrl(inv.mainImageKey);
   }
 
   // eventStartAt이 더 최근(또는 null이 아닌) 쪽을 최신으로 본다.
@@ -144,7 +157,9 @@ export class FriendsService {
           id: inv.id,
           title: inv.title,
           eventStartAt: inv.eventStartAt,
-          imageUrl: await this.resolveImageUrl(inv.mainImageKey),
+          status: inv.status,
+          isHostedByMe: inv.hostUserId === myUserId,
+          imageUrl: await this.resolveInvitationCoverUrl(inv),
         })),
       ),
     ]);

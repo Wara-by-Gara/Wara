@@ -42,7 +42,7 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
         aria-label="주요 탭"
         className={cn(
           "flex h-16 w-full items-stretch justify-around",
-          "rounded-full border border-border bg-surface",
+          "rounded-none border-t border-white/40 bg-white/55 backdrop-blur-xl backdrop-saturate-150",
           className,
         )}
         {...props}
@@ -53,32 +53,18 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
             ? "text-text-tertiary opacity-40"
             : active
               ? "text-primary"
-              : "text-gray-400";
+              : "text-text-secondary";
 
           const content = item.fab ? (
             <span className="flex flex-col items-center justify-center -mt-5">
-              <span className="relative inline-flex size-12 items-center justify-center rounded-full shadow-[0_6px_22px_rgba(232,151,177,0.38)] transition-[transform,box-shadow] duration-300 hover-emphasis-sm">
-                <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full bg-[linear-gradient(180deg,#F4B8C9_0%,#E897B1_100%)]"
-                />
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute inset-0 rounded-full",
-                    "border border-white/50",
-                    "bg-[linear-gradient(180deg,rgba(255,255,255,0.38)_0%,rgba(255,255,255,0.16)_42%,rgba(255,255,255,0.06)_100%)]",
-                    "backdrop-blur-[20px] backdrop-saturate-150",
-                    "shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.82),inset_0_-1px_2px_rgba(255,255,255,0.22)]",
-                  )}
-                />
+              <span className="relative inline-flex size-12 items-center justify-center rounded-full bg-gradient-to-b from-cranberry-30 to-cranberry-50 shadow-[0_6px_22px_rgba(243,26,124,0.28)] transition-shadow duration-300 hover:shadow-[0_8px_28px_rgba(243,26,124,0.34)]">
                 <Icon
                   name={item.icon}
                   size="lg"
                   color="currentColor"
                   strokeWidth={2.25}
                   decorative
-                  className="relative z-10 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.55)]"
+                  className="text-white"
                 />
               </span>
               {showLabels ? (
@@ -92,12 +78,12 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
                 {item.badge ? (
                   <span
                     aria-hidden
-                    className="absolute -right-1 -top-1 size-2 rounded-full bg-primary ring-2 ring-surface"
+                    className="absolute -right-1 -top-1 size-2 rounded-full bg-primary ring-2 ring-white/60"
                   />
                 ) : null}
               </span>
               {showLabels ? (
-                <span className={cn("text-[11px]", active ? "font-bold" : "")}>{item.label}</span>
+                <span className={cn("text-[11px]", active ? "font-semibold" : "")}>{item.label}</span>
               ) : null}
             </span>
           );
@@ -113,7 +99,7 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
               className={cn(
                 "flex flex-1 items-center justify-center",
                 colorClass,
-                !item.disabled && !item.fab && "hover-emphasis-sm",
+                !item.disabled && !item.fab && "hover:bg-black/5 transition-colors duration-150",
               )}
             >
               {content}
@@ -123,7 +109,7 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
           return renderItem ? (
             <span
               key={item.key}
-              className={cn("flex flex-1", colorClass, !item.disabled && !item.fab && "hover-emphasis-sm")}
+              className={cn("flex flex-1", colorClass, !item.disabled && !item.fab && "hover:bg-black/5 transition-colors duration-150")}
             >
               {renderItem(item, content)}
             </span>

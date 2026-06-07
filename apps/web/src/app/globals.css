@@ -1,43 +1,6 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "DungGeunMo";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.3/NeoDunggeunmo.woff")
-    format("woff");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "GMarketSans";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff")
-    format("woff");
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "GMarketSans";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff")
-    format("woff");
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "GMarketSans";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff")
-    format("woff");
-  font-weight: 700;
-  font-display: swap;
-}
-
-/* ============================================================
-   초대장 제목용 폰트 (기본 Pretendard + docs/font.md 8종)
-   ============================================================ */
-
-@font-face {
   font-family: "Pretendard";
   src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/PretendardVariable.woff2")
     format("woff2-variations");
@@ -45,181 +8,156 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: "ElegantSerif";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/GraceSerif-Regular.woff2")
-    format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "ElegantSerif";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/GraceSerif-Bold.woff2")
-    format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "HsHouseRabbitBlack";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/HSJiptokki-Black.woff2")
-    format("woff2");
-  font-weight: 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PartialSans";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2")
-    format("woff2");
-  font-weight: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SillaGothic";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/Shilla_Gothic-Bold.woff2")
-    format("woff2");
-  font-weight: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "HighTeenChoiHyoryeong";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/Lasthighteen-Bold.woff2")
-    format("woff2");
-  font-weight: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "DosHandwriting";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/DOSPilgiMedium.woff2")
-    format("woff2");
-  font-weight: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "MoonHalo";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2102-01@1.0/dalmoori.woff")
-    format("woff");
-  font-weight: normal;
-  font-display: swap;
-}
-
 /* ============================================================
-   Wara Design Tokens (sourced from src/styles/DESIGN.md)
+   Wara Design Tokens — Luma Design System
    ============================================================ */
 
 @theme {
-  /* ---------- Primitive Colors ---------- */
-  --color-wara-white: #ffffff;
-  --color-wara-black: #171717;
+  /* ---------- Primitive: White / Black ---------- */
+  --color-white: #ffffff;
+  --color-black: #131517;
 
-  --color-gray-50: #fafafa;
-  --color-gray-100: #f5f5f5;
-  --color-gray-200: #eaeaea;
-  --color-gray-300: #d4d4d4;
-  --color-gray-400: #a3a3a3;
-  --color-gray-500: #737373;
-  --color-gray-600: #525252;
-  --color-gray-700: #404040;
-  --color-gray-800: #262626;
-  --color-gray-900: #171717;
+  /* ---------- Primitive: Gray (Luma scale, Tailwind-compatible names) ---------- */
+  --color-gray-50:  #f7f8f9;
+  --color-gray-100: #ebeced;
+  --color-gray-200: #dee0e2;
+  --color-gray-300: #d2d4d7;
+  --color-gray-400: #b3b5b7;
+  --color-gray-500: #939597;
+  --color-gray-600: #737577;
+  --color-gray-700: #535557;
+  --color-gray-800: #333537;
+  --color-gray-900: #212325;
 
-  --color-pink-50: #fff1f7;
-  --color-pink-100: #ffe1ef;
-  --color-pink-200: #ffc4df;
-  --color-pink-300: #ff9aca;
-  --color-pink-400: #ff6db3;
-  --color-pink-500: #ff4fa3;
-  --color-pink-600: #e7358c;
+  /* ---------- Primitive: Cranberry (Luma brand color — replaces pink) ---------- */
+  --color-cranberry-5:  #fef4f9;
+  --color-cranberry-10: #fde2ef;
+  --color-cranberry-20: #fcc6de;
+  --color-cranberry-30: #f98dbe;
+  --color-cranberry-40: #f6539d;
+  --color-cranberry-50: #f31a7c;
+  --color-cranberry-60: #d5176d;
+  --color-cranberry-70: #b6145d;
+  --color-cranberry-80: #98104e;
+  --color-cranberry-90: #790d3e;
 
-  --color-sky-50: #eef8ff;
-  --color-sky-100: #ddf1ff;
-  --color-sky-200: #bde6ff;
-  --color-sky-300: #8dd4ff;
-  --color-sky-400: #5bc1ff;
-  --color-sky-500: #2ea8f5;
+  /* ---------- Primitive: Red ---------- */
+  --color-red-50:  #fff1f2;
+  --color-red-100: #ffe1e4;
+  --color-red-200: #ffc5ca;
+  --color-red-300: #ff9aa2;
+  --color-red-400: #ff6370;
+  --color-red-500: #f63b44;
+  --color-red-600: #dd3038;
+  --color-red-700: #b82028;
 
-  --color-yellow-50: #fffbea;
-  --color-yellow-100: #fff3bf;
-  --color-yellow-200: #ffe47a;
-  --color-yellow-300: #ffd43b;
-  --color-yellow-400: #fab005;
+  /* ---------- Primitive: Green ---------- */
+  --color-green-50:  #ecfdf5;
+  --color-green-100: #d1fae5;
+  --color-green-200: #a7f3d0;
+  --color-green-300: #6ee7b7;
+  --color-green-400: #34d399;
+  --color-green-500: #10b981;
+  --color-green-600: #059669;
+  --color-green-700: #047857;
 
-  --color-mint-50: #edfff8;
-  --color-mint-100: #d3fbea;
-  --color-mint-200: #a8f0d2;
-  --color-mint-300: #6ee7b7;
-  --color-mint-400: #34d399;
+  /* ---------- Primitive: Blue (replaces sky) ---------- */
+  --color-blue-50:  #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
 
-  --color-red-50: #fff1f2;
-  --color-red-100: #ffe4e6;
-  --color-red-500: #f43f5e;
-  --color-red-600: #e11d48;
+  /* ---------- Primitive: Yellow ---------- */
+  --color-yellow-50:  #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
 
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
+  /* ---------- Primitive: Orange ---------- */
+  --color-orange-50:  #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
 
-  /* ---------- Semantic Colors (Dark) ---------- */
-  --color-background: #0d0d0d;
-  --color-background-soft: #111111;
-  --color-surface: #1c1c1e;
-  --color-surface-pastel: #241820;
+  /* ---------- Primitive: Barney (Luma purple — estimated from style guide) ---------- */
+  --color-barney-10: #f3f0ff;
+  --color-barney-20: #e6d9fd;
+  --color-barney-30: #c9b5fc;
+  --color-barney-40: #a88af9;
+  --color-barney-50: #8b68f7;
+  --color-barney-60: #7356e2;
+  --color-barney-70: #5c42cc;
+  --color-barney-80: #4530b5;
+  --color-barney-90: #2f1e9e;
 
-  --color-primary: var(--color-pink-500);
-  --color-primary-hover: var(--color-pink-600);
-  --color-primary-soft: #3a2230;
+  /* ---------- Semantic Colors (Light theme default) ---------- */
+  --color-background:      #f0f2f5;
+  --color-background-soft: #f0f2f5;
+  --color-surface:         #ffffff;
 
-  --color-secondary: var(--color-sky-400);
-  --color-secondary-soft: #14222e;
+  /* Primary: near-black (Luma-style dark primary button) */
+  --color-primary:       #333537;
+  --color-primary-hover: #535557;
+  --color-primary-soft:  #f7f8f9;
 
-  --color-accent: var(--color-yellow-300);
-  --color-accent-soft: #2a2410;
+  /* Brand: Cranberry (Luma's signature brand color) */
+  --color-brand:       #f31a7c;
+  --color-brand-hover: #d5176d;
+  --color-brand-soft:  #fde2ef;
 
-  --color-success: var(--color-green-500);
-  --color-success-soft: #122017;
+  --color-success:      #10b981;
+  --color-success-soft: #ecfdf5;
 
-  --color-danger: var(--color-red-500);
-  --color-danger-soft: #2a1418;
+  --color-danger:      #f63b44;
+  --color-danger-soft: #fff1f2;
 
-  --color-text-primary: var(--color-gray-100);
-  --color-text-secondary: #b0b0b0;
-  --color-text-tertiary: #9a9a9a;
-  --color-text-inverse: var(--color-wara-white);
-  --color-text-inactive: #5a5a5a;
+  --color-warning:      #eab308;
+  --color-warning-soft: #fefce8;
 
-  --color-border: #2a2a2c;
-  --color-border-strong: #3a3a3c;
+  /* Text */
+  --color-text-primary:   #131517;
+  --color-text-secondary: #535557;
+  --color-text-tertiary:  #939597;
+  --color-text-inverse:   #ffffff;
+  --color-text-inactive:  #d2d4d7;
 
-  /* ---------- Icon Color Aliases ---------- */
-  --color-icon-default: var(--color-gray-300);
-  --color-icon-primary: var(--color-pink-500);
-  --color-icon-inactive: #6a6a6a;
-  --color-icon-danger: var(--color-red-500);
-  --color-icon-inverse: var(--color-wara-white);
+  /* Border */
+  --color-border:        #ebeced;
+  --color-border-strong: #dee0e2;
 
-  /* ---------- Radius ---------- */
-  /* 사진·카드를 더 각진 형태로: 한 번 더 축소. 원형(full)은 유지. */
-  --radius-xs: 1px;
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 5px;
-  --radius-xl: 6px;
-  --radius-2xl: 7px;
-  --radius-3xl: 8px;
-  --radius-full: 999px;
+  /* Icon */
+  --color-icon-default:  #939597;
+  --color-icon-primary:  #f31a7c;
+  --color-icon-inactive: #d2d4d7;
+  --color-icon-danger:   #f63b44;
+  --color-icon-inverse:  #ffffff;
 
-  /* ---------- Shadow ---------- */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  /* ---------- Radius (angular, tight corners) ---------- */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;    /* buttons, inputs */
+  --radius-lg:   8px;    /* thumbnails, small controls */
+  --radius-xl:   10px;   /* cards, secondary containers */
+  --radius-2xl:  12px;
+  --radius-3xl:  14px;   /* hero images, modals, bottom sheets */
+  --radius-4xl:  16px;   /* large poster */
+  --radius-full: 9999px;
+
+  /* ---------- Shadow (from Luma DevTools, light mode) ---------- */
+  --shadow-xs: 0 1px 4px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 7px rgba(0, 0, 0, 0.03), 0 3px 14px rgba(0, 0, 0, 0.04), 0 7px 29px rgba(0, 0, 0, 0.05), 0 20px 80px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 1.6px 3px rgba(0, 0, 0, 0.02), 0 4.2px 7px rgba(0, 0, 0, 0.03), 0 8px 14px rgba(0, 0, 0, 0.04), 0 17.5px 29px rgba(0, 0, 0, 0.05), 0 48px 80px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 3px 3px rgba(0, 0, 0, 0.03), 0 8px 7px rgba(0, 0, 0, 0.04), 0 17px 14px rgba(0, 0, 0, 0.05), 0 35px 29px rgba(0, 0, 0, 0.06), 0 96px 80px rgba(0, 0, 0, 0.07);
+  --shadow-xl: 0 4.5px 3px rgba(0, 0, 0, 0.04), 0 11.3px 7px rgba(0, 0, 0, 0.06), 0 23px 14px rgba(0, 0, 0, 0.08), 0 47.5px 29px rgba(0, 0, 0, 0.1), 0 130px 80px rgba(0, 0, 0, 0.14);
 
   /* ---------- Icon Size ---------- */
   --size-icon-xs: 12px;
@@ -228,28 +166,18 @@
   --size-icon-lg: 24px;
   --size-icon-xl: 32px;
 
-  /* ---------- Spacing (DESIGN.md §6) ---------- */
+  /* ---------- Spacing (4px base) ---------- */
   --spacing: 4px;
+  --spacing-page: 12px;
 
   /* ---------- Font ---------- */
-  --font-sans: var(--font-be-vietnam-pro), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-serif: var(--font-noto-serif);
-  --font-family-pixel: "DungGeunMo", "Galmuri", "Pretendard", sans-serif;
-  --font-display: var(--font-family-pixel);
-  --font-gmarket: "GMarketSans", var(--font-sans);
-
-  /* ---------- Legacy WARA Brand Colors (develop) ---------- */
-  --color-foreground: #171717;
-  --color-wara-primary: #a73921;
-  --color-wara-bg: #fbf9f8;
-  --color-wara-surface: #f5f3f3;
-  --color-wara-footer: #e4e2e2;
-  --color-wara-label: #58423d;
-  --color-wara-body: #1b1c1c;
-  --color-wara-secondary: #505f78;
-  --color-wara-placeholder: #6b7280;
-  --color-wara-divider: #dfc0b9;
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple Color Emoji", Inter, Roboto, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", Courier, monospace;
 }
+
+/* ============================================================
+   Base styles — Light theme default
+   ============================================================ */
 
 html,
 body {
@@ -258,45 +186,225 @@ body {
   font-family: var(--font-sans);
 }
 
-/* 초대장 상세 등 라이트 모드 화면 — DESIGN.md §4.2 Semantic Colors */
-html.theme-light {
-  --color-background: var(--color-wara-white);
-  --color-background-soft: var(--color-gray-50);
-  --color-surface: var(--color-wara-white);
-  --color-surface-pastel: var(--color-pink-50);
+/* 스크롤바 숨김 — 좌우·상하 스크롤 동작은 유지 */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
-  --color-primary-soft: var(--color-pink-100);
+*::-webkit-scrollbar {
+  display: none;
+}
 
-  --color-secondary-soft: var(--color-sky-100);
+/* Dark mode — html.theme-dark or scoped .theme-dark wrapper */
+html.theme-dark,
+.theme-dark {
+  --color-background:      #131517;
+  --color-background-soft: #212325;
+  --color-surface:         #212325;
 
-  --color-accent-soft: var(--color-yellow-100);
+  --color-primary:       #ffffff;
+  --color-primary-hover: #ebeced;
+  --color-primary-soft:  rgba(255, 255, 255, 0.08);
 
-  --color-success-soft: var(--color-green-50);
+  --color-brand-soft: rgba(243, 26, 124, 0.15);
 
-  --color-danger-soft: var(--color-red-50);
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: #d2d4d7;
+  --color-text-tertiary:  #939597;
+  --color-text-inverse:   #131517;
+  --color-text-inactive:  #535557;
 
-  --color-text-primary: var(--color-gray-900);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-tertiary: var(--color-gray-500);
-  --color-text-inactive: var(--color-gray-400);
+  --color-border:        rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
 
-  --color-border: var(--color-gray-200);
-  --color-border-strong: var(--color-gray-300);
+  --color-icon-default:  #d2d4d7;
+  --color-icon-inactive: #535557;
+}
 
-  --color-icon-default: var(--color-gray-600);
-  --color-icon-inactive: var(--color-gray-400);
-
+html.theme-dark,
+html.theme-dark body {
   background: var(--color-background);
   color: var(--color-text-primary);
 }
 
-html.theme-light body {
-  background: var(--color-background);
-  color: var(--color-text-primary);
+/* ============================================================
+   Home / list typography hierarchy
+   ============================================================ */
+@layer utilities {
+  .type-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+  }
+
+  .type-section-desc {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+  }
+
+  .type-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+  }
+
+  .type-card-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--color-cranberry-60);
+  }
+
+  .type-meta {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+  }
+
+  .type-meta-muted {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--color-text-tertiary);
+  }
+
+  .type-empty {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--color-text-tertiary);
+  }
+
+  .type-template-name {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+  }
+
+  .home-page-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .home-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 섹션 제목 ↔ 콘텐츠 블록 (인기 초대장과 동일 12px) */
+  .home-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .home-section-list > :first-child {
+    padding-top: 0;
+  }
+
+  /* 다가오는 모임 — 제목 ↔ 카드 썸네일 간격 */
+  .home-section-upcoming {
+    gap: 6px;
+  }
+
+  .home-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .home-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .home-list-item-y {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  /* 초대장 테마 배경 (DESIGN_BG_THEMES.cls 와 1:1) */
+  .bg-invite-minimal {
+    background-color: #f8f9fb;
+    background-image: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+  }
+
+  .bg-invite-pastel {
+    background-color: #fde8f0;
+    background-image: linear-gradient(135deg, #fde8f0 0%, #e8f4fd 45%, #e8fdf0 100%);
+  }
+
+  .bg-invite-sky {
+    background-color: #dbeafe;
+    background-image: linear-gradient(180deg, #93c5fd 0%, #dbeafe 42%, #f0f9ff 100%);
+  }
+
+  .bg-invite-glass {
+    background-color: #eef2f6;
+    background-image: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(230, 238, 248, 0.9) 50%,
+      rgba(245, 247, 250, 1) 100%
+    );
+  }
+
+  .bg-invite-y2k {
+    background-color: #fce7f3;
+    background-image: linear-gradient(135deg, #fbcfe8 0%, #a5f3fc 48%, #fef08a 100%);
+  }
+
+  .bg-invite-flower {
+    background-color: #fff5f7;
+    background-image:
+      radial-gradient(circle at 18% 28%, rgba(251, 207, 232, 0.55) 0%, transparent 52%),
+      radial-gradient(circle at 82% 72%, rgba(254, 226, 226, 0.5) 0%, transparent 50%),
+      linear-gradient(180deg, #fff5f7 0%, #fdf2f8 100%);
+  }
+
+  .bg-invite-film {
+    background-color: #e8e0d5;
+    background-image: linear-gradient(180deg, #d6ccc2 0%, #ede8e0 52%, #f5f0eb 100%);
+  }
+
+  .bg-invite-aurora {
+    background-color: #312e81;
+    background-image: linear-gradient(135deg, #312e81 0%, #5b21b6 38%, #0d9488 72%, #1e1b4b 100%);
+  }
+
+  .bg-invite-checkdot {
+    background-color: #fafafa;
+    background-image: radial-gradient(circle, #d1d5db 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
+  }
+
+  .bg-invite-starry {
+    background-color: #0f172a;
+    background-image:
+      radial-gradient(1px 1px at 18% 32%, rgba(255, 255, 255, 0.9), transparent),
+      radial-gradient(1px 1px at 62% 68%, rgba(255, 255, 255, 0.85), transparent),
+      radial-gradient(1.5px 1.5px at 78% 22%, rgba(255, 255, 255, 0.75), transparent),
+      radial-gradient(1px 1px at 42% 82%, rgba(255, 255, 255, 0.8), transparent),
+      linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  }
 }
 
-/* react-remove-scroll-bar이 모달 오픈 시 body에 margin-left:0 / margin-right:[gap]px를
-   !important로 주입해 mx-auto 센터링을 깨뜨리는 문제 방지 */
+/* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해
+   mx-auto 센터링을 깨뜨리는 문제 방지 */
 @layer base {
   html body[data-scroll-locked] {
     margin-left: auto !important;
@@ -310,56 +418,9 @@ a {
   cursor: pointer;
 }
 
-@utility font-pixel {
-  font-family: var(--font-family-pixel);
-}
-
-@utility hover-emphasis {
-  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-
-  @media (hover: hover) {
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 8px 24px rgb(0 0 0 / 0.28),
-        0 2px 8px rgb(0 0 0 / 0.16);
-    }
-  }
-}
-
-@utility hover-emphasis-sm {
-  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-
-  @media (hover: hover) {
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgb(0 0 0 / 0.24);
-    }
-  }
-}
-
-@utility hover-emphasis-glass {
-  transition-property: transform, box-shadow, backdrop-filter, -webkit-backdrop-filter;
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-
-  @media (hover: hover) {
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 12px 32px rgb(0 0 0 / 0.32),
-        0 4px 12px rgb(0 0 0 / 0.2);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-    }
-  }
-}
-
-/* Storybook MobileDeviceFrame: min-h-screen → frame height */
+/* ============================================================
+   Storybook MobileDeviceFrame
+   ============================================================ */
 .mobile-frame-viewport > main,
 .mobile-frame-viewport > div {
   box-sizing: border-box;
@@ -369,107 +430,8 @@ a {
 }
 
 /* ============================================================
-   초대장 제목 폰트 유틸리티 (FONT_CLASS 매핑과 1:1)
+   Cherry blossom animation (초대장 생성 전용)
    ============================================================ */
-@utility font-pretendard {
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-}
-@utility font-elegant-serif {
-  font-family: "ElegantSerif", "Pretendard", serif;
-}
-@utility font-jiptokki {
-  font-family: "HsHouseRabbitBlack", "Pretendard", sans-serif;
-}
-@utility font-partial-sans {
-  font-family: "PartialSans", "Pretendard", sans-serif;
-}
-@utility font-silla {
-  font-family: "SillaGothic", "Pretendard", sans-serif;
-}
-@utility font-highteen {
-  font-family: "HighTeenChoiHyoryeong", "Pretendard", sans-serif;
-}
-@utility font-dos {
-  font-family: "DosHandwriting", "Pretendard", monospace;
-}
-@utility font-moonhalo {
-  font-family: "MoonHalo", "Pretendard", sans-serif;
-}
-
-/* ============================================================
-   초대장 배경 (CSS 근사 — docs/font.md 옆 10종 프롬프트 기반)
-   레이어드 그라데이션/패턴으로 분위기·깊이 표현. 중앙은 가독성 위해 단순.
-   ============================================================ */
-@utility bg-invite-minimal {
-  background-color: #f7f7f9;
-  background-image:
-    radial-gradient(130% 70% at 50% -10%, #ffffff 0%, rgba(255, 255, 255, 0) 60%),
-    radial-gradient(80% 50% at 50% 115%, #ececed 0%, rgba(236, 236, 237, 0) 70%);
-}
-@utility bg-invite-pastel {
-  background-image: linear-gradient(155deg, #ffe1ef 0%, #ecdcff 48%, #dcebff 100%);
-}
-@utility bg-invite-sky {
-  background-color: #ddf1ff;
-  background-image:
-    radial-gradient(45% 22% at 22% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 70%),
-    radial-gradient(50% 24% at 78% 52%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 72%),
-    radial-gradient(40% 20% at 40% 78%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 70%),
-    linear-gradient(180deg, #9ed8ff 0%, #ddf1ff 60%, #f1f9ff 100%);
-}
-@utility bg-invite-glass {
-  background-color: #eef0fb;
-  background-image:
-    radial-gradient(40% 30% at 18% 22%, rgba(255, 150, 200, 0.5) 0%, rgba(255, 150, 200, 0) 70%),
-    radial-gradient(46% 34% at 82% 30%, rgba(120, 170, 255, 0.5) 0%, rgba(120, 170, 255, 0) 72%),
-    radial-gradient(50% 36% at 60% 88%, rgba(170, 140, 255, 0.45) 0%, rgba(170, 140, 255, 0) 72%),
-    linear-gradient(135deg, #f2f4fd 0%, #ede7fb 100%);
-}
-@utility bg-invite-y2k {
-  background-color: #f0eef6;
-  background-image:
-    linear-gradient(135deg, #ffd6ef 0%, #d6e4ff 32%, #eef0f6 52%, #d9f5ff 72%, #ffe0f3 100%);
-}
-@utility bg-invite-flower {
-  background-color: #fff6f1;
-  background-image:
-    radial-gradient(20% 16% at 6% 8%, rgba(255, 154, 202, 0.55) 0%, rgba(255, 154, 202, 0) 70%),
-    radial-gradient(22% 18% at 94% 14%, rgba(255, 196, 223, 0.6) 0%, rgba(255, 196, 223, 0) 72%),
-    radial-gradient(22% 18% at 90% 92%, rgba(255, 154, 202, 0.5) 0%, rgba(255, 154, 202, 0) 72%),
-    radial-gradient(20% 16% at 10% 90%, rgba(255, 212, 59, 0.4) 0%, rgba(255, 212, 59, 0) 72%),
-    linear-gradient(180deg, #fff7f2 0%, #fff1f6 100%);
-}
-@utility bg-invite-film {
-  background-color: #e9ddca;
-  background-image:
-    radial-gradient(120% 80% at 50% 0%, rgba(255, 248, 232, 0.7) 0%, rgba(255, 248, 232, 0) 60%),
-    repeating-linear-gradient(0deg, rgba(120, 90, 60, 0.04) 0px, rgba(120, 90, 60, 0.04) 1px, transparent 1px, transparent 3px),
-    linear-gradient(170deg, #efe6d4 0%, #e3d2ba 100%);
-}
-@utility bg-invite-aurora {
-  background-color: #eef6f4;
-  background-image:
-    radial-gradient(55% 38% at 18% 16%, rgba(110, 231, 183, 0.5) 0%, rgba(110, 231, 183, 0) 70%),
-    radial-gradient(58% 40% at 84% 24%, rgba(196, 181, 253, 0.55) 0%, rgba(196, 181, 253, 0) 72%),
-    radial-gradient(64% 46% at 50% 102%, rgba(125, 211, 252, 0.5) 0%, rgba(125, 211, 252, 0) 72%),
-    linear-gradient(180deg, #f2fbf8 0%, #f3f0fe 100%);
-}
-@utility bg-invite-checkdot {
-  background-color: #fff8f1;
-  background-image: radial-gradient(circle, rgba(255, 154, 202, 0.6) 1.6px, transparent 1.7px);
-  background-size: 18px 18px;
-}
-@utility bg-invite-starry {
-  background-color: #ece9f8;
-  background-image:
-    radial-gradient(1.6px 1.6px at 18% 22%, rgba(120, 110, 190, 0.7) 50%, transparent 51%),
-    radial-gradient(1.3px 1.3px at 68% 16%, rgba(120, 110, 190, 0.6) 50%, transparent 51%),
-    radial-gradient(1.8px 1.8px at 82% 58%, rgba(120, 110, 190, 0.65) 50%, transparent 51%),
-    radial-gradient(1.3px 1.3px at 34% 72%, rgba(120, 110, 190, 0.55) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 52% 40%, rgba(120, 110, 190, 0.6) 50%, transparent 51%),
-    linear-gradient(180deg, #e7e3fb 0%, #f1ecfb 58%, #fdf1f8 100%);
-}
-
 @keyframes cherry-blossom-fall {
   0% {
     transform: translate3d(0, -12vh, 0) rotate(0deg);
@@ -506,138 +468,5 @@ a {
     animation: none;
     opacity: var(--petal-opacity, 0.6);
     top: 12%;
-  }
-}
-
-/* ============================================================
-   초대장 애니메이션 효과 (생성·미리보기 전용)
-   입자별 CSS 변수: --drift, --spin, --opacity, --tilt
-   ============================================================ */
-@keyframes invite-fall {
-  0% {
-    transform: translate3d(0, -14vh, 0) rotate(0deg);
-    opacity: 0;
-  }
-  8% {
-    opacity: var(--opacity, 0.85);
-  }
-  92% {
-    opacity: var(--opacity, 0.85);
-  }
-  100% {
-    transform: translate3d(var(--drift, 0px), 114vh, 0) rotate(var(--spin, 360deg));
-    opacity: 0;
-  }
-}
-
-@keyframes invite-confetti {
-  0% {
-    transform: translate3d(0, -14vh, 0) rotate(0deg);
-    opacity: 0;
-  }
-  8% {
-    opacity: var(--opacity, 0.95);
-  }
-  100% {
-    transform: translate3d(var(--drift, 0px), 114vh, 0) rotate(var(--spin, 720deg));
-    opacity: 0.25;
-  }
-}
-
-@keyframes invite-rise {
-  0% {
-    transform: translate3d(0, 8vh, 0) scale(0.7);
-    opacity: 0;
-  }
-  14% {
-    opacity: var(--opacity, 0.85);
-  }
-  90% {
-    opacity: var(--opacity, 0.85);
-  }
-  100% {
-    transform: translate3d(var(--drift, 0px), -112vh, 0) scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes invite-drift {
-  0% {
-    transform: translate3d(-24vw, 0, 0);
-    opacity: 0;
-  }
-  12% {
-    opacity: var(--opacity, 0.85);
-  }
-  88% {
-    opacity: var(--opacity, 0.85);
-  }
-  100% {
-    transform: translate3d(124vw, var(--drift, 0px), 0);
-    opacity: 0;
-  }
-}
-
-@keyframes invite-fly {
-  0% {
-    transform: translate3d(-24vw, 0, 0) rotate(var(--tilt, 0deg));
-    opacity: 0;
-  }
-  12% {
-    opacity: var(--opacity, 1);
-  }
-  50% {
-    transform: translate3d(50vw, var(--drift, -30px), 0) rotate(var(--tilt, 0deg));
-  }
-  88% {
-    opacity: var(--opacity, 1);
-  }
-  100% {
-    transform: translate3d(124vw, 0, 0) rotate(var(--tilt, 0deg));
-    opacity: 0;
-  }
-}
-
-@keyframes invite-twinkle {
-  0%,
-  100% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1);
-    opacity: var(--opacity, 1);
-  }
-}
-
-.invite-anim-fall {
-  animation: invite-fall linear infinite;
-  will-change: transform, opacity;
-}
-.invite-anim-confetti {
-  animation: invite-confetti linear infinite;
-  will-change: transform, opacity;
-}
-.invite-anim-rise {
-  animation: invite-rise ease-in infinite;
-  will-change: transform, opacity;
-}
-.invite-anim-drift {
-  animation: invite-drift linear infinite;
-  will-change: transform, opacity;
-}
-.invite-anim-fly {
-  animation: invite-fly ease-in-out infinite;
-  will-change: transform, opacity;
-}
-.invite-anim-twinkle {
-  animation: invite-twinkle ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [class*="invite-anim-"] {
-    animation: none !important;
-    opacity: var(--opacity, 0.7);
   }
 }

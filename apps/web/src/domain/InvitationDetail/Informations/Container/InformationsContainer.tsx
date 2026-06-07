@@ -8,10 +8,29 @@ type Props = {
   isHost: boolean;
   invitationId: string;
   voteResultsHref?: string;
+  showWeather?: boolean;
+  hideDateInHeader?: boolean;
+  immersive?: boolean;
 };
 
-export default function InformationsContainer({ invitation, isHost, invitationId, voteResultsHref }: Props) {
+export default function InformationsContainer({
+  invitation,
+  isHost,
+  invitationId,
+  voteResultsHref,
+  showWeather,
+  hideDateInHeader,
+  immersive,
+}: Props) {
   return (
-    <LocationWithDate invitation={invitation} isHost={isHost} invitationId={invitationId} voteResultsHref={voteResultsHref} />
+    <LocationWithDate
+      invitation={invitation}
+      isHost={isHost}
+      invitationId={invitationId}
+      voteResultsHref={voteResultsHref}
+      showWeather={showWeather}
+      hideDateInHeader={hideDateInHeader}
+      immersive={immersive}
+    />
   );
 }

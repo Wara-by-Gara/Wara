@@ -1,7 +1,9 @@
 'use client';
 
-import { Icon } from '@/components/icons';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/primitives/Button';
+import { ROUTES } from '@/constants/routes';
 import { SocialLoginButton } from '@/components/primitives/SocialLoginButton';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import {
@@ -56,38 +58,25 @@ export const Login = ({
     setMounted(true);
   }, []);
 
-  const errorMessage =
-    state === 'socialFailed'
-      ? '로그인에 실패했어요. 잠시 후 다시 시도해주세요.'
-      : state === 'socialCancelled'
-        ? '로그인이 취소되었어요.'
-        : state === 'accountBlocked'
-          ? '이용이 제한된 계정이에요. 고객센터에 문의해주세요.'
-          : state === 'withdrawnAccount'
-            ? '탈퇴한 계정이에요. 30일 후 다시 가입할 수 있어요.'
-            : null;
-
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background px-6 pb-[calc(env(safe-area-inset-bottom)+24px)]">
-      <section className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <div className="inline-flex size-20 items-center justify-center rounded-3xl bg-primary-soft">
-          <Icon name="pixel-heart" size="xl" color="primary" decorative />
-        </div>
-        <h1 className="text-[24px] font-extrabold text-text-primary">
-          Wara에 오신 걸 환영해요
-        </h1>
-        {state === 'withInvitationContext' && invitationTitle ? (
-          <p className="rounded-full bg-pink-50 px-3 py-1 text-[13px] font-medium text-pink-600">
-            {invitationTitle}에 초대받았어요
-          </p>
-        ) : (
-          <p className="text-[14px] text-text-secondary">
-            소셜 계정으로 1초 만에 시작
-          </p>
-        )}
-      </section>
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-black">
+      <Image
+        src="/onboarding_y2k.png"
+        alt=""
+        fill
+        priority
+        className="object-cover object-[center_calc(50%-120px)]"
+        sizes="(max-width: 448px) 100vw, 448px"
+      />
 
-      <section className="flex flex-col gap-2.5">
+      <div className="relative z-10 mt-auto flex flex-col gap-2.5 px-page pb-[calc(env(safe-area-inset-bottom)+24px)]">
+        {state === 'withInvitationContext' && invitationTitle ? (
+          <p className="mb-1 text-center text-[13px] font-medium text-cranberry-60">
+            <span className="rounded-full bg-white/90 px-3 py-1 shadow-sm backdrop-blur-sm">
+              {invitationTitle}에 초대받았어요
+            </span>
+          </p>
+        ) : null}
         <SocialLoginButton
           provider="kakao"
           loading={state === 'kakaoLoading'}
@@ -109,15 +98,6 @@ export const Login = ({
           onClick={onApple}
         />
 
-        {errorMessage ? (
-          <p
-            role="alert"
-            className="mt-1 rounded-2xl bg-red-50 px-3 py-2 text-center text-[13px] font-medium text-danger"
-          >
-            {errorMessage}
-          </p>
-        ) : null}
-
         {state === 'withInvitationContext' ||
         state === 'continueWithoutLogin' ? (
           <Button variant="text" size="md" onClick={onContinueWithoutLogin}>
@@ -125,11 +105,18 @@ export const Login = ({
           </Button>
         ) : null}
 
-        <p className="mt-2 text-center text-[12px] text-text-tertiary">
-          시작 시 <a className="underline">이용약관</a>·
-          <a className="underline">개인정보처리방침</a>에 동의하게 됩니다
+        <p className="mt-2 text-center text-[12px] text-white/80 drop-shadow-sm">
+          시작 시{' '}
+          <Link href={ROUTES.TERMS.SERVICE} className="underline">
+            이용약관
+          </Link>
+          ·
+          <Link href={ROUTES.TERMS.PRIVACY} className="underline">
+            개인정보처리방침
+          </Link>
+          에 동의하게 됩니다
         </p>
-      </section>
+      </div>
 
       <ConfirmModal
         contained

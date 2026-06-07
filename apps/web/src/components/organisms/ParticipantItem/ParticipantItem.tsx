@@ -77,7 +77,7 @@ export const ParticipantItem = forwardRef<HTMLDivElement, ParticipantItemProps>(
               ) : null}
             </p>
             {isHost ? (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-bold text-yellow-400">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-yellow-100 px-1.5 text-[11px] font-semibold text-yellow-400">
                 <Icon name="crown" size="xs" color="currentColor" decorative /> 호스트
               </span>
             ) : null}

@@ -110,7 +110,7 @@ export class FeedbacksService {
 
   // 초대장댓글 + 사진 댓글 혼합 (초대장 상세페이지에서 보여줄 댓글들...)
   async listAll(invitationId: string, dto: ListFeedbacksDto, participantId?: string) {
-    const { rows, nextCursor } = await this.repository.findAllByInvitation(
+    const { rows, nextCursor, total } = await this.repository.findAllByInvitation(
       invitationId,
       dto,
       participantId,
@@ -118,6 +118,7 @@ export class FeedbacksService {
     return {
       rows: await this.attachPhotoUrls(await this.attachProfileImageUrls(this.applyDeletedPlaceholder(rows))),
       nextCursor,
+      total,
     };
   }
 

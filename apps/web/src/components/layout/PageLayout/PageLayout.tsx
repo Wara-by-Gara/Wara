@@ -42,7 +42,7 @@ export const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(
         ref={ref}
         className={cn(
           "flex w-full max-w-md flex-col bg-background mx-auto min-h-screen",
-          isModalPage && "rounded-t-3xl shadow-lg",
+          isModalPage && "rounded-t-lg shadow-lg",
           className,
         )}
         {...props}
@@ -51,7 +51,7 @@ export const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(
         <main
           className={cn(
             "flex-1",
-            !noPadding && "px-5 py-4",
+            !noPadding && "px-page py-4",
             variant === "scroll-view" && "overflow-y-auto",
           )}
         >

@@ -10,6 +10,7 @@ import { Button } from '@/components/primitives/Button';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import { useAdminFaq, useCreateFaq, useUpdateFaq, useDeleteFaq } from '@/hooks/useFaq';
 import { ROUTES } from '@/constants/routes';
+import { FaqListSkeleton } from '@/components/organisms/Skeleton';
 import type { FaqItem, CreateFaqPayload, UpdateFaqPayload } from '@/lib/api/faq';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -61,9 +62,7 @@ export default function AdminFaqPage() {
 
         {/* FAQ 목록 */}
         <Section title={`자주 묻는 질문${items ? ` (${items.length})` : ''}`}>
-          {isLoading && (
-            <p className="px-4 py-3 text-[14px] text-text-tertiary">불러오는 중...</p>
-          )}
+          {isLoading && <FaqListSkeleton count={5} />}
           {!isLoading && items?.length === 0 && !isCreating && (
             <p className="px-4 py-3 text-[14px] text-text-tertiary">등록된 항목이 없습니다</p>
           )}
@@ -185,7 +184,7 @@ function CreateFaqForm({
         maxLength={200}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <textarea
         name="answer"
@@ -196,7 +195,7 @@ function CreateFaqForm({
         rows={4}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-[14px] text-text-secondary">
@@ -208,7 +207,7 @@ function CreateFaqForm({
             onChange={handleChange}
             min={0}
             disabled={isPending}
-            className="w-16 rounded-lg border border-border px-2 py-1 text-[14px]"
+            className="w-16 rounded-xs border border-border px-2 py-1 text-[14px]"
           />
         </label>
         <label className="flex items-center gap-2 text-[14px] text-text-secondary">
@@ -272,7 +271,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
         maxLength={200}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <textarea
         name="answer"
@@ -283,7 +282,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
         rows={4}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-[14px] text-text-secondary">
@@ -295,7 +294,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
             onChange={handleChange}
             min={0}
             disabled={isPending}
-            className="w-16 rounded-lg border border-border px-2 py-1 text-[14px]"
+            className="w-16 rounded-xs border border-border px-2 py-1 text-[14px]"
           />
         </label>
         <label className="flex items-center gap-2 text-[14px] text-text-secondary">

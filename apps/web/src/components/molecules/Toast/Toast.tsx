@@ -12,19 +12,19 @@ export type ToasterProps = React.ComponentPropsWithoutRef<typeof SonnerToaster>;
 export const Toaster = ({ className, ...props }: ToasterProps) => (
   <SonnerToaster
     position="top-center"
-    duration={5000}
+    duration={2500}
     expand={false}
     visibleToasts={1}
     toastOptions={{
       classNames: {
         toast:
-          "wara-toast rounded-full bg-gray-900 text-white text-sm font-medium px-4 py-3 shadow-md",
+          "rounded-full bg-gray-900 text-white text-sm font-medium px-4 py-3 shadow-md",
         title: "text-sm",
         description: "text-xs opacity-80",
-        actionButton: "text-sm font-bold text-pink-300",
+        actionButton: "text-sm font-semibold text-cranberry-30",
       },
     }}
-    className={cn("wara-sonner", className)}
+    className={cn(className)}
     {...props}
   />
 );

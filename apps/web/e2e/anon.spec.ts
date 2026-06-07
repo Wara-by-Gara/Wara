@@ -30,14 +30,14 @@ test.describe("anon", () => {
       await page.waitForLoadState("domcontentloaded");
       await expectNotCrashed(page);
     }
-    await safeGoto(page, "/calendar");
+    await safeGoto(page, "/meetings");
     await page.waitForURL(/\/login/, { timeout: 10_000 });
     await expectNotCrashed(page);
     expectNoPageErrors(pageErrors);
   });
 
   test("비로그인 캘린더 접근은 로그인으로 리다이렉트된다", async ({ page }) => {
-    await safeGoto(page, "/calendar");
+    await safeGoto(page, "/meetings");
     await page.waitForURL(/\/login/, { timeout: 8000 });
     await expect(page).toHaveURL(/\/login/);
   });
@@ -90,7 +90,7 @@ test.describe("anon", () => {
   }) => {
     await page.goto("/signup", { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(500);
-    await page.getByRole("button", { name: "완료" }).click();
+    await page.getByRole("button", { name: "저장하기" }).click();
     await expect(page.getByText("이름을 입력해주세요")).toBeVisible();
     await expect(page.getByText("유효한 이메일을 입력해주세요")).toBeVisible();
     await expect(page.getByText("출생연도를 입력해주세요")).toBeVisible();
@@ -111,7 +111,7 @@ test.describe("anon", () => {
     await page.getByPlaceholder("이름을 입력해주세요").fill("홍");
     await page.getByPlaceholder("이메일을 입력해주세요").fill("not-an-email");
     await page.getByPlaceholder("예) 1995").fill("99");
-    await page.getByRole("button", { name: "완료" }).click();
+    await page.getByRole("button", { name: "저장하기" }).click();
     await expect(page.getByText("한글 또는 영문으로 2자 이상 입력해주세요")).toBeVisible();
     await expect(page.getByText("유효한 이메일을 입력해주세요")).toBeVisible();
     await expect(page.getByText("4자리 연도를 입력해주세요")).toBeVisible();

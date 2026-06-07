@@ -20,7 +20,7 @@ export interface DateTimeSelectorProps {
 }
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-border-strong bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-primary";
+  "h-12 w-full rounded-xs border border-border-strong bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-primary";
 
 // ── 24h HH:MM ↔ 오전/오후 + 1-12h 변환 ───────────────────────────────────────
 const HOURS = [1,2,3,4,5,6,7,8,9,10,11,12];
@@ -92,7 +92,7 @@ function WheelColumn<T extends number>({
   return (
     <div className="relative flex flex-1 flex-col items-center" style={{ height: ITEM_H * VISIBLE }}>
       <div
-        className="pointer-events-none absolute inset-x-0 rounded-xl bg-primary/10"
+        className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary/10"
         style={{ top: ITEM_H * 2, height: ITEM_H }}
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/90 to-transparent" style={{ height: ITEM_H * 2 }} />
@@ -150,9 +150,9 @@ function TimeWheelPicker({
   }, [onChange]);
 
   return (
-    <div className={cn("flex w-full flex-col gap-2 rounded-2xl border border-border bg-surface p-3", disabled && "opacity-40 pointer-events-none")}>
+    <div className={cn("flex w-full flex-col gap-2 rounded-md border border-border bg-surface p-3", disabled && "opacity-40 pointer-events-none")}>
       {/* 오전/오후 토글 */}
-      <div className="flex overflow-hidden rounded-xl border border-border bg-background-soft">
+      <div className="flex overflow-hidden rounded-sm border border-border bg-background-soft">
         {(["오전", "오후"] as const).map((v) => (
           <button
             key={v}
@@ -167,7 +167,7 @@ function TimeWheelPicker({
       </div>
 
       {/* 시·분 휠 */}
-      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-border bg-white px-2 h-[150px]">
+      <div className="flex items-center gap-0 overflow-hidden rounded-sm border border-border bg-white px-2 h-[150px]">
         <WheelColumn
           items={HOURS}
           value={hour}
@@ -247,7 +247,7 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
         </div>
 
         {unknownToggle ? (
-          <label className="flex items-center justify-between gap-3 rounded-2xl bg-background-soft px-4 py-2.5">
+          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
             <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
             <Switch
               checked={isUnknown}

@@ -29,7 +29,7 @@ export interface SplashProps {
 
 const SplashLoadingIndicator = () => (
   <div
-    className="relative inline-flex size-20 items-center justify-center rounded-3xl bg-primary-soft"
+    className="relative inline-flex size-20 items-center justify-center rounded-lg bg-primary-soft"
     role="status"
     aria-label="로딩 중"
   >
@@ -42,7 +42,7 @@ const LogoBlock = ({ loading = false }: { loading?: boolean }) => (
     {loading ? (
       <SplashLoadingIndicator />
     ) : (
-      <div className="relative inline-flex size-20 items-center justify-center rounded-3xl bg-primary-soft">
+      <div className="relative inline-flex size-20 items-center justify-center rounded-lg bg-primary-soft">
         <Icon name="send" size="xl" color="primary" decorative />
       </div>
     )}
@@ -62,13 +62,13 @@ const SplashDefaultNew = ({
       alt=""
       className="absolute inset-0 size-full object-cover object-center"
     />
-    <div className="relative z-10 mt-auto px-6 pb-[max(2.75rem,calc(env(safe-area-inset-bottom)+2.75rem))]">
+    <div className="relative z-10 mt-auto px-page pb-[max(2.75rem,calc(env(safe-area-inset-bottom)+2.75rem))]">
       <Button
         variant="outline"
         size="lg"
         fullWidth
         onClick={onStart}
-        className="border-0 bg-white text-text-primary shadow-md hover-emphasis active:opacity-90"
+        className="border-0 bg-white text-text-primary shadow-md hover:shadow-lg transition-shadow duration-200 active:opacity-90"
       >
         시작하기
       </Button>
@@ -97,7 +97,7 @@ export const Splash = ({
   const isAutoLoginLoading = state === "autoLoginLoading";
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-12 overflow-hidden bg-background px-6 py-20">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-12 overflow-hidden bg-background px-page py-20">
       <LogoBlock loading={isLoading} />
 
       {isAutoLoginLoading ? (

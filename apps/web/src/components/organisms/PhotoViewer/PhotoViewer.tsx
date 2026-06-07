@@ -119,7 +119,7 @@ function ProfileActions({
         aria-label={liked ? "좋아요 취소" : "좋아요"}
         className={cn(
           "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors disabled:opacity-60",
-          liked ? "text-primary" : "text-white/70 hover:text-primary",
+          liked ? "text-brand" : "text-white/70 hover:text-brand",
         )}
       >
         {liked ? (
@@ -220,7 +220,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
             variant="ghost"
             aria-label="닫기"
             onClick={onClose}
-            className="bg-black/40 text-white hover-emphasis-sm"
+            className="bg-black/40 text-white hover:bg-black/50 transition-colors duration-150"
           />
           <div className="flex items-center gap-1">
             {onSave ? (
@@ -324,7 +324,6 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                   </p>
                 )}
               </div>
-              {gifPicker}
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
@@ -337,6 +336,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                 onGifButtonClick={onGifButtonClick}
                 className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
               />
+              {gifPicker}
             </>
           ) : null}
         </footer>
@@ -375,7 +375,7 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
       return (
         <div
           className={cn(
-            "relative flex aspect-[9/16] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-black text-text-inverse",
+            "relative flex aspect-[9/16] w-full max-w-md flex-col overflow-hidden rounded-lg bg-black text-text-inverse",
             className,
           )}
         >
@@ -385,7 +385,7 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
     }
 
     const contentClass = cn(
-      "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden rounded-3xl bg-black p-0 shadow-lg focus:outline-none",
+      "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden rounded-lg bg-black p-0 shadow-lg focus:outline-none",
       "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
       "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
       contained ? "absolute" : "fixed",

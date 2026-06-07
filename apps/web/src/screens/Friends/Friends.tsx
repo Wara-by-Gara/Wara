@@ -8,8 +8,9 @@ import { SearchBar } from "@/components/molecules/SearchBar";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { toast } from "@/components/molecules/Toast";
-import { mobileMainScroll } from "@/lib/mobilePageLayout";
+import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
 import { ROUTES } from "@/constants/routes";
+import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriends } from "@/hooks/useFriends";
 
 const DM_TOAST = "DM 기능은 곧 만나요";
@@ -29,11 +30,11 @@ export const Friends = () => {
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <StickyHeader title="친구" />
-      <main className={`relative z-10 ${mobileMainScroll} pt-14`}>
+      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
         {isLoading ? (
-          <p className="py-10 text-center text-text-tertiary">불러오는 중...</p>
+          <FriendsPageSkeleton />
         ) : isError ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-5">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-page">
             <EmptyState icon="users" title="친구 목록을 불러오지 못했어요" />
             <button
               type="button"
@@ -44,7 +45,7 @@ export const Friends = () => {
             </button>
           </div>
         ) : friends.length === 0 ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center px-5">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center px-page">
             <EmptyState
               icon="users"
               title="아직 친구가 없어요"
@@ -55,8 +56,8 @@ export const Friends = () => {
           <div className="flex flex-col gap-3 pb-6">
             {/* 최근 함께한 친구 — 스토리 형태 (그라데이션 링) */}
             <section className="pt-3">
-              <h2 className="px-5 pb-2 text-[14px] font-bold text-text-primary">최근 함께한 친구</h2>
-              <div className="flex gap-2 overflow-x-auto overscroll-x-contain px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <h2 className="px-page pb-2 text-[14px] font-bold text-text-primary">최근 함께한 친구</h2>
+              <div className="flex gap-5 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {recentFriends.map((f) => {
                   const name = f.name ?? "이름 없음";
                   return (
@@ -82,8 +83,8 @@ export const Friends = () => {
 
             {/* 친구 목록 — 함께한 모임 많은 순 */}
             <section>
-              <h2 className="px-5 pb-1 text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
-              <div className="px-5 py-3">
+              <h2 className="px-page pb-1 text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
+              <div className="px-page py-3">
                 <SearchBar
                   placeholder="친구 이름으로 검색"
                   value={query}
@@ -108,7 +109,7 @@ export const Friends = () => {
                               goDetail(f.id);
                             }
                           }}
-                          className="flex cursor-pointer items-center gap-3 px-5 py-3 active:bg-background-soft"
+                          className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
                         >
                           <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
                           <div className="min-w-0 flex-1">

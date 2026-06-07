@@ -1,15 +1,92 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, desc, eq, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { invitations, participants } from '../database/schema';
+import { eventLocations, invitations, participants, users } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
+import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { RsvpStatus } from '../common/enums/rsvp-status.enum';
+
+const PARTICIPANT_PREVIEW_LIMIT = 3;
+
+export type ParticipantPreviewRow = {
+  invitationId: string;
+  userId: string;
+  name: string | null;
+  profileImageUrl: string | null;
+  memberRole: 'HOST' | 'GUEST';
+};
+
+export type ParticipantPreviewBundle = {
+  total: number;
+  previews: ParticipantPreviewRow[];
+};
 
 @Injectable()
 export class InvitationsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+
+  async findPublicExplore(dto: ListPublicInvitationsDto) {
+    const pageLimit = dto.limit ?? 20;
+    const fetchLimit = pageLimit + 1;
+
+    const conditions = [
+      eq(invitations.isPublic, true),
+      isNull(invitations.deletedAt),
+      eq(invitations.status, 'active'),
+    ];
+    if (dto.category) {
+      conditions.push(eq(invitations.category, dto.category));
+    }
+    if (dto.cursor) {
+      conditions.push(
+        sql`(${invitations.eventStartAt}, ${invitations.createdAt}, ${invitations.id}) < (
+          SELECT ${invitations.eventStartAt}, ${invitations.createdAt}, ${invitations.id}
+          FROM ${invitations}
+          WHERE ${invitations.id} = ${dto.cursor}
+          LIMIT 1
+        )`,
+      );
+    }
+
+    const rows = await this.db.query.invitations.findMany({
+      where: and(...conditions),
+      with: {
+        eventLocation: true,
+        host: {
+          columns: { name: true, nickname: true, profileImageUrl: true },
+        },
+      },
+      orderBy: [
+        desc(invitations.eventStartAt),
+        desc(invitations.createdAt),
+        desc(invitations.id),
+      ],
+      limit: fetchLimit,
+    });
+
+    const hasNext = rows.length > pageLimit;
+    const paged = hasNext ? rows.slice(0, pageLimit) : rows;
+
+    return {
+      rows: paged,
+      nextCursor: hasNext && paged.length > 0 ? paged.at(-1)!.id : null,
+    };
+  }
+
+  async countPublicParticipants(invitationId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(participants)
+      .where(
+        and(
+          eq(participants.invitationId, invitationId),
+          ne(participants.rsvpStatus, RsvpStatus.ABSENT),
+        ),
+      );
+    return row?.count ?? 0;
+  }
 
   async findAllByUserId(userId: string) {
     const rows = await this.db
@@ -26,7 +103,74 @@ export class InvitationsRepository {
         ),
       )
       .orderBy(desc(invitations.createdAt));
-    return rows.map((r) => ({ ...r.invitation, myRole: r.myRole }));
+
+    const invitationIds = rows.map((r) => r.invitation.id);
+    if (invitationIds.length === 0) return [];
+
+    const locations = await this.db
+      .select()
+      .from(eventLocations)
+      .where(
+        and(
+          inArray(eventLocations.invitationId, invitationIds),
+          isNull(eventLocations.deletedAt),
+        ),
+      );
+    const locationByInvitationId = new Map(
+      locations.map((loc) => [loc.invitationId, loc]),
+    );
+
+    return rows.map((r) => ({
+      ...r.invitation,
+      myRole: r.myRole,
+      eventLocation: locationByInvitationId.get(r.invitation.id) ?? null,
+    }));
+  }
+
+  async findParticipantPreviewsByInvitationIds(
+    invitationIds: string[],
+  ): Promise<Map<string, ParticipantPreviewBundle>> {
+    if (invitationIds.length === 0) return new Map();
+
+    const rows = await this.db
+      .select({
+        invitationId: participants.invitationId,
+        userId: users.id,
+        name: users.name,
+        profileImageUrl: users.profileImageUrl,
+        memberRole: participants.memberRole,
+      })
+      .from(participants)
+      .innerJoin(users, eq(participants.userId, users.id))
+      .where(
+        and(
+          inArray(participants.invitationId, invitationIds),
+          isNull(users.deletedAt),
+          ne(participants.rsvpStatus, RsvpStatus.ABSENT),
+        ),
+      );
+
+    const grouped = new Map<string, ParticipantPreviewRow[]>();
+    for (const row of rows) {
+      const list = grouped.get(row.invitationId) ?? [];
+      list.push(row);
+      grouped.set(row.invitationId, list);
+    }
+
+    const result = new Map<string, ParticipantPreviewBundle>();
+    for (const [invitationId, members] of grouped) {
+      const sorted = [...members].sort((a, b) => {
+        const aIsHost = a.memberRole === MemberRole.HOST ? 0 : 1;
+        const bIsHost = b.memberRole === MemberRole.HOST ? 0 : 1;
+        return aIsHost - bIsHost;
+      });
+      result.set(invitationId, {
+        total: sorted.length,
+        previews: sorted.slice(0, PARTICIPANT_PREVIEW_LIMIT),
+      });
+    }
+
+    return result;
   }
 
   findById(id: string) {

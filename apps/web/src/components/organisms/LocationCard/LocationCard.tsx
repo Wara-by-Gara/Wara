@@ -1,7 +1,9 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
+import type { IconName } from "@/components/icons";
+import { KakaoStaticMapPreview } from "@/components/molecules/KakaoStaticMapPreview";
 import { Button } from "@/components/primitives/Button";
 import { toast } from "@/components/molecules/Toast";
 import { cn } from "@/lib/cn";
@@ -13,14 +15,19 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   placeName?: string;
   /** 주소 */
   address?: string;
-  /** 지도 미리보기 이미지 URL */
-  mapPreviewUrl?: string;
+  /** 지도 미리보기 좌표 */
+  mapLat?: number;
+  mapLng?: number;
   /** 온라인 모임 링크 (online 모드) */
   onlineLink?: string;
   /** 지도에서 보기 콜백 (preview 모드) */
   onViewMap?: () => void;
   /** 길찾기 콜백 */
   onGetDirections?: () => void;
+  /** 주소 행 우측 날씨 슬롯 */
+  weatherSlot?: ReactNode;
+  /** 초대장 상세 글래스 배경용 */
+  immersive?: boolean;
 }
 
 async function copyToClipboard(text: string, successMessage: string) {
@@ -32,6 +39,52 @@ async function copyToClipboard(text: string, successMessage: string) {
   }
 }
 
+function openExternalUrl(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function LocationActionMenu({
+  open,
+  onClose,
+  items,
+  className,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: { label: string; icon: IconName; onClick: () => void }[];
+  className?: string;
+}) {
+  if (!open) return null;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden />
+      <div
+        role="menu"
+        className={cn(
+          "absolute z-50 min-w-[168px] overflow-hidden rounded-xs bg-surface shadow-md",
+          className,
+        )}
+      >
+        {items.map((item, index) => (
+          <div key={item.label}>
+            {index > 0 ? <div className="h-px bg-border" /> : null}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={item.onClick}
+              className="flex w-full items-center justify-between gap-6 px-4 py-3 text-left text-[15px] text-text-primary transition-colors duration-150 hover:bg-gray-50 active:bg-gray-100"
+            >
+              <span>{item.label}</span>
+              <Icon name={item.icon} size="sm" color="currentColor" decorative />
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
   function LocationCard(
     {
@@ -39,27 +92,67 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       variant = "preview",
       placeName,
       address,
-      mapPreviewUrl,
+      mapLat,
+      mapLng,
       onlineLink,
       onViewMap,
       onGetDirections,
+      weatherSlot,
+      immersive = false,
       ...props
     },
     ref,
   ) {
+    const [addressMenuOpen, setAddressMenuOpen] = useState(false);
+    const hasDirections =
+      mapLat !== undefined && mapLng !== undefined && !!placeName;
+
+    const closeAddressMenu = () => setAddressMenuOpen(false);
+
+    const handleDirections = () => {
+      if (hasDirections) {
+        openExternalUrl(
+          `https://map.kakao.com/link/to/${encodeURIComponent(placeName!)},${mapLat},${mapLng}`,
+        );
+      } else {
+        const query = placeName ?? address;
+        if (query) {
+          openExternalUrl(`https://map.naver.com/v5/search/${encodeURIComponent(query)}`);
+        }
+      }
+      closeAddressMenu();
+    };
+
+    const handleCopyAddress = async () => {
+      if (!address) return;
+      await copyToClipboard(address, "주소가 복사되었어요");
+      closeAddressMenu();
+    };
+
+    const addressMenuItems = [
+      { label: "길찾기", icon: "navigation" as const, onClick: handleDirections },
+      { label: "복사하기", icon: "copy" as const, onClick: handleCopyAddress },
+    ];
+
     if (variant === "unknown") {
       return (
         <div
           ref={ref}
           className={cn(
-            "flex flex-col gap-2 rounded-3xl border border-dashed border-border-strong bg-background-soft p-5 text-center",
+            immersive
+              ? "flex flex-col gap-2 p-0 text-center"
+              : "flex flex-col gap-2 rounded-md border border-dashed border-border-strong bg-background-soft p-5 text-center",
             className,
           )}
           {...props}
         >
           <Icon name="map-pin" size="lg" color="inactive" decorative className="mx-auto" />
-          <p className="text-[15px] font-semibold text-text-primary">장소가 아직 정해지지 않았어요</p>
-          <p className="text-[13px] text-text-tertiary">호스트가 장소를 정하면 알려드릴게요</p>
+          <p className="text-[15px] font-semibold text-text-primary">
+            장소가 아직 정해지지 않았어요
+          </p>
+          <p className="text-[13px] text-text-tertiary">
+            호스트가 장소를 정하면 알려드릴게요
+          </p>
         </div>
       );
     }
@@ -69,12 +162,12 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
         <div
           ref={ref}
           className={cn(
-            "flex items-center gap-3 rounded-3xl border border-border bg-surface p-4",
+            "flex items-center gap-3 rounded-md border border-border bg-surface p-4",
             className,
           )}
           {...props}
         >
-          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-500">
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xs bg-blue-100 text-blue-500">
             <Icon name="globe" size="lg" color="currentColor" decorative />
           </span>
           <div className="flex-1 min-w-0">
@@ -92,51 +185,77 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       );
     }
 
+    const mapRadius = immersive ? "rounded-sm" : "rounded-md";
+
     return (
       <div
         ref={ref}
-        className={cn("flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4", className)}
+        className={cn(
+          immersive
+            ? "flex flex-col gap-3 p-0"
+            : "flex flex-col gap-3 rounded-md border border-border bg-surface p-4",
+          className,
+        )}
         {...props}
       >
-        {mapPreviewUrl && (
-          <div className="overflow-hidden rounded-2xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={mapPreviewUrl} alt={placeName ?? ""} className="aspect-[16/9] w-full object-cover" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[16px] font-semibold text-text-primary">
+              {placeName}
+            </p>
+            {address ? (
+              <div className="mt-0.5 flex items-center gap-[3px]">
+                <p className="min-w-0 text-[14px] leading-[1.4] text-text-secondary">
+                  {address}
+                </p>
+                <span className="relative shrink-0">
+                  <button
+                    type="button"
+                    aria-label="길찾기 · 복사"
+                    aria-expanded={addressMenuOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setAddressMenuOpen((open) => !open)}
+                    className="inline-flex size-5 -translate-x-[2px] translate-y-[2px] items-center justify-center text-text-tertiary transition-colors duration-150 hover:text-text-primary"
+                  >
+                    <Icon name="map" size={14} color="currentColor" decorative />
+                  </button>
+                  <LocationActionMenu
+                    open={addressMenuOpen}
+                    onClose={closeAddressMenu}
+                    items={addressMenuItems}
+                    className="left-0 top-full mt-1"
+                  />
+                </span>
+              </div>
+            ) : null}
           </div>
-        )}
-        <div>
-          <p className="text-[16px] font-bold text-text-primary">{placeName}</p>
-          <p className="mt-0.5 text-[14px] text-text-secondary">
-            {address}
-            {address && (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  aria-label="주소 복사"
-                  onClick={() => copyToClipboard(address, "주소가 복사되었어요")}
-                  className="inline-flex align-middle rounded-md p-1 text-text-tertiary transition-[color,transform,box-shadow] hover-emphasis-sm hover:text-text-primary"
-                >
-                  <Icon name="copy" size="sm" color="currentColor" decorative />
-                </button>
-              </>
-            )}
-          </p>
+          {weatherSlot}
         </div>
-        {(onViewMap || onGetDirections) && (
-          <div className="flex gap-2">
-            {onViewMap && (
-              <Button variant="outline" size="sm" fullWidth onClick={onViewMap}>
-                <Icon name="map" size="sm" decorative /> 지도에서 보기
-              </Button>
-            )}
-            {onGetDirections && (
-              <Button variant="primary" size="sm" fullWidth onClick={onGetDirections}>
-                <Icon name="navigation" size="sm" color="inverse" decorative /> 길찾기
-              </Button>
-            )}
-          </div>
-        )}
+        {mapLat !== undefined && mapLng !== undefined ? (
+          onViewMap ? (
+            <button
+              type="button"
+              onClick={onViewMap}
+              className={cn("w-full overflow-hidden transition-opacity hover:opacity-90", mapRadius)}
+            >
+              <KakaoStaticMapPreview
+                lat={mapLat}
+                lng={mapLng}
+                heightOffset={20}
+                className={mapRadius}
+                alt={placeName ?? "지도 미리보기"}
+              />
+            </button>
+          ) : (
+            <KakaoStaticMapPreview
+              lat={mapLat}
+              lng={mapLng}
+              heightOffset={20}
+              className={mapRadius}
+              alt={placeName ?? "지도 미리보기"}
+            />
+          )
+        ) : null}
       </div>
     );
   },

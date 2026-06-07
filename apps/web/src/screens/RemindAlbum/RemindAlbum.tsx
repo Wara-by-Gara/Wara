@@ -68,7 +68,7 @@ export const RemindAlbum = ({
       {state === "loadingSkeleton" ? (
         <RemindAlbumHeaderSkeleton />
       ) : state !== "empty" && state !== "error" ? (
-        <div className="shrink-0 border-b border-border bg-surface px-5 py-4">
+        <div className="shrink-0 border-b border-border bg-surface px-page py-4">
           <div className="flex items-center gap-3">
             <Avatar
               src={hostAvatarUrl}
@@ -85,7 +85,7 @@ export const RemindAlbum = ({
               </p>
             </div>
             <div className="flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5">
-              <Icon name="retro-camera" size="sm" color="primary" decorative />
+              <Icon name="camera" size="sm" color="primary" decorative />
               <span className="text-[13px] font-semibold text-primary">
                 {mockRemindPhotos.length}장
               </span>
@@ -118,7 +118,7 @@ export const RemindAlbum = ({
           <ErrorState title="앨범을 불러오지 못했어요" onRetry={() => {}} />
         ) : state === "empty" ? (
           <EmptyState
-            icon="retro-camera"
+            icon="camera"
             title="아직 추억이 없어요"
             description="모임이 끝나면 여기에서 추억을 모아볼 수 있어요"
             action={<Button>사진 올리기</Button>}

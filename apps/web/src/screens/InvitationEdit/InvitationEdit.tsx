@@ -83,7 +83,7 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="초대장 수정" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
           <Button variant="outline">다시 시도</Button>
@@ -123,7 +123,7 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
       case "privacySettings":
         return <p className="text-[14px] text-text-secondary">공개 · 참석자 명단 공개 · 댓글 허용</p>;
       case "design":
-        return <p className="text-[14px] text-text-secondary">Y2K Pink 템플릿</p>;
+        return <p className="text-[14px] text-text-secondary">Clean Modern 템플릿</p>;
       case "questions":
         return (
           <div className="flex flex-col gap-2">
@@ -141,7 +141,7 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="초대장 수정" onBack={onBack} />
       <nav
-        className="shrink-0 overflow-x-auto overscroll-x-contain px-5 py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="shrink-0 overflow-x-auto overscroll-x-contain px-page py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="수정 단계"
       >
         <div className="flex w-max flex-nowrap gap-1.5">
@@ -157,12 +157,12 @@ export const InvitationEdit = ({ step = "basicInfo", onBack }: InvitationEditPro
           ))}
         </div>
       </nav>
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-4">
         {renderBody()}
       </main>
 
       {step === "closedInvitationEditLimited" ? (
-        <p className="shrink-0 px-5 pb-2 text-center text-[13px] text-text-tertiary">
+        <p className="shrink-0 px-page pb-2 text-center text-[13px] text-text-tertiary">
           마감된 초대장은 일부만 수정할 수 있어요
         </p>
       ) : null}

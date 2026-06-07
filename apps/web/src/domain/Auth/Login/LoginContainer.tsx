@@ -10,22 +10,32 @@ const AUTH_ERROR_STATE: Record<string, LoginState> = {
   failed: 'socialFailed',
 };
 
+const ERROR_MESSAGES: Partial<Record<LoginState, string>> = {
+  socialFailed: '로그인에 실패했어요. 잠시 후 다시 시도해주세요.',
+  socialCancelled: '로그인이 취소되었어요.',
+  accountBlocked: '이용이 제한된 계정이에요. 고객센터에 문의해주세요.',
+  withdrawnAccount: '탈퇴한 계정이에요. 30일 후 다시 가입할 수 있어요.',
+};
+
 export default function LoginContainer() {
   const [state, setState] = useState<LoginState>('default');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const authError = params.get('auth_error');
-    const reason = params.get('reason');
     if (authError) {
       setState(AUTH_ERROR_STATE[authError] ?? 'socialFailed');
-      window.history.replaceState({}, '', '/login');
-    } else if (reason === 'suspicious') {
-      toast.error('의심스러운 활동이 감지돼 자동 로그아웃됐어요. 다시 로그인해주세요.');
       window.history.replaceState({}, '', '/login');
     }
   }, []);
 
+  useEffect(() => {
+    const message = ERROR_MESSAGES[state];
+    if (message) {
+      toast.error(message);
+      setState('default');
+    }
+  }, [state]);
 
   function handleKakao() {
     setState('kakaoLoading');

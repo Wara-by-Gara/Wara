@@ -1,0 +1,1 @@
+export { KakaoStaticMapPreview } from "./KakaoStaticMapPreview";

@@ -20,7 +20,7 @@ export function useInvitationDetail(invitationId: string) {
   });
 
   const { data: myParticipant } = useQuery({
-    queryKey: ["myParticipant", invitationId],
+    queryKey: QUERY_KEYS.invitations.myParticipant(invitationId),
     queryFn: () => getMyParticipant(invitationId),
     enabled: hydrated && isLoggedIn,
   });

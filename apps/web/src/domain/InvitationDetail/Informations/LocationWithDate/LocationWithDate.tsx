@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LocationCard } from "@/components/organisms/LocationCard";
 import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
+import { LocationWeatherInline } from "@/components/organisms/WeatherCard";
+import { useWeather } from "@/hooks/useWeather";
+import { toWeatherCardCondition } from "@/lib/api/weather";
 import { ROUTES } from "@/constants/routes";
 import type { getInvitation } from "@/lib/api/invitations";
 
@@ -14,15 +17,41 @@ type Props = {
   isHost: boolean;
   invitationId: string;
   voteResultsHref?: string;
+  showWeather?: boolean;
+  /** 상세 헤더에 일시를 표시할 때 카드 숨김 */
+  hideDateInHeader?: boolean;
+  /** 상세 페이지 글래스 배경용 스타일 */
+  immersive?: boolean;
 };
 
-export default function LocationWithDate({ invitation, isHost, invitationId, voteResultsHref }: Props) {
+export default function LocationWithDate({
+  invitation,
+  isHost,
+  invitationId,
+  voteResultsHref,
+  showWeather = true,
+  hideDateInHeader = false,
+  immersive = false,
+}: Props) {
   const router = useRouter();
   const eventLocation = invitation.eventLocation ?? null;
+  const { data: weather, within3Days, isFuture } = useWeather(
+    invitationId,
+    invitation.eventStartAt,
+    { enabled: showWeather },
+  );
+
+  const weatherSlot =
+    showWeather && invitation.eventStartAt && isFuture && within3Days && weather ? (
+      <LocationWeatherInline
+        condition={toWeatherCardCondition(weather.condition)}
+        temperatureCelsius={weather.temperature}
+      />
+    ) : null;
 
   return (
-    <div className="flex flex-col gap-3">
-      {invitation.eventStartAt && (() => {
+    <div className={immersive ? "flex flex-col divide-y divide-border" : "flex flex-col gap-3"}>
+      {!hideDateInHeader && invitation.eventStartAt && (() => {
         const d = new Date(invitation.eventStartAt);
         const dateLabel = d.toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -51,25 +80,25 @@ export default function LocationWithDate({ invitation, isHost, invitationId, vot
         );
       })()}
 
-      <div>
+      <div className={immersive ? "pt-4" : undefined}>
         {eventLocation ? (
           <LocationCard
             variant="preview"
+            immersive={immersive}
             placeName={eventLocation.placeName}
             address={
               eventLocation.detailAddress
                 ? `${eventLocation.address} ${eventLocation.detailAddress}`
                 : eventLocation.address
             }
+            mapLat={eventLocation.lat}
+            mapLng={eventLocation.lng}
+            weatherSlot={weatherSlot}
             onViewMap={() => router.push(ROUTES.INVITATIONS.LOCATION(invitationId))}
-            onGetDirections={() => {
-              const url = `https://map.kakao.com/link/to/${encodeURIComponent(eventLocation.placeName)},${eventLocation.lat},${eventLocation.lng}`;
-              window.open(url, "_blank");
-            }}
           />
         ) : (
           <>
-            <LocationCard variant="unknown" />
+            <LocationCard variant="unknown" immersive={immersive} />
             {isHost && (
               <Link
                 href={ROUTES.INVITATIONS.LOCATION(invitationId)}

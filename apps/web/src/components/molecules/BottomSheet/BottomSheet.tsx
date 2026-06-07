@@ -47,7 +47,7 @@ export const BottomSheetContent = forwardRef<
     contained ? "absolute inset-0" : "fixed inset-0",
   );
   const contentClass = cn(
-    "z-50 flex flex-col rounded-t-3xl bg-surface focus:outline-none",
+    "z-50 flex flex-col rounded-t-lg bg-surface focus:outline-none",
     "pb-[env(safe-area-inset-bottom)]",
     contained
       ? "absolute inset-x-0 bottom-0 max-h-[min(72%,480px)] w-full"
@@ -63,7 +63,7 @@ export const BottomSheetContent = forwardRef<
           <div className="mx-auto mt-3 h-1 w-9 rounded-full bg-gray-300" aria-hidden />
         ) : null}
         {(title || description) ? (
-          <div className="px-5 pt-4">
+          <div className="px-page pt-4">
             {title ? (
               <Drawer.Title className="text-[18px] font-bold text-text-primary">
                 {title}
@@ -80,7 +80,7 @@ export const BottomSheetContent = forwardRef<
         ) : (
           <Drawer.Title className="sr-only">바텀시트</Drawer.Title>
         )}
-        <div className="overflow-y-auto px-5 pb-5 pt-2">{children}</div>
+        <div className="overflow-y-auto px-page pb-5 pt-2">{children}</div>
       </Drawer.Content>
     </>
   );

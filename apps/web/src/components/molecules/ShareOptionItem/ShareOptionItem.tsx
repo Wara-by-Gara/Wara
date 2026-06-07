@@ -37,7 +37,7 @@ export const ShareOptionItem = forwardRef<HTMLButtonElement, ShareOptionItemProp
         ref={ref}
         type="button"
         className={cn(
-          "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left hover-emphasis-sm",
+          "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           className,
         )}
@@ -45,7 +45,7 @@ export const ShareOptionItem = forwardRef<HTMLButtonElement, ShareOptionItemProp
       >
         <span
           className={cn(
-            "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl",
+            "inline-flex size-11 shrink-0 items-center justify-center rounded-md",
             iconBg,
             iconColor,
           )}

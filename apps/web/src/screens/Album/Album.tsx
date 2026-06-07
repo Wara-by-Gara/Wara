@@ -155,7 +155,7 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       />
 
       {state === "hostManageMode" ? (
-        <div className="flex items-center justify-between border-b border-border px-5 py-2 text-[13px]">
+        <div className="flex items-center justify-between border-b border-border px-page py-2 text-[13px]">
           <span>3개 선택됨</span>
           <Button variant="danger" size="sm">삭제</Button>
         </div>
@@ -173,13 +173,13 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
           <ErrorState title="사진을 불러오지 못했어요" onRetry={() => {}} />
         ) : state === "emptyBeforeEvent" ? (
           <EmptyState
-            icon="retro-camera"
+            icon="camera"
             title="모임 시작 후 사진을 모을 수 있어요"
             description="모임이 시작되면 함께 추억을 남길 수 있어요"
           />
         ) : state === "emptyAfterEvent" ? (
           <EmptyState
-            icon="retro-camera"
+            icon="camera"
             title="아직 사진이 없어요"
             description="모임의 첫 사진을 올려보세요"
             action={<Button>사진 올리기</Button>}
@@ -225,7 +225,7 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       </main>
 
       {showUploadFab ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-end px-5 pb-24">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-end px-page pb-24">
           <button
             type="button"
             aria-label="사진 올리기"
@@ -248,7 +248,7 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       <BottomSheet open={state === "sortBottomSheet"} onOpenChange={() => {}}>
         <BottomSheetContent contained title="정렬">
           <div className="flex flex-col gap-1">
-            <ShareOptionItem icon="hourglass" title="최신순" iconBg="bg-pink-100" iconColor="text-pink-600" />
+            <ShareOptionItem icon="hourglass" title="최신순" iconBg="bg-cranberry-10" iconColor="text-cranberry-60" />
             <ShareOptionItem icon="clock" title="오래된순" iconBg="bg-surface" />
             <ShareOptionItem icon="heart" title="좋아요순 (V1.1+)" iconBg="bg-surface" />
           </div>
@@ -259,7 +259,7 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
         <div className="border-t border-border bg-surface p-4">
           <div className="mb-3 flex gap-1.5">
             {mockPhotos.slice(0, 5).map((p) => (
-              <div key={p.id} className="relative size-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
+              <div key={p.id} className="relative size-12 shrink-0 overflow-hidden rounded-sm bg-gray-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.src} alt="" className="size-full object-cover" />
               </div>
@@ -270,19 +270,19 @@ export const Album = ({ state = "grid", onBack }: AlbumProps) => {
       ) : null}
 
       {state === "uploadProgress" ? (
-        <div className="border-t border-border bg-surface px-5 py-4 text-center">
+        <div className="border-t border-border bg-surface px-page py-4 text-center">
           <p className="text-[14px] text-text-secondary">사진 5장 중 2장 업로드 중...</p>
         </div>
       ) : null}
 
       {state === "uploadComplete" ? (
-        <div className="border-t border-border bg-green-50 px-5 py-4 text-center text-[14px] font-bold text-green-600">
+        <div className="border-t border-border bg-green-50 px-page py-4 text-center text-[14px] font-semibold text-green-600">
           업로드 완료!
         </div>
       ) : null}
 
       {state === "uploadFailed" || state === "uploadPartialFailed" ? (
-        <div className="border-t border-border bg-red-50 px-5 py-4 text-center">
+        <div className="border-t border-border bg-red-50 px-page py-4 text-center">
           <p className="text-[13px] text-danger">
             {state === "uploadFailed" ? "업로드 실패" : "일부 사진 업로드 실패"}
           </p>

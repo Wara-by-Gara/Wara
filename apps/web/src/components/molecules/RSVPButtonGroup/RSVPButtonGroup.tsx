@@ -8,7 +8,7 @@ export type RSVPValue = "attending" | "maybe" | "declined";
 
 const OPTIONS: { value: RSVPValue; label: string; activeColor: string }[] = [
   { value: "attending", label: "참석 👍", activeColor: "bg-primary text-text-inverse border-primary" },
-  { value: "maybe", label: "미정 🤔", activeColor: "bg-yellow-300 text-gray-900 border-yellow-300" },
+  { value: "maybe", label: "미정 🤔", activeColor: "bg-yellow-50 text-yellow-600 border-yellow-200" },
   { value: "declined", label: "불참 😢", activeColor: "bg-gray-800 text-text-inverse border-gray-800" },
 ];
 
@@ -99,14 +99,14 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
               disabled={itemDisabled}
               onClick={() => handleSelect(opt.value)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 font-bold transition-[color,transform,box-shadow,backdrop-filter,-webkit-backdrop-filter]",
-                isPill ? "rounded-lg border" : "rounded-lg border-2",
+                "flex flex-col items-center justify-center gap-1 font-semibold",
+                isPill ? "rounded-xs border" : "rounded-xs border-2",
                 isHorizontal ? "h-[68px] text-[13px]" : "h-[60px] px-5 text-[15px]",
                 active
                   ? opt.activeColor
                   : isPill
-                    ? "border-border bg-surface text-text-primary hover-emphasis-sm"
-                    : "border-border-strong bg-surface text-text-primary hover-emphasis-sm",
+                    ? "border-border bg-surface text-text-primary hover:bg-gray-50 transition-colors duration-150"
+                    : "border-border-strong bg-surface text-text-primary hover:bg-gray-50 transition-colors duration-150",
                 "disabled:cursor-not-allowed disabled:opacity-40",
               )}
             >

@@ -26,8 +26,8 @@ export function SocialLoginButton({
       disabled={isDisabled}
       className={[
         'relative flex h-13 w-full items-center justify-center',
-        'rounded-[14px] text-[15px] font-semibold leading-none',
-        'transition duration-150 active:scale-[0.985]',
+        'rounded-xs text-[15px] font-semibold leading-none',
+        'transition-colors duration-150 active:opacity-90',
         'outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variantClass,

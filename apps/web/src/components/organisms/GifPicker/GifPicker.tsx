@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { GifGridSkeleton } from "@/components/organisms/Skeleton";
 import { type KlipyGif, type KlipySearchResponse } from "@/lib/klipy";
 
 interface GifPickerProps {
@@ -60,7 +61,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
   }, [query]);
 
   return (
-    <div className="flex flex-col h-[400px] bg-surface rounded-t-2xl">
+    <div className="flex flex-col h-[400px] bg-surface rounded-t-lg">
       {/* 헤더 */}
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
         <input
@@ -84,34 +85,35 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       <div className="flex-1 overflow-y-auto px-4">
         {error ? (
           <p className="text-center text-gray-400 py-10">불러오는 중 오류가 발생했습니다</p>
-        ) : gifs.length === 0 && !loading ? (
+        ) : loading && gifs.length === 0 ? (
+          <GifGridSkeleton count={6} />
+        ) : gifs.length === 0 ? (
           <p className="text-center text-gray-400 py-10">검색 결과가 없습니다</p>
         ) : (
-          <div className="grid grid-cols-2 gap-2 pb-4">
-            {gifs.map((gif) => (
-              <button
-                key={gif.id}
-                type="button"
-                onClick={() => {
-                  onSelect(gif.gifUrl);
-                  onClose();
-                }}
-                className="relative aspect-video rounded-lg overflow-hidden bg-gray-100"
-              >
-                <Image
-                  src={gif.previewUrl}
-                  alt="GIF"
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-
-        {loading && (
-          <p className="text-center text-gray-400 py-4">불러오는 중...</p>
+          <>
+            <div className="grid grid-cols-2 gap-2 pb-4">
+              {gifs.map((gif) => (
+                <button
+                  key={gif.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(gif.gifUrl);
+                    onClose();
+                  }}
+                  className="relative aspect-video rounded-sm overflow-hidden bg-gray-100"
+                >
+                  <Image
+                    src={gif.previewUrl}
+                    alt="GIF"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+            {loading ? <GifGridSkeleton count={2} /> : null}
+          </>
         )}
 
         {hasNext && !loading && (

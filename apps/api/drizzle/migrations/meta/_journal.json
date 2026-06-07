@@ -36,6 +36,20 @@
       "when": 1780648180952,
       "tag": "0005_gifted_zaladane",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781000000000,
+      "tag": "0006_user_activity_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781000000001,
+      "tag": "0007_invitation_public_category",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -33,6 +34,10 @@ import {
   InvitationPresignedUrlSchema,
 } from './dto/invitation-presigned-url.dto';
 import { ApplyAiImageDto, ApplyAiImageSchema } from './dto/apply-ai-image.dto';
+import {
+  ListPublicInvitationsDto,
+  ListPublicInvitationsSchema,
+} from './dto/list-public-invitations.dto';
 
 @Controller('invitations')
 export class InvitationsController {
@@ -49,6 +54,16 @@ export class InvitationsController {
     dto: InvitationPresignedUrlDto,
   ) {
     return this.invitationsService.generatePresignedUrl(dto);
+  }
+
+  /** 탐색·추천 이벤트 — 공개 초대장만 */
+  @Public()
+  @Get('explore')
+  findPublicExplore(
+    @Query(new ZodValidationPipe(ListPublicInvitationsSchema))
+    dto: ListPublicInvitationsDto,
+  ) {
+    return this.invitationsService.findPublicExplore(dto);
   }
 
   @Public()

@@ -93,10 +93,19 @@ export interface Invitation {
   rsvpDeclinedLabel: string;
   myRole?: 'HOST' | 'GUEST';
   host?: { name: string | null; nickname: string | null; profileImageUrl: string | null } | null;
+  participantAvatars?: InvitationParticipantAvatar[];
+  participantTotal?: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+}
+
+export interface InvitationParticipantAvatar {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+  isHost: boolean;
 }
 
 export interface EventLocation {
@@ -122,6 +131,43 @@ export function getInvitation(id: string): Promise<Invitation> {
 
 export function getMyInvitations(): Promise<Invitation[]> {
   return apiGet<Invitation[]>("/invitations");
+}
+
+export interface PublicInvitationExplore {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  eventStartAt: string | null;
+  mainImageUrl: string | null;
+  location: string | null;
+  participantCount: number;
+  host: {
+    name: string | null;
+    nickname: string | null;
+    profileImageUrl: string | null;
+  } | null;
+}
+
+export interface PublicInvitationsPage {
+  items: PublicInvitationExplore[];
+  nextCursor: string | null;
+  hasNext: boolean;
+}
+
+export function getPublicInvitations(params?: {
+  category?: string;
+  limit?: number;
+  cursor?: string;
+}): Promise<PublicInvitationsPage> {
+  const search = new URLSearchParams();
+  if (params?.category) search.set("category", params.category);
+  if (params?.limit != null) search.set("limit", String(params.limit));
+  if (params?.cursor) search.set("cursor", params.cursor);
+  const qs = search.toString();
+  return apiGet<PublicInvitationsPage>(
+    qs ? `/invitations/explore?${qs}` : "/invitations/explore",
+  );
 }
 
 export function updateInvitation(id: string, payload: UpdateInvitationPayload): Promise<Invitation> {

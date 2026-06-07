@@ -17,7 +17,7 @@ export default function InvitationCardContainer({ invitation }: Props) {
   const [saveError, setSaveError] = useState('');
 
   if (!invitation) {
-    return <div className="w-full aspect-square bg-gray-100 rounded-2xl animate-pulse" />;
+    return <div className="w-full aspect-square bg-gray-100 rounded-lg animate-pulse" />;
   }
 
   const handleSave = async (data: {
@@ -41,7 +41,7 @@ export default function InvitationCardContainer({ invitation }: Props) {
   return (
     <div className="flex flex-col gap-6 p-4">
       {/* 현재 메인 이미지 미리보기 */}
-      <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100">
+      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
         {currentMainImageUrl && (
           <Image
             src={currentMainImageUrl}

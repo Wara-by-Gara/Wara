@@ -7,6 +7,9 @@ import { pageStoryParameters } from "./pageStoryParameters";
 import "../src/app/globals.css";
 
 const preview: Preview = {
+  initialGlobals: {
+    backgrounds: { value: "white" },
+  },
   parameters: {
     layout: "centered",
     docs: pageStoryParameters.docs,
@@ -20,14 +23,11 @@ const preview: Preview = {
       default: "white",
       values: [
         { name: "white", value: "#FFFFFF" },
-        { name: "gray-50", value: "#FAFAFA" },
-        { name: "pink-50", value: "#FFF1F7" },
-        { name: "sky-50", value: "#EEF8FF" },
-        { name: "yellow-50", value: "#FFFBEA" },
-        { name: "black", value: "#171717" },
+        { name: "gray-50", value: "#F7F8F9" },
+        { name: "cranberry-5", value: "#FEF4F9" },
+        { name: "black", value: "#131517" },
       ],
     },
-    layout: "centered",
     viewport: {
       viewports: {
         mobileSmall: {
@@ -53,6 +53,24 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
+          ["Input", ["Overview", "*"]],
+          ["Button", ["Overview", "*"]],
+          ["Text", ["Overview", "*"]],
+          ["Color", ["Overview", "*"]],
+          ["Controls", ["Overview", "*"]],
+          ["Collapse", ["Overview", "*"]],
+          ["Overlay", ["Overview", "*"]],
+          ["Icons", ["Overview", "*"]],
+          ["Image", ["Overview", "*"]],
+          ["Events", ["Overview", "*"]],
+          ["Timeline", ["Overview", "*"]],
+          ["Tint", ["Overview", "*"]],
+          ["Editor", ["Overview", "*"]],
+          ["Banner", ["Overview", "*"]],
+          ["Social", ["Overview", "*"]],
+          ["Datetime", ["Overview", "*"]],
+          ["Chat", ["Overview", "*"]],
+          ["Weather", ["Overview", "*"]],
           "Docs",
           [
             "Screens Overview",

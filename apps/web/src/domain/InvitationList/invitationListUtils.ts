@@ -20,6 +20,8 @@ export type InvitationListItem = {
   coverImageUrl: string;
   host: { name: string };
   variant?: InvitationCardVariant;
+  /** 가로 카드 주제 라벨 (없으면 생략) */
+  subject?: string;
 };
 
 export type MappedInvitationListItem = InvitationListItem & {
@@ -39,7 +41,7 @@ export function mapInvitationsToListItems(invitations: Invitation[]): MappedInvi
     title: inv.title,
     description: "",
     date: formatInvitationEventDate(inv.eventStartAt),
-    location: inv.eventLocation?.placeName ?? "",
+    location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? "",
     coverImageUrl: getInvitationCoverImageUrl(inv),
     host: { name: "" },
     _status: inv.status,

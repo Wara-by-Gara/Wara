@@ -24,7 +24,7 @@ export interface ParticipantSummaryCardProps
 
 const Stat = ({ label, value, color }: { label: string; value: number; color: string }) => (
   <div className="flex flex-1 flex-col items-center gap-0.5">
-    <span className={cn("text-[20px] font-extrabold", color)}>{value}</span>
+    <span className={cn("text-[20px] font-bold", color)}>{value}</span>
     <span className="text-[12px] text-text-tertiary">{label}</span>
   </div>
 );
@@ -33,7 +33,6 @@ export const ParticipantSummaryCard = forwardRef<
   HTMLDivElement,
   ParticipantSummaryCardProps
 >(function ParticipantSummaryCard({ className, variant = "guest", summary, rsvpLabels, ...props }, ref) {
-  const isCompact = variant === "compact";
   const showCapacity = variant === "host" && summary.capacity !== undefined;
   const attendingLabel = rsvpLabels?.attending ?? "참석";
   const maybeLabel = rsvpLabels?.maybe ?? "미정";
@@ -43,8 +42,7 @@ export const ParticipantSummaryCard = forwardRef<
     <div
       ref={ref}
       className={cn(
-        "flex flex-col gap-3 rounded-3xl border border-border bg-surface",
-        isCompact ? "p-3" : "p-4",
+        "flex flex-col gap-3",
         className,
       )}
       {...props}

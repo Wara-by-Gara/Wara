@@ -14,6 +14,8 @@ export type TemplateCardVariant =
 
 export interface TemplateCardProps extends React.HTMLAttributes<HTMLButtonElement> {
   variant?: TemplateCardVariant;
+  /** 썸네일 비율 */
+  imageAspect?: "square" | "portrait";
   /** 템플릿 썸네일 */
   imageUrl?: string;
   /** 템플릿 이름 */
@@ -24,7 +26,7 @@ export interface TemplateCardProps extends React.HTMLAttributes<HTMLButtonElemen
 
 export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
   function TemplateCard(
-    { className, variant = "basic", imageUrl, name, category, ...props },
+    { className, variant = "basic", imageAspect = "portrait", imageUrl, name, category, ...props },
     ref,
   ) {
     const isSelected = variant === "selected";
@@ -36,7 +38,7 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
         type="button"
         aria-pressed={isSelected}
         className={cn(
-          "group flex flex-col gap-2 text-left transition-transform active:scale-95",
+          "group flex flex-col gap-1.5 text-left transition-opacity active:opacity-80",
           "focus-visible:outline-none",
           className,
         )}
@@ -44,7 +46,8 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
       >
         <div
           className={cn(
-            "relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100",
+            "relative w-full overflow-hidden rounded-lg bg-gray-100",
+            imageAspect === "square" ? "aspect-square" : "aspect-[3/4]",
             isSelected ? "ring-4 ring-primary" : "ring-1 ring-border",
           )}
         >
@@ -74,7 +77,7 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
             </span>
           ) : null}
         </div>
-        <p className={cn("text-[14px] font-semibold", isSelected ? "text-primary" : "text-text-primary")}>
+        <p className={cn("type-template-name", isSelected && "text-primary")}>
           {name}
         </p>
       </button>

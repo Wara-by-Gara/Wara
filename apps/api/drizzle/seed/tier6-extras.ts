@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   faqItems,
   userTermAgreements,
@@ -22,7 +23,18 @@ export async function seedTier6(db: DrizzleDB) {
     SEEDS.remindLogs,
   );
   await chunkedInsert(
-    (chunk) => db.insert(aiImageJobs).values(chunk).onConflictDoNothing(),
+    (chunk) =>
+      db
+        .insert(aiImageJobs)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: aiImageJobs.id,
+          set: {
+            uploadedImageKey: sql`excluded.uploaded_image_key`,
+            resultKey: sql`excluded.result_key`,
+            updatedAt: new Date(),
+          },
+        }),
     SEEDS.aiImageJobs,
   );
   // date_vote: polls → slots → responses 순서 (FK 의존)

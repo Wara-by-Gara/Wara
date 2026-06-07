@@ -13,7 +13,7 @@ export function NotificationBell({ unreadCount, onClick }: Props) {
       type="button"
       onClick={onClick}
       aria-label="알림"
-      className="relative inline-flex size-11 items-center justify-center rounded-lg text-white hover-emphasis-sm"
+      className="relative inline-flex size-11 items-center justify-center rounded-md text-text-secondary hover:bg-gray-100 transition-colors duration-150"
     >
       <Icon name="bell" size="lg" color="currentColor" decorative />
       {unreadCount > 0 && (

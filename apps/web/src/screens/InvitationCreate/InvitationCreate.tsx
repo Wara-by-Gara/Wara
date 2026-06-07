@@ -131,7 +131,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="초대장 만들기" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto px-6 text-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto px-page text-center">
           <Icon name="send" size="xl" color="primary" decorative />
           <h1 className="text-[22px] font-extrabold text-text-primary">어떻게 시작할까요?</h1>
           <div className="mt-4 flex w-full max-w-xs flex-col gap-3">
@@ -148,8 +148,8 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="템플릿 카테고리" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-4">
-          {["Y2K", "Minimal", "Birthday", "Floral", "Premium"].map((c) => (
+        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-page py-4">
+          {["Modern", "Minimal", "Birthday", "Floral", "Premium"].map((c) => (
             <Button key={c} variant="outline" size="lg" fullWidth>{c}</Button>
           ))}
         </main>
@@ -164,8 +164,8 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
         <main
           className={
             step === "blankTemplate"
-              ? "flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-5 py-4 text-center"
-              : "min-h-0 flex-1 overflow-y-auto px-5 py-4"
+              ? "flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-page py-4 text-center"
+              : "min-h-0 flex-1 overflow-y-auto px-page py-4"
           }
         >
           {step === "blankTemplate" ? (
@@ -178,7 +178,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
             <div className="flex flex-col gap-4">
               <AutoSlide slides={[...mockTemplateSlides]} intervalMs={4000} />
               <p className="text-center text-[13px] text-text-tertiary">
-                Y2K · 레트로 · 콜라주 스타일을 둘러보세요
+                클린 · 미니멀 · 모던 스타일을 둘러보세요
               </p>
             </div>
           ) : (
@@ -207,26 +207,26 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={stepTitle(step)} onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-4">
           <FormField label="대표 이미지">
             {step === "coverImageEmpty" ? (
-              <button type="button" className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl border-2 border-dashed border-border-strong bg-background-soft">
+              <button type="button" className="flex aspect-[4/5] w-full items-center justify-center rounded-lg border-2 border-dashed border-border-strong bg-background-soft">
                 <div className="flex flex-col items-center gap-2 text-text-tertiary">
                   <Icon name="image" size="xl" color="inactive" decorative />
                   <span className="text-[13px]">사진을 추가해보세요</span>
                 </div>
               </button>
             ) : step === "coverImageUploading" ? (
-              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-3xl bg-surface">
+              <div className="flex aspect-[4/5] w-full items-center justify-center rounded-lg bg-surface">
                 <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
               </div>
             ) : step === "coverImageUploadFailed" ? (
-              <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-danger-soft">
+              <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-lg bg-danger-soft">
                 <Icon name="alert-triangle" size="lg" color="danger" decorative />
                 <Button variant="text" size="sm">다시 시도</Button>
               </div>
             ) : step === "coverImageCrop" ? (
-              <div className="aspect-[4/5] w-full rounded-3xl bg-gray-900" />
+              <div className="aspect-[4/5] w-full rounded-lg bg-gray-900" />
             ) : (
               <InvitationCover imageUrl={mockInvitation.coverImageUrl} variant="image" />
             )}
@@ -269,7 +269,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="날짜·시간" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-4">
           <DateTimeSelector
             mode="date"
             label="모임 날짜"
@@ -299,9 +299,9 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
 
           {/* 날짜 미정 시 날짜 투표 제안 배너 */}
           {showVotePropose && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+            <div className="flex flex-col gap-3 rounded-md border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
               <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15">
                   <Icon name="calendar" size="md" color="primary" decorative />
                 </div>
                 <div className="flex flex-col gap-0.5">
@@ -311,11 +311,11 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+              <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
                 <Icon name="check-circle" size="sm" color="primary" decorative />
                 <span className="text-[12px] text-gray-700">최대 30개 날짜·시간 후보 등록</span>
               </div>
-              <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5">
+              <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
                 <Icon name="check-circle" size="sm" color="primary" decorative />
                 <span className="text-[12px] text-gray-700">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
               </div>
@@ -343,9 +343,9 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-page py-4">
           {step === "locationPermissionGuide" ? (
-            <div className="rounded-2xl bg-yellow-50 p-4 text-[13px] text-yellow-400">위치 권한이 필요해요</div>
+            <div className="rounded-md bg-yellow-50 p-4 text-[13px] text-yellow-400">위치 권한이 필요해요</div>
           ) : null}
           <LocationSelector
             mode={
@@ -368,7 +368,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
             unknown={step === "locationUnknownToggleOn"}
           />
           {step === "locationSearchResults" ? (
-            <ul className="rounded-2xl border border-border bg-surface">
+            <ul className="rounded-md border border-border bg-surface">
               {["와라 카페 (마포)", "와라 키친 (성수)", "와라 스튜디오 (강남)"].map((p) => (
                 <li key={p} className="flex items-center gap-2 px-4 py-3 border-b border-border last:border-0">
                   <Icon name="map-pin" size="sm" color="inactive" decorative />
@@ -501,8 +501,8 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="디자인" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
-          <InvitationCover variant="color" backgroundClass="bg-pink-200" />
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-4">
+          <InvitationCover variant="color" backgroundClass="bg-cranberry-20" />
           <div className="flex flex-wrap gap-1.5">
             <Chip variant="filter" selected>레이아웃</Chip>
             <Chip variant="filter">배경색</Chip>
@@ -512,7 +512,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
           </div>
           <div className="grid grid-cols-3 gap-2">
             {["#FFE1EF", "#FFD43B", "#DDF1FF", "#D3FBEA", "#FFC4DF", "#A8F0D2"].map((c) => (
-              <button key={c} className="aspect-square rounded-2xl border-2 border-border" style={{ background: c }} />
+              <button key={c} className="aspect-square rounded-md border-2 border-border" style={{ background: c }} />
             ))}
           </div>
         </main>
@@ -540,7 +540,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="초대장 만들기" />
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">초대장이 만들어졌어요!</p>
           <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
@@ -555,7 +555,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="QR 코드" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
-          <div className="size-64 rounded-3xl bg-surface grid place-items-center">
+          <div className="size-64 rounded-lg bg-surface grid place-items-center">
             <Icon name="qrcode" size="xl" decorative className="size-32" />
           </div>
           <Button variant="outline" size="md">이미지로 저장</Button>
@@ -581,7 +581,7 @@ export const InvitationCreate = ({ step = "start", onBack, onNext }: InvitationC
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="만들기" onBack={onBack} />
-      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-page py-4">
         <Button variant="primary" size="lg" fullWidth onClick={() => toast.show("임시저장 완료")}>임시저장</Button>
         {step === "saveFailed" || step === "requiredFieldsError" ? (
           <p className="mt-4 text-center text-[13px] text-danger">

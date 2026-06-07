@@ -6,6 +6,7 @@ export type IconColor =
   | "default"
   | "primary"
   | "inactive"
+  | "tertiary"
   | "danger"
   | "success"
   | "inverse"
@@ -23,6 +24,7 @@ export const ICON_COLOR_MAP: Record<IconColor, string> = {
   default: "var(--color-icon-default)",
   primary: "var(--color-icon-primary)",
   inactive: "var(--color-icon-inactive)",
+  tertiary: "var(--color-icon-inactive)",
   danger: "var(--color-icon-danger)",
   success: "var(--color-success)",
   inverse: "var(--color-icon-inverse)",
@@ -51,6 +53,7 @@ export type IconName =
   | "clock"
   | "map-pin"
   | "navigation"
+  | "compass"
   | "link"
   | "copy"
   | "share"

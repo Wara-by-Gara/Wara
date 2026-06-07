@@ -49,7 +49,7 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-text-tertiary">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -294,10 +294,10 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6">
           <p className="text-[14px] text-text-secondary">{description}</p>
         </main>
-        <footer className="p-5">
+        <footer className="px-page py-5">
           <Button variant="outline" fullWidth>
             시스템 설정 열기
           </Button>
@@ -321,7 +321,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="테마" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-page py-4">
           <RadioGroup defaultValue={value}>
             {[
               { value: 'light', label: '라이트 모드' },
@@ -330,7 +330,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
             ].map((opt) => (
               <label
                 key={opt.value}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
+                className="flex items-center gap-3 rounded-md border border-border bg-surface p-4"
               >
                 <Radio value={opt.value} />
                 <span className="text-[15px] text-text-primary">
@@ -348,7 +348,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="언어" onBack={onBack} />
-        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-page py-4">
           <RadioGroup defaultValue="ko">
             {[
               { value: 'ko', label: '한국어' },
@@ -356,7 +356,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
             ].map((opt) => (
               <label
                 key={opt.value}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
+                className="flex items-center gap-3 rounded-md border border-border bg-surface p-4"
               >
                 <Radio value={opt.value} />
                 <span className="text-[15px] text-text-primary">
@@ -384,7 +384,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6 text-[13px] leading-relaxed text-text-secondary">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-secondary">
           (본문 발췌) 본 약관은 …
         </main>
       </div>
@@ -471,7 +471,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="문의하기" onBack={onBack} />
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-6">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-6">
         <FormField label="이메일" required>
           <TextInput placeholder="reply@example.com" />
         </FormField>
@@ -483,7 +483,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
           <Textarea rows={6} placeholder="문의하고 싶은 내용을 입력해주세요." />
         </FormField>
       </main>
-      <footer className="px-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      <footer className="px-page pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <Button
           variant="primary"
           size="lg"

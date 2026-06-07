@@ -334,7 +334,7 @@ export const mockRecentFriends: MockFriend[] = RECENT_FRIEND_ORDER.map((id) =>
 export interface MockFriendProfile extends MockFriend {
   /** 함께 아는 친구 */
   mutualFriends: { id: string; name: string; avatarUrl?: string }[];
-  /** 함께 참여했던 초대 */
+  /** 함께한 초대 */
   sharedInvitations: { id: string; title: string; date: string; imageUrl?: string }[];
 }
 

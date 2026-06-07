@@ -4,7 +4,6 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { Avatar } from "@/components/primitives/Avatar";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { HeaderGradient } from "@/components/layout/StickyHeader";
 import { InvitationListSection } from "@/domain/InvitationList/InvitationListSection";
 import type { InvitationListTab } from "@/domain/InvitationList/invitationListUtils";
 import type { InvitationListSectionState } from "@/domain/InvitationList/InvitationListSection";
@@ -52,8 +51,8 @@ export const Home = ({
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background">
         <TopAppBar className="absolute inset-x-0 top-0 z-30" brandLogo brandLogoCompact />
-        <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <Icon name="pixel-heart" size="xl" color="primary" decorative />
+        <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-page text-center">
+          <Icon name="sparkle" size="xl" color="primary" decorative />
           <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
           <p className="text-[14px] text-text-secondary">로그인하고 첫 초대장을 만들어보세요</p>
           <Button variant="primary" size="lg" className="mt-2">
@@ -86,7 +85,6 @@ export const Home = ({
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <HeaderGradient fixed />
       <TopAppBar
         className="absolute inset-x-0 top-0 z-30"
         variant="transparent"
@@ -100,17 +98,17 @@ export const Home = ({
         }
       />
 
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pt-14">
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pt-[76px]">
         <div className="flex flex-col gap-5 pb-6">
-          <div className="flex flex-col gap-1.5 px-5 pt-3">
-            <h2 className="font-gmarket text-[22px] font-bold leading-tight text-white">
+          <div className="flex flex-col gap-1.5 px-page pt-3">
+            <h2 className="text-[22px] font-bold leading-tight text-text-primary">
               안녕하세요, {me.name ?? me.nickname}님!
             </h2>
-            <p className="font-gmarket text-[15px] leading-tight text-white">
+            <p className="text-[15px] leading-tight text-text-secondary">
               오늘도 즐거운 모임 되세요👋
             </p>
           </div>
-          <div className={cn("px-5", (state === "networkError" || state === "loggedInEmpty") && "flex min-h-[40vh] flex-col justify-center")}>
+          <div className={cn("px-page", (state === "networkError" || state === "loggedInEmpty") && "flex min-h-[40vh] flex-col justify-center")}>
             <InvitationListSection
               tab={tab}
               onTabChange={setTab}

@@ -43,9 +43,18 @@ interface Props {
   photos: Photo[];
   total: number;
   hasNextPage: boolean;
+  fetchAllPages: () => Promise<void>;
+  isFetchingNextPage: boolean;
 }
 
-export default function Album({ invitationId, photos, total, hasNextPage }: Props) {
+export default function Album({
+  invitationId,
+  photos,
+  total,
+  hasNextPage,
+  fetchAllPages,
+  isFetchingNextPage,
+}: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +67,7 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [isLoadingAllPhotos, setIsLoadingAllPhotos] = useState(false);
 
   const previewLimit = 5;
   const preview = photos.slice(0, previewLimit);
@@ -150,9 +160,20 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
     setPreviewUrls([]);
   };
 
+  const handleOpenAlbumModal = async () => {
+    setShowModal(true);
+    if (!hasNextPage) return;
+    setIsLoadingAllPhotos(true);
+    try {
+      await fetchAllPages();
+    } finally {
+      setIsLoadingAllPhotos(false);
+    }
+  };
+
   return (
     <>
-      <div className="rounded-3xl border border-border bg-surface p-4">
+      <div>
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <span className="text-[15px] font-bold text-text-primary">사진 앨범</span>
@@ -181,7 +202,7 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="mt-2 w-full rounded-2xl border-2 border-dashed border-border py-8 text-center"
+            className="mt-2 w-full py-8 text-center"
           >
             <Icon name="camera" size="md" color="currentColor" decorative className="mx-auto mb-2 text-text-tertiary" />
             <p className="text-[14px] font-medium text-text-secondary">우리 추억을 업로드 해보세요</p>
@@ -202,7 +223,7 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
             {remaining > 0 && (
               <PhotoGridItem
                 overflowLabel={overflowLabel}
-                onClick={() => setShowModal(true)}
+                onClick={() => { void handleOpenAlbumModal(); }}
               />
             )}
           </PhotoGrid>
@@ -210,20 +231,20 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
       </div>
 
       {uploadState === 'previewing' && (
-        <div className="mt-2 rounded-2xl border border-border bg-surface p-4">
+        <div className="mt-2 rounded-md border border-border bg-surface p-4">
           <div className="mb-3 flex gap-1.5 overflow-x-auto">
             {selectedFiles.map((_, i) => (
-              <div key={i} className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+              <div key={i} className="relative size-14 shrink-0 overflow-hidden rounded-sm bg-gray-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrls[i]} alt="" className="size-full object-cover" />
               </div>
             ))}
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={handleCancelUpload} className="flex-1 rounded-xl border border-border py-2.5 text-[14px] text-text-secondary">
+            <button type="button" onClick={handleCancelUpload} className="flex-1 rounded-sm border border-border py-2.5 text-[14px] text-text-secondary">
               취소
             </button>
-            <button type="button" onClick={handleUpload} className="flex-1 rounded-xl bg-primary py-2.5 text-[14px] font-semibold text-text-inverse">
+            <button type="button" onClick={handleUpload} className="flex-1 rounded-sm bg-primary py-2.5 text-[14px] font-semibold text-text-inverse">
               {selectedFiles.length}장 올리기
             </button>
           </div>
@@ -231,19 +252,19 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
       )}
 
       {uploadState === 'uploading' && (
-        <div className="mt-2 rounded-2xl border border-border bg-surface px-4 py-3 text-center text-[14px] text-text-secondary">
+        <div className="mt-2 rounded-md border border-border bg-surface px-4 py-3 text-center text-[14px] text-text-secondary">
           사진 {uploadProgress.total}장 중 {uploadProgress.done}장 업로드 중...
         </div>
       )}
 
       {uploadState === 'complete' && (
-        <div className="mt-2 rounded-2xl bg-green-50 px-4 py-3 text-center text-[14px] font-bold text-green-600">
+        <div className="mt-2 rounded-md bg-green-50 px-4 py-3 text-center text-[14px] font-bold text-green-600">
           업로드 완료!
         </div>
       )}
 
       {(uploadState === 'failed' || uploadState === 'partialFailed') && (
-        <div className="mt-2 rounded-2xl bg-red-50 px-4 py-3 text-center text-[14px] text-danger">
+        <div className="mt-2 rounded-md bg-red-50 px-4 py-3 text-center text-[14px] text-danger">
           {uploadState === 'failed' ? '업로드에 실패했어요' : '일부 사진 업로드에 실패했어요'}
         </div>
       )}
@@ -251,6 +272,8 @@ export default function Album({ invitationId, photos, total, hasNextPage }: Prop
       {showModal && (
         <AlbumModal
           photos={photos}
+          total={totalForOverflow}
+          isLoadingMore={isLoadingAllPhotos || isFetchingNextPage}
           onClose={() => setShowModal(false)}
           initialLikedMap={likedMap}
           initialLikeCountMap={likeCountMap}

@@ -7,6 +7,7 @@ import { Settings, type SettingsScreen } from '@/screens/Settings';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 import { useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/useNotifications';
+import { TextContentSkeleton } from '@/components/organisms/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 
 export default function SettingsContainer() {
@@ -15,7 +16,7 @@ export default function SettingsContainer() {
 
   const { data: notifSettings, isLoading } = useNotificationSettings();
   const { mutate: updateNotif, isPending } = useUpdateNotificationSettings();
-  const { data: terms } = useTerms();
+  const { data: terms, isLoading: isTermsLoading } = useTerms();
 
   const handleToggle = (key: NotificationSettingKey, value: boolean) => {
     updateNotif({ [key]: value });
@@ -34,8 +35,14 @@ export default function SettingsContainer() {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={handleBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6 text-[13px] leading-relaxed text-text-secondary whitespace-pre-wrap">
-          {term ? term.content : '불러오는 중...'}
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-secondary whitespace-pre-wrap">
+          {isTermsLoading ? (
+            <TextContentSkeleton />
+          ) : term ? (
+            term.content
+          ) : (
+            <p className="text-center text-text-tertiary">약관을 불러올 수 없어요</p>
+          )}
         </main>
       </div>
     );

@@ -30,7 +30,7 @@ export function NotificationItem({ notification, onReadAction, onDelete }: Props
       <button
         type="button"
         onClick={() => !notification.isRead && onReadAction(notification.id)}
-        className="flex-1 text-left px-4 py-3 flex gap-3 hover-emphasis-sm min-w-0"
+        className="flex-1 text-left px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors duration-150 min-w-0"
       >
         <span
           className={`mt-1.5 size-2 rounded-full shrink-0 ${notification.isRead ? '' : 'bg-primary'}`}

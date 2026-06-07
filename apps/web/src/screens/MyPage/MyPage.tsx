@@ -92,7 +92,7 @@ export const MyPage = ({
         }
       />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
-      <section className="flex flex-col items-center gap-4 bg-surface pb-8 pt-[88px]">
+      <section className="flex flex-col items-center gap-4 bg-surface pb-8 pt-[108px]">
         <div className="relative">
           <Avatar
             size="xl"
@@ -111,7 +111,7 @@ export const MyPage = ({
           </button>
         </div>
         <div className="flex flex-col items-center gap-0.5 text-center">
-          <p className="font-gmarket text-[22px] font-medium text-text-primary">{user.name ?? user.nickname}</p>
+          <p className="text-[22px] font-bold text-text-primary">{user.name ?? user.nickname}</p>
           {user.name && user.nickname ? (
             <p className="text-[14px] text-text-tertiary">@{user.nickname}</p>
           ) : null}
@@ -119,11 +119,11 @@ export const MyPage = ({
       </section>
 
       <section className="py-3">
-        <h2 className="px-5 py-2 text-[14px] font-bold text-text-primary">최근 초대장</h2>
+        <h2 className="px-page py-2 text-[14px] font-bold text-text-primary">최근 초대장</h2>
         {recentInvitations.length === 0 ? (
-          <p className="px-5 py-6 text-center text-[13px] text-text-tertiary">최근 초대장이 없어요</p>
+          <p className="px-page py-6 text-center text-[13px] text-text-tertiary">최근 초대장이 없어요</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 px-5">
+          <div className="grid grid-cols-2 gap-3 px-page">
             {recentInvitations.map((inv) => (
               <InvitationCard
                 key={inv.id}

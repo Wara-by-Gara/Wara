@@ -34,6 +34,15 @@ export const linkEventTypeEnum = pgEnum('link_event_type', [
   'joined',
 ]);
 
+export const activityEventTypeEnum = pgEnum('activity_event_type', [
+  'login',
+  'invitation_created',
+  'invitation_sent',
+  'participant_joined',
+  'link_opened',
+  'feedback_created',
+]);
+
 export const notificationTypeEnum = pgEnum('notification_type', [
   'remind',
   'participantLocations',

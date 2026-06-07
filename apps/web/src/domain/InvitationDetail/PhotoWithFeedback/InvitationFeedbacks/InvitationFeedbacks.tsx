@@ -6,6 +6,7 @@ import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useParticipants } from '@/hooks/useParticipants';
 import { CommentInputBar, GifPicker } from '@/components/organisms';
+import { CommentListSkeleton, MentionListSkeleton } from '@/components/organisms/Skeleton';
 import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
 import { type Photo, getPhoto } from '@/lib/api/photos';
@@ -27,7 +28,8 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
     data,
     submitComment,
     fetchNextPage,
-    hasNextPage,
+    canLoadMore,
+    total,
     isFetchingNextPage,
     removeComment,
     editComment,
@@ -37,6 +39,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
     getLikeCount,
   } = useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
+  const commentCount = total ?? allRows.length;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{
@@ -116,13 +119,13 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
 
   return (
     <div className="mt-4">
-      <div className="rounded-3xl border border-border bg-surface p-4">
+      <div>
         <h3 className="mb-3 text-[15px] font-bold text-text-primary">
-          댓글 {allRows.length}
+          댓글 {commentCount}
         </h3>
 
         {replyingTo ? (
-          <div className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-primary-soft px-4 py-1.5">
+          <div className="mt-2 flex items-center justify-between rounded-md border border-border bg-primary-soft px-4 py-1.5">
             <span className="text-[13px] text-primary">
               @{replyingTo.authorName}에게 답글
             </span>
@@ -137,7 +140,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
         ) : null}
         {pendingPreview && (
           <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
+            <div className="relative size-12 shrink-0 overflow-hidden rounded-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={pendingPreview}
@@ -155,11 +158,9 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           </div>
         )}
         {mentionQuery !== null && (
-          <div className="mx-3 mb-1 rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-hidden">
             {isParticipantsLoading ? (
-              <p className="px-4 py-3 text-[13px] text-text-tertiary">
-                불러오는 중...
-              </p>
+              <MentionListSkeleton count={3} />
             ) : filteredParticipants.length === 0 ? (
               <p className="px-4 py-3 text-[13px] text-text-tertiary">
                 일치하는 참가자 없음
@@ -177,7 +178,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
                           p.user.nickname ?? p.user.id,
                         );
                       }}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
                     >
                       <Avatar
                         src={p.user.profileImageUrl ?? undefined}
@@ -195,12 +196,6 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
             )}
           </div>
         )}
-        {gifPickerOpen ? (
-          <GifPicker
-            onSelect={handleGifSelect}
-            onClose={() => setGifPickerOpen(false)}
-          />
-        ) : null}
         <input
           ref={fileInputRef}
           type="file"
@@ -209,6 +204,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           onChange={handleFileSelect}
         />
         <CommentInputBar
+          variant="glass"
           className="border-t-0"
           placeholder={
             replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'
@@ -219,6 +215,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           onGifClear={clearPendingGif}
           onGifButtonClick={() => setGifPickerOpen((v) => !v)}
           onPhotoButtonClick={() => fileInputRef.current?.click()}
+          hasPendingPhoto={!!pendingFile}
           onSubmit={async (text) => {
             await submitComment(
               text,
@@ -236,6 +233,12 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           }}
           state={isSubmitting ? 'submitting' : 'default'}
         />
+        {gifPickerOpen ? (
+          <GifPicker
+            onSelect={handleGifSelect}
+            onClose={() => setGifPickerOpen(false)}
+          />
+        ) : null}
 
         <div className="mt-2 flex flex-col">
           {allRows.map((f) => (
@@ -432,90 +435,22 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
               />
             </div>
           ))}
-          {hasNextPage ? (
-            <button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-            >
-              {isFetchingNextPage ? '불러오는 중...' : '더보기'}
-            </button>
+          {canLoadMore ? (
+            <>
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="mt-2 w-full py-2 text-center text-[13px] font-medium text-brand disabled:opacity-50"
+              >
+                더보기
+              </button>
+              {isFetchingNextPage ? <CommentListSkeleton count={1} /> : null}
+            </>
           ) : null}
         </div>
       </div>
 
-      {pendingPreview && (
-        <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
-          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={pendingPreview}
-              alt=""
-              className="size-full object-cover"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={clearPendingFile}
-            className="text-[12px] text-text-tertiary hover:text-text-secondary"
-          >
-            취소
-          </button>
-        </div>
-      )}
-      {mentionQuery !== null && (
-        <div className="mx-3 mb-1 rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
-          {isParticipantsLoading ? (
-            <p className="px-4 py-3 text-[13px] text-text-tertiary">
-              불러오는 중...
-            </p>
-          ) : filteredParticipants.length === 0 ? (
-            <p className="px-4 py-3 text-[13px] text-text-tertiary">
-              일치하는 참가자 없음
-            </p>
-          ) : (
-            <ul>
-              {filteredParticipants.map((p) => (
-                <li key={p.user.id}>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault(); // input blur 방지
-                      handleSelectMention(
-                        p.user.id,
-                        p.user.nickname ?? p.user.id,
-                      );
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover-emphasis-sm"
-                  >
-                    <Avatar
-                      src={p.user.profileImageUrl ?? undefined}
-                      alt={p.user.nickname ?? ''}
-                      size="xs"
-                      name={p.user.nickname ?? undefined}
-                    />
-                    <span className="text-[14px] text-text-primary">
-                      @{p.user.nickname}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-      {gifPickerOpen ? (
-        <GifPicker
-          onSelect={handleGifSelect}
-          onClose={() => setGifPickerOpen(false)}
-        />
-      ) : null}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-        className="hidden"
-        onChange={handleFileSelect}
-      />
       {selectedPhoto ? (
         <PhotoDetailModal
           photos={[selectedPhoto]}

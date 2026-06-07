@@ -8,6 +8,7 @@ import { Icon } from '@/components/icons';
 import { Divider } from '@/components/primitives/Divider';
 import { ROUTES } from '@/constants/routes';
 import { useActiveFaq } from '@/hooks/useFaq';
+import { FaqListSkeleton } from '@/components/organisms/Skeleton';
 import { getUserRole } from '@/lib/jwt';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -44,9 +45,7 @@ export default function CustomerSupportPage() {
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
         {/* 자주 묻는 질문 */}
         <Section title="자주 묻는 질문">
-          {isLoading && (
-            <p className="px-4 py-3 text-[14px] text-text-tertiary">불러오는 중...</p>
-          )}
+          {isLoading && <FaqListSkeleton count={5} />}
           {!isLoading && faqItems?.length === 0 && (
             <p className="px-4 py-3 text-[14px] text-text-tertiary">
               등록된 질문이 없어요

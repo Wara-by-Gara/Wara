@@ -62,14 +62,14 @@ export function VotePreviewCard({ pollData, resultsData, isHost, onClick }: Prop
       onClick={onClick}
       className={
         isConfirmed
-          ? "flex w-full items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left"
-          : "flex w-full items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4 text-left"
+          ? "flex w-full items-center gap-3 rounded-md border border-border bg-surface p-4 text-left"
+          : "flex w-full items-center gap-3 rounded-md border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4 text-left"
       }
     >
       <div className={
         isConfirmed
-          ? "flex size-10 shrink-0 items-center justify-center rounded-xl bg-background-soft"
-          : "flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15"
+          ? "flex size-10 shrink-0 items-center justify-center rounded-sm bg-background-soft"
+          : "flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15"
       }>
         <Icon name="calendar" size="md" color={isConfirmed ? "inactive" : "primary"} decorative />
       </div>

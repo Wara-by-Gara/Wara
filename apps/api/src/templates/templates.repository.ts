@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { invitationTemplates } from '../database/schema';
 import { CreateTemplateDto } from './dto/create-template.dto';
@@ -12,6 +12,7 @@ export class TemplatesRepository {
   findAll() {
     return this.db.query.invitationTemplates.findMany({
       where: (t, { eq }) => eq(t.isActive, true),
+      orderBy: [asc(invitationTemplates.name)],
     });
   }
 

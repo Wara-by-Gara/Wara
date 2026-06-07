@@ -3,6 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isDicebearProfileImage } from '../common/utils/profile-image';
 import { S3_CLIENT } from './s3.constants';
 
 const UPLOAD_URL_EXPIRES_IN = 900;
@@ -47,6 +48,7 @@ export class S3Service {
   // 조회용 presigned URL (GET, private 파일용)
   async getViewPresignedUrl(key: string): Promise<string> {
     if (this.isExternalUrl(key)) return key;
+    if (isDicebearProfileImage(key)) return key;
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
   }

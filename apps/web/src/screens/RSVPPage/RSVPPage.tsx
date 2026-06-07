@@ -127,7 +127,7 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={state === "editComplete" ? "응답 수정" : "응답하기"} />
-        <main className={cn(mobileMainCenter, "px-6 text-center")}>
+        <main className={cn(mobileMainCenter, "px-page text-center")}>
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">
             {state === "editComplete" ? "응답이 수정됐어요" : "응답이 제출됐어요"}
@@ -143,7 +143,7 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background pb-24">
       <TopAppBar className="shrink-0" title={state === "edit" ? "응답 수정" : "응답하기"} onBack={onBack} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-4">
         <InvitationInfoCard variant="datetime" title={invitation.title} description={invitation.date} />
 
         <section>
@@ -171,7 +171,7 @@ export const RSVPPage = ({ state = "entry", invitation = mockInvitation, onBack 
               <h3 className="mb-2 text-[14px] font-bold text-text-primary">알러지가 있나요?</h3>
               <RadioGroup>
                 {["없음", "견과류", "유제품", "기타"].map((v) => (
-                  <label key={v} className="flex items-center gap-3 rounded-2xl border border-border p-3">
+                  <label key={v} className="flex items-center gap-3 rounded-md border border-border p-3">
                     <Radio value={v} />
                     <span className="text-[14px]">{v}</span>
                   </label>

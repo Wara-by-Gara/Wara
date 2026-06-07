@@ -88,8 +88,6 @@ export interface MapPageProps {
   isSavingPlace?: boolean;
 }
 
-const PLACEHOLDER_MAP_URL = "https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map";
-
 function MapPlaceholder() {
   return (
     <div className="absolute inset-0 bg-[url('https://placehold.co/640x900/EEF8FF/8DD4FF?text=Map')] bg-cover bg-center" />
@@ -129,12 +127,13 @@ export const MapPage = ({
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto p-5">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-5">
           <LocationCard
             variant="preview"
             placeName={placeName}
             address={address}
-            mapPreviewUrl={PLACEHOLDER_MAP_URL}
+            mapLat={35.8242}
+            mapLng={127.148}
             onGetDirections={onGetDirections}
           />
         </main>
@@ -171,7 +170,7 @@ export const MapPage = ({
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소" onBack={onBack} />
-        <div className="px-5 py-4">
+        <div className="px-page py-4">
           {state === "noLocation" ? (
             <>
               <LocationCard variant="unknown" />
@@ -236,7 +235,7 @@ export const MapPage = ({
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소 검색" onBack={onBack} />
-        <div className="px-5 py-3">
+        <div className="px-page py-3">
           <TextInput
             leftIcon="search"
             placeholder="장소를 검색해보세요"
@@ -376,15 +375,15 @@ export const MapPage = ({
               <ShareOptionItem
                 icon="map"
                 title="네이버 지도"
-                iconBg="bg-[#03C75A]/20"
-                iconColor="text-[#03C75A]"
+                iconBg="bg-green-50"
+                iconColor="text-green-600"
                 onClick={onOpenNaverMap}
               />
               <ShareOptionItem
                 icon="map"
                 title="구글 지도"
-                iconBg="bg-sky-100"
-                iconColor="text-sky-500"
+                iconBg="bg-blue-100"
+                iconColor="text-blue-500"
                 onClick={onOpenGoogleMap}
               />
             </div>

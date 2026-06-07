@@ -20,7 +20,7 @@ export default function InvitationEditPage() {
 
   if (isError || !invitation) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-page text-center">
         <p className="text-[16px] font-semibold text-text-primary">초대장을 불러올 수 없어요</p>
         <button
           type="button"

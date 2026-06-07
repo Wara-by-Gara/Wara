@@ -2,20 +2,6 @@
 
 export const DEFAULT_COVER_KEY = "defaults/cover.jpg";
 
-/* ---------- 배경: 단색 ---------- */
-export const DESIGN_BG_SOLIDS = [
-  { cls: "bg-pink-200", hex: "#FBCFE8" },
-  { cls: "bg-yellow-200", hex: "#FEF08A" },
-  { cls: "bg-blue-200", hex: "#BFDBFE" },
-  { cls: "bg-green-200", hex: "#BBF7D0" },
-  { cls: "bg-purple-200", hex: "#E9D5FF" },
-  { cls: "bg-orange-200", hex: "#FED7AA" },
-  { cls: "bg-red-200", hex: "#FECACA" },
-  { cls: "bg-teal-200", hex: "#99F6E4" },
-  { cls: "bg-indigo-200", hex: "#C7D2FE" },
-  { cls: "bg-white", hex: "#FFFFFF" },
-] as const;
-
 /* ---------- 배경: 테마 (CSS 근사, globals.css의 .bg-invite-* 와 1:1) ---------- */
 export const DESIGN_BG_THEMES = [
   { id: "minimal", label: "미니멀", cls: "bg-invite-minimal" },
@@ -29,6 +15,10 @@ export const DESIGN_BG_THEMES = [
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
 ] as const;
+
+export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
+
+export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[0].cls;
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */
 export const DESIGN_FONTS = [

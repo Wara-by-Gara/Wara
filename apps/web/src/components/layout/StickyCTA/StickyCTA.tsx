@@ -30,8 +30,8 @@ export const StickyCTA = forwardRef<HTMLDivElement, StickyCTAProps>(
       <div
         ref={ref}
         className={cn(
-          "sticky bottom-0 z-30 flex w-full items-center gap-3 border-t border-border bg-surface/95 backdrop-blur",
-          "px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)]",
+          "sticky bottom-0 z-30 flex w-full items-center gap-3 border-t border-border bg-surface",
+          "px-page pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)]",
           className,
         )}
         {...props}
