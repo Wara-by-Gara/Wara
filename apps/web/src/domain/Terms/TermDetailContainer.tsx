@@ -1,11 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { TextContentSkeleton } from '@/components/organisms/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
+import { TermContent } from './TermContent';
 
 export type TermDetailType = 'service' | 'privacy' | 'location';
 
@@ -46,8 +45,8 @@ export function TermDetailContainer({ termType }: TermDetailContainerProps) {
             등록된 약관이 없어요
           </p>
         ) : (
-          <article className="prose prose-sm max-w-none whitespace-pre-wrap">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{term.content}</ReactMarkdown>
+          <article className="leading-relaxed">
+            <TermContent content={term.content} variant="detail" />
           </article>
         )}
       </main>
