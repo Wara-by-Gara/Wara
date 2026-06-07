@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAgreeTerms, useMyAgreements, useTerms } from '@/hooks/useTerms';
 import { useAuthStore } from '@/stores/authStore';
 import { TermsAgreeSkeleton } from '@/components/organisms/Skeleton';
@@ -49,8 +51,10 @@ function TermItem({
         </button>
       </label>
       {expanded && (
-        <div className="px-4 py-3 border-t border-border bg-background-soft text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto">
-          {term.content}
+        <div className="px-4 py-3 border-t border-border bg-background-soft text-xs text-text-secondary max-h-48 overflow-y-auto">
+          <article className="prose prose-xs max-w-none whitespace-pre-wrap">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{term.content}</ReactMarkdown>
+          </article>
         </div>
       )}
     </div>
