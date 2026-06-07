@@ -44,6 +44,7 @@ import { InvitationPreview } from "@/domain/InvitationCreate/InvitationPreview";
 import {
   DEFAULT_COVER_KEY,
   DEFAULT_BG_COLOR,
+  type DesignBgColor,
   DESIGN_BG_THEMES,
   DESIGN_FONTS,
   DEFAULT_FONT,
@@ -188,7 +189,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
   const [voteDraft, setVoteDraft] = useState<VoteDraft | null>(null);
   // design
-  const [designBgColor, setDesignBgColor] = useState(DEFAULT_BG_COLOR);
+  const [designBgColor, setDesignBgColor] = useState<DesignBgColor>(DEFAULT_BG_COLOR);
   const [designFont, setDesignFont] = useState<DesignFont>(DEFAULT_FONT);
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationId>("none");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -247,7 +248,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
       lng: editInvitation.eventLocation?.lng ?? null,
       placeId: editInvitation.eventLocation?.placeId ?? "",
     });
-    setDesignBgColor(editInvitation.bgColor);
+    setDesignBgColor(editInvitation.bgColor as DesignBgColor);
     setDesignFont(editInvitation.font as DesignFont);
     setRsvpOptions({
       attending: { emoji: editInvitation.rsvpAttendingEmoji, label: editInvitation.rsvpAttendingLabel },
@@ -298,7 +299,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         rsvpOptions?: Record<RsvpType, RsvpOption>;
       };
       setForm(saved.form);
-      setDesignBgColor(saved.designBgColor);
+      setDesignBgColor(saved.designBgColor as DesignBgColor);
       setDesignFont(saved.designFont);
       if (saved.selectedAnimation) setSelectedAnimation(saved.selectedAnimation);
       setMissionEnabled(saved.missionEnabled);

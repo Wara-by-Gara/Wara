@@ -14,25 +14,6 @@ type Props = {
   heightOffset?: number;
 };
 
-declare global {
-  interface Window {
-    kakao?: {
-      maps: {
-        load: (callback: () => void) => void;
-        LatLng: new (lat: number, lng: number) => object;
-        StaticMap: new (
-          container: HTMLElement,
-          options: {
-            center: object;
-            level: number;
-            marker?: { position: object };
-          },
-        ) => object;
-      };
-    };
-  }
-}
-
 export function KakaoStaticMapPreview({
   lat,
   lng,

@@ -147,7 +147,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
             <Badge
               variant={statusBadge.variant}
               size="sm"
-              className={STATUS_BADGE_GLASS[statusBadge.variant]}
+              className={statusBadge.variant ? STATUS_BADGE_GLASS[statusBadge.variant] : undefined}
             >
               {statusBadge.label}
             </Badge>
@@ -162,7 +162,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
           <Badge
             variant={statusBadge.variant}
             size="sm"
-            className={cn("w-fit", STATUS_BADGE_HORIZONTAL[statusBadge.variant])}
+            className={cn("w-fit", statusBadge.variant ? STATUS_BADGE_HORIZONTAL[statusBadge.variant] : undefined)}
           >
             {statusBadge.label}
           </Badge>

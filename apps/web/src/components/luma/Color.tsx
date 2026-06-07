@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/cn";
 
 const COLOR_LABELS = [
   { name: "빨강", hex: "#f63b44" },
@@ -68,7 +67,7 @@ export function LumaColorPicker({ value, onChange }: { value?: string; onChange?
 }
 
 export function LumaColorScale({ name }: { name: keyof typeof SCALES }) {
-  const colors = SCALES[name];
+  const colors = SCALES[name] ?? [];
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium capitalize text-text-primary">{name}</p>

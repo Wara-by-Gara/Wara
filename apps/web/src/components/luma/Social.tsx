@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { cn } from "@/lib/cn";
 
 const SIZES = [16, 20, 24, 32, 40, 48, 64] as const;
 

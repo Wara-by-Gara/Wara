@@ -31,23 +31,23 @@ export const Overview: Story = {
         </LumaRow>
         <LumaRow label="Outline">
           <div className="flex flex-wrap gap-2">
-            <LumaButton color="brand" style="outline">브랜드</LumaButton>
-            <LumaButton color="primary" style="outline">기본</LumaButton>
-            <LumaButton color="success" style="outline">성공</LumaButton>
+            <LumaButton color="brand" buttonStyle="outline">브랜드</LumaButton>
+            <LumaButton color="primary" buttonStyle="outline">기본</LumaButton>
+            <LumaButton color="success" buttonStyle="outline">성공</LumaButton>
           </div>
         </LumaRow>
         <LumaRow label="Ghost">
           <div className="flex flex-wrap gap-2">
-            <LumaButton color="brand" style="ghost">고스트</LumaButton>
-            <LumaButton color="light" style="ghost">연한</LumaButton>
+            <LumaButton color="brand" buttonStyle="ghost">고스트</LumaButton>
+            <LumaButton color="light" buttonStyle="ghost">연한</LumaButton>
           </div>
         </LumaRow>
         <LumaRow label="Icon · Loading">
           <div className="flex flex-wrap gap-2">
             <LumaButton color="brand" icon="sparkle">아이콘 포함</LumaButton>
             <LumaButton color="primary" loading>로딩 중</LumaButton>
-            <LumaButton color="light" style="icon" icon="plus" aria-label="추가" />
-            <LumaButton color="brand" style="iconRound" icon="heart" aria-label="좋아요" />
+            <LumaButton color="light" buttonStyle="icon" icon="plus" aria-label="추가" />
+            <LumaButton color="brand" buttonStyle="iconRound" icon="heart" aria-label="좋아요" />
           </div>
         </LumaRow>
         <LumaRow label="Invite · Disabled · FullWidth">
@@ -74,9 +74,9 @@ export const Outline: Story = {
   render: () => (
     <LumaSection title="Button — Outline">
       <div className="flex flex-wrap gap-2">
-        <LumaButton color="brand" style="outline">브랜드</LumaButton>
-        <LumaButton color="primary" style="outline">기본</LumaButton>
-        <LumaButton color="success" style="outline">성공</LumaButton>
+        <LumaButton color="brand" buttonStyle="outline">브랜드</LumaButton>
+        <LumaButton color="primary" buttonStyle="outline">기본</LumaButton>
+        <LumaButton color="success" buttonStyle="outline">성공</LumaButton>
       </div>
     </LumaSection>
   ),
@@ -86,8 +86,8 @@ export const Ghost: Story = {
   render: () => (
     <LumaSection title="Button — Ghost">
       <div className="flex flex-wrap gap-2">
-        <LumaButton color="brand" style="ghost">고스트</LumaButton>
-        <LumaButton color="light" style="ghost">연한</LumaButton>
+        <LumaButton color="brand" buttonStyle="ghost">고스트</LumaButton>
+        <LumaButton color="light" buttonStyle="ghost">연한</LumaButton>
       </div>
     </LumaSection>
   ),
@@ -99,8 +99,8 @@ export const IconAndLoading: Story = {
       <div className="flex flex-wrap gap-2">
         <LumaButton color="brand" icon="sparkle">아이콘 포함</LumaButton>
         <LumaButton color="primary" loading>로딩 중</LumaButton>
-        <LumaButton color="light" style="icon" icon="plus" aria-label="추가" />
-        <LumaButton color="brand" style="iconRound" icon="heart" aria-label="좋아요" />
+        <LumaButton color="light" buttonStyle="icon" icon="plus" aria-label="추가" />
+        <LumaButton color="brand" buttonStyle="iconRound" icon="heart" aria-label="좋아요" />
       </div>
     </LumaSection>
   ),

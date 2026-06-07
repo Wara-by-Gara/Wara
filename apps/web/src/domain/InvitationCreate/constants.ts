@@ -16,7 +16,9 @@ export const DESIGN_BG_THEMES = [
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
 ] as const;
 
-export const DEFAULT_BG_COLOR = DESIGN_BG_THEMES[0].cls;
+export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
+
+export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[0].cls;
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */
 export const DESIGN_FONTS = [

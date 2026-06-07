@@ -10,7 +10,7 @@ export function LumaTimeline({ items }: { items: LumaTimelineItem[] }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-text-primary">Timeline</h3>
-        <LumaButton color="light" style="outline">설정</LumaButton>
+        <LumaButton color="light" buttonStyle="outline">설정</LumaButton>
       </div>
       <div className="space-y-6">
         {items.map((item, i) => (

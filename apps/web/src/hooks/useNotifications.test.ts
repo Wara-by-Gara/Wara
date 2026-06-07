@@ -5,6 +5,7 @@ import { createElement } from 'react';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
 import { mockSettings } from '@/mocks/handlers';
+import { QUERY_KEYS } from '@/constants/queryKeys';
 import {
   useUnreadCount,
   useNotifications,
@@ -12,10 +13,9 @@ import {
   useMarkAllAsRead,
   useNotificationSettings,
   useUpdateNotificationSettings,
-  notificationKeys,
 } from './useNotifications';
 
-const BASE = 'http://localhost:3001/api';
+const BASE = '/api';
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient({
@@ -55,7 +55,7 @@ describe('useUnreadCount', () => {
 
   it('refetch 시 최신 데이터로 갱신된다', async () => {
   server.use(
-    http.get(`http://localhost:3001/api/notifications/unread`, () =>
+    http.get(`${BASE}/notifications/unread`, () =>
       HttpResponse.json(wrap({ count: 10 })),
     ),
   );
@@ -106,10 +106,10 @@ describe('useMarkAsRead', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: notificationKeys.lists(),
+      queryKey: QUERY_KEYS.notifications.list(),
     });
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: notificationKeys.unread(),
+      queryKey: QUERY_KEYS.notifications.unread(),
     });
   });
 
@@ -139,10 +139,10 @@ describe('useMarkAllAsRead', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: notificationKeys.lists(),
+      queryKey: QUERY_KEYS.notifications.list(),
     });
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: notificationKeys.unread(),
+      queryKey: QUERY_KEYS.notifications.unread(),
     });
   });
 });
@@ -178,7 +178,7 @@ describe('useUpdateNotificationSettings', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(setQueryData).toHaveBeenCalledWith(
-      notificationKeys.settings(),
+      QUERY_KEYS.notifications.settings(),
       expect.objectContaining({ isFeedback: false }),
     );
   });

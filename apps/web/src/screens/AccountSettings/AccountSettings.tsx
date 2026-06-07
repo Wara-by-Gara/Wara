@@ -15,7 +15,6 @@ export type AccountScreen =
   | "connectedSocial"
   | "connectAdditional"
   | "disconnectModal"
-  | "logoutModal"
   | "logoutComplete"
   | "withdrawGuide"
   | "withdrawReason"
@@ -46,6 +45,10 @@ export interface AccountSettingsProps {
   onDisconnectRequest?: (provider: string) => void;
   onDisconnectConfirm?: () => void;
   isDisconnecting?: boolean;
+  onLinkRequest?: (provider: string) => void;
+  isLinking?: boolean;
+  linkingProvider?: string | null;
+  onLastConnectedClick?: () => void;
   // 탈퇴 사유 — Container에서 끌어올린 state를 props로 받는다
   withdrawReason?: WithdrawalReasonKey;
   withdrawDetail?: string;
@@ -53,9 +56,9 @@ export interface AccountSettingsProps {
   onWithdrawDetailChange?: (detail: string) => void;
 }
 
-export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
+export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, onLoginAgain, onWithdrawStart, onWithdrawContinue, onWithdrawCancel, onWithdrawConfirm, onWithdrawComplete, isWithdrawing, connectedProviders, onDisconnectRequest, onDisconnectConfirm, isDisconnecting, onLinkRequest, isLinking, linkingProvider, onLastConnectedClick, withdrawReason, withdrawDetail, onWithdrawReasonChange, onWithdrawDetailChange }: AccountSettingsProps) => {
   const [modalOpen, setModalOpen] = useState(
-    screen === "disconnectModal" || screen === "logoutModal" || screen === "withdrawFinalConfirm",
+    screen === "disconnectModal" || screen === "withdrawFinalConfirm",
   );
 
   if (screen === "connectedSocial" || screen === "connectAdditional" || screen === "disconnectModal") {
@@ -64,23 +67,28 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
         <section className="py-2">
-          <h2 className="px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-text-tertiary">연결된 소셜 계정</h2>
+          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">연결된 소셜 계정</h2>
           <div className="divide-y divide-border bg-surface">
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const isConnected = connectedProviders?.includes(provider);
               const isLastConnected = isConnected && (connectedProviders?.length ?? 0) === 1;
+              const isThisLinking = isLinking && linkingProvider === provider;
               const label = { kakao: "카카오", naver: "네이버", google: "Google" }[provider];
               const icon = { kakao: "kakao-logo", naver: "naver-logo", google: "google-logo" }[provider] as "kakao-logo" | "naver-logo" | "google-logo";
+              const handleClick = isConnected
+                ? (isLastConnected ? () => onLastConnectedClick?.() : () => onDisconnectRequest?.(provider))
+                : (isLinking ? undefined : () => onLinkRequest?.(provider));
+              const rightText = isThisLinking
+                ? "연결 중..."
+                : isConnected
+                  ? "연결됨"
+                  : "연결하기";
               return (
                 <MenuItem
                   key={provider}
                   leftIcon={icon}
-                  onClick={isConnected && !isLastConnected ? () => onDisconnectRequest?.(provider) : undefined}
-                  rightSlot={
-                    isLastConnected
-                      ? <span className="text-[13px] text-text-tertiary">최소 1개 필요</span>
-                      : <span className="text-[13px] text-text-tertiary">{isConnected ? "연결됨" : "미연결"}</span>
-                  }
+                  onClick={handleClick}
+                  rightSlot={<span className="text-[13px] text-text-tertiary">{rightText}</span>}
                 >
                   {label}
                 </MenuItem>
@@ -89,7 +97,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           </div>
         </section>
         <section className="py-2">
-          <h2 className="px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-text-tertiary">계정</h2>
+          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">계정</h2>
           <div className="divide-y divide-border bg-surface">
             <MenuItem leftIcon="log-out" variant="danger" onClick={() => setModalOpen(true)}>로그아웃</MenuItem>
             <MenuItem leftIcon="trash" variant="danger" onClick={onWithdrawStart}>회원 탈퇴</MenuItem>
@@ -115,22 +123,6 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
     );
   }
 
-  if (screen === "logoutModal") {
-    return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-        <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
-        <ConfirmModal contained
-          open
-          onOpenChange={() => {}}
-          title="로그아웃 할까요?"
-          description="다시 들어오려면 다시 로그인해야 해요"
-          confirmLabel="로그아웃"
-          confirmVariant="danger"
-        />
-      </div>
-    );
-  }
-
   if (screen === "logoutComplete") {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -148,7 +140,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="회원 탈퇴 안내" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6">
+        <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
           <h1 className="text-[20px] font-bold text-text-primary">탈퇴 전 확인해주세요</h1>
           <ul className="mt-4 flex flex-col gap-3 text-[14px] text-text-secondary">
             <li>• 내가 만든 초대장과 참석자 데이터가 모두 삭제돼요</li>
@@ -167,7 +159,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="떠나시는 이유를 알려주세요" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-page py-4">
+        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <RadioGroup
             value={withdrawReason ?? "rarely"}
             onValueChange={(v) => onWithdrawReasonChange?.(v as WithdrawalReasonKey)}
@@ -179,7 +171,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
               { value: "privacy", label: "개인정보가 걱정돼요" },
               { value: "etc", label: "기타" },
             ].map((opt) => (
-              <label key={opt.value} className="flex items-center gap-3 rounded-md border border-border bg-surface p-4">
+              <label key={opt.value} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
                 <Radio value={opt.value} />
                 <span className="text-[15px] text-text-primary">{opt.label}</span>
               </label>
@@ -216,7 +208,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="회원 탈퇴" />
-      <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-page text-center">
+      <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
         <Icon name="user-x" size="xl" color="inactive" decorative />
         <p className="text-[18px] font-bold text-text-primary">탈퇴가 완료됐어요</p>
         <p className="text-[14px] text-text-secondary">언젠가 다시 만나길 바라요</p>
@@ -241,7 +233,7 @@ function WithdrawFinalConfirm({ onBack, onWithdrawCancel, onWithdrawConfirm, isW
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
-      <main className="min-h-0 flex-1 overflow-y-auto px-page py-8">
+      <main className="min-h-0 flex-1 overflow-y-auto px-6 py-8">
         <h1 className="text-[20px] font-bold text-text-primary">정말 탈퇴할까요?</h1>
         <p className="mt-2 text-[14px] text-text-secondary">
           탈퇴하면 모든 데이터가 즉시 삭제되고 복구할 수 없어요.

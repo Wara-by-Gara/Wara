@@ -29,7 +29,7 @@ const buttonBase = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap text-base font-medium transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-40",
   {
     variants: {
-      style: {
+      buttonStyle: {
         solid: "border border-transparent px-3.5 py-2.5 rounded-xs",
         outline: "border bg-transparent px-3.5 py-2.5 rounded-full",
         ghost: "border-transparent bg-transparent px-3.5 py-2.5 rounded-xs",
@@ -38,7 +38,7 @@ const buttonBase = cva(
       },
       fullWidth: { true: "w-full", false: "" },
     },
-    defaultVariants: { style: "solid", fullWidth: false },
+    defaultVariants: { buttonStyle: "solid", fullWidth: false },
   },
 );
 
@@ -51,17 +51,18 @@ export interface LumaButtonProps
 }
 
 export const LumaButton = forwardRef<HTMLButtonElement, LumaButtonProps>(function LumaButton(
-  { className, color = "primary", style = "solid", fullWidth, icon, loading, children, disabled, ...props },
+  { className, color = "primary", buttonStyle = "solid", fullWidth, icon, loading, children, disabled, ...props },
   ref,
 ) {
   const palette = COLOR_MAP[color];
-  const colorClass = style === "outline" ? palette.outline : style === "ghost" ? palette.ghost : palette.solid;
+  const colorClass =
+    buttonStyle === "outline" ? palette.outline : buttonStyle === "ghost" ? palette.ghost : palette.solid;
 
   return (
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={cn(buttonBase({ style, fullWidth }), colorClass, className)}
+      className={cn(buttonBase({ buttonStyle, fullWidth }), colorClass, className)}
       {...props}
     >
       {loading ? (

@@ -38,7 +38,7 @@ export function LumaBanner({
         ) : null}
       </div>
       {action ? (
-        <LumaButton color="light" style="outline" className="ml-auto shrink-0 text-xs">
+        <LumaButton color="light" buttonStyle="outline" className="ml-auto shrink-0 text-xs">
           {action}
         </LumaButton>
       ) : null}

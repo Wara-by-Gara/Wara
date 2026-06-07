@@ -3,56 +3,21 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { cn } from "@/lib/cn";
 
-// Minimal Kakao Maps type declarations
-declare global {
-  interface Window {
-    kakao: {
-      maps: {
-        load: (callback: () => void) => void;
-        Map: new (
-          container: HTMLElement,
-          options: { center: KakaoLatLng; level: number },
-        ) => KakaoMap;
-        LatLng: new (lat: number, lng: number) => KakaoLatLng;
-        LatLngBounds: new () => KakaoLatLngBounds;
-        Marker: new (options: { position: KakaoLatLng; map?: KakaoMap }) => KakaoMarker;
-        CustomOverlay: new (options: {
-          position: KakaoLatLng;
-          content: HTMLElement;
-          map?: KakaoMap;
-          yAnchor?: number;
-          xAnchor?: number;
-          zIndex?: number;
-        }) => KakaoCustomOverlay;
-      };
-    };
-  }
-}
-
-interface KakaoLatLng {
-  getLat: () => number;
-  getLng: () => number;
-}
-
-interface KakaoLatLngBounds {
-  extend: (latlng: KakaoLatLng) => void;
-  isEmpty: () => boolean;
-}
-
-interface KakaoMap {
-  setCenter: (latlng: KakaoLatLng) => void;
-  setBounds: (bounds: KakaoLatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number) => void;
+interface SdkKakaoMap {
+  setCenter: (latlng: { getLat: () => number; getLng: () => number }) => void;
+  setBounds: (
+    bounds: { extend: (latlng: { getLat: () => number; getLng: () => number }) => void; isEmpty: () => boolean },
+    paddingTop?: number,
+    paddingRight?: number,
+    paddingBottom?: number,
+    paddingLeft?: number,
+  ) => void;
   getLevel: () => number;
 }
 
-interface KakaoMarker {
-  setMap: (map: KakaoMap | null) => void;
-  setPosition: (latlng: KakaoLatLng) => void;
-}
-
-interface KakaoCustomOverlay {
-  setMap: (map: KakaoMap | null) => void;
-  setPosition: (latlng: KakaoLatLng) => void;
+interface SdkKakaoCustomOverlay {
+  setMap: (map: SdkKakaoMap | null) => void;
+  setPosition: (latlng: { getLat: () => number; getLng: () => number }) => void;
 }
 
 export interface ParticipantPin {
@@ -285,11 +250,11 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<KakaoMap | null>(null);
-  const eventOverlayRef = useRef<KakaoCustomOverlay | null>(null);
-  const participantOverlaysRef = useRef<Map<string, KakaoCustomOverlay>>(new Map());
-  const myLocationOverlayRef = useRef<KakaoCustomOverlay | null>(null);
-  const photoOverlaysRef = useRef<Map<string, KakaoCustomOverlay>>(new Map());
+  const mapRef = useRef<SdkKakaoMap | null>(null);
+  const eventOverlayRef = useRef<SdkKakaoCustomOverlay | null>(null);
+  const participantOverlaysRef = useRef<Map<string, SdkKakaoCustomOverlay>>(new Map());
+  const myLocationOverlayRef = useRef<SdkKakaoCustomOverlay | null>(null);
+  const photoOverlaysRef = useRef<Map<string, SdkKakaoCustomOverlay>>(new Map());
   const initializedRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
@@ -304,9 +269,12 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   useEffect(() => {
     if (!ready || !containerRef.current || initializedRef.current) return;
 
+    const kakao = window.kakao;
+    if (!kakao?.maps) return;
+
     const initMap = () => {
-      if (!containerRef.current) return;
-      const { maps } = window.kakao;
+      if (!containerRef.current || !kakao.maps) return;
+      const { maps } = kakao;
       const center = new maps.LatLng(
         eventLocation?.lat ?? DEFAULT_CENTER.lat,
         eventLocation?.lng ?? DEFAULT_CENTER.lng,
@@ -315,7 +283,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       initializedRef.current = true;
     };
 
-    window.kakao.maps.load(initMap);
+    kakao.maps.load(initMap);
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 행사 장소 마커 갱신

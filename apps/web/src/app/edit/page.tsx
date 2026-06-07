@@ -1,5 +1,5 @@
-import EditContainer from "@/domain/Edit/Container/EditContainer";
+import { redirect } from "next/navigation";
 
 export default function EditPage() {
-  return <EditContainer />;
+  redirect("/invitations/create");
 }

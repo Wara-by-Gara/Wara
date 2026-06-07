@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import type { Notification, NotificationSettings } from '@/lib/api/notifications';
 
-const BASE = 'http://localhost:3001/api';
+const BASE = '/api';
 
 export const mockNotification: Notification = {
   id: 'n1',
