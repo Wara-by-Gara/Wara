@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
 import { FriendsList } from "./FriendsList";
@@ -9,7 +9,14 @@ import { ChatList } from "./ChatList";
 type Tab = "friends" | "chat";
 
 export const Friends = () => {
-  const [tab, setTab] = useState<Tab>("friends");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // 세그먼트 탭을 URL로 관리 → 채팅방에서 뒤로가기 시 채팅 탭으로 복귀
+  const tab: Tab = searchParams.get("tab") === "chat" ? "chat" : "friends";
+  const setTab = (next: Tab) =>
+    router.replace(next === "chat" ? "/friends?tab=chat" : "/friends", {
+      scroll: false,
+    });
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">

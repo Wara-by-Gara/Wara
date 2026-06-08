@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Button } from "@/components/primitives/Button";
 import { HeaderGradient } from "@/components/layout/StickyHeader";
@@ -63,7 +64,6 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
       <HeaderGradient fixed />
       <TopAppBar
         className="absolute inset-x-0 top-0 z-30"
-        title={name}
         onBack={() => router.back()}
       />
       <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
@@ -85,9 +85,10 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
             fullWidth
             onClick={() => startChat.mutate(id)}
             disabled={startChat.isPending}
-            className="mt-1"
+            className="mt-1 rounded-lg border border-border-strong"
           >
-            메시지 보내기
+            <Icon name="message-circle" size="sm" color="currentColor" decorative />
+            1:1 채팅
           </Button>
         </section>
 
