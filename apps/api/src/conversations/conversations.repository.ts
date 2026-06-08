@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, ne, lt, desc, isNull, inArray, or, sql } from 'drizzle-orm';
+import { and, eq, ne, lt, gt, desc, isNull, inArray, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   conversations,
@@ -106,7 +106,13 @@ export class ConversationsRepository {
         ),
       )
       .innerJoin(users, eq(users.id, otherP.userId))
-      .where(isNull(conversations.deletedAt))
+      .where(
+        and(
+          isNull(conversations.deletedAt),
+          // 나간 방은 숨김 — 단, 나간 이후 새 메시지가 오면 다시 표시
+          or(isNull(myP.leftAt), gt(conversations.lastMessageAt, myP.leftAt)),
+        ),
+      )
       .orderBy(desc(conversations.lastMessageAt));
   }
 
@@ -135,13 +141,24 @@ export class ConversationsRepository {
             isNull(conversationParticipants.lastReadAt),
             sql`${messages.createdAt} > ${conversationParticipants.lastReadAt}`,
           ),
+          // 나간 이후 메시지만 카운트
+          or(
+            isNull(conversationParticipants.leftAt),
+            gt(messages.createdAt, conversationParticipants.leftAt),
+          ),
         ),
       )
       .groupBy(messages.conversationId);
   }
 
   // 대화방 메시지 — cursor(ULID)보다 오래된 것부터 최신순으로 limit개.
-  async listMessages(conversationId: string, cursor: string | undefined, limit: number) {
+  // leftAt 이후 메시지만 (나간 뒤 재진입 시 이전 기록 숨김).
+  async listMessages(
+    conversationId: string,
+    cursor: string | undefined,
+    limit: number,
+    leftAt: Date | null,
+  ) {
     return this.db
       .select({
         id: messages.id,
@@ -156,10 +173,24 @@ export class ConversationsRepository {
           eq(messages.conversationId, conversationId),
           isNull(messages.deletedAt),
           cursor ? lt(messages.id, cursor) : undefined,
+          leftAt ? gt(messages.createdAt, leftAt) : undefined,
         ),
       )
       .orderBy(desc(messages.id))
       .limit(limit);
+  }
+
+  // 채팅방 나가기 — 내 leftAt 갱신 (상대는 유지)
+  async leaveConversation(conversationId: string, userId: string) {
+    await this.db
+      .update(conversationParticipants)
+      .set({ leftAt: new Date() })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId),
+        ),
+      );
   }
 
   async insertMessage(conversationId: string, senderId: string, content: string) {

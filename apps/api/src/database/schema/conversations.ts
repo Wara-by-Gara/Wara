@@ -28,6 +28,9 @@ export const conversationParticipants = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     // 이 유저가 마지막으로 읽은 시각 → 안 읽음 수 계산 기준.
     lastReadAt: timestamp('last_read_at', { withTimezone: true }),
+    // 채팅방 나가기 시각 (카톡식). 이 시각 이전 메시지는 내 화면에서 숨김.
+    // 새 메시지(left_at 이후)가 오면 목록에 다시 등장 — 상대 기록은 유지.
+    leftAt: timestamp('left_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

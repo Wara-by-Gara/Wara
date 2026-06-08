@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { and, desc, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { invitations, participants, users } from '../database/schema';
+import { invitations, participants, users, friendHides } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 @Injectable()
@@ -9,8 +9,8 @@ export class FriendsRepository {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
   // 내가 참여한 초대에 함께 참여한 다른 사용자들의 (초대 단위) 행.
-  // 서비스에서 friendUserId 기준으로 그룹 집계한다.
-  async findCoParticipationRows(myUserId: string) {
+  // 서비스에서 friendUserId 기준으로 그룹 집계한다. hiddenIds(영구 숨김)는 제외.
+  async findCoParticipationRows(myUserId: string, hiddenIds: string[] = []) {
     const myParticipation = alias(participants, 'my_p');
     const friendParticipation = alias(participants, 'friend_p');
 
@@ -38,8 +38,53 @@ export class FriendsRepository {
           eq(myParticipation.userId, myUserId),
           isNull(users.deletedAt),
           isNull(invitations.deletedAt),
+          hiddenIds.length
+            ? notInArray(friendParticipation.userId, hiddenIds)
+            : undefined,
         ),
       );
+  }
+
+  // 내가 숨긴 사용자 id 목록
+  async findHiddenIds(myUserId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ hiddenUserId: friendHides.hiddenUserId })
+      .from(friendHides)
+      .where(eq(friendHides.userId, myUserId));
+    return rows.map((r) => r.hiddenUserId);
+  }
+
+  async addHide(myUserId: string, targetUserId: string) {
+    await this.db
+      .insert(friendHides)
+      .values({ userId: myUserId, hiddenUserId: targetUserId })
+      .onConflictDoNothing();
+  }
+
+  async removeHide(myUserId: string, targetUserId: string) {
+    await this.db
+      .delete(friendHides)
+      .where(
+        and(
+          eq(friendHides.userId, myUserId),
+          eq(friendHides.hiddenUserId, targetUserId),
+        ),
+      );
+  }
+
+  // 삭제(숨김)한 친구 목록 — 복원 화면용
+  async findHiddenFriends(myUserId: string) {
+    return this.db
+      .select({
+        id: users.id,
+        name: users.name,
+        profileImageUrl: users.profileImageUrl,
+        hiddenAt: friendHides.createdAt,
+      })
+      .from(friendHides)
+      .innerJoin(users, eq(users.id, friendHides.hiddenUserId))
+      .where(and(eq(friendHides.userId, myUserId), isNull(users.deletedAt)))
+      .orderBy(desc(friendHides.createdAt));
   }
 
   // 나와 대상이 함께 참여한 초대에 같이 있는 (나·대상 제외) 사용자들.

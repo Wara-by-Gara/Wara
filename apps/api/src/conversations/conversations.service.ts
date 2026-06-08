@@ -87,9 +87,14 @@ export class ConversationsService {
     cursor: string | undefined,
     limit: number,
   ) {
-    await this.assertMember(conversationId, userId);
+    const participant = await this.assertMember(conversationId, userId);
 
-    const rows = await this.repository.listMessages(conversationId, cursor, limit);
+    const rows = await this.repository.listMessages(
+      conversationId,
+      cursor,
+      limit,
+      participant.leftAt,
+    );
     const hasMore = rows.length === limit;
     const nextCursor = hasMore ? rows[rows.length - 1]!.id : null;
 
@@ -141,7 +146,13 @@ export class ConversationsService {
     await this.repository.softDeleteMessage(messageId);
   }
 
-  // 대화방 존재 + 내가 참가자인지 확인
+  // 채팅방 나가기 (나만 — 상대 기록은 유지)
+  async leaveConversation(userId: string, conversationId: string) {
+    await this.assertMember(conversationId, userId);
+    await this.repository.leaveConversation(conversationId, userId);
+  }
+
+  // 대화방 존재 + 내가 참가자인지 확인 → 내 참가자 행 반환
   private async assertMember(conversationId: string, userId: string) {
     const conversation = await this.repository.findConversationById(conversationId);
     if (!conversation) {
@@ -151,6 +162,7 @@ export class ConversationsService {
     if (!participant) {
       throw new ForbiddenException(ErrorCode.CONVERSATION_FORBIDDEN);
     }
+    return participant;
   }
 
   private buildDirectKey(a: string, b: string): string {

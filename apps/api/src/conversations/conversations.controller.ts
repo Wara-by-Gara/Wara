@@ -83,6 +83,16 @@ export class ConversationsController {
     return this.conversationsService.markRead(user.id, id);
   }
 
+  // 채팅방 나가기 (나만)
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leaveConversation(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.leaveConversation(user.id, id);
+  }
+
   @Delete(':id/messages/:messageId')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteMessage(
