@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
@@ -12,6 +12,8 @@ import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
 import { ROUTES } from "@/constants/routes";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriends } from "@/hooks/useFriends";
+import { FriendsIndexBar } from "./FriendsIndexBar";
+import { buildIndexLetters, compareByInitial, getInitial } from "./initials";
 
 const DM_TOAST = "DM 기능은 곧 만나요";
 
@@ -21,11 +23,34 @@ export const Friends = () => {
   const { friends, recentFriends, isLoading, isError, refetch } = useFriends();
 
   const keyword = query.trim();
+
+  // 가나다 정렬 (한글 → 영문 → #)
+  const sorted = useMemo(
+    () => [...friends].sort((a, b) => compareByInitial(a.name, b.name)),
+    [friends],
+  );
   const filtered = keyword
-    ? friends.filter((f) => f.name?.includes(keyword))
-    : friends;
+    ? sorted.filter((f) => f.name?.includes(keyword))
+    : sorted;
+
+  // 검색 중이 아닐 때만 초성 인덱스 바 노출
+  const showIndex = !keyword && filtered.length > 0;
+  const presentInitials = useMemo(
+    () => new Set(sorted.map((f) => getInitial(f.name))),
+    [sorted],
+  );
+  const indexLetters = useMemo(
+    () => buildIndexLetters(presentInitials),
+    [presentInitials],
+  );
 
   const goDetail = (id: string) => router.push(ROUTES.FRIENDS.DETAIL(id));
+
+  const jumpToInitial = (letter: string) => {
+    document
+      .getElementById(`fr-init-${letter}`)
+      ?.scrollIntoView({ block: "start" });
+  };
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -95,10 +120,18 @@ export const Friends = () => {
                 <EmptyState icon="search" title="검색 결과가 없어요" />
               ) : (
                 <ul className="divide-y divide-border bg-surface">
-                  {filtered.map((f) => {
+                  {filtered.map((f, i) => {
                     const name = f.name ?? "이름 없음";
+                    const initial = getInitial(f.name);
+                    const isFirstOfInitial =
+                      showIndex &&
+                      (i === 0 || initial !== getInitial(filtered[i - 1]?.name));
                     return (
-                      <li key={f.id}>
+                      <li
+                        key={f.id}
+                        id={isFirstOfInitial ? `fr-init-${initial}` : undefined}
+                        className={isFirstOfInitial ? "scroll-mt-3" : undefined}
+                      >
                         <div
                           role="button"
                           tabIndex={0}
@@ -109,7 +142,9 @@ export const Friends = () => {
                               goDetail(f.id);
                             }
                           }}
-                          className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
+                          className={`flex cursor-pointer items-center gap-3 py-3 pl-page active:bg-background-soft ${
+                            showIndex ? "pr-7" : "pr-page"
+                          }`}
                         >
                           <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
                           <div className="min-w-0 flex-1">
@@ -141,6 +176,13 @@ export const Friends = () => {
           </div>
         )}
       </main>
+      {showIndex && (
+        <FriendsIndexBar
+          letters={indexLetters}
+          activeSet={presentInitials}
+          onJump={jumpToInitial}
+        />
+      )}
     </div>
   );
 };
