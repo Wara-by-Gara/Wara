@@ -50,7 +50,12 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
 
   useEffect(() => { hydrate(); }, [hydrate]);
-  if (HIDDEN_PATHS.includes(pathname) || pathname.endsWith("/location")) return null;
+  if (
+    HIDDEN_PATHS.includes(pathname) ||
+    pathname.endsWith("/location") ||
+    pathname.startsWith("/chats/")
+  )
+    return null;
 
   const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
 

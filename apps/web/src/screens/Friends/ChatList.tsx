@@ -84,16 +84,14 @@ export const ChatList = () => {
                   <Avatar size="md" src={c.partner.avatarUrl ?? undefined} alt={name} initial={name[0]} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold text-text-primary">{name}</p>
-                    <p className="truncate text-[13px] text-text-tertiary">
+                    <p className="line-clamp-2 text-[13px] text-text-tertiary">
                       {c.lastMessageText ?? "대화를 시작해보세요"}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    {c.lastMessageAt && (
-                      <span className="text-[11px] text-text-tertiary">
-                        {timeAgo(c.lastMessageAt)}
-                      </span>
-                    )}
+                  <div className="flex shrink-0 flex-col items-end justify-between self-stretch py-0.5">
+                    <span className="text-[11px] text-text-tertiary">
+                      {c.lastMessageAt ? timeAgo(c.lastMessageAt) : ""}
+                    </span>
                     {c.unreadCount > 0 && (
                       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
                         {c.unreadCount > 99 ? "99+" : c.unreadCount}
