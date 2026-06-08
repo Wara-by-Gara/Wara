@@ -27,6 +27,7 @@ export type Message = {
   senderId: string;
   content: string;
   createdAt: string;
+  deleted: boolean;
 };
 
 export type MessagesPage = {
@@ -62,4 +63,9 @@ export function markConversationRead(id: string) {
 /** 채팅방 나가기 (나만 — 상대 기록 유지) */
 export function leaveConversation(id: string) {
   return apiDelete(`/conversations/${id}`);
+}
+
+/** 내 메시지 삭제 (모두에게서 — soft delete) */
+export function deleteMessage(conversationId: string, messageId: string) {
+  return apiDelete(`/conversations/${conversationId}/messages/${messageId}`);
 }

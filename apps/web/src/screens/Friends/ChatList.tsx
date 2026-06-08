@@ -9,7 +9,11 @@ import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/mo
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { ROUTES } from "@/constants/routes";
 import { timeAgo } from "@/utils/timeAge";
-import { useConversations, useLeaveConversation } from "@/hooks/useConversations";
+import {
+  useConversations,
+  useLeaveConversation,
+  useConversationsRealtime,
+} from "@/hooks/useConversations";
 import type { ConversationListItem } from "@/lib/api/conversations";
 import { matchName } from "./initials";
 
@@ -19,6 +23,7 @@ export const ChatList = () => {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const { data: conversations = [], isLoading, isError, refetch } = useConversations();
+  useConversationsRealtime();
 
   const keyword = query.trim();
   const filtered = keyword

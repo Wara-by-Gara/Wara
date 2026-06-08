@@ -15,6 +15,7 @@ import {
   fetchMessages,
   sendMessage as apiSendMessage,
   markConversationRead,
+  deleteMessage as apiDeleteMessage,
   type ConversationDetail,
   type Message,
   type MessagesPage,
@@ -35,6 +36,25 @@ function appendMessage(qc: QueryClient, id: string, msg: Message) {
         pages: [{ ...first, messages: [...first.messages, msg] }, ...rest],
       };
     },
+  );
+}
+
+// 캐시에서 특정 메시지를 삭제 상태로 표시
+function markDeleted(qc: QueryClient, id: string, messageId: string) {
+  qc.setQueryData<InfiniteData<MessagesPage>>(
+    QUERY_KEYS.conversations.messages(id),
+    (old) =>
+      old
+        ? {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              messages: p.messages.map((m) =>
+                m.id === messageId ? { ...m, deleted: true, content: '' } : m,
+              ),
+            })),
+          }
+        : old,
   );
 }
 
@@ -68,7 +88,18 @@ export function useSendMessage(id: string) {
     mutationFn: (content: string) => apiSendMessage(id, content),
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    },
+  });
+}
+
+export function useDeleteMessage(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => apiDeleteMessage(id, messageId),
+    onSuccess: (_data, messageId) => {
+      markDeleted(qc, id, messageId);
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     },
   });
 }
@@ -81,7 +112,7 @@ export function useChatRealtime(id: string) {
     if (!id) return;
 
     markConversationRead(id)
-      .then(() => qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() }))
+      .then(() => qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' }))
       .catch(() => {});
 
     const socket = io(`${SOCKET_BASE}/dm`, {
@@ -92,12 +123,19 @@ export function useChatRealtime(id: string) {
     socket.on('message:new', (msg: Message) => {
       if (msg.conversationId !== id) {
         // 다른 대화방 메시지 → 목록 갱신만
-        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
         return;
       }
       appendMessage(qc, id, msg);
       markConversationRead(id).catch(() => {});
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    });
+
+    // 상대가 메시지 삭제 → 삭제 표시 동기화
+    socket.on('message:deleted', (payload: { conversationId: string; messageId: string }) => {
+      if (payload.conversationId !== id) return;
+      markDeleted(qc, id, payload.messageId);
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     });
 
     // 상대가 읽음 → 내 메시지 읽음 표시 갱신
