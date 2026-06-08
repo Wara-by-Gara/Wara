@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { LocationsRepository } from './locations.repository';
+import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -66,7 +66,7 @@ export class LocationsService {
     invitationId: string,
     userId: string,
     dto: UpdateParticipantLocationDto,
-  ): Promise<{ location: Awaited<ReturnType<LocationsRepository['upsertParticipantLocation']>>; justArrived: boolean }> {
+  ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
     const participant = await this.repository.findParticipantWithUser(
       userId,
       invitationId,
@@ -75,11 +75,24 @@ export class LocationsService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
 
-    const location = await this.repository.upsertParticipantLocation(
+    const raw = await this.repository.upsertParticipantLocation(
       invitationId,
       participant.id,
       dto,
     );
+
+    const location: ParticipantLocationWithUser = {
+      id: raw.id,
+      invitationId: raw.invitationId,
+      participantId: raw.participantId,
+      lat: raw.lat,
+      lng: raw.lng,
+      accuracy: raw.accuracy,
+      isArrived: raw.isArrived,
+      updatedAt: raw.updatedAt,
+      nickname: participant.user.nickname,
+      profileImageUrl: participant.user.profileImageUrl,
+    };
 
     if (location.isArrived) {
       return { location, justArrived: false };

@@ -1,9 +1,27 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { and, eq, isNull } from 'drizzle-orm';
-import { eventLocations, participantLocations } from '../database/schema';
+import {
+  eventLocations,
+  participantLocations,
+  participants,
+  users,
+} from '../database/schema';
 import type { SetEventLocationDto } from './dto/set-event-location.dto';
 import type { UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
+
+export type ParticipantLocationWithUser = {
+  id: string;
+  invitationId: string;
+  participantId: string;
+  lat: number;
+  lng: number;
+  accuracy: number;
+  isArrived: boolean;
+  updatedAt: Date;
+  nickname: string | null;
+  profileImageUrl: string | null;
+};
 
 @Injectable()
 export class LocationsRepository {
@@ -84,10 +102,27 @@ export class LocationsRepository {
     return result.length > 0;
   }
 
-  async findAllParticipantLocations(invitationId: string) {
-    return this.db.query.participantLocations.findMany({
-      where: (t, { eq }) => eq(t.invitationId, invitationId),
-    });
+  async findAllParticipantLocations(
+    invitationId: string,
+  ): Promise<ParticipantLocationWithUser[]> {
+    const rows = await this.db
+      .select({
+        id: participantLocations.id,
+        invitationId: participantLocations.invitationId,
+        participantId: participantLocations.participantId,
+        lat: participantLocations.lat,
+        lng: participantLocations.lng,
+        accuracy: participantLocations.accuracy,
+        isArrived: participantLocations.isArrived,
+        updatedAt: participantLocations.updatedAt,
+        nickname: users.nickname,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(participantLocations)
+      .innerJoin(participants, eq(participants.id, participantLocations.participantId))
+      .innerJoin(users, eq(users.id, participants.userId))
+      .where(eq(participantLocations.invitationId, invitationId));
+    return rows;
   }
 
   async upsertParticipantLocation(
