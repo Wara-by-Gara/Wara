@@ -63,7 +63,7 @@ const SegmentTab = ({
   >
     {label}
     {count > 0 && (
-      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
         {count > 99 ? "99+" : count}
       </span>
     )}
