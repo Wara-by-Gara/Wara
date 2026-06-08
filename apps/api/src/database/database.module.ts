@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { instrumentPostgresClient } from './instrument';
 export const DRIZZLE = Symbol('DRIZZLE');
 
 @Global()
@@ -13,7 +14,7 @@ export const DRIZZLE = Symbol('DRIZZLE');
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const url = configService.getOrThrow<string>('DATABASE_URL');
-        const client = postgres(url);
+        const client = instrumentPostgresClient(postgres(url));
         return drizzle(client, { schema, casing: 'snake_case' });
       },
     },
