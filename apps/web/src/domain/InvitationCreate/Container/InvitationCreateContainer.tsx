@@ -23,6 +23,7 @@ import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import { API_BASE } from "@/lib/env";
 import { createInvitation, updateInvitation, getInvitationImagePresignedUrl, type Invitation } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
@@ -184,6 +185,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
@@ -1239,7 +1241,10 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
               <SocialLoginButton
                 key={provider}
                 provider={provider}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
                 onClick={() => {
+                  setLoadingProvider(provider);
                   sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
                   window.location.href = `${API_BASE}/auth/${provider}/redirect`;
                 }}

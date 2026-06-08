@@ -20,14 +20,13 @@ import { API_BASE } from "@/lib/env";
 import { ROUTES } from "@/constants/routes";
 import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-
-type LoadingProvider = "kakao" | "naver" | "google" | "apple" | null;
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 
 export default function HomeContainer() {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<LoadingProvider>(null);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   useEffect(() => {
     hydrate();
@@ -42,7 +41,7 @@ export default function HomeContainer() {
 
   const upcoming = getUpcomingInvitations(invitations ?? [], 3);
 
-  function handleSocialLogin(provider: Exclude<LoadingProvider, null>) {
+  function handleSocialLogin(provider: SocialProvider) {
     setLoadingProvider(provider);
     window.location.href = `${API_BASE}/auth/${provider}/redirect`;
   }
@@ -91,30 +90,15 @@ export default function HomeContainer() {
         <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
           <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작하세요">
             <div className="flex flex-col gap-2 pt-2">
-              <SocialLoginButton
-                provider="kakao"
-                loading={loadingProvider === "kakao"}
-                disabled={loadingProvider !== null}
-                onClick={() => handleSocialLogin("kakao")}
-              />
-              <SocialLoginButton
-                provider="naver"
-                loading={loadingProvider === "naver"}
-                disabled={loadingProvider !== null}
-                onClick={() => handleSocialLogin("naver")}
-              />
-              <SocialLoginButton
-                provider="google"
-                loading={loadingProvider === "google"}
-                disabled={loadingProvider !== null}
-                onClick={() => handleSocialLogin("google")}
-              />
-              <SocialLoginButton
-                provider="apple"
-                loading={loadingProvider === "apple"}
-                disabled={loadingProvider !== null}
-                onClick={() => handleSocialLogin("apple")}
-              />
+              {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+                <SocialLoginButton
+                  key={provider}
+                  provider={provider}
+                  loading={loadingProvider === provider}
+                  disabled={loadingProvider !== null}
+                  onClick={() => handleSocialLogin(provider)}
+                />
+              ))}
             </div>
             <p className="mt-4 text-center text-[12px] text-text-tertiary">
               시작 시{" "}

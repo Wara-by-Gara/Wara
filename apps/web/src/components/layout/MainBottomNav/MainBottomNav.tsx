@@ -10,6 +10,7 @@ import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNa
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { API_BASE } from "@/lib/env";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
@@ -48,6 +49,12 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const pathname = usePathname();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
 
   useEffect(() => { hydrate(); }, [hydrate]);
   if (HIDDEN_PATHS.includes(pathname) || pathname.endsWith("/location")) return null;
@@ -105,7 +112,9 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
               <SocialLoginButton
                 key={provider}
                 provider={provider}
-                onClick={() => { window.location.href = `${API_BASE}/auth/${provider}/redirect`; }}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
               />
             ))}
           </div>

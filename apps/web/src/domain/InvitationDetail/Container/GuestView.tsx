@@ -13,6 +13,7 @@ import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
 import { ROUTES } from "@/constants/routes";
@@ -51,6 +52,13 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    sessionStorage.setItem("wara_oauth_return", window.location.pathname);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
 
   const isLoggedIn = !!me;
 
@@ -250,10 +258,9 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               <SocialLoginButton
                 key={provider}
                 provider={provider}
-                onClick={() => {
-                  sessionStorage.setItem("wara_oauth_return", window.location.pathname);
-                  window.location.href = `${API_BASE}/auth/${provider}/redirect`;
-                }}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
               />
             ))}
           </div>
