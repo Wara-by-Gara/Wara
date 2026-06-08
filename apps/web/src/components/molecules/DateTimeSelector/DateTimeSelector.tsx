@@ -204,9 +204,21 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
     return (
       <div ref={ref} className={cn("flex flex-col gap-1.5", className)}>
         {label ? (
-          <label htmlFor={id} className="text-[14px] font-medium text-text-primary">
-            {label}
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor={id} className="text-[14px] font-medium text-text-primary">
+              {label}
+            </label>
+            {unknownToggle ? (
+              <Switch
+                checked={isUnknown}
+                onCheckedChange={(checked) => {
+                  setInternalUnknown(checked);
+                  onUnknownChange?.(checked);
+                }}
+                disabled={disabled}
+              />
+            ) : null}
+          </div>
         ) : null}
 
         <div className={cn(isUnknown && "opacity-40 pointer-events-none")}>
@@ -245,20 +257,6 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
             </div>
           )}
         </div>
-
-        {unknownToggle ? (
-          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
-            <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
-            <Switch
-              checked={isUnknown}
-              onCheckedChange={(checked) => {
-                setInternalUnknown(checked);
-                onUnknownChange?.(checked);
-              }}
-              disabled={disabled}
-            />
-          </label>
-        ) : null}
 
         {error ? <span className="text-[13px] text-danger">{error}</span> : null}
       </div>

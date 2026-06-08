@@ -97,7 +97,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         ref={ref}
         className={cn(
           fit
-            ? cn("relative w-full overflow-hidden rounded-lg")
+            ? cn("relative w-full overflow-hidden rounded-lg aspect-[3/2]")
             : containerBase,
           !fit && variant === "color" && (backgroundClass ?? "bg-white"),
           !fit && variant === "no-image" && "bg-gray-100",
@@ -105,7 +105,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
           fit && variant === "no-image" && "bg-gray-100",
           className,
         )}
-        style={fit ? { aspectRatio: String(displayRatio), ...style } : style}
+        // style={fit ? { aspectRatio: String(displayRatio), ...style } : style}
         {...props}
       >
         {fit && mediaUrl ? (

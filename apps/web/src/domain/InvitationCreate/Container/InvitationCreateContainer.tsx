@@ -13,15 +13,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
-import { Textarea } from "@/components/primitives/Textarea";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { FormField } from "@/components/molecules/FormField";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { KakaoStaticMapPreview } from "@/components/molecules/KakaoStaticMapPreview/KakaoStaticMapPreview";
 import { createInvitation, updateInvitation, getInvitationImagePresignedUrl, type Invitation } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
@@ -40,15 +39,13 @@ import {
 } from "@/utils/invitationCoverAspect";
 import { useLightTheme } from "@/hooks/useLightTheme";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { InvitationPreview } from "@/domain/InvitationCreate/InvitationPreview";
+import { CreateCanvas } from "@/domain/InvitationCreate/Canvas/CreateCanvas";
 import {
   DEFAULT_COVER_KEY,
   DEFAULT_BG_COLOR,
   type DesignBgColor,
   DESIGN_BG_THEMES,
-  DESIGN_FONTS,
   DEFAULT_FONT,
-  fontStyle,
   ANIMATIONS,
   type AnimationId,
   type DesignFont,
@@ -104,7 +101,7 @@ function MissionTemplateSection({
   return (
     <section>
       <p className="mb-2 text-[14px] font-semibold text-text-primary">시스템 미션</p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: "200px" }}>
         {missionTemplates.map((t) => {
           const isSelected = selectedMissions.some(
             (m) => m.type === "template" && m.templateId === t.id,
@@ -170,7 +167,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [imageUploadError, setImageUploadError] = useState(false);
   const [dateUnknown, setDateUnknown] = useState(false);
   const [dateError, setDateError] = useState(false);
-  const [timeUnknown, setTimeUnknown] = useState(false);
+  const [timeUnknown, setTimeUnknown] = useState(true);
   const [timeError, setTimeError] = useState(false);
   const [locationError, setLocationError] = useState(false);
   const [locationMode, setLocationMode] = useState<"search" | "selected">("search");
@@ -192,7 +189,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [designBgColor, setDesignBgColor] = useState<DesignBgColor>(DEFAULT_BG_COLOR);
   const [designFont, setDesignFont] = useState<DesignFont>(DEFAULT_FONT);
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationId>("none");
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [designSheetOpen, setDesignSheetOpen] = useState(false);
   // rsvp
   const [rsvpOptions, setRsvpOptions] = useState<Record<RsvpType, RsvpOption>>(DEFAULT_RSVP);
   const [selectedPackId, setSelectedPackId] = useState<string>("default");
@@ -211,6 +208,10 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
   const [customInput, setCustomInput] = useState("");
   const [missionError, setMissionError] = useState(false);
+  const [imageSheetOpen, setImageSheetOpen] = useState(false);
+  const [dateSheetOpen, setDateSheetOpen] = useState(false);
+  const [locationSheetOpen, setLocationSheetOpen] = useState(false);
+  const [rsvpSheetOpen, setRsvpSheetOpen] = useState(false);
   const [form, setForm] = useState<FormData>({
     templateId: "",
     title: "",
@@ -641,34 +642,57 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
     );
   }
 
-  const previewCoverImageUrl = mainGifUrl
-    ? undefined
-    : localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined);
-
   return (
     <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
       <TopAppBar
         className="shrink-0"
         title={editInvitation ? "초대장 수정" : "초대장 만들기"}
         onBack={() => router.back()}
-        rightSlot={
-          <Button variant="text" size="sm" onClick={() => setPreviewOpen(true)}>
-            미리보기
-          </Button>
-        }
+      />
+
+      {/* WYSIWYG 캔버스 */}
+      <CreateCanvas
+        title={form.title}
+        onTitleChange={(v) => { set({ title: v }); if (titleError) setTitleError(false); }}
+        titleError={titleError}
+        titleFocused={titleFocused}
+        onTitleFocus={() => setTitleFocused(true)}
+        designFont={designFont}
+        onFontChange={setDesignFont}
+        coverImageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+        coverGifUrl={mainGifUrl || undefined}
+        imageError={imageError}
+        onEditImage={() => setImageSheetOpen(true)}
+        dateText={dateUnknown ? (voteDraft ? "일정 투표 진행" : "날짜 미정") : form.date || undefined}
+        dateError={dateError}
+        onEditDate={() => setDateSheetOpen(true)}
+        timeText={!dateUnknown ? (form.time || undefined) : undefined}
+        timeUnknown={timeUnknown}
+        onTimeUnknownChange={(v) => { setTimeUnknown(v); if (!v) setDateSheetOpen(true); }}
+        placeText={form.placeName || undefined}
+        locationError={locationError}
+        onEditLocation={() => setLocationSheetOpen(true)}
+        description={form.description}
+        onDescriptionChange={(v) => set({ description: v })}
+        rsvp={rsvpOptions}
+        onEditRsvp={() => setRsvpSheetOpen(true)}
+        bgClass={designBgColor}
+        animation={selectedAnimation}
+        onEditDesign={() => setDesignSheetOpen(true)}
       />
 
       <main className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5">
-        {/* 1. 대표 이미지 */}
-        <FormField label="대표 이미지" required>
-          {form.templateId ? (
-            <InvitationCover
-              imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
-              variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
-              fitToImage
-            />
-          ) : (
-            <div>
+        {/* 대표 이미지 편집 시트 */}
+        <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen}>
+          <BottomSheetContent title="대표 이미지">
+            {form.templateId ? (
+              <InvitationCover
+                imageUrl={localPreviewUrl ?? (form.mainImageKey !== DEFAULT_COVER_KEY ? form.mainImageKey : undefined)}
+                variant={localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY ? "image" : "no-image"}
+                fitToImage
+              />
+            ) : (
+              <div>
               {/* 탭: 이미지 업로드 / GIF */}
               <div className="mb-3 flex gap-2">
                 <button
@@ -803,158 +827,136 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                   ) : null}
                 </>
               )}
-            </div>
-          )}
-        </FormField>
+              </div>
+            )}
+          </BottomSheetContent>
+        </BottomSheet>
 
-        {/* 3. 제목 + 폰트 */}
-        <FormField label="모임 이름" required counter={{ current: form.title.length, max: 30 }} error={titleError ? "모임 이름을 입력해주세요" : undefined}>
-          <TextInput
-            value={form.title}
-            onChange={(e) => { set({ title: e.target.value }); if (titleError) setTitleError(false); }}
-            onFocus={() => setTitleFocused(true)}
-            placeholder="예: 와라의 생일 파티"
-            maxLength={30}
-          />
-          {titleFocused && (
-            <div className="mt-3">
-              <p className="mb-2 text-[13px] font-semibold text-text-secondary">제목 폰트</p>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {DESIGN_FONTS.map(({ id, label, style }) => (
+        {/* 날짜·시간 편집 시트 */}
+        <BottomSheet open={dateSheetOpen} onOpenChange={setDateSheetOpen}>
+          <BottomSheetContent title="모임 일정" >
+            <div className="flex flex-col gap-4">
+              <DateTimeSelector
+                mode="date"
+                label="날짜"
+                value={form.date}
+                onChange={(v) => { set({ date: v }); if (dateError) setDateError(false); }}
+                unknownToggle
+                unknown={dateUnknown}
+                onUnknownChange={(v) => {
+                  setDateUnknown(v);
+                  if (v) { setTimeUnknown(true); set({ date: "", time: "" }); }
+                  else setTimeUnknown(false);
+                  if (dateError) setDateError(false);
+                }}
+                error={dateError ? "날짜를 선택해주세요" : undefined}
+              />
+              {!dateUnknown && (
+                <DateTimeSelector
+                  mode="time"
+                  label="시작 시간"
+                  value={form.time}
+                  onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
+                  unknownToggle
+                  unknown={timeUnknown}
+                  onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
+                  error={timeError ? "시간을 선택해주세요" : undefined}
+                />
+              )}
+
+              {/* 날짜 미정 → 투표 제안 배너 */}
+              {dateUnknown && (
+                <div className="flex flex-col gap-3 rounded-md border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15">
+                      <Icon name="calendar" size="md" color="primary" decorative />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
+                      <p className="text-[13px] leading-relaxed text-text-secondary">
+                        여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
+                    <Icon name="check-circle" size="sm" color="primary" decorative />
+                    <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
+                    <Icon name="check-circle" size="sm" color="primary" decorative />
+                    <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
+                  </div>
+                  {voteDraft ? (
+                    <div className="flex items-center justify-between rounded-sm bg-white/80 px-3 py-2.5">
+                      <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
+                      <button type="button" onClick={() => setSubScreen("dateVoteSetup")}
+                        className="text-[12px] text-text-tertiary underline">수정</button>
+                    </div>
+                  ) : (
+                    <Button variant="primary" size="md" fullWidth onClick={() => setSubScreen("dateVoteSetup")} className="mt-1">
+                      날짜 투표 만들기
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </BottomSheetContent>
+        </BottomSheet>
+
+        {/* 위치 편집 시트 */}
+        <BottomSheet open={locationSheetOpen} onOpenChange={setLocationSheetOpen}>
+          <BottomSheetContent title="모임 장소" >
+            <LocationSelector
+              mode={locationUnknown ? "unknown" : locationMode}
+              query={locationQuery}
+              onQueryChange={handleLocationQueryChange}
+              selected={locationMode === "selected" && form.placeName ? { name: form.placeName, address: form.address } : undefined}
+              state={locationSearchState}
+              unknown={locationUnknown}
+              onUnknownChange={(v) => { setLocationUnknown(v); if (locationError) setLocationError(false); }}
+              error={locationError ? "장소를 선택해주세요" : undefined}
+            />
+            {locationMode === "selected" && form.placeName && (
+              <>
+                {form.lat !== null && form.lng !== null && (
+                  <div className="rounded-md overflow-hidden border border-border" style={{ height: "200px" }}>
+                    <KakaoStaticMapPreview lat={form.lat} lng={form.lng} level={3} />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setLocationMode("search")}
+                  className="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-center text-[14px] font-semibold text-primary hover:bg-gray-50 transition-colors"
+                >
+                  장소 변경
+                </button>
+              </>
+            )}
+            {locationMode === "search" && locationResults.length > 0 && (
+              <div className="flex flex-col overflow-y-auto rounded-md border border-border bg-surface" style={{ maxHeight: "200px" }}>
+                {locationResults.map((place) => (
                   <button
-                    key={id}
+                    key={place.placeId}
                     type="button"
-                    onClick={() => setDesignFont(id)}
-                    className={cn(
-                      "flex shrink-0 flex-col items-center gap-1 rounded-md border-2 px-3 py-3 transition-colors",
-                      designFont === id ? "border-primary bg-primary-soft" : "border-border bg-surface",
-                    )}
+                    className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
+                    onClick={() => {
+                      set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
+                      setLocationMode("selected");
+                      setLocationResults([]);
+                      setLocationQuery("");
+                      setLocationSearchState("default");
+                      if (locationError) setLocationError(false);
+                      setLocationSheetOpen(false);
+                    }}
                   >
-                    <span className={cn("text-[22px] leading-tight", style, designFont === id ? "text-primary" : "text-text-primary")}>
-                      가나다
-                    </span>
-                    <span className={cn("whitespace-nowrap text-[11px]", designFont === id ? "font-semibold text-primary" : "text-text-secondary")}>
-                      {label}
-                    </span>
+                    <span className="text-[14px] font-semibold text-text-primary">{place.placeName}</span>
+                    <span className="text-[12px] text-text-tertiary">{place.roadAddress || place.address}</span>
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-        </FormField>
-
-        {/* 4. 모임 소개 */}
-        <FormField label="모임 소개" counter={{ current: form.description.length, max: 500 }}>
-          <Textarea
-            value={form.description}
-            onChange={(e) => set({ description: e.target.value })}
-            placeholder="간단한 소개를 적어주세요"
-            rows={4}
-          />
-        </FormField>
-
-        <div className="h-px bg-border" />
-
-        {/* 5. 날짜·시간 */}
-        <DateTimeSelector
-          mode="date"
-          label="모임 날짜"
-          value={form.date}
-          onChange={(v) => { set({ date: v }); if (dateError) setDateError(false); }}
-          unknownToggle
-          unknown={dateUnknown}
-          onUnknownChange={(v) => {
-            setDateUnknown(v);
-            if (v) { setTimeUnknown(true); set({ date: "", time: "" }); }
-            else setTimeUnknown(false);
-            if (dateError) setDateError(false);
-          }}
-          error={dateError ? "날짜를 선택해주세요" : undefined}
-        />
-        {!dateUnknown && (
-          <DateTimeSelector
-            mode="time"
-            label="시작 시간"
-            value={form.time}
-            onChange={(v) => { set({ time: v }); if (timeError) setTimeError(false); }}
-            unknownToggle
-            unknown={timeUnknown}
-            onUnknownChange={(v) => { setTimeUnknown(v); if (timeError) setTimeError(false); }}
-            error={timeError ? "시간을 선택해주세요" : undefined}
-          />
-        )}
-
-        {/* 날짜 미정 → 투표 제안 배너 */}
-        {dateUnknown && (
-          <div className="flex flex-col gap-3 rounded-md border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15">
-                <Icon name="calendar" size="md" color="primary" decorative />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
-                <p className="text-[13px] leading-relaxed text-text-secondary">
-                  여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
-              <Icon name="check-circle" size="sm" color="primary" decorative />
-              <span className="text-[12px] text-text-secondary">최대 30개 날짜·시간 후보 등록</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-sm bg-white/70 px-3 py-2.5">
-              <Icon name="check-circle" size="sm" color="primary" decorative />
-              <span className="text-[12px] text-text-secondary">👍 🤔 👎 로 간편 응답, 결과 자동 집계</span>
-            </div>
-            {voteDraft ? (
-              <div className="flex items-center justify-between rounded-sm bg-white/80 px-3 py-2.5">
-                <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
-                <button type="button" onClick={() => setSubScreen("dateVoteSetup")}
-                  className="text-[12px] text-text-tertiary underline">수정</button>
-              </div>
-            ) : (
-              <Button variant="primary" size="md" fullWidth onClick={() => setSubScreen("dateVoteSetup")} className="mt-1">
-                날짜 투표 만들기
-              </Button>
             )}
-          </div>
-        )}
-
-        <div className="h-px bg-border" />
-
-        {/* 6. 장소 */}
-        <LocationSelector
-          mode={locationUnknown ? "unknown" : locationMode}
-          query={locationQuery}
-          onQueryChange={handleLocationQueryChange}
-          selected={locationMode === "selected" && form.placeName ? { name: form.placeName, address: form.address } : undefined}
-          state={locationSearchState}
-          unknown={locationUnknown}
-          onUnknownChange={(v) => { setLocationUnknown(v); if (locationError) setLocationError(false); }}
-          error={locationError ? "장소를 선택해주세요" : undefined}
-        />
-        {locationMode === "search" && locationResults.length > 0 && (
-          <div className="flex flex-col overflow-hidden rounded-md border border-border bg-surface">
-            {locationResults.map((place) => (
-              <button
-                key={place.placeId}
-                type="button"
-                className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
-                onClick={() => {
-                  set({ placeName: place.placeName, address: place.roadAddress || place.address, lat: place.lat, lng: place.lng, placeId: place.placeId });
-                  setLocationMode("selected");
-                  setLocationResults([]);
-                  setLocationQuery("");
-                  setLocationSearchState("default");
-                  if (locationError) setLocationError(false);
-                }}
-              >
-                <span className="text-[14px] font-semibold text-text-primary">{place.placeName}</span>
-                <span className="text-[12px] text-text-tertiary">{place.roadAddress || place.address}</span>
-              </button>
-            ))}
-          </div>
-        )}
+          </BottomSheetContent>
+        </BottomSheet>
 
         <div className="h-px bg-border" />
 
@@ -1005,7 +1007,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                     {selectedMissions.length}/{MAX_MISSIONS}
                   </span>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: "200px" }}>
                   {selectedMissions.map((m) => {
                     const key = m.type === "template" ? m.templateId : m.localId;
                     return (
@@ -1027,71 +1029,67 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           </>
         )}
 
-        <div className="h-px bg-border" />
+        {/* 디자인(배경색·애니메이션) 편집 시트 */}
+        <BottomSheet open={designSheetOpen} onOpenChange={setDesignSheetOpen}>
+          <BottomSheetContent title="디자인" >
+            <div className="flex flex-col gap-6">
+              {/* 배경색 */}
+              <section className="flex flex-col gap-3">
+                <p className="text-[15px] font-semibold text-text-primary">배경</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setDesignBgColor(cls)}
+                      className="flex flex-col items-center gap-1"
+                      aria-label={label}
+                    >
+                      <span
+                        className={cn(
+                          "aspect-square w-full rounded-md border-2",
+                          cls,
+                          designBgColor === cls ? "border-primary" : "border-border",
+                        )}
+                      />
+                      <span className={cn("text-[10px]", designBgColor === cls ? "font-semibold text-primary" : "text-text-tertiary")}>
+                        {label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
 
-        {/* 8. 디자인 — 배경 */}
-        <section className="flex flex-col gap-3">
-          <p className="text-[15px] font-semibold text-text-primary">배경</p>
-          <div className="grid grid-cols-5 gap-2">
-            {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setDesignBgColor(cls)}
-                className="flex flex-col items-center gap-1"
-                aria-label={label}
-              >
-                <span
-                  className={cn(
-                    "aspect-square w-full rounded-md border-2",
-                    cls,
-                    designBgColor === cls ? "border-primary" : "border-border",
-                  )}
-                />
-                <span className={cn("text-[10px]", designBgColor === cls ? "font-semibold text-primary" : "text-text-tertiary")}>
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
+              {/* 애니메이션 */}
+              <section className="flex flex-col gap-3">
+                <p className="text-[15px] font-semibold text-text-primary">애니메이션 효과</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {ANIMATIONS.map(({ id, label, emoji }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedAnimation(id)}
+                      className={cn(
+                        "flex flex-col items-center gap-1 rounded-md border-2 px-2 py-3 transition-colors",
+                        selectedAnimation === id ? "border-primary bg-primary-soft" : "border-border bg-surface",
+                      )}
+                    >
+                      <span className="text-[24px] leading-none">{emoji}</span>
+                      <span className={cn("text-[12px]", selectedAnimation === id ? "font-semibold text-primary" : "text-text-secondary")}>
+                        {label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </BottomSheetContent>
+        </BottomSheet>
 
-        {/* 8. 디자인 — 애니메이션 */}
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[15px] font-semibold text-text-primary">애니메이션 효과</p>
-            <button type="button" onClick={() => setPreviewOpen(true)} className="text-[13px] font-semibold text-primary underline">
-              미리보기
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {ANIMATIONS.map(({ id, label, emoji }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setSelectedAnimation(id)}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-md border-2 px-2 py-3 transition-colors",
-                  selectedAnimation === id ? "border-primary bg-primary-soft" : "border-border bg-surface",
-                )}
-              >
-                <span className="text-[24px] leading-none">{emoji}</span>
-                <span className={cn("text-[12px]", selectedAnimation === id ? "font-semibold text-primary" : "text-text-secondary")}>
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-          <p className="text-[12px] text-text-tertiary">
-            애니메이션은 미리보기에서 확인할 수 있어요.
-          </p>
-        </section>
-
-        <div className="h-px bg-border" />
-
-        {/* 9. 참석 버튼 꾸미기 */}
-        <div className="flex flex-col gap-3">
-          <p className="text-[15px] font-semibold text-text-primary">참석 버튼 꾸미기</p>
+        {/* RSVP 편집 시트 */}
+        <BottomSheet open={rsvpSheetOpen} onOpenChange={setRsvpSheetOpen}>
+          <BottomSheetContent title="참석 버튼 꾸미기" >
+            <div className="flex flex-col gap-3">
 
           {/* 팩 선택 드롭다운 */}
           <div className="relative">
@@ -1146,40 +1144,42 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                 ))}
               </div>
             )}
-          </div>
+              </div>
 
-          {/* 버튼 미리보기 + 문구 편집 */}
-          <div className="grid grid-cols-3 gap-2">
-            {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setEditingRsvp(editingRsvp === type ? null : type)}
-                className={cn(
-                  "flex flex-col items-center gap-2 rounded-md border-2 px-3 py-4 transition-colors",
-                  editingRsvp === type ? "border-primary bg-primary-soft" : "border-border bg-surface",
-                )}
-              >
-                <span className="text-[32px] leading-none">{rsvpOptions[type].emoji}</span>
-                <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-secondary")}>
-                  {rsvpOptions[type].label}
-                </span>
-              </button>
-            ))}
-          </div>
+              {/* 버튼 미리보기 + 문구 편집 */}
+              <div className="grid grid-cols-3 gap-2">
+                {(["attending", "maybe", "declined"] as RsvpType[]).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setEditingRsvp(editingRsvp === type ? null : type)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 rounded-md border-2 px-3 py-4 transition-colors",
+                      editingRsvp === type ? "border-primary bg-primary-soft" : "border-border bg-surface",
+                    )}
+                  >
+                    <span className="text-[32px] leading-none">{rsvpOptions[type].emoji}</span>
+                    <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-secondary")}>
+                      {rsvpOptions[type].label}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
-          {editingRsvp && (
-            <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
-              <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
-              <TextInput
-                value={rsvpOptions[editingRsvp].label}
-                onChange={(e) => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
-                placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
-                maxLength={8}
-              />
+              {editingRsvp && (
+                <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
+                  <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
+                  <TextInput
+                    value={rsvpOptions[editingRsvp].label}
+                    onChange={(e) => setRsvpOptions((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
+                    placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
+                    maxLength={8}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </BottomSheetContent>
+        </BottomSheet>
       </main>
 
       <div className="relative z-10 shrink-0">
@@ -1195,22 +1195,6 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           }}
         />
       </div>
-
-      <InvitationPreview
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        title={form.title}
-        fontClass={fontStyle(designFont)}
-        bgClass={designBgColor}
-        coverImageUrl={previewCoverImageUrl}
-        coverGifUrl={mainGifUrl || undefined}
-        description={form.description}
-        dateLabel={dateUnknown ? "날짜 미정" : form.date || undefined}
-        timeLabel={dateUnknown || timeUnknown ? undefined : form.time || undefined}
-        placeName={locationUnknown ? "장소 미정" : form.placeName || undefined}
-        rsvp={rsvpOptions}
-        animation={selectedAnimation}
-      />
 
       <ConfirmModal
         open={showPublishConfirm}

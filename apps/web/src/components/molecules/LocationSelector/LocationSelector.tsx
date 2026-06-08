@@ -74,7 +74,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
 
     return (
       <div ref={ref} className={cn("flex flex-col gap-2", className)}>
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <span className="text-[14px] font-medium text-text-primary">{label}</span>
           <div className="flex gap-1.5">
             <button
@@ -92,7 +92,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               검색
             </button>
           </div>
-        </div>
+        </div> */}
 
         {mode === "search" && (
           <>
