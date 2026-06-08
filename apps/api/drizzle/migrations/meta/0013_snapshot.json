@@ -1,6 +1,6 @@
 {
-  "id": "9e7295b5-282e-4f0e-a01d-323fc13e9300",
-  "prevId": "9df8e9fd-f414-4629-b0fe-956837f128eb",
+  "id": "68618172-321e-4dad-807a-1f83b145513c",
+  "prevId": "4edcb2c8-63e6-4e90-8b68-969ff6e4392e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3576,6 +3576,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "left_at": {
+          "name": "left_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -3736,6 +3742,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "reply_to_message_id": {
+          "name": "reply_to_message_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "edited_at": {
+          "name": "edited_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -3799,9 +3817,105 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "messages_reply_to_message_id_messages_id_fk": {
+          "name": "messages_reply_to_message_id_messages_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "messages",
+          "columnsFrom": [
+            "reply_to_message_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.friend_hides": {
+      "name": "friend_hides",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hidden_user_id": {
+          "name": "hidden_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_friend_hides_user": {
+          "name": "idx_friend_hides_user",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "friend_hides_user_id_users_id_fk": {
+          "name": "friend_hides_user_id_users_id_fk",
+          "tableFrom": "friend_hides",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "friend_hides_hidden_user_id_users_id_fk": {
+          "name": "friend_hides_hidden_user_id_users_id_fk",
+          "tableFrom": "friend_hides",
+          "tableTo": "users",
+          "columnsFrom": [
+            "hidden_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "friend_hides_user_id_hidden_user_id_pk": {
+          "name": "friend_hides_user_id_hidden_user_id_pk",
+          "columns": [
+            "user_id",
+            "hidden_user_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},

@@ -38,8 +38,8 @@ export class RemindSchedulerService {
     const targets = await this.repository.findRemindTargets(remindType);
     const contentFn = REMIND_CONTENTS[remindType];
 
-    for (const { invitation, participants } of targets) {
-      const results = await Promise.allSettled(
+    const results = await Promise.allSettled(
+      targets.flatMap(({ invitation, participants }) =>
         participants.map((p) =>
           this.notificationsService.notify({
             userId: p.userId,
@@ -50,17 +50,18 @@ export class RemindSchedulerService {
             invitationId: invitation.id,
           }),
         ),
-      );
+      ),
+    );
 
-      const failCount = results.filter((r) => r.status === 'rejected').length;
-      if (failCount > 0) {
-        this.logger.warn(
-          `초대장 ${invitation.id} 리마인드(${remindType}): ${failCount}건 발송 실패`,
-        );
-      }
-
-      await this.repository.markAsSent(invitation.id, remindType);
+    const failCount = results.filter((r) => r.status === 'rejected').length;
+    if (failCount > 0) {
+      this.logger.warn(`${remindType} 리마인드: ${failCount}건 발송 실패`);
     }
+
+    await this.repository.markAsSentBatch(
+      targets.map((t) => t.invitation.id),
+      remindType,
+    );
 
     this.logger.log(`${remindType} 리마인드 ${targets.length}건 처리 완료`);
   }

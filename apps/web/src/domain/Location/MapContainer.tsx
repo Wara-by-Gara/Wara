@@ -126,6 +126,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           lng: update.lng,
           accuracy: update.accuracy,
           isArrived: update.isArrived,
+          nickname: update.nickname,
+          profileImageUrl: update.profileImageUrl,
         });
         return next;
       });
@@ -268,6 +270,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       ),
     [participantsData],
   );
+  // payload에 nickname/profileImageUrl이 포함되지만, 과거 응답·캐시 호환을 위해 participantMap을 fallback으로 둠.
   const participantPins: ParticipantPin[] = useMemo(
     () =>
       Array.from(participantLocations.values()).map((loc) => {
@@ -276,8 +279,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           participantId: loc.participantId,
           lat: loc.lat,
           lng: loc.lng,
-          profileImageUrl: user?.profileImageUrl ?? null,
-          nickname: user?.nickname ?? null,
+          profileImageUrl: loc.profileImageUrl ?? user?.profileImageUrl ?? null,
+          nickname: loc.nickname ?? user?.nickname ?? null,
           isArrived: loc.isArrived,
         };
       }),

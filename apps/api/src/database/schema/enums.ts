@@ -101,4 +101,6 @@ export const termTypeEnum = pgEnum('term_type', [
   'privacy',
   'marketing',
   'location',
+  'analytics',
+  'age',
 ]);
