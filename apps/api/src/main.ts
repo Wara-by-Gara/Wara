@@ -3,6 +3,8 @@ import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import compression from 'compression';
 import { AppModule } from './app.module';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -29,6 +31,13 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule);
+
+  // 보안 헤더 (X-Frame-Options, X-Content-Type-Options 등 기본 set).
+  // CSP는 web/mobile 영향 분석 전이라 미적용 — 추후 검토.
+  app.use(helmet({ contentSecurityPolicy: false }));
+
+  // 응답 gzip 압축
+  app.use(compression());
 
   app.setGlobalPrefix('api');
 
