@@ -8,6 +8,62 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "ElegantSerif";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/GraceSerif-Regular.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ElegantSerif";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/GraceSerif-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HsHouseRabbitBlack";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/HSJiptokki-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PartialSans";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SillaGothic";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/Shilla_Gothic-Bold.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HighTeenChoiHyoryeong";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/Lasthighteen-Bold.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DosHandwriting";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/DOSPilgiMedium.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "MoonHalo";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2102-01@1.0/dalmoori.woff") format("woff");
+  font-weight: normal;
+  font-display: swap;
+}
+
 /* ============================================================
    Wara Design Tokens — Luma Design System
    ============================================================ */
@@ -173,6 +229,14 @@
   /* ---------- Font ---------- */
   --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple Color Emoji", Inter, Roboto, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", Courier, monospace;
+  --font-pretendard: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple Color Emoji", sans-serif;
+  --font-elegant-serif: "ElegantSerif", Georgia, serif;
+  --font-jiptokki: "HsHouseRabbitBlack", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-partial-sans: "PartialSans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-silla: "SillaGothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-highteen: "HighTeenChoiHyoryeong", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-dos: "DosHandwriting", cursive, sans-serif;
+  --font-moonhalo: "MoonHalo", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ============================================================
