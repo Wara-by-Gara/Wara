@@ -11,6 +11,8 @@ export function useConversations() {
   return useQuery({
     queryKey: QUERY_KEYS.conversations.list(),
     queryFn: fetchConversations,
+    // 목록 진입 시 항상 최신화 (다른 화면에서 받은 메시지 반영)
+    refetchOnMount: "always",
   });
 }
 
