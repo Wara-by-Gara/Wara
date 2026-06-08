@@ -1,0 +1,87 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { ConversationsService } from './conversations.service';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
+import {
+  CreateConversationSchema,
+  CreateConversationDto,
+} from './dto/create-conversation.dto';
+import { SendMessageSchema, SendMessageDto } from './dto/send-message.dto';
+import {
+  ListMessagesQuerySchema,
+  ListMessagesQueryDto,
+} from './dto/list-messages.query.dto';
+
+@Controller('conversations')
+export class ConversationsController {
+  constructor(private readonly conversationsService: ConversationsService) {}
+
+  @Post()
+  createConversation(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(CreateConversationSchema))
+    dto: CreateConversationDto,
+  ) {
+    return this.conversationsService.createOrGet(user.id, dto.targetUserId);
+  }
+
+  @Get()
+  getConversations(@CurrentUser() user: JwtPayload) {
+    return this.conversationsService.getConversations(user.id);
+  }
+
+  @Get(':id/messages')
+  getMessages(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Query(new ZodValidationPipe(ListMessagesQuerySchema))
+    query: ListMessagesQueryDto,
+  ) {
+    return this.conversationsService.getMessages(
+      user.id,
+      id,
+      query.cursor,
+      query.limit,
+    );
+  }
+
+  @Post(':id/messages')
+  sendMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(SendMessageSchema)) dto: SendMessageDto,
+  ) {
+    return this.conversationsService.sendMessage(user.id, id, dto.content);
+  }
+
+  @Post(':id/read')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markRead(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.markRead(user.id, id);
+  }
+
+  @Delete(':id/messages/:messageId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+  ) {
+    return this.conversationsService.deleteMessage(user.id, id, messageId);
+  }
+}
