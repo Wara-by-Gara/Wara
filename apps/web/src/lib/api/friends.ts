@@ -1,4 +1,4 @@
-import { apiGet } from './client';
+import { apiGet, apiPost, apiDelete } from './client';
 
 export type Friend = {
   id: string;
@@ -42,4 +42,25 @@ export function fetchFriends() {
 
 export function fetchFriendProfile(id: string) {
   return apiGet<FriendProfile>(`/friends/${id}`);
+}
+
+export type HiddenFriend = {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+  hiddenAt: string;
+};
+
+/** 친구 삭제 (영구 숨김) */
+export function hideFriend(id: string) {
+  return apiDelete(`/friends/${id}`);
+}
+
+/** 삭제한 친구 복원 */
+export function restoreFriend(id: string) {
+  return apiPost<void>(`/friends/${id}/restore`);
+}
+
+export function fetchHiddenFriends() {
+  return apiGet<{ friends: HiddenFriend[] }>('/friends/hidden');
 }

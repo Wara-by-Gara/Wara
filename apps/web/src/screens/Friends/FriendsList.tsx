@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { EmptyState } from "@/components/organisms/EmptyState";
+import { Modal, ModalContent, ModalClose } from "@/components/molecules/Modal";
 import { ROUTES } from "@/constants/routes";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
-import { useFriends } from "@/hooks/useFriends";
+import { useFriends, useHideFriend } from "@/hooks/useFriends";
+import type { Friend } from "@/lib/api/friends";
 import { FriendsIndexBar } from "./FriendsIndexBar";
 import { buildIndexLetters, compareByInitial, getInitial, matchName } from "./initials";
 
 type SortBy = "name" | "shared";
+const LONG_PRESS_MS = 500;
 
 export const FriendsList = () => {
   const router = useRouter();
@@ -53,6 +56,34 @@ export const FriendsList = () => {
 
   const jumpToInitial = (letter: string) => {
     document.getElementById(`fr-init-${letter}`)?.scrollIntoView({ block: "start" });
+  };
+
+  // 길게 눌러 삭제 — 액션 시트 → 확인 모달
+  const [actionTarget, setActionTarget] = useState<Friend | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Friend | null>(null);
+  const hideFriend = useHideFriend();
+  const pressTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+
+  const startPress = (friend: Friend) => {
+    longPressed.current = false;
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      setActionTarget(friend);
+    }, LONG_PRESS_MS);
+  };
+  const cancelPress = () => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+  const handleRowClick = (friend: Friend) => {
+    if (longPressed.current) {
+      longPressed.current = false;
+      return;
+    }
+    goDetail(friend.id);
   };
 
   if (isLoading) return <FriendsPageSkeleton />;
@@ -162,13 +193,18 @@ export const FriendsList = () => {
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => goDetail(f.id)}
+                      onClick={() => handleRowClick(f)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           goDetail(f.id);
                         }
                       }}
+                      onPointerDown={() => startPress(f)}
+                      onPointerUp={cancelPress}
+                      onPointerLeave={cancelPress}
+                      onPointerCancel={cancelPress}
+                      onContextMenu={(e) => e.preventDefault()}
                       className={`flex cursor-pointer items-center gap-3 py-3 pl-page active:bg-background-soft ${
                         showIndex ? "pr-8" : "pr-page"
                       }`}
@@ -197,6 +233,64 @@ export const FriendsList = () => {
           onJump={jumpToInitial}
         />
       )}
+
+      {/* 길게 누르기 → 가운데 액션 팝업 */}
+      <Modal
+        open={!!actionTarget}
+        onOpenChange={(open) => !open && setActionTarget(null)}
+      >
+        <ModalContent className="max-w-[280px]">
+          <p className="text-left text-[16px] font-bold text-text-primary">
+            {actionTarget?.name ?? "친구"}
+          </p>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmTarget(actionTarget);
+                setActionTarget(null);
+              }}
+              className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+            >
+              삭제
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      {/* 삭제 확인 모달 (카카오톡식 — 텍스트 버튼 우측 하단) */}
+      <Modal
+        open={!!confirmTarget}
+        onOpenChange={(open) => !open && setConfirmTarget(null)}
+      >
+        <ModalContent className="max-w-[300px]">
+          <p className="text-[17px] font-bold text-text-primary">친구 삭제</p>
+          <p className="mt-2 text-[14px] text-text-secondary">
+            {confirmTarget?.name ?? "이 친구"}님을 친구 목록에서 삭제합니다. ‘삭제한
+            친구’에서 되돌릴 수 있어요.
+          </p>
+          <div className="mt-6 flex justify-end gap-6">
+            <ModalClose asChild>
+              <button type="button" className="text-[15px] font-bold text-blue-500">
+                취소
+              </button>
+            </ModalClose>
+            <button
+              type="button"
+              disabled={hideFriend.isPending}
+              onClick={() => {
+                if (!confirmTarget) return;
+                hideFriend.mutate(confirmTarget.id, {
+                  onSuccess: () => setConfirmTarget(null),
+                });
+              }}
+              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
+            >
+              삭제
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

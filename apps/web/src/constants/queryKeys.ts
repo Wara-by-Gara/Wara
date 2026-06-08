@@ -31,6 +31,7 @@ export const QUERY_KEYS = {
     all: () => ["friends"] as const,
     list: () => ["friends", "list"] as const,
     detail: (id: string) => ["friends", id] as const,
+    hidden: () => ["friends", "hidden"] as const,
   },
   conversations: {
     all: () => ["conversations"] as const,

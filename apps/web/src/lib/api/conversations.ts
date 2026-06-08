@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client';
+import { apiGet, apiPost, apiDelete } from './client';
 
 export type ConversationPartner = {
   id: string;
@@ -57,4 +57,9 @@ export function sendMessage(id: string, content: string) {
 
 export function markConversationRead(id: string) {
   return apiPost<void>(`/conversations/${id}/read`);
+}
+
+/** 채팅방 나가기 (나만 — 상대 기록 유지) */
+export function leaveConversation(id: string) {
+  return apiDelete(`/conversations/${id}`);
 }
