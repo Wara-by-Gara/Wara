@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/primitives/Avatar";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { EmptyState } from "@/components/organisms/EmptyState";
-import { Modal, ModalContent, ModalClose } from "@/components/molecules/Modal";
+import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { ROUTES } from "@/constants/routes";
 import { timeAgo } from "@/utils/timeAge";
@@ -147,10 +147,10 @@ export const ChatList = () => {
         open={!!actionTarget}
         onOpenChange={(open) => !open && setActionTarget(null)}
       >
-        <ModalContent className="max-w-[280px]">
-          <p className="text-left text-[16px] font-bold text-text-primary">
+        <ModalContent className="max-w-[280px]" aria-describedby={undefined}>
+          <ModalPrimitive.Title className="text-left text-[16px] font-bold text-text-primary">
             {actionTarget?.partner.name ?? "대화"}
-          </p>
+          </ModalPrimitive.Title>
           <div className="mt-4">
             <button
               type="button"
@@ -172,11 +172,13 @@ export const ChatList = () => {
         onOpenChange={(open) => !open && setConfirmTarget(null)}
       >
         <ModalContent className="max-w-[300px]">
-          <p className="text-[17px] font-bold text-text-primary">채팅방 나가기</p>
-          <p className="mt-2 text-[14px] text-text-secondary">
+          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+            채팅방 나가기
+          </ModalPrimitive.Title>
+          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
             채팅방을 나가면 대화 내용이 삭제됩니다. 상대가 새 메시지를 보내면 다시
             표시돼요.
-          </p>
+          </ModalPrimitive.Description>
           <div className="mt-6 flex justify-end gap-6">
             <ModalClose asChild>
               <button type="button" className="text-[15px] font-bold text-blue-500">

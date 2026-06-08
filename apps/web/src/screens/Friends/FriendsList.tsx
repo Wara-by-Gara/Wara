@@ -6,7 +6,7 @@ import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { SearchBar } from "@/components/molecules/SearchBar";
 import { EmptyState } from "@/components/organisms/EmptyState";
-import { Modal, ModalContent, ModalClose } from "@/components/molecules/Modal";
+import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
 import { ROUTES } from "@/constants/routes";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriends, useHideFriend } from "@/hooks/useFriends";
@@ -239,10 +239,10 @@ export const FriendsList = () => {
         open={!!actionTarget}
         onOpenChange={(open) => !open && setActionTarget(null)}
       >
-        <ModalContent className="max-w-[280px]">
-          <p className="text-left text-[16px] font-bold text-text-primary">
+        <ModalContent className="max-w-[280px]" aria-describedby={undefined}>
+          <ModalPrimitive.Title className="text-left text-[16px] font-bold text-text-primary">
             {actionTarget?.name ?? "친구"}
-          </p>
+          </ModalPrimitive.Title>
           <div className="mt-4">
             <button
               type="button"
@@ -264,11 +264,13 @@ export const FriendsList = () => {
         onOpenChange={(open) => !open && setConfirmTarget(null)}
       >
         <ModalContent className="max-w-[300px]">
-          <p className="text-[17px] font-bold text-text-primary">친구 삭제</p>
-          <p className="mt-2 text-[14px] text-text-secondary">
+          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+            친구 삭제
+          </ModalPrimitive.Title>
+          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
             {confirmTarget?.name ?? "이 친구"}님을 친구 목록에서 삭제합니다. ‘삭제한
             친구’에서 되돌릴 수 있어요.
-          </p>
+          </ModalPrimitive.Description>
           <div className="mt-6 flex justify-end gap-6">
             <ModalClose asChild>
               <button type="button" className="text-[15px] font-bold text-blue-500">
