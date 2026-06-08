@@ -31,7 +31,7 @@ export class AppleService {
   generateState(): string {
     return this.jwtService.sign(
       { nonce: randomUUID() },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '10m' },
+      { secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'), expiresIn: '10m' },
     );
   }
 
