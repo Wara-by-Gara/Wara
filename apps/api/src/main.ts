@@ -32,9 +32,17 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  // 보안 헤더 (X-Frame-Options, X-Content-Type-Options 등 기본 set).
-  // CSP는 web/mobile 영향 분석 전이라 미적용 — 추후 검토.
-  app.use(helmet({ contentSecurityPolicy: false }));
+  // helmet 기본 옵션 (CSP 포함). JSON API라 CSP 영향 없음.
+  app.use(helmet());
+
+  // Swagger UI(/api-docs)는 dev에서만 마운트되며 inline script/style 사용 →
+  // 해당 경로 한정으로 CSP 헤더 제거. helmet 미들웨어 다음에 등록되어 후처리.
+  if (process.env.NODE_ENV !== 'production') {
+    app.use('/api-docs', (_req: Request, res: Response, next: NextFunction) => {
+      res.removeHeader('Content-Security-Policy');
+      next();
+    });
+  }
 
   // 응답 gzip 압축
   app.use(compression());
