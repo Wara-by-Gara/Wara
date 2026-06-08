@@ -13,4 +13,6 @@ export * from './faq';
 export * from './terms';
 export * from './date-votes';
 export * from './activity-events';
+export * from './conversations';
+export * from './friend-hides';
 export * from './relations';
