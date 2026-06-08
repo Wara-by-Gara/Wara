@@ -53,3 +53,34 @@ export function buildIndexLetters(present: Set<string>): string[] {
   const hash = present.has("#") ? ["#"] : [];
   return [...KOREAN_INITIALS, ...latin, ...hash];
 }
+
+const CONSONANT_ONLY = /^[ㄱ-ㅎ]+$/;
+
+function collapseDoubles(s: string): string {
+  return [...s].map((c) => DOUBLE_TO_BASE[c] ?? c).join("");
+}
+
+/** 이름을 초성 문자열로 변환 ("김지아" → "ㄱㅈㅇ") */
+function toChosungString(name: string): string {
+  let out = "";
+  for (const ch of name) {
+    const code = ch.charCodeAt(0);
+    if (code >= 0xac00 && code <= 0xd7a3) {
+      const cho = CHOSUNG[Math.floor((code - 0xac00) / 588)]!;
+      out += DOUBLE_TO_BASE[cho] ?? cho;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+
+/** 일반 부분일치 + 초성 검색 (검색어가 자음만일 때 "ㄱㅈ" → "김지아" 매칭) */
+export function matchName(name: string | null | undefined, keyword: string): boolean {
+  if (!name) return false;
+  if (name.includes(keyword)) return true;
+  if (CONSONANT_ONLY.test(keyword)) {
+    return toChosungString(name).includes(collapseDoubles(keyword));
+  }
+  return false;
+}

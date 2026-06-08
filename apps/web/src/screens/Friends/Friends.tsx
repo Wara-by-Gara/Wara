@@ -13,28 +13,38 @@ import { ROUTES } from "@/constants/routes";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriends } from "@/hooks/useFriends";
 import { FriendsIndexBar } from "./FriendsIndexBar";
-import { buildIndexLetters, compareByInitial, getInitial } from "./initials";
+import { buildIndexLetters, compareByInitial, getInitial, matchName } from "./initials";
+
+type SortBy = "name" | "shared";
 
 const DM_TOAST = "DM 기능은 곧 만나요";
 
 export const Friends = () => {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("name");
   const { friends, recentFriends, isLoading, isError, refetch } = useFriends();
 
   const keyword = query.trim();
 
-  // 가나다 정렬 (한글 → 영문 → #)
-  const sorted = useMemo(
-    () => [...friends].sort((a, b) => compareByInitial(a.name, b.name)),
-    [friends],
-  );
+  // 가나다순(한글→영문→#) 또는 함께한 모임 많은 순
+  const sorted = useMemo(() => {
+    const arr = [...friends];
+    if (sortBy === "shared") {
+      arr.sort(
+        (a, b) => b.sharedCount - a.sharedCount || compareByInitial(a.name, b.name),
+      );
+    } else {
+      arr.sort((a, b) => compareByInitial(a.name, b.name));
+    }
+    return arr;
+  }, [friends, sortBy]);
   const filtered = keyword
-    ? sorted.filter((f) => f.name?.includes(keyword))
+    ? sorted.filter((f) => matchName(f.name, keyword))
     : sorted;
 
-  // 검색 중이 아닐 때만 초성 인덱스 바 노출
-  const showIndex = !keyword && filtered.length > 0;
+  // 가나다순 + 검색 중이 아닐 때만 초성 인덱스 바 노출
+  const showIndex = sortBy === "name" && !keyword && filtered.length > 0;
   const presentInitials = useMemo(
     () => new Set(sorted.map((f) => getInitial(f.name))),
     [sorted],
@@ -106,9 +116,28 @@ export const Friends = () => {
               </div>
             </section>
 
-            {/* 친구 목록 — 함께한 모임 많은 순 */}
+            {/* 친구 목록 — 가나다순 / 모임 많은 순 토글 */}
             <section>
-              <h2 className="px-page pb-1 text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
+              <div className="flex items-center justify-between px-page pb-1">
+                <h2 className="text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
+                <div className="flex items-center gap-1.5 text-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("name")}
+                    className={sortBy === "name" ? "font-bold text-text-primary" : "text-text-tertiary active:opacity-70"}
+                  >
+                    가나다순
+                  </button>
+                  <span className="text-text-tertiary/40">·</span>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("shared")}
+                    className={sortBy === "shared" ? "font-bold text-text-primary" : "text-text-tertiary active:opacity-70"}
+                  >
+                    모임 많은 순
+                  </button>
+                </div>
+              </div>
               <div className="px-page py-3">
                 <SearchBar
                   placeholder="친구 이름으로 검색"
