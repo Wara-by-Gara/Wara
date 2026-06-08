@@ -75,12 +75,15 @@ function toChosungString(name: string): string {
   return out;
 }
 
-/** 일반 부분일치 + 초성 검색 (검색어가 자음만일 때 "ㄱㅈ" → "김지아" 매칭) */
+/**
+ * 일반 부분일치 + 초성 검색.
+ * 초성 검색은 ㄱㄴㄷ 인덱스와 동일하게 "앞글자 기준"(prefix)으로 매칭한다.
+ * 예: "ㄱ" → 강동현·고민준(O), 황건우(X) / "ㄱㄷ" → 강동현(O)
+ */
 export function matchName(name: string | null | undefined, keyword: string): boolean {
   if (!name) return false;
-  if (name.includes(keyword)) return true;
   if (CONSONANT_ONLY.test(keyword)) {
-    return toChosungString(name).includes(collapseDoubles(keyword));
+    return toChosungString(name).startsWith(collapseDoubles(keyword));
   }
-  return false;
+  return name.includes(keyword);
 }

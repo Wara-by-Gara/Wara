@@ -32,6 +32,11 @@ export const QUERY_KEYS = {
     list: () => ["friends", "list"] as const,
     detail: (id: string) => ["friends", id] as const,
   },
+  conversations: {
+    all: () => ["conversations"] as const,
+    list: () => ["conversations", "list"] as const,
+    messages: (id: string) => ["conversations", id, "messages"] as const,
+  },
   templates: {
     all: () => ["templates"] as const,
     detail: (id: string) => ["templates", id] as const,

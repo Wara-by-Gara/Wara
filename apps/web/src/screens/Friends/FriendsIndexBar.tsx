@@ -82,7 +82,7 @@ export const FriendsIndexBar = ({ letters, activeSet, onJump }: Props) => {
         <div
           ref={barRef}
           aria-hidden
-          className={`absolute right-1 top-[76px] bottom-[calc(4rem+env(safe-area-inset-bottom))] flex touch-none select-none flex-col items-center justify-between py-2 transition-opacity duration-200 ${
+          className={`absolute right-2.5 top-[76px] bottom-[calc(4rem+env(safe-area-inset-bottom))] flex touch-none select-none flex-col items-center justify-between py-2 transition-opacity duration-200 ${
             visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
           }`}
           onPointerDown={start}
@@ -95,7 +95,7 @@ export const FriendsIndexBar = ({ letters, activeSet, onJump }: Props) => {
           {letters.map((letter) => (
             <span
               key={letter}
-              className={`text-[12px] font-bold leading-[1.7] ${
+              className={`text-[14px] font-bold leading-[1.7] ${
                 activeSet.has(letter) ? "text-text-secondary" : "text-text-tertiary/40"
               }`}
             >

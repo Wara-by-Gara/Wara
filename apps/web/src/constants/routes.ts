@@ -8,6 +8,9 @@ export const ROUTES = {
     LIST: "/friends",
     DETAIL: (id: string) => `/friends/${id}`,
   },
+  CHAT: {
+    ROOM: (id: string) => `/chats/${id}`,
+  },
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {
