@@ -29,6 +29,8 @@ export interface ParticipantLocation {
   lng: number;
   accuracy: number;
   isArrived: boolean;
+  nickname: string | null;
+  profileImageUrl: string | null;
 }
 
 export interface UpdateMyLocationPayload {
