@@ -3,7 +3,11 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
-import { fetchConversations, leaveConversation } from '@/lib/api/conversations';
+import {
+  fetchConversations,
+  fetchUnreadCount,
+  leaveConversation,
+} from '@/lib/api/conversations';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { SOCKET_BASE } from '@/lib/env';
 
@@ -16,16 +20,27 @@ export function useConversations() {
   });
 }
 
-// 대화 목록 실시간 갱신 — 메시지 수신/삭제/읽음 시 목록 새로고침
-export function useConversationsRealtime() {
+// 전체 안읽음 DM 수 (친구 탭 배지 / 채팅 세그먼트 개수)
+export function useDmUnreadCount(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.unreadCount(),
+    queryFn: fetchUnreadCount,
+    enabled,
+  });
+}
+
+// DM 전역 소켓 — 메시지 수신/삭제 시 목록 + 안읽음 카운트 갱신 (앱 전역 1회 마운트)
+export function useDmGlobalSocket() {
   const qc = useQueryClient();
   useEffect(() => {
     const socket = io(`${SOCKET_BASE}/dm`, {
       withCredentials: true,
       transports: ['websocket'],
     });
-    const refresh = () =>
+    const refresh = () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() });
+    };
     socket.on('message:new', refresh);
     socket.on('message:deleted', refresh);
     return () => {

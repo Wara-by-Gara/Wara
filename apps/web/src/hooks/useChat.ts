@@ -91,6 +91,8 @@ export function useChatMessages(id: string) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: Boolean(id),
+    // 입장 시 항상 최신 메시지 로드 (다른 화면에 있는 동안 온 메시지 반영)
+    refetchOnMount: "always",
   });
 
   // page 0 = 최신 블록, 이후 페이지일수록 과거 → 오래된→최신 순으로 펼침
@@ -143,7 +145,10 @@ export function useChatRealtime(id: string) {
     if (!id) return;
 
     markConversationRead(id)
-      .then(() => qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' }))
+      .then(() => {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() });
+      })
       .catch(() => {});
 
     const socket = io(`${SOCKET_BASE}/dm`, {

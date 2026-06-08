@@ -9,6 +9,7 @@ import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNav";
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
+import { useDmUnreadCount } from "@/hooks/useConversations";
 import { API_BASE } from "@/lib/env";
 import type { ReactNode } from "react";
 
@@ -48,6 +49,7 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const pathname = usePathname();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn);
 
   useEffect(() => { hydrate(); }, [hydrate]);
   if (
@@ -60,11 +62,16 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const activeKey = activeKeyProp ?? resolveActiveKey(pathname);
 
 
-  const items = MAIN_BOTTOM_NAV_ITEMS.map((item) =>
-    item.key === "profile" && hydrated && !isLoggedIn
-      ? { ...item, label: "로그인", icon: "user-plus" as const }
-      : item,
-  );
+  const hasUnreadDm = (dmUnread?.count ?? 0) > 0;
+  const items = MAIN_BOTTOM_NAV_ITEMS.map((item) => {
+    if (item.key === "profile" && hydrated && !isLoggedIn) {
+      return { ...item, label: "로그인", icon: "user-plus" as const };
+    }
+    if (item.key === "friends" && hasUnreadDm) {
+      return { ...item, badge: true };
+    }
+    return item;
+  });
 
   function renderItem(item: BottomNavItem, content: ReactNode) {
     if (item.key === "profile" && hydrated && !isLoggedIn) {

@@ -48,6 +48,10 @@ export function fetchConversations() {
   return apiGet<ConversationListItem[]>('/conversations');
 }
 
+export function fetchUnreadCount() {
+  return apiGet<{ count: number }>('/conversations/unread-count');
+}
+
 export function createConversation(targetUserId: string) {
   return apiPost<{ id: string }>('/conversations', { targetUserId });
 }
