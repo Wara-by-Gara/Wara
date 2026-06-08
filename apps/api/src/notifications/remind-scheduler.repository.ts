@@ -37,29 +37,48 @@ export class RemindSchedulerRepository {
         ),
       );
 
-    return Promise.all(
-      targetInvitations.map(async (invitation) => {
-        const invitationParticipants = await this.db
-          .select({ userId: participants.userId })
-          .from(participants)
-          .where(
-            and(
-              eq(participants.invitationId, invitation.id),
-              or(
-                eq(participants.memberRole, 'HOST'),
-                inArray(participants.rsvpStatus, ['attending', 'undecided']),
-              ),
-            ),
-          );
-        return { invitation, participants: invitationParticipants };
-      }),
-    );
+    if (targetInvitations.length === 0) return [];
+
+    const invitationIds = targetInvitations.map((i) => i.id);
+
+    const allParticipants = await this.db
+      .select({ userId: participants.userId, invitationId: participants.invitationId })
+      .from(participants)
+      .where(
+        and(
+          inArray(participants.invitationId, invitationIds),
+          or(
+            eq(participants.memberRole, 'HOST'),
+            inArray(participants.rsvpStatus, ['attending', 'undecided']),
+          ),
+        ),
+      );
+
+    const participantsByInvitation = new Map<string, { userId: string }[]>();
+    for (const p of allParticipants) {
+      const list = participantsByInvitation.get(p.invitationId) ?? [];
+      list.push({ userId: p.userId });
+      participantsByInvitation.set(p.invitationId, list);
+    }
+
+    return targetInvitations.map((invitation) => ({
+      invitation,
+      participants: participantsByInvitation.get(invitation.id) ?? [],
+    }));
   }
 
   async markAsSent(invitationId: string, remindType: RemindType) {
     await this.db
       .insert(remindLogs)
       .values({ invitationId, remindType })
+      .onConflictDoNothing();
+  }
+
+  async markAsSentBatch(invitationIds: string[], remindType: RemindType) {
+    if (invitationIds.length === 0) return;
+    await this.db
+      .insert(remindLogs)
+      .values(invitationIds.map((invitationId) => ({ invitationId, remindType })))
       .onConflictDoNothing();
   }
 }
