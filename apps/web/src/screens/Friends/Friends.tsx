@@ -13,7 +13,7 @@ export const Friends = () => {
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <StickyHeader title="친구" />
+      <StickyHeader title={tab === "friends" ? "친구" : "채팅"} />
       <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
         {/* 친구 | 채팅 세그먼트 (콘텐츠 최상단) */}
         <div className="mx-page mb-1 mt-3 flex gap-1 rounded-full bg-border p-1">

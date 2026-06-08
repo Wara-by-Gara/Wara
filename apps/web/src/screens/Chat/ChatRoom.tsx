@@ -101,11 +101,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               const mine = m.senderId === myId;
               const unread =
                 mine && (partnerReadAt === null || new Date(m.createdAt).getTime() > partnerReadAt);
-              // 연속된 상대 메시지의 첫 번째에만 프로필 표시
-              const showAvatar = !mine && messages[i - 1]?.senderId !== m.senderId;
-              // 프로필 옆 첫 말풍선은 프로필 쪽으로 꼬리(tail) 표시
+              // 연속 그룹의 첫 메시지 (보낸 사람이 바뀌는 지점)
+              const firstOfGroup = messages[i - 1]?.senderId !== m.senderId;
+              // 상대 메시지의 첫 번째에만 프로필 표시
+              const showAvatar = !mine && firstOfGroup;
+              // 각 그룹 첫 말풍선은 자기 쪽으로 꼬리(tail) 표시
               const bubbleClass = mine
-                ? "rounded-br-sm bg-primary text-text-inverse"
+                ? firstOfGroup
+                  ? "rounded-tr-sm bg-primary text-text-inverse before:absolute before:-right-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-l-[7px] before:border-y-transparent before:border-l-primary before:content-['']"
+                  : "rounded-br-sm bg-primary text-text-inverse"
                 : showAvatar
                   ? "rounded-tl-sm bg-surface text-text-primary before:absolute before:-left-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-r-[7px] before:border-y-transparent before:border-r-surface before:content-['']"
                   : "rounded-bl-sm bg-surface text-text-primary";
