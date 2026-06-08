@@ -159,6 +159,7 @@ export class ConversationsRepository {
     limit: number,
     leftAt: Date | null,
   ) {
+    const reply = alias(messages, 'reply');
     return this.db
       .select({
         id: messages.id,
@@ -167,8 +168,14 @@ export class ConversationsRepository {
         content: messages.content,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
+        editedAt: messages.editedAt,
+        replyToMessageId: messages.replyToMessageId,
+        replyToSenderId: reply.senderId,
+        replyToContent: reply.content,
+        replyToDeletedAt: reply.deletedAt,
       })
       .from(messages)
+      .leftJoin(reply, eq(reply.id, messages.replyToMessageId))
       .where(
         and(
           eq(messages.conversationId, conversationId),
@@ -194,12 +201,32 @@ export class ConversationsRepository {
       );
   }
 
-  async insertMessage(conversationId: string, senderId: string, content: string) {
+  async insertMessage(
+    conversationId: string,
+    senderId: string,
+    content: string,
+    replyToMessageId?: string,
+  ) {
     const rows = await this.db
       .insert(messages)
-      .values({ conversationId, senderId, content })
+      .values({ conversationId, senderId, content, replyToMessageId })
       .returning();
     return rows[0]!;
+  }
+
+  // 삭제 여부 무관하게 메시지 조회 (답장 미리보기 해석용)
+  async findMessageRaw(messageId: string) {
+    const rows = await this.db
+      .select({
+        id: messages.id,
+        senderId: messages.senderId,
+        content: messages.content,
+        deletedAt: messages.deletedAt,
+      })
+      .from(messages)
+      .where(eq(messages.id, messageId))
+      .limit(1);
+    return rows[0] ?? null;
   }
 
   async updateLastMessage(conversationId: string, text: string, at: Date) {
@@ -243,6 +270,15 @@ export class ConversationsRepository {
       .where(and(eq(messages.id, messageId), isNull(messages.deletedAt)))
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  async updateMessageContent(messageId: string, content: string) {
+    const rows = await this.db
+      .update(messages)
+      .set({ content, editedAt: new Date() })
+      .where(eq(messages.id, messageId))
+      .returning();
+    return rows[0]!;
   }
 
   async softDeleteMessage(messageId: string) {

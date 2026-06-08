@@ -14,6 +14,13 @@ export type ChatMessagePayload = {
   content: string;
   createdAt: Date;
   deleted: boolean;
+  edited: boolean;
+  replyTo: {
+    id: string;
+    senderId: string;
+    content: string;
+    deleted: boolean;
+  } | null;
 };
 
 @WebSocketGateway({
@@ -53,6 +60,11 @@ export class ConversationsGateway implements OnGatewayConnection {
     this.server
       .to(`user:${userId}`)
       .emit('message:deleted', { conversationId, messageId });
+  }
+
+  // 메시지 수정 동기화
+  sendMessageEdited(userId: string, message: ChatMessagePayload) {
+    this.server.to(`user:${userId}`).emit('message:edited', message);
   }
 
   private extractToken(client: Socket): string {

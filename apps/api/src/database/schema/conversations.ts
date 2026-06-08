@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, primaryKey, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  primaryKey,
+  index,
+  type AnyPgColumn,
+} from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
 import { users } from './users';
 
@@ -52,6 +59,13 @@ export const messages = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
+    // 답장 대상 메시지 (자기 참조). 원본 삭제 시 null.
+    replyToMessageId: text('reply_to_message_id').references(
+      (): AnyPgColumn => messages.id,
+      { onDelete: 'set null' },
+    ),
+    // 메시지 수정 시각 ("수정됨" 표시용)
+    editedAt: timestamp('edited_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },

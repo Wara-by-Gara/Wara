@@ -16,6 +16,13 @@ export interface ConversationListItem {
   unreadCount: number;
 }
 
+export type ReplyPreview = {
+  id: string;
+  senderId: string;
+  content: string;
+  deleted: boolean;
+} | null;
+
 export interface MessageItem {
   id: string;
   conversationId: string;
@@ -23,17 +30,23 @@ export interface MessageItem {
   content: string;
   createdAt: Date;
   deleted: boolean;
+  edited: boolean;
+  replyTo: ReplyPreview;
 }
 
 // 메시지 행을 클라이언트 응답 형태로 변환 (삭제된 메시지는 내용 숨김)
-function toMessageItem(row: {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  content: string;
-  createdAt: Date;
-  deletedAt: Date | null;
-}): MessageItem {
+function toMessageItem(
+  row: {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    content: string;
+    createdAt: Date;
+    deletedAt: Date | null;
+    editedAt: Date | null;
+  },
+  replyTo: ReplyPreview = null,
+): MessageItem {
   const deleted = row.deletedAt != null;
   return {
     id: row.id,
@@ -42,6 +55,8 @@ function toMessageItem(row: {
     content: deleted ? '' : row.content,
     createdAt: row.createdAt,
     deleted,
+    edited: row.editedAt != null,
+    replyTo,
   };
 }
 
@@ -120,18 +135,41 @@ export class ConversationsService {
     const nextCursor = hasMore ? rows[rows.length - 1]!.id : null;
 
     // 최신순으로 가져온 뒤 화면 표시용으로 오래된→최신 정렬
-    return { messages: rows.reverse().map(toMessageItem), nextCursor };
+    const messages = rows.reverse().map((row) =>
+      toMessageItem(
+        row,
+        row.replyToMessageId
+          ? {
+              id: row.replyToMessageId,
+              senderId: row.replyToSenderId!,
+              content: row.replyToDeletedAt ? '' : (row.replyToContent ?? ''),
+              deleted: row.replyToDeletedAt != null,
+            }
+          : null,
+      ),
+    );
+    return { messages, nextCursor };
   }
 
-  async sendMessage(userId: string, conversationId: string, content: string) {
+  async sendMessage(
+    userId: string,
+    conversationId: string,
+    content: string,
+    replyToMessageId?: string,
+  ) {
     await this.assertMember(conversationId, userId);
 
-    const row = await this.repository.insertMessage(conversationId, userId, content);
+    const row = await this.repository.insertMessage(
+      conversationId,
+      userId,
+      content,
+      replyToMessageId,
+    );
     await this.repository.updateLastMessage(conversationId, content, row.createdAt);
     // 보낸 사람은 자기 메시지를 읽은 것으로 처리
     await this.repository.updateLastRead(conversationId, userId, row.createdAt);
 
-    const message = toMessageItem(row);
+    const message = toMessageItem(row, await this.resolveReply(replyToMessageId));
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     for (const otherId of others) {
       this.gateway.sendMessageToUser(otherId, message);
@@ -179,6 +217,39 @@ export class ConversationsService {
     }
   }
 
+  async editMessage(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+    content: string,
+  ) {
+    await this.assertMember(conversationId, userId);
+
+    const existing = await this.repository.findMessageById(messageId);
+    if (!existing || existing.conversationId !== conversationId) {
+      throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+    }
+    if (existing.senderId !== userId) {
+      throw new ForbiddenException(ErrorCode.MESSAGE_FORBIDDEN);
+    }
+
+    const row = await this.repository.updateMessageContent(messageId, content);
+    const message = toMessageItem(row, await this.resolveReply(row.replyToMessageId));
+
+    // 마지막 메시지면 목록 미리보기도 갱신
+    const latest = await this.repository.findLatestMessage(conversationId);
+    if (latest && !latest.deletedAt && latest.createdAt.getTime() === row.createdAt.getTime()) {
+      await this.repository.updateLastMessage(conversationId, content, row.createdAt);
+    }
+
+    const others = await this.repository.otherParticipantIds(conversationId, userId);
+    for (const otherId of others) {
+      this.gateway.sendMessageEdited(otherId, message);
+    }
+
+    return message;
+  }
+
   // 채팅방 나가기 (나만 — 상대 기록은 유지)
   async leaveConversation(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
@@ -196,6 +267,21 @@ export class ConversationsService {
       throw new ForbiddenException(ErrorCode.CONVERSATION_FORBIDDEN);
     }
     return participant;
+  }
+
+  // 답장 대상 메시지 미리보기 해석 (삭제됐으면 내용 숨김)
+  private async resolveReply(
+    replyToMessageId: string | null | undefined,
+  ): Promise<ReplyPreview> {
+    if (!replyToMessageId) return null;
+    const target = await this.repository.findMessageRaw(replyToMessageId);
+    if (!target) return null;
+    return {
+      id: target.id,
+      senderId: target.senderId,
+      content: target.deletedAt ? '' : target.content,
+      deleted: target.deletedAt != null,
+    };
   }
 
   private buildDirectKey(a: string, b: string): string {

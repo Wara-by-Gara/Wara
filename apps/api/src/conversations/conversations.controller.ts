@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -71,7 +72,22 @@ export class ConversationsController {
     @Param('id', ParseUlidPipe) id: string,
     @Body(new ZodValidationPipe(SendMessageSchema)) dto: SendMessageDto,
   ) {
-    return this.conversationsService.sendMessage(user.id, id, dto.content);
+    return this.conversationsService.sendMessage(
+      user.id,
+      id,
+      dto.content,
+      dto.replyToMessageId,
+    );
+  }
+
+  @Patch(':id/messages/:messageId')
+  editMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+    @Body(new ZodValidationPipe(SendMessageSchema)) dto: SendMessageDto,
+  ) {
+    return this.conversationsService.editMessage(user.id, id, messageId, dto.content);
   }
 
   @Post(':id/read')
