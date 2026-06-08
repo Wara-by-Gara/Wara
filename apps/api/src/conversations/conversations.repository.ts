@@ -166,12 +166,13 @@ export class ConversationsRepository {
         senderId: messages.senderId,
         content: messages.content,
         createdAt: messages.createdAt,
+        deletedAt: messages.deletedAt,
       })
       .from(messages)
       .where(
         and(
           eq(messages.conversationId, conversationId),
-          isNull(messages.deletedAt),
+          // 삭제된 메시지도 포함 ("삭제된 메시지입니다" 표시용)
           cursor ? lt(messages.id, cursor) : undefined,
           leftAt ? gt(messages.createdAt, leftAt) : undefined,
         ),
@@ -218,6 +219,21 @@ export class ConversationsRepository {
           eq(conversationParticipants.userId, userId),
         ),
       );
+  }
+
+  // 대화방의 가장 최근 메시지 (삭제 포함) — 목록 미리보기 재계산용
+  async findLatestMessage(conversationId: string) {
+    const rows = await this.db
+      .select({
+        content: messages.content,
+        createdAt: messages.createdAt,
+        deletedAt: messages.deletedAt,
+      })
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.id))
+      .limit(1);
+    return rows[0] ?? null;
   }
 
   async findMessageById(messageId: string) {

@@ -6,7 +6,15 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
-import type { Message } from '../database/schema';
+
+export type ChatMessagePayload = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  createdAt: Date;
+  deleted: boolean;
+};
 
 @WebSocketGateway({
   namespace: '/dm',
@@ -29,7 +37,7 @@ export class ConversationsGateway implements OnGatewayConnection {
   }
 
   // 상대에게 새 메시지 푸시
-  sendMessageToUser(userId: string, message: Message) {
+  sendMessageToUser(userId: string, message: ChatMessagePayload) {
     this.server.to(`user:${userId}`).emit('message:new', message);
   }
 
@@ -38,6 +46,13 @@ export class ConversationsGateway implements OnGatewayConnection {
     this.server
       .to(`user:${userId}`)
       .emit('message:read', { conversationId, readerId });
+  }
+
+  // 메시지 삭제 동기화
+  sendMessageDeleted(userId: string, conversationId: string, messageId: string) {
+    this.server
+      .to(`user:${userId}`)
+      .emit('message:deleted', { conversationId, messageId });
   }
 
   private extractToken(client: Socket): string {
