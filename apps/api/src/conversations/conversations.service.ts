@@ -87,6 +87,10 @@ export class ConversationsService {
     return { id: conversation.id };
   }
 
+  async getUnreadCount(userId: string): Promise<{ count: number }> {
+    return { count: await this.repository.unreadTotal(userId) };
+  }
+
   async getDetail(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
     const partner = await this.repository.getPartner(conversationId, userId);

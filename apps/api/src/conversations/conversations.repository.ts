@@ -248,6 +248,35 @@ export class ConversationsRepository {
       );
   }
 
+  // 전체 안읽음 DM 메시지 수 (내가 참여 + 나간 이후 + 안 읽은 + 내가 보낸 게 아닌)
+  async unreadTotal(userId: string): Promise<number> {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(messages)
+      .innerJoin(
+        conversationParticipants,
+        and(
+          eq(conversationParticipants.conversationId, messages.conversationId),
+          eq(conversationParticipants.userId, userId),
+        ),
+      )
+      .where(
+        and(
+          ne(messages.senderId, userId),
+          isNull(messages.deletedAt),
+          or(
+            isNull(conversationParticipants.lastReadAt),
+            gt(messages.createdAt, conversationParticipants.lastReadAt),
+          ),
+          or(
+            isNull(conversationParticipants.leftAt),
+            gt(messages.createdAt, conversationParticipants.leftAt),
+          ),
+        ),
+      );
+    return rows[0]?.count ?? 0;
+  }
+
   // 대화방의 가장 최근 메시지 (삭제 포함) — 목록 미리보기 재계산용
   async findLatestMessage(conversationId: string) {
     const rows = await this.db

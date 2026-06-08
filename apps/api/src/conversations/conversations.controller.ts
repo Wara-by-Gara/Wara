@@ -43,6 +43,12 @@ export class ConversationsController {
     return this.conversationsService.getConversations(user.id);
   }
 
+  // 전체 안읽음 DM 수 — :id 라우트보다 먼저 선언
+  @Get('unread-count')
+  getUnreadCount(@CurrentUser() user: JwtPayload) {
+    return this.conversationsService.getUnreadCount(user.id);
+  }
+
   @Get(':id')
   getConversation(
     @CurrentUser() user: JwtPayload,
