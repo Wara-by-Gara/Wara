@@ -50,5 +50,6 @@ export const ROUTES = {
     AGREE: "/terms/agree",
     SERVICE: "/terms/service",
     PRIVACY: "/terms/privacy",
+    LOCATION: "/terms/location",
   },
 } as const;

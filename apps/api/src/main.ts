@@ -3,6 +3,8 @@ import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import compression from 'compression';
 import { AppModule } from './app.module';
 import { DbTimeInterceptor } from './common/interceptors/db-time.interceptor';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
@@ -30,6 +32,21 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule);
+
+  // helmet 기본 옵션 (CSP 포함). JSON API라 CSP 영향 없음.
+  app.use(helmet());
+
+  // Swagger UI(/api-docs)는 dev에서만 마운트되며 inline script/style 사용 →
+  // 해당 경로 한정으로 CSP 헤더 제거. helmet 미들웨어 다음에 등록되어 후처리.
+  if (process.env.NODE_ENV !== 'production') {
+    app.use('/api-docs', (_req: Request, res: Response, next: NextFunction) => {
+      res.removeHeader('Content-Security-Policy');
+      next();
+    });
+  }
+
+  // 응답 gzip 압축
+  app.use(compression());
 
   app.setGlobalPrefix('api');
 

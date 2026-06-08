@@ -12,6 +12,7 @@ import { seedTier4 } from './tier4-activity';
 import { seedTier5 } from './tier5-engagement';
 import { seedTier6 } from './tier6-extras';
 import { SEEDS } from './fixtures';
+import { loadLegalSeeds } from './legal-loader';
 
 const TOKEN_USER_PICK = 50;
 const TOKEN_EXPIRES_DAYS = 7;
@@ -69,7 +70,7 @@ async function main() {
   log(`users: ${SEEDS.users.length}건, templates: ${SEEDS.templates.length}건`);
 
   await seedTier0(db);
-  log(`✓ Tier 0 — service_terms: ${SEEDS.terms.length}건, users, invitation_templates`);
+  log(`✓ Tier 0 — service_terms: ${loadLegalSeeds().length}건 (docs/legal/*.md), users, invitation_templates`);
 
   await seedTier1(db);
   log(`✓ Tier 1 — social_accounts, notification_settings, inquiries: ${SEEDS.inquiries.length}건`);

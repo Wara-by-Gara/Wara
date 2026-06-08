@@ -1,13 +1,23 @@
 import { apiGet, apiPost } from './client';
 
+export type TermType =
+  | 'service'
+  | 'privacy'
+  | 'marketing'
+  | 'location'
+  | 'analytics'
+  | 'age';
+
 export interface ServiceTerm {
   id: string;
-  termType: 'service' | 'privacy' | 'marketing' | 'location';
+  documentId: string;
+  termType: TermType;
   version: string;
   title: string;
   content: string;
   isActive: boolean;
   isRequired: boolean;
+  effectiveDate: string;
   publishedAt: string;
   createdAt: string;
   updatedAt: string;
