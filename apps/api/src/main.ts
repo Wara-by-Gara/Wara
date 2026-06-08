@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { DbTimeInterceptor } from './common/interceptors/db-time.interceptor';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -33,9 +34,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
+  // X-DB-Time은 dev에서 브라우저 콘솔/네트워크 패널 확인용으로 노출
   app.enableCors({
     origin: process.env.FRONTEND_URL?.replace(/\/$/, ''),
     credentials: true,
+    exposedHeaders: process.env.NODE_ENV !== 'production'
+      ? ['X-DB-Time', 'X-DB-Query-Count']
+      : [],
   });
 
   // DTO 검증: class-validator 데코레이터(@IsString 등) 실행
@@ -49,8 +54,10 @@ async function bootstrap() {
     }),
   );
 
+  // DB 시간 측정 — handler 실행을 ALS 컨텍스트로 감싸고 응답 직전 X-DB-Time 헤더 set (dev 환경만).
+  // ResponseFormatInterceptor보다 먼저 등록해서 응답 직렬화까지 컨텍스트 안에 포함.
   // 모든 응답을 { success: true, data: ... } 형식으로 자동 래핑
-  app.useGlobalInterceptors(new ResponseFormatInterceptor());
+  app.useGlobalInterceptors(new DbTimeInterceptor(), new ResponseFormatInterceptor());
 
   // 에러 응답을 { success: false, error, meta } 형식으로 통일
   // Nest 내부에서 useGlobalFilters 배열을 reverse 후 first-match로 선택하므로,
