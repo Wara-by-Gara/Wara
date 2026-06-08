@@ -11,6 +11,7 @@ import {
   useConversation,
   useChatMessages,
   useSendMessage,
+  useEditMessage,
   useDeleteMessage,
   useChatRealtime,
 } from "@/hooks/useChat";
@@ -37,10 +38,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const { messages, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
     useChatMessages(id);
   const sendMutation = useSendMessage(id);
+  const editMutation = useEditMessage(id);
   const deleteMutation = useDeleteMessage(id);
   useChatRealtime(id);
 
   const [text, setText] = useState("");
+  const [editing, setEditing] = useState<Message | null>(null);
+  const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 메시지 길게 누르기 → 메뉴
@@ -68,6 +72,25 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setDeleteTarget(menuTarget);
     setMenuTarget(null);
   };
+  const startEdit = () => {
+    if (!menuTarget) return;
+    setReplyTarget(null);
+    setEditing(menuTarget);
+    setText(menuTarget.content);
+    setMenuTarget(null);
+  };
+  const cancelEdit = () => {
+    setEditing(null);
+    setText("");
+  };
+  const startReply = () => {
+    if (!menuTarget) return;
+    setEditing(null);
+    setText("");
+    setReplyTarget(menuTarget);
+    setMenuTarget(null);
+  };
+  const cancelReply = () => setReplyTarget(null);
 
   const partnerName = conversation?.partner?.name ?? "상대";
   const partnerReadAt = conversation?.partnerLastReadAt
@@ -84,9 +107,21 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const content = text.trim();
-    if (!content || sendMutation.isPending) return;
-    sendMutation.mutate(content);
+    if (!content) return;
+
+    if (editing) {
+      if (editMutation.isPending) return;
+      editMutation.mutate(
+        { messageId: editing.id, content },
+        { onSuccess: cancelEdit },
+      );
+      return;
+    }
+
+    if (sendMutation.isPending) return;
+    sendMutation.mutate({ content, replyToMessageId: replyTarget?.id });
     setText("");
+    setReplyTarget(null);
   };
 
   return (
@@ -178,12 +213,41 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       onContextMenu={(e) => e.preventDefault()}
                       className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${bubbleClass}`}
                     >
+                      {m.replyTo && (
+                        <div
+                          className={`mb-1 border-l-2 pl-2 ${
+                            mine ? "border-text-inverse/40" : "border-text-tertiary/40"
+                          }`}
+                        >
+                          <p
+                            className={`text-[11px] font-bold ${
+                              mine ? "text-text-inverse/90" : "text-text-secondary"
+                            }`}
+                          >
+                            {m.replyTo.senderId === myId ? "나" : partnerName}
+                          </p>
+                          <p
+                            className={`truncate text-[12px] ${
+                              mine ? "text-text-inverse/70" : "text-text-tertiary"
+                            }`}
+                          >
+                            {m.replyTo.deleted ? "삭제된 메시지" : m.replyTo.content}
+                          </p>
+                        </div>
+                      )}
                       {m.content}
                     </div>
                   )}
-                  <div className="flex shrink-0 flex-col items-end justify-end leading-none">
+                  <div
+                    className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
+                      mine ? "items-end" : "items-start"
+                    }`}
+                  >
                     {unread && (
-                      <span className="mb-0.5 text-[11px] font-bold text-primary">1</span>
+                      <span className="text-[11px] font-bold text-primary">1</span>
+                    )}
+                    {m.edited && !m.deleted && (
+                      <span className="text-[10px] text-text-tertiary">수정됨</span>
                     )}
                     <span className="text-[10px] text-text-tertiary">
                       {formatTime(m.createdAt)}
@@ -198,30 +262,101 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
       <form
         onSubmit={handleSend}
-        className="flex shrink-0 items-center gap-2 border-t border-border bg-surface px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+        className="shrink-0 border-t border-border bg-surface px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
       >
+        {editing && (
+          <div className="mb-2 flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-bold text-text-primary">메시지 수정</p>
+              <p className="truncate text-[13px] text-text-tertiary">{editing.content}</p>
+            </div>
+            <button
+              type="button"
+              onClick={cancelEdit}
+              aria-label="수정 취소"
+              className="shrink-0 p-1 text-text-tertiary active:opacity-70"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+        {replyTarget && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-background-soft px-3 py-2">
+            <div className="w-0.5 shrink-0 self-stretch rounded bg-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-bold text-text-secondary">
+                {replyTarget.senderId === myId ? "나" : partnerName}에게 답장
+              </p>
+              <p className="truncate text-[13px] text-text-tertiary">
+                {replyTarget.deleted ? "삭제된 메시지" : replyTarget.content}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={cancelReply}
+              aria-label="답장 취소"
+              className="shrink-0 p-1 text-text-tertiary active:opacity-70"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="메시지를 입력하세요"
+          placeholder={editing ? "수정 메시지 입력" : "메시지를 입력하세요"}
           className="h-10 flex-1 rounded-full bg-background-soft px-4 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
         />
         <button
           type="submit"
-          aria-label="전송"
-          disabled={!text.trim() || sendMutation.isPending}
+          aria-label={editing ? "수정 완료" : "전송"}
+          disabled={!text.trim() || sendMutation.isPending || editMutation.isPending}
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-text-inverse transition-opacity disabled:opacity-40"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M12 19V5M12 5l-6 6M12 5l6 6"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {editing ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M5 13l4 4L19 7"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M12 19V5M12 5l-6 6M12 5l6 6"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
         </button>
+        </div>
       </form>
 
       {/* 메시지 길게 누르기 메뉴 */}
@@ -236,14 +371,30 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             >
               복사
             </button>
+            <button
+              type="button"
+              onClick={startReply}
+              className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+            >
+              답장
+            </button>
             {menuMine && (
-              <button
-                type="button"
-                onClick={openDelete}
-                className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
-              >
-                삭제
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={openDelete}
+                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+                >
+                  삭제
+                </button>
+              </>
             )}
           </div>
         </ModalContent>

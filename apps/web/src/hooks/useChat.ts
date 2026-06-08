@@ -14,6 +14,7 @@ import {
   fetchConversation,
   fetchMessages,
   sendMessage as apiSendMessage,
+  editMessage as apiEditMessage,
   markConversationRead,
   deleteMessage as apiDeleteMessage,
   type ConversationDetail,
@@ -58,6 +59,23 @@ function markDeleted(qc: QueryClient, id: string, messageId: string) {
   );
 }
 
+// 캐시에서 특정 메시지를 교체 (수정 반영)
+function replaceMessage(qc: QueryClient, id: string, msg: Message) {
+  qc.setQueryData<InfiniteData<MessagesPage>>(
+    QUERY_KEYS.conversations.messages(id),
+    (old) =>
+      old
+        ? {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              messages: p.messages.map((m) => (m.id === msg.id ? msg : m)),
+            })),
+          }
+        : old,
+  );
+}
+
 export function useConversation(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.conversations.detail(id),
@@ -85,9 +103,22 @@ export function useChatMessages(id: string) {
 export function useSendMessage(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (content: string) => apiSendMessage(id, content),
+    mutationFn: ({ content, replyToMessageId }: { content: string; replyToMessageId?: string }) =>
+      apiSendMessage(id, content, replyToMessageId),
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    },
+  });
+}
+
+export function useEditMessage(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, content }: { messageId: string; content: string }) =>
+      apiEditMessage(id, messageId, content),
+    onSuccess: (msg) => {
+      replaceMessage(qc, id, msg);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     },
   });
@@ -135,6 +166,13 @@ export function useChatRealtime(id: string) {
     socket.on('message:deleted', (payload: { conversationId: string; messageId: string }) => {
       if (payload.conversationId !== id) return;
       markDeleted(qc, id, payload.messageId);
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    });
+
+    // 상대가 메시지 수정 → 교체
+    socket.on('message:edited', (msg: Message) => {
+      if (msg.conversationId !== id) return;
+      replaceMessage(qc, id, msg);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     });
 

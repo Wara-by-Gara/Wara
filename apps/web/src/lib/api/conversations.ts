@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete } from './client';
+import { apiGet, apiPost, apiPatch, apiDelete } from './client';
 
 export type ConversationPartner = {
   id: string;
@@ -21,6 +21,13 @@ export type ConversationDetail = {
   partnerLastReadAt: string | null;
 };
 
+export type ReplyPreview = {
+  id: string;
+  senderId: string;
+  content: string;
+  deleted: boolean;
+};
+
 export type Message = {
   id: string;
   conversationId: string;
@@ -28,6 +35,8 @@ export type Message = {
   content: string;
   createdAt: string;
   deleted: boolean;
+  edited: boolean;
+  replyTo: ReplyPreview | null;
 };
 
 export type MessagesPage = {
@@ -52,8 +61,15 @@ export function fetchMessages(id: string, cursor?: string) {
   return apiGet<MessagesPage>(`/conversations/${id}/messages${qs}`);
 }
 
-export function sendMessage(id: string, content: string) {
-  return apiPost<Message>(`/conversations/${id}/messages`, { content });
+export function sendMessage(id: string, content: string, replyToMessageId?: string) {
+  return apiPost<Message>(`/conversations/${id}/messages`, {
+    content,
+    replyToMessageId,
+  });
+}
+
+export function editMessage(id: string, messageId: string, content: string) {
+  return apiPatch<Message>(`/conversations/${id}/messages/${messageId}`, { content });
 }
 
 export function markConversationRead(id: string) {
