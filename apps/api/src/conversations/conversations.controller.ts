@@ -42,6 +42,14 @@ export class ConversationsController {
     return this.conversationsService.getConversations(user.id);
   }
 
+  @Get(':id')
+  getConversation(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.getDetail(user.id, id);
+  }
+
   @Get(':id/messages')
   getMessages(
     @CurrentUser() user: JwtPayload,

@@ -51,6 +51,19 @@ export class ConversationsService {
     return { id: conversation.id };
   }
 
+  async getDetail(userId: string, conversationId: string) {
+    await this.assertMember(conversationId, userId);
+    const partner = await this.repository.getPartner(conversationId, userId);
+    return {
+      id: conversationId,
+      partner: partner
+        ? { id: partner.id, name: partner.name, avatarUrl: partner.avatarUrl }
+        : null,
+      // 내가 보낸 메시지의 읽음 표시용 — 상대가 마지막으로 읽은 시각
+      partnerLastReadAt: partner?.lastReadAt ?? null,
+    };
+  }
+
   async getConversations(userId: string): Promise<ConversationListItem[]> {
     const rows = await this.repository.listForUser(userId);
     const unread = await this.repository.unreadCounts(

@@ -205,6 +205,28 @@ export class ConversationsRepository {
       .where(eq(messages.id, messageId));
   }
 
+  // 대화방의 상대 참가자 정보 (1:1 헤더용) + 상대의 읽음 시각.
+  async getPartner(conversationId: string, userId: string) {
+    const rows = await this.db
+      .select({
+        id: users.id,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+        lastReadAt: conversationParticipants.lastReadAt,
+      })
+      .from(conversationParticipants)
+      .innerJoin(users, eq(users.id, conversationParticipants.userId))
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          ne(conversationParticipants.userId, userId),
+          isNull(users.deletedAt),
+        ),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   // 대화방의 나를 제외한 참가자 id들 (1:1이면 1명, 그룹 대비 배열).
   async otherParticipantIds(conversationId: string, exceptUserId: string) {
     const rows = await this.db
