@@ -215,8 +215,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     >
                       {m.replyTo && (
                         <div
-                          className={`mb-1 border-l-2 pl-2 ${
-                            mine ? "border-text-inverse/40" : "border-text-tertiary/40"
+                          className={`mb-1 border-b pb-1 ${
+                            mine ? "border-text-inverse/30" : "border-text-tertiary/30"
                           }`}
                         >
                           <p
@@ -299,10 +299,20 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           </div>
         )}
         {replyTarget && (
-          <div className="mb-2 flex items-center gap-2 rounded-lg bg-background-soft px-3 py-2">
-            <div className="w-0.5 shrink-0 self-stretch rounded bg-primary" />
+          <div className="mb-2 flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M9 17l-5-5 5-5M4 12h9a5 5 0 0 1 5 5v2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-bold text-text-secondary">
+              <p className="text-[14px] font-bold text-text-primary">
                 {replyTarget.senderId === myId ? "나" : partnerName}에게 답장
               </p>
               <p className="truncate text-[13px] text-text-tertiary">
