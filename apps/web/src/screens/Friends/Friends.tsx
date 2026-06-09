@@ -2,8 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { StickyHeader } from "@/components/layout/StickyHeader";
-import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
+import { mobileMainScroll } from "@/lib/mobilePageLayout";
 import { useDmUnreadCount } from "@/hooks/useConversations";
+import { useScrolled } from "@/hooks/useScrolled";
+import { cn } from "@/lib/cn";
 import { FriendsList } from "./FriendsList";
 import { ChatList } from "./ChatList";
 
@@ -19,22 +21,43 @@ export const Friends = () => {
       scroll: false,
     });
   const { data: dmUnread } = useDmUnreadCount();
+  // 최상단이 아니면 세그먼트를 '유령 모드'로 — 배경·블러 제거하고 글자/선택표시를
+  // 연하게 해서 뒤 친구 리스트를 가리지 않게 한다.
+  const ghost = useScrolled();
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <StickyHeader title={tab === "friends" ? "친구" : "채팅"} />
-      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
-        {/* 친구 | 채팅 세그먼트 (콘텐츠 최상단) */}
-        <div className="mx-page mb-1 mt-3 flex gap-1 rounded-full bg-border p-1">
-          <SegmentTab label="친구" active={tab === "friends"} onClick={() => setTab("friends")} />
+
+      {/* 친구 | 채팅 세그먼트 — 헤더 아래 고정 글래스 알약.
+          이 셸은 main이 아닌 window가 스크롤되므로 sticky가 안 먹어 fixed로 고정한다.
+          z-20: 리스트(main z-10) 위·헤더(z-30) 아래 → 리스트가 알약 뒤로 흐르며 비침. */}
+      <div className="fixed inset-x-0 top-[60px] z-20 mx-auto w-full max-w-md px-page">
+        <div
+          className={cn(
+            "flex gap-1 rounded-full p-1 transition-all duration-300",
+            ghost
+              ? "bg-transparent ring-0"
+              : "bg-surface/45 ring-1 ring-border-strong/50 backdrop-blur-md",
+          )}
+        >
+          <SegmentTab
+            label="친구"
+            active={tab === "friends"}
+            ghost={ghost}
+            onClick={() => setTab("friends")}
+          />
           <SegmentTab
             label="채팅"
             active={tab === "chat"}
+            ghost={ghost}
             onClick={() => setTab("chat")}
             count={dmUnread?.count ?? 0}
           />
         </div>
+      </div>
 
+      <main className={`relative z-10 ${mobileMainScroll} pt-[112px]`}>
         {tab === "friends" ? <FriendsList /> : <ChatList />}
       </main>
     </div>
@@ -44,22 +67,30 @@ export const Friends = () => {
 const SegmentTab = ({
   label,
   active,
+  ghost,
   onClick,
   count = 0,
 }: {
   label: string;
   active: boolean;
+  ghost: boolean;
   onClick: () => void;
   count?: number;
 }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-[14px] font-bold transition-colors ${
-      active
-        ? "bg-surface text-text-primary shadow-sm"
-        : "text-text-secondary active:opacity-70"
-    }`}
+    className={cn(
+      "flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-[14px] font-bold transition-all duration-300",
+      // 유령 모드: 흰 배경 대신 선택탭은 테두리만, 글자는 연하게 → 리스트 안 가림
+      ghost
+        ? active
+          ? "ring-1 ring-inset ring-text-primary/12 text-text-primary/55"
+          : "text-text-secondary/35 active:opacity-70"
+        : active
+          ? "bg-surface/85 text-text-primary shadow-sm"
+          : "text-text-secondary active:opacity-70",
+    )}
   >
     {label}
     {count > 0 && (
