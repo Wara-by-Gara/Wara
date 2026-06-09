@@ -93,7 +93,7 @@ export default function AccountSettingsContainer() {
   const handleLogout = async () => {
     await logout();
     queryClient.clear();
-    setScreen('logoutComplete');
+    router.replace(ROUTES.HOME);
   };
 
   const handleWithdrawContinue = () => {
@@ -110,6 +110,7 @@ export default function AccountSettingsContainer() {
           await logout();
           queryClient.clear();
           setScreen('withdrawComplete');
+          window.history.replaceState(null, '', ROUTES.HOME);
         },
         onError: (err) => {
           const code = err instanceof Error ? err.message : '';
