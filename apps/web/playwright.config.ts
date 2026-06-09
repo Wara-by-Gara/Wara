@@ -48,6 +48,24 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], storageState: authFile("admin") },
     },
     {
+      name: "voteFlow",
+      testMatch: /date-vote-flow\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"], storageState: authFile("guest") },
+    },
+    {
+      name: "locationFlow",
+      testMatch: /location-flow\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"], storageState: authFile("newHost") },
+    },
+    {
+      name: "dmFlow",
+      testMatch: /dm-flow\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"], storageState: authFile("newHost") },
+    },
+    {
       name: "anon",
       testMatch: /anon.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
