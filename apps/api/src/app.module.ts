@@ -33,6 +33,7 @@ import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
+    LoggerModule,
     ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -48,7 +50,7 @@ import { HealthModule } from './health/health.module';
         stores: [createKeyv(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379')],
       }),
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: process.env.NODE_ENV !== 'production' ? 10000 : 60 }]),
     DatabaseModule,
     // dev 전용: AuthController의 @Post(':provider/token') 와일드카드가 /auth/dev/token을
     // 가로채지 않도록 AuthModule보다 먼저 등록 (NestJS는 import 순서대로 controller 등록).

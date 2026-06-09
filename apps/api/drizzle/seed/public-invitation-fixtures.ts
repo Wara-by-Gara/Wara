@@ -22,8 +22,8 @@ type SeedDeps = {
   templateIdByKey: Record<string, string>;
   hostKeys: string[];
   guestKeys: string[];
-  lumaCategoryCoverUrl: (folder: string, seedKey: string) => string;
-  lumaCategoryPhotoUrl: (folder: string, seedKey: string) => string;
+  templateCoverUrl: (folder: string, seedKey: string) => string;
+  templatePhotoUrl: (folder: string, seedKey: string) => string;
   realEventLocations: ReadonlyArray<{
     readonly placeName: string;
     readonly address: string;
@@ -270,7 +270,7 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
         title: cat.titles[n]!,
         description: cat.descriptions[n]!,
         mainCoverType: 'image',
-        mainImageKey: deps.lumaCategoryCoverUrl(cat.folder, invKey),
+        mainImageKey: deps.templateCoverUrl(cat.folder, invKey),
         mainGifUrl: null,
         eventStartAt: eventDate,
         isMissionEnabled: false,
@@ -324,7 +324,7 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
           id: photoId,
           participantId: uploaderId,
           invitationId: invId,
-          imageKey: deps.lumaCategoryPhotoUrl(cat.folder, `${invKey}-${pi}`),
+          imageKey: deps.templatePhotoUrl(cat.folder, `${invKey}-${pi}`),
           exifMetadata: { width: 1280, height: 853, camera: 'iPhone 15' },
           viewCount: pi * 3,
           likeCount: likers.length,

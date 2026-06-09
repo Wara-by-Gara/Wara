@@ -9,12 +9,15 @@ import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type { JwtPayload } from '../types/jwt-payload.type';
+import { AuthRepository } from '../../auth/auth.repository';
+import { ErrorCode } from '../constants/error-codes';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly authRepository: AuthRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,7 +34,9 @@ export class JwtAuthGuard implements CanActivate {
         try {
           const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
           if (this.isValidPayload(payload)) request.user = payload;
-        } catch { /* 유효하지 않은 토큰은 무시 */ }
+        } catch {
+          /* 유효하지 않은 토큰은 무시 */
+        }
       }
       return true;
     }
@@ -47,6 +52,13 @@ export class JwtAuthGuard implements CanActivate {
 
       if (!this.isValidPayload(payload)) {
         throw new UnauthorizedException('TOKEN_INVALID');
+      }
+
+      const user = await this.authRepository.findUserById(payload.id);
+      if (!user) {
+        throw new UnauthorizedException({
+          code: ErrorCode.AUTH_USER_NOT_FOUND,
+        });
       }
 
       request.user = payload;

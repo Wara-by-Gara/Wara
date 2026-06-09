@@ -36,10 +36,10 @@ const DICEBEAR_PROFILE_PREFIX = 'dicebear:';
 /** 유저별 결정적 랜덤 DiceBear 시드 (재시드 시 동일 아바타) */
 const profileDicebearSeed = (userKey: string) =>
   `${DICEBEAR_PROFILE_PREFIX}${id(`avatar:${userKey}`).slice(0, 12).toLowerCase()}`;
-const { all: LUMA_IMAGE_PATHS, byFolder: LUMA_IMAGE_PATHS_BY_FOLDER } = collectLumaImagePaths();
+const { all: TEMPLATE_IMAGE_PATHS, byFolder: TEMPLATE_IMAGE_PATHS_BY_FOLDER } = collectTemplateImagePaths();
 
-function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, string[]> } {
-  const root = path.resolve(__dirname, '../../../web/public/luma_images');
+function collectTemplateImagePaths(): { all: string[]; byFolder: Record<string, string[]> } {
+  const root = path.resolve(__dirname, '../../../web/public/template_images');
   if (!fs.existsSync(root)) return { all: [], byFolder: {} };
 
   const all: string[] = [];
@@ -50,7 +50,7 @@ function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, stri
     const folderPaths: string[] = [];
     for (const file of fs.readdirSync(categoryDir)) {
       if (!/\.(png|jpe?g|webp)$/i.test(file)) continue;
-      const rel = `/luma_images/${entry.name}/${file}`;
+      const rel = `/template_images/${entry.name}/${file}`;
       folderPaths.push(rel);
       all.push(rel);
     }
@@ -61,7 +61,7 @@ function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, stri
   return { all: all.sort(), byFolder };
 }
 
-const lumaUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
+const templateImageUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
   if (pool.length === 0) {
     return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
   }
@@ -73,46 +73,46 @@ const lumaUrlFromPool = (pool: string[], namespace: string, seedKey: string) => 
   return `${base}/${urlPath}`;
 };
 
-const lumaCategoryCoverUrl = (folder: string, seedKey: string) =>
-  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-cover:${folder}`, seedKey);
+const templateCoverUrl = (folder: string, seedKey: string) =>
+  templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-cover:${folder}`, seedKey);
 
-const lumaCategoryPhotoUrl = (folder: string, seedKey: string) =>
-  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-photo:${folder}`, seedKey);
+const templatePhotoUrl = (folder: string, seedKey: string) =>
+  templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-photo:${folder}`, seedKey);
 
-/** luma_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
-const lumaImageUrl = (namespace: string, seedKey: string) => {
-  if (LUMA_IMAGE_PATHS.length === 0) {
+/** template_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
+const templateImageUrl = (namespace: string, seedKey: string) => {
+  if (TEMPLATE_IMAGE_PATHS.length === 0) {
     return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
   }
   const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
-  const idx = hash.readUInt32BE(0) % LUMA_IMAGE_PATHS.length;
-  const rel = LUMA_IMAGE_PATHS[idx]!;
+  const idx = hash.readUInt32BE(0) % TEMPLATE_IMAGE_PATHS.length;
+  const rel = TEMPLATE_IMAGE_PATHS[idx]!;
   const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
   const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
   return `${base}/${urlPath}`;
 };
-const invitationCoverUrl = (seedKey: string) => lumaImageUrl('luma-cover', seedKey);
-const photoUrl = (seedKey: string) => lumaImageUrl('luma-photo', seedKey);
-const templatePreviewUrl = (seedKey: string) => lumaImageUrl('luma-template', seedKey);
+const invitationCoverUrl = (seedKey: string) => templateImageUrl('template-cover', seedKey);
+const photoUrl = (seedKey: string) => templateImageUrl('template-photo', seedKey);
+const templatePreviewUrl = (seedKey: string) => templateImageUrl('template-preview', seedKey);
 
-const lumaImageUrlFromRel = (rel: string) => {
+const templateImageUrlFromRel = (rel: string) => {
   const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
   const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
   return `${base}/${urlPath}`;
 };
 
-/** luma_images 폴더에서 대표 미리보기 1장 선택 */
+/** template_images 폴더에서 대표 미리보기 1장 선택 */
 const templatePreviewFromFolder = (
   folder: string,
   imageIndex: number,
   previewFile?: string,
 ) => {
   if (previewFile) {
-    return lumaImageUrlFromRel(`/luma_images/${folder}/${previewFile}`);
+    return templateImageUrlFromRel(`/template_images/${folder}/${previewFile}`);
   }
-  const pool = LUMA_IMAGE_PATHS_BY_FOLDER[folder];
+  const pool = TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder];
   if (!pool?.length) return templatePreviewUrl(`template-${folder}`);
-  return lumaImageUrlFromRel(pool[imageIndex % pool.length]!);
+  return templateImageUrlFromRel(pool[imageIndex % pool.length]!);
 };
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
@@ -546,7 +546,7 @@ function buildSeeds() {
     isEventLocations: true,
   }));
 
-  // 5. Templates (previewImageKey: luma_images URL)
+  // 5. Templates (previewImageKey: template_images URL)
   const templateIdByKey: Record<string, string> = {};
   for (const t of TEMPLATE_DEFS) templateIdByKey[t.key] = id(`template:${t.key}`);
 
@@ -567,7 +567,7 @@ function buildSeeds() {
     isActive: mt.isActive,
   }));
 
-  // 6. Invitations (mainImageKey: luma_images URL — S3Service.getPublicUrl 패스스루)
+  // 6. Invitations (mainImageKey: template_images URL — S3Service.getPublicUrl 정적 URL 변환)
   const invIdByKey: Record<string, string> = {};
   for (const inv of INV_DEFS) invIdByKey[inv.key] = id(`invitation:${inv.key}`);
 
@@ -1086,8 +1086,8 @@ function buildSeeds() {
     templateIdByKey,
     hostKeys: HOST_KEYS,
     guestKeys: GUEST_KEYS,
-    lumaCategoryCoverUrl,
-    lumaCategoryPhotoUrl,
+    templateCoverUrl,
+    templatePhotoUrl,
     realEventLocations: REAL_EVENT_LOCATIONS,
     feedbackInvTemplates: FEEDBACK_INV_TEMPLATES,
     feedbackPhotoTemplates: FEEDBACK_PHOTO_TEMPLATES,
