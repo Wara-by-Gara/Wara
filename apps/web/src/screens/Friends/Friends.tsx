@@ -27,12 +27,13 @@ export const Friends = () => {
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <StickyHeader title={tab === "friends" ? "친구" : "채팅"} />
+      {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당 */}
+      <StickyHeader />
 
-      {/* 친구 | 채팅 세그먼트 — 헤더 아래 고정 글래스 알약.
+      {/* 친구 | 채팅 세그먼트 — 상단 고정 글래스 알약.
           이 셸은 main이 아닌 window가 스크롤되므로 sticky가 안 먹어 fixed로 고정한다.
-          z-20: 리스트(main z-10) 위·헤더(z-30) 아래 → 리스트가 알약 뒤로 흐르며 비침. */}
-      <div className="fixed inset-x-0 top-[60px] z-20 mx-auto w-full max-w-md px-page">
+          z-40: 빈 헤더(z-30)보다 위에 둬야 헤더가 알약 상단 클릭을 가로채지 않는다. */}
+      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page">
         <div
           className={cn(
             "flex gap-1 rounded-full p-1 transition-all duration-300",
@@ -57,7 +58,7 @@ export const Friends = () => {
         </div>
       </div>
 
-      <main className={`relative z-10 ${mobileMainScroll} pt-[112px]`}>
+      <main className={`relative z-10 ${mobileMainScroll} pt-[80px]`}>
         {tab === "friends" ? <FriendsList /> : <ChatList />}
       </main>
     </div>
