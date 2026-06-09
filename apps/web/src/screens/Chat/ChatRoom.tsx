@@ -165,23 +165,17 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
       <TopAppBar
         onBack={() => router.back()}
+        largeTitle
+        className="min-h-0 pt-2"
         title={
           <button
             type="button"
             onClick={goProfile}
             disabled={!partnerId}
             aria-label={`${partnerName} 프로필 보기`}
-            className="flex items-center justify-center gap-2 active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+            className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
           >
-            <Avatar
-              size="xs"
-              src={conversation?.partner?.avatarUrl ?? undefined}
-              alt={partnerName}
-              initial={partnerName[0]}
-            />
-            <span className="truncate text-[16px] font-bold text-text-primary">
-              {partnerName}
-            </span>
+            {partnerName}
           </button>
         }
       />
