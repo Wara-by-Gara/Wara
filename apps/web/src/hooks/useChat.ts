@@ -163,7 +163,11 @@ export function useChatRealtime(id: string) {
         return;
       }
       appendMessage(qc, id, msg);
-      markConversationRead(id).catch(() => {});
+      // 읽음 처리 커밋 후 전역 안읽음 카운트도 갱신 — 안 하면 전역 소켓의 이른
+      // refetch가 읽기 전 카운트(=1)를 잡아 하단 점·세그먼트 배지가 stale로 남는다.
+      markConversationRead(id)
+        .then(() => qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() }))
+        .catch(() => {});
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     });
 
