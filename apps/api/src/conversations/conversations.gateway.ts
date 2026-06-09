@@ -25,7 +25,6 @@ export type ChatMessagePayload = {
 
 @WebSocketGateway({
   namespace: '/dm',
-  cors: { origin: process.env.FRONTEND_URL, credentials: true },
 })
 export class ConversationsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
