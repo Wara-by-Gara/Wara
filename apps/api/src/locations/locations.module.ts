@@ -10,6 +10,7 @@ import { LocationsRedisStore } from './locations.redis-store';
 import { LocationsFlushScheduler } from './locations-flush.scheduler';
 import { LocationsGateway } from './locations.gateway';
 import { KakaoLocalService } from './kakao-local.service';
+import { LocationPreEventScheduler } from './location-pre-event.scheduler';
 
 @Module({
   imports: [AuthModule, HttpModule, NotificationsModule],
@@ -21,6 +22,8 @@ import { KakaoLocalService } from './kakao-local.service';
     LocationsFlushScheduler,
     LocationsGateway,
     KakaoLocalService,
+    LocationPreEventScheduler,
   ],
+  exports: [LocationsService],
 })
 export class LocationsModule {}
