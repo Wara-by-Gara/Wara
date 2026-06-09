@@ -33,6 +33,7 @@ import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { HealthModule } from './health/health.module';
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
     ScheduleModule.forRoot(),
+    RedisModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
