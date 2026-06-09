@@ -17,7 +17,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
-    private readonly repository: AuthRepository,
+    private readonly authRepository: AuthRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -54,7 +54,7 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('TOKEN_INVALID');
       }
 
-      const user = await this.repository.findUserById(payload.id);
+      const user = await this.authRepository.findUserById(payload.id);
       if (!user) {
         throw new UnauthorizedException({
           code: ErrorCode.AUTH_USER_NOT_FOUND,
