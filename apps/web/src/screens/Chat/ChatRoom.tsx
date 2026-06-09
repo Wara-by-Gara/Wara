@@ -19,6 +19,8 @@ import type { Message } from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
+// 메시지 최대 길이 — 백엔드 send-message DTO(.max(2000))와 일치시킨다.
+const MAX_MESSAGE = 2000;
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("ko-KR", {
@@ -361,11 +363,22 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             </button>
           </div>
         )}
+        {/* 한도 근처에서만 글자수 카운터 노출 (백엔드 2000자 제한과 일치) */}
+        {text.length >= MAX_MESSAGE - 100 && (
+          <p
+            className={`mb-1 pr-1 text-right text-[11px] ${
+              text.length >= MAX_MESSAGE ? "text-danger" : "text-text-tertiary"
+            }`}
+          >
+            {text.length}/{MAX_MESSAGE}
+          </p>
+        )}
         <div className="flex items-center gap-2">
         <input
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          maxLength={MAX_MESSAGE}
           // 한글 조합 중 Enter는 글자 확정용 → 전송(폼 submit) 막아 오발송·글자깨짐 방지
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
