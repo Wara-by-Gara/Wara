@@ -1,4 +1,4 @@
-import { Global, Logger, Module } from '@nestjs/common';
+import { Global, Inject, Logger, Module, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import {
@@ -24,8 +24,11 @@ function createClient(url: string, role: string): Redis {
 
 function clientFactory(role: string) {
   return (config: ConfigService): Redis => {
-    const url = config.get<string>('REDIS_URL') ?? DEFAULT_REDIS_URL;
-    return createClient(url, role);
+    const url = config.get<string>('REDIS_URL');
+    if (!url && process.env.NODE_ENV === 'production') {
+      throw new Error('REDIS_URL is required in production');
+    }
+    return createClient(url ?? DEFAULT_REDIS_URL, role);
   };
 }
 
@@ -50,4 +53,18 @@ function clientFactory(role: string) {
   ],
   exports: [REDIS_CLIENT, REDIS_PUB, REDIS_SUB],
 })
-export class RedisModule {}
+export class RedisModule implements OnModuleDestroy {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly client: Redis,
+    @Inject(REDIS_PUB) private readonly pub: Redis,
+    @Inject(REDIS_SUB) private readonly sub: Redis,
+  ) {}
+
+  async onModuleDestroy(): Promise<void> {
+    await Promise.allSettled(
+      [this.client, this.pub, this.sub].map((c) =>
+        c.status === 'end' ? Promise.resolve() : c.quit(),
+      ),
+    );
+  }
+}

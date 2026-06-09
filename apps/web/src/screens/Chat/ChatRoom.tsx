@@ -16,8 +16,11 @@ import {
   useChatRealtime,
 } from "@/hooks/useChat";
 import type { Message } from "@/lib/api/conversations";
+import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
+// 메시지 최대 길이 - 백엔드 send-message DTO(.max(2000))와 일치시킨다.
+const MAX_MESSAGE = 2000;
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("ko-KR", {
@@ -46,8 +49,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // 메시지 길게 누르기 → 메뉴
+  // PC만 진입 시 입력창 자동 포커스 - 마우스 클릭 없이 바로 타이핑.
+  // 모바일은 진입하자마자 키보드가 올라와 메시지를 가리므로 제외(정밀 포인터 기기만).
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus();
+  }, [id]);
+
+  // 메시지 길게 누르기 -> 메뉴
   const [menuTarget, setMenuTarget] = useState<Message | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
   const pressTimer = useRef<number | null>(null);
@@ -107,39 +117,66 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const content = text.trim();
-    if (!content) return;
+    // maxLength는 입력창 UI 가드일 뿐 - 전송 직전에도 길이를 방어한다 (defense in depth)
+    if (!content || content.length > MAX_MESSAGE) return;
 
     if (editing) {
       if (editMutation.isPending) return;
       editMutation.mutate(
         { messageId: editing.id, content },
-        { onSuccess: cancelEdit },
+        {
+          onSuccess: cancelEdit,
+          // 실패해도 수정 상태/입력은 유지해 재시도 가능하게 하고 알림만 (send와 대칭)
+          onError: (err) => {
+            toast.error("메시지를 수정하지 못했어요. 다시 시도해주세요");
+            console.warn("[dm] edit failed", err);
+          },
+        },
       );
       return;
     }
 
     if (sendMutation.isPending) return;
-    sendMutation.mutate({ content, replyToMessageId: replyTarget?.id });
+    // 입력은 즉시 비우되(스냅감), 실패하면 내용/답장 대상을 복원하고 알린다.
+    const reply = replyTarget;
     setText("");
     setReplyTarget(null);
+    sendMutation.mutate(
+      { content, replyToMessageId: reply?.id },
+      {
+        onError: (err) => {
+          setText(content);
+          setReplyTarget(reply);
+          toast.error("메시지를 보내지 못했어요. 다시 시도해주세요");
+          // 관측용: 전송 실패를 태그와 함께 남김 (원격 트래커 도입 시 이 지점에서 전송)
+          console.warn("[dm] send failed", err);
+        },
+      },
+    );
+  };
+
+  // 헤더 이름/아바타 또는 상대 말풍선 아바타 클릭 -> 상대 프로필(친구 화면 재사용)
+  const partnerId = conversation?.partner?.id;
+  const goProfile = () => {
+    if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
   };
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
       <TopAppBar
         onBack={() => router.back()}
+        largeTitle
+        className="min-h-0 pt-2"
         title={
-          <span className="flex items-center justify-center gap-2">
-            <Avatar
-              size="xs"
-              src={conversation?.partner?.avatarUrl ?? undefined}
-              alt={partnerName}
-              initial={partnerName[0]}
-            />
-            <span className="truncate text-[16px] font-bold text-text-primary">
-              {partnerName}
-            </span>
-          </span>
+          <button
+            type="button"
+            onClick={goProfile}
+            disabled={!partnerId}
+            aria-label={`${partnerName} 프로필 보기`}
+            className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+          >
+            {partnerName}
+          </button>
         }
       />
 
@@ -152,13 +189,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               disabled={isFetchingNextPage}
               className="text-[13px] text-text-tertiary active:opacity-70"
             >
-              {isFetchingNextPage ? "불러오는 중…" : "이전 메시지 보기"}
+              {isFetchingNextPage ? "불러오는 중..." : "이전 메시지 보기"}
             </button>
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중…</p>
+          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중...</p>
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-[14px] text-text-tertiary">
             첫 메시지를 보내보세요
@@ -190,13 +227,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 >
                   {!mine &&
                     (showAvatar ? (
-                      <Avatar
-                        size="sm"
-                        src={conversation?.partner?.avatarUrl ?? undefined}
-                        alt={partnerName}
-                        initial={partnerName[0]}
-                        className="self-start"
-                      />
+                      <button
+                        type="button"
+                        onClick={goProfile}
+                        aria-label={`${partnerName} 프로필 보기`}
+                        className="self-start active:opacity-70"
+                      >
+                        <Avatar
+                          size="sm"
+                          src={conversation?.partner?.avatarUrl ?? undefined}
+                          alt={partnerName}
+                          initial={partnerName[0]}
+                        />
+                      </button>
                     ) : (
                       <span className="w-9 shrink-0" aria-hidden />
                     ))}
@@ -211,11 +254,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       onPointerLeave={cancelPress}
                       onPointerCancel={cancelPress}
                       onContextMenu={(e) => e.preventDefault()}
-                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${bubbleClass}`}
+                      // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
+                      // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
+                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
+                        m.replyTo ? "min-w-[120px] text-left" : ""
+                      } ${bubbleClass}`}
                     >
                       {m.replyTo && (
                         <div
-                          className={`mb-1 border-b pb-1 ${
+                          className={`mb-2 border-b pb-2 ${
                             mine ? "border-text-inverse/30" : "border-text-tertiary/30"
                           }`}
                         >
@@ -331,10 +378,26 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             </button>
           </div>
         )}
+        {/* 한도 근처에서만 글자수 카운터 노출 (백엔드 2000자 제한과 일치) */}
+        {text.length >= MAX_MESSAGE - 100 && (
+          <p
+            className={`mb-1 pr-1 text-right text-[11px] ${
+              text.length >= MAX_MESSAGE ? "text-danger" : "text-text-tertiary"
+            }`}
+          >
+            {text.length}/{MAX_MESSAGE}
+          </p>
+        )}
         <div className="flex items-center gap-2">
         <input
+          ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          maxLength={MAX_MESSAGE}
+          // 한글 조합 중 Enter는 글자 확정용 -> 전송(폼 submit) 막아 오발송/글자깨짐 방지
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
+          }}
           placeholder={editing ? "수정 메시지 입력" : "메시지를 입력하세요"}
           className="h-10 flex-1 rounded-full bg-background-soft px-4 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
         />
@@ -371,7 +434,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
       {/* 메시지 길게 누르기 메뉴 */}
       <Modal open={!!menuTarget} onOpenChange={(open) => !open && setMenuTarget(null)}>
-        <ModalContent className="max-w-[240px]" aria-describedby={undefined}>
+        <ModalContent className="max-w-[240px] py-2" aria-describedby={undefined}>
           <ModalPrimitive.Title className="sr-only">메시지 메뉴</ModalPrimitive.Title>
           <div className="flex flex-col">
             <button

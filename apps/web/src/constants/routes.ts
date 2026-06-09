@@ -7,6 +7,7 @@ export const ROUTES = {
   FRIENDS: {
     LIST: "/friends",
     DETAIL: (id: string) => `/friends/${id}`,
+    HIDDEN: "/friends/hidden",
   },
   CHAT: {
     ROOM: (id: string) => `/chats/${id}`,

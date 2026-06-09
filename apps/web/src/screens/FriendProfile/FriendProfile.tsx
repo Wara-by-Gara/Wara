@@ -63,12 +63,13 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <HeaderGradient fixed />
       <TopAppBar
-        className="absolute inset-x-0 top-0 z-30"
+        variant="transparent"
+        className="absolute inset-x-0 top-0 z-30 min-h-0 pt-2"
         onBack={() => router.back()}
       />
-      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
-        {/* 헤더 — 소프트 그라데이션 배경 */}
-        <section className="flex flex-col items-center gap-3 bg-gradient-to-b from-primary-soft/40 to-surface px-page pb-7 pt-8">
+      <main className={`relative z-10 ${mobileMainScroll}`}>
+        {/* 프로필 헤더 - 배경 투명으로 두어 상단 aura 그라데이션(HeaderGradient)이 비치게, 위 여백 축소 */}
+        <section className="flex flex-col items-center gap-3 px-page pb-7 pt-14">
           <Avatar
             size="xl"
             src={friend.avatarUrl ?? undefined}
@@ -85,7 +86,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
             fullWidth
             onClick={() => startChat.mutate(id)}
             disabled={startChat.isPending}
-            className="mt-1 rounded-lg border border-border-strong"
+            className="mt-1 rounded-lg border border-border-strong bg-surface/40 backdrop-blur-sm hover:bg-surface/60 active:bg-surface/70"
           >
             <Icon name="message-circle" size="sm" color="currentColor" decorative />
             1:1 채팅
