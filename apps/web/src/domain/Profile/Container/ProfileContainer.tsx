@@ -43,12 +43,14 @@ export default function ProfileContainer() {
         avatarUrl: me.profileImageUrl ?? undefined,
       }}
       recentInvitations={recentInvitations}
+      participatedCount={invitations?.length ?? 0}
       onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
       onInquiries={() => router.push(ROUTES.INQUIRIES.HOME)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
       onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
+      onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
     />
   );
 }
