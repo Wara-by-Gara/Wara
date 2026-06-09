@@ -86,7 +86,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
             fullWidth
             onClick={() => startChat.mutate(id)}
             disabled={startChat.isPending}
-            className="mt-1 rounded-lg border border-border-strong"
+            className="mt-1 rounded-lg border border-border-strong bg-surface/40 backdrop-blur-sm hover:bg-surface/60 active:bg-surface/70"
           >
             <Icon name="message-circle" size="sm" color="currentColor" decorative />
             1:1 채팅
