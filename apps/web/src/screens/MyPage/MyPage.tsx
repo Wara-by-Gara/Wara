@@ -21,7 +21,7 @@ const RECENT_PREVIEW = 4;
 export interface MyPageProps {
   state?: MyPageState;
   user?: MockUser;
-  /** 최근/내가 만든/참여한 — props로 주입 */
+  /** 최근/내가 만든/참여한 - props로 주입 */
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
   /** 총 참여한 모임 수 */
   participatedCount?: number;
@@ -106,7 +106,7 @@ export const MyPage = ({
         }
       />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pb-10">
-      {/* 프로필 히어로 — 배경 투명, 상단 aura 그라데이션이 비치게 */}
+      {/* 프로필 히어로 - 배경 투명, 상단 aura 그라데이션이 비치게 */}
       <section className="flex flex-col items-center gap-4 pb-7 pt-[108px]">
         <div className="relative">
           <Avatar

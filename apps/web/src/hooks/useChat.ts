@@ -111,7 +111,7 @@ export function useChatMessages(id: string) {
     refetchOnMount: "always",
   });
 
-  // page 0 = 최신 블록, 이후 페이지일수록 과거 → 오래된→최신 순으로 펼침
+  // page 0 = 최신 블록, 이후 페이지일수록 과거 -> 오래된->최신 순으로 펼침
   const messages =
     query.data?.pages.slice().reverse().flatMap((p) => p.messages) ?? [];
 
@@ -125,7 +125,7 @@ export function useSendMessage(id: string) {
       apiSendMessage(id, content, replyToMessageId),
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
-      // 목록 캐시 직접 갱신 (내 메시지 → 안읽음 안 올림). 캐시에 없으면 1회 폴백.
+      // 목록 캐시 직접 갱신 (내 메시지 -> 안읽음 안 올림). 캐시에 없으면 1회 폴백.
       if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       }
@@ -180,26 +180,26 @@ export function useChatRealtime(id: string) {
     });
 
     socket.on('message:new', (msg: Message) => {
-      // 다른 방·목록 갱신은 전역 소켓(useDmGlobalSocket)이 담당 → 여기선 이 방만 처리.
+      // 다른 방/목록 갱신은 전역 소켓(useDmGlobalSocket)이 담당 -> 여기선 이 방만 처리.
       if (msg.conversationId !== id) return;
       appendMessage(qc, id, msg);
-      // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 → rate limit 방지)
+      // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 -> rate limit 방지)
       scheduleMarkRead(qc, id);
     });
 
-    // 상대가 메시지 삭제 → 열린 방의 메시지 캐시만 동기화 (목록은 전역 소켓이 갱신)
+    // 상대가 메시지 삭제 -> 열린 방의 메시지 캐시만 동기화 (목록은 전역 소켓이 갱신)
     socket.on('message:deleted', (payload: { conversationId: string; messageId: string }) => {
       if (payload.conversationId !== id) return;
       markDeleted(qc, id, payload.messageId);
     });
 
-    // 상대가 메시지 수정 → 교체
+    // 상대가 메시지 수정 -> 교체
     socket.on('message:edited', (msg: Message) => {
       if (msg.conversationId !== id) return;
       replaceMessage(qc, id, msg);
     });
 
-    // 상대가 읽음 → 내 메시지 읽음 표시 갱신
+    // 상대가 읽음 -> 내 메시지 읽음 표시 갱신
     socket.on('message:read', (payload: { conversationId: string; readerId: string }) => {
       if (payload.conversationId !== id) return;
       qc.setQueryData<ConversationDetail>(
@@ -209,6 +209,11 @@ export function useChatRealtime(id: string) {
     });
 
     return () => {
+      // 예약된 읽음 처리 타이머 정리 - 방 전환/언마운트 후 엉뚱한 방의 markRead 발화 방지
+      if (readTimer) {
+        clearTimeout(readTimer);
+        readTimer = null;
+      }
       setActiveConversation(null);
       socket.disconnect();
     };

@@ -19,7 +19,7 @@ import type { Message } from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
-// 메시지 최대 길이 — 백엔드 send-message DTO(.max(2000))와 일치시킨다.
+// 메시지 최대 길이 - 백엔드 send-message DTO(.max(2000))와 일치시킨다.
 const MAX_MESSAGE = 2000;
 
 function formatTime(iso: string): string {
@@ -51,13 +51,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // PC만 진입 시 입력창 자동 포커스 — 마우스 클릭 없이 바로 타이핑.
+  // PC만 진입 시 입력창 자동 포커스 - 마우스 클릭 없이 바로 타이핑.
   // 모바일은 진입하자마자 키보드가 올라와 메시지를 가리므로 제외(정밀 포인터 기기만).
   useEffect(() => {
     if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus();
   }, [id]);
 
-  // 메시지 길게 누르기 → 메뉴
+  // 메시지 길게 누르기 -> 메뉴
   const [menuTarget, setMenuTarget] = useState<Message | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
   const pressTimer = useRef<number | null>(null);
@@ -117,7 +117,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const content = text.trim();
-    if (!content) return;
+    // maxLength는 입력창 UI 가드일 뿐 - 전송 직전에도 길이를 방어한다 (defense in depth)
+    if (!content || content.length > MAX_MESSAGE) return;
 
     if (editing) {
       if (editMutation.isPending) return;
@@ -129,7 +130,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
 
     if (sendMutation.isPending) return;
-    // 입력은 즉시 비우되(스냅감), 실패하면 내용·답장 대상을 복원하고 알린다.
+    // 입력은 즉시 비우되(스냅감), 실패하면 내용/답장 대상을 복원하고 알린다.
     const reply = replyTarget;
     setText("");
     setReplyTarget(null);
@@ -147,7 +148,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     );
   };
 
-  // 헤더 이름·아바타 또는 상대 말풍선 아바타 클릭 → 상대 프로필(친구 화면 재사용)
+  // 헤더 이름/아바타 또는 상대 말풍선 아바타 클릭 -> 상대 프로필(친구 화면 재사용)
   const partnerId = conversation?.partner?.id;
   const goProfile = () => {
     if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
@@ -187,13 +188,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               disabled={isFetchingNextPage}
               className="text-[13px] text-text-tertiary active:opacity-70"
             >
-              {isFetchingNextPage ? "불러오는 중…" : "이전 메시지 보기"}
+              {isFetchingNextPage ? "불러오는 중..." : "이전 메시지 보기"}
             </button>
           </div>
         )}
 
         {isLoading ? (
-          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중…</p>
+          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중...</p>
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-[14px] text-text-tertiary">
             첫 메시지를 보내보세요
@@ -392,7 +393,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={MAX_MESSAGE}
-          // 한글 조합 중 Enter는 글자 확정용 → 전송(폼 submit) 막아 오발송·글자깨짐 방지
+          // 한글 조합 중 Enter는 글자 확정용 -> 전송(폼 submit) 막아 오발송/글자깨짐 방지
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
           }}
