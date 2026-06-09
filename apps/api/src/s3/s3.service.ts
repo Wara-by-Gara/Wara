@@ -4,6 +4,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { isDicebearProfileImage } from '../common/utils/profile-image';
+import { isLumaStaticPath, resolveStaticAssetUrl } from '../common/utils/static-asset-url';
 import { S3_CLIENT } from './s3.constants';
 
 const UPLOAD_URL_EXPIRES_IN = 900;
@@ -28,6 +29,7 @@ export class S3Service {
 
   // public 파일 고정 URL (만료 없음)
   getPublicUrl(key: string): string {
+    if (isLumaStaticPath(key)) return resolveStaticAssetUrl(key);
     if (this.isExternalUrl(key)) return key;
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
   }
