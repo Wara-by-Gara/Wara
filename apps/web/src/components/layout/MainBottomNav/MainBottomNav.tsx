@@ -11,6 +11,7 @@ import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { useDmUnreadCount } from "@/hooks/useConversations";
 import { API_BASE } from "@/lib/env";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
@@ -49,7 +50,13 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const pathname = usePathname();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn);
+
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
 
   useEffect(() => { hydrate(); }, [hydrate]);
   if (
@@ -117,7 +124,9 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
               <SocialLoginButton
                 key={provider}
                 provider={provider}
-                onClick={() => { window.location.href = `${API_BASE}/auth/${provider}/redirect`; }}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
               />
             ))}
           </div>

@@ -7,11 +7,13 @@ import { API_BASE } from "@/lib/env";
 import { Icon } from "@/components/icons";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { getInvitation } from "@/lib/api/invitations";
 import type { getMe } from "@/lib/api/users";
 import { ROUTES } from "@/constants/routes";
@@ -50,6 +52,13 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    sessionStorage.setItem("wara_oauth_return", window.location.pathname);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
 
   const isLoggedIn = !!me;
 
@@ -244,26 +253,16 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
-          <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver"] as const).map((provider) => {
-              const config = {
-                kakao: { label: "카카오로 시작하기", cls: "bg-[#FEE500] text-[#181600]", path: "kakao" },
-                naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
-              }[provider];
-              return (
-                <button
-                  key={provider}
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem("wara_oauth_return", window.location.pathname);
-                    window.location.href = `${API_BASE}/auth/${config.path}/redirect`;
-                  }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-xs text-[16px] font-bold ${config.cls}`}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-col gap-2 pt-2">
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
+              />
+            ))}
           </div>
         </BottomSheetContent>
       </BottomSheet>

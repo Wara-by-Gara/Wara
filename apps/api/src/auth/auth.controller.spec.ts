@@ -138,7 +138,7 @@ describe('AuthController', () => {
 
       expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'acc', expect.any(Object));
       expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'ref', expect.any(Object));
-      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/signup');
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000/terms/agree?returnTo=/signup');
     });
 
     it('service 에러 → /login?auth_error=1 로 redirect', async () => {

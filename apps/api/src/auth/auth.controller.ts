@@ -106,7 +106,7 @@ export class AuthController {
         });
       this.setAuthCookies(res, accessToken, refreshToken);
       if (needsProfileCompletion) {
-        return res.redirect(`${frontendUrl}/signup`);
+        return res.redirect(`${frontendUrl}/terms/agree?returnTo=/signup`);
       }
       return res.redirect(`${frontendUrl}/?auth_success=1`);
     } catch (err) {

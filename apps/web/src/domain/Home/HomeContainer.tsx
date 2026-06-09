@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { Button } from "@/components/primitives/Button";
-import { Icon } from "@/components/icons";
 import { HeaderGradient } from "@/components/layout/StickyHeader";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { HomeHeader } from "@/domain/Home/HomeHeader";
 import { UpcomingMeetingsSection } from "@/domain/Home/UpcomingMeetingsSection";
 import { PopularTemplatesSection } from "@/domain/Home/PopularTemplatesSection";
@@ -14,13 +16,17 @@ import { RecommendedEventsSection } from "@/domain/Home/RecommendedEventsSection
 import { getUpcomingInvitations } from "@/domain/Home/homeUtils";
 import { useAuthStore } from "@/stores/authStore";
 import { getMyInvitations } from "@/lib/api/invitations";
+import { API_BASE } from "@/lib/env";
 import { ROUTES } from "@/constants/routes";
 import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 
 export default function HomeContainer() {
   const router = useRouter();
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   useEffect(() => {
     hydrate();
@@ -35,21 +41,78 @@ export default function HomeContainer() {
 
   const upcoming = getUpcomingInvitations(invitations ?? [], 3);
 
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
+
   if (!hydrated) return null;
 
   if (!isLoggedIn) {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background">
         <HeaderGradient fixed />
-        <TopAppBar className="relative z-30" brandLogo brandLogoCompact />
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-page text-center">
-          <Icon name="pixel-heart" size="xl" color="primary" decorative />
-          <h1 className="text-[24px] font-extrabold text-text-primary">초대장을 더 특별하게</h1>
-          <p className="text-[14px] text-text-secondary">로그인하고 첫 초대장을 만들어보세요</p>
-          <Button variant="primary" size="lg" className="mt-2" onClick={() => router.push(ROUTES.INVITATIONS.CREATE)}>
-            시작하기
-          </Button>
+        <TopAppBar className="relative z-30" variant="transparent" brandLogo brandLogoCompact />
+
+        <div className="relative z-10 flex flex-1 flex-col justify-end px-page pb-[calc(env(safe-area-inset-bottom)+32px)]">
+          <div className="mb-8">
+            <h1 className="text-[34px] font-extrabold leading-tight text-text-primary">
+              초대장을<br />더 특별하게 <span className="text-primary">✦</span>
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-text-secondary">
+              쉽게 만들고, 바로 공유하고,<br />함께 추억을 기록하세요
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={() => router.push(ROUTES.INVITATIONS.CREATE)}
+            >
+              초대장 만들기 →
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              onClick={() => setLoginSheetOpen(true)}
+            >
+              로그인하기
+            </Button>
+            <p className="mt-1 text-center text-[12px] text-text-tertiary">
+              계정이 있으면 더 많은 기능을 이용할 수 있어요
+            </p>
+          </div>
         </div>
+
+        <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
+          <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작하세요">
+            <div className="flex flex-col gap-2 pt-2">
+              {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+                <SocialLoginButton
+                  key={provider}
+                  provider={provider}
+                  loading={loadingProvider === provider}
+                  disabled={loadingProvider !== null}
+                  onClick={() => handleSocialLogin(provider)}
+                />
+              ))}
+            </div>
+            <p className="mt-4 text-center text-[12px] text-text-tertiary">
+              시작 시{" "}
+              <Link href={ROUTES.TERMS.SERVICE} className="underline">
+                이용약관
+              </Link>
+              ·
+              <Link href={ROUTES.TERMS.PRIVACY} className="underline">
+                개인정보처리방침
+              </Link>
+              에 동의하게 됩니다
+            </p>
+          </BottomSheetContent>
+        </BottomSheet>
       </div>
     );
   }
