@@ -33,6 +33,7 @@ import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
+    LoggerModule,
     ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       isGlobal: true,
