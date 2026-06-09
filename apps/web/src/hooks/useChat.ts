@@ -23,6 +23,22 @@ import {
 } from '@/lib/api/conversations';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { SOCKET_BASE } from '@/lib/env';
+import {
+  setActiveConversation,
+  applyIncomingToList,
+  scheduleUnreadRefresh,
+} from '@/hooks/useConversations';
+
+// 보고 있는 방의 읽음 처리를 메시지마다 호출하지 않고 디바운스로 묶는다 (rate limit 방지).
+let readTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleMarkRead(qc: QueryClient, id: string) {
+  if (readTimer) clearTimeout(readTimer);
+  readTimer = setTimeout(() => {
+    markConversationRead(id)
+      .then(() => scheduleUnreadRefresh(qc))
+      .catch(() => {});
+  }, 700);
+}
 
 // 새 메시지를 캐시의 최신 페이지(page 0) 끝에 추가 (id 중복 방지)
 function appendMessage(qc: QueryClient, id: string, msg: Message) {
@@ -109,7 +125,10 @@ export function useSendMessage(id: string) {
       apiSendMessage(id, content, replyToMessageId),
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+      // 목록 캐시 직접 갱신 (내 메시지 → 안읽음 안 올림). 캐시에 없으면 1회 폴백.
+      if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      }
     },
   });
 }
@@ -144,9 +163,13 @@ export function useChatRealtime(id: string) {
   useEffect(() => {
     if (!id) return;
 
+    // 보고 있는 방을 전역 소켓에 알려, 전역 소켓이 이 방의 안읽음을 올리지 않게 한다.
+    setActiveConversation(id);
+
+    // 입장 시 1회: 읽음 처리 + 목록/안읽음 최신화 (이 방 안읽음 0으로 수렴)
     markConversationRead(id)
       .then(() => {
-        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() });
       })
       .catch(() => {});
@@ -157,32 +180,23 @@ export function useChatRealtime(id: string) {
     });
 
     socket.on('message:new', (msg: Message) => {
-      if (msg.conversationId !== id) {
-        // 다른 대화방 메시지 → 목록 갱신만
-        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
-        return;
-      }
+      // 다른 방·목록 갱신은 전역 소켓(useDmGlobalSocket)이 담당 → 여기선 이 방만 처리.
+      if (msg.conversationId !== id) return;
       appendMessage(qc, id, msg);
-      // 읽음 처리 커밋 후 전역 안읽음 카운트도 갱신 — 안 하면 전역 소켓의 이른
-      // refetch가 읽기 전 카운트(=1)를 잡아 하단 점·세그먼트 배지가 stale로 남는다.
-      markConversationRead(id)
-        .then(() => qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() }))
-        .catch(() => {});
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+      // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 → rate limit 방지)
+      scheduleMarkRead(qc, id);
     });
 
-    // 상대가 메시지 삭제 → 삭제 표시 동기화
+    // 상대가 메시지 삭제 → 열린 방의 메시지 캐시만 동기화 (목록은 전역 소켓이 갱신)
     socket.on('message:deleted', (payload: { conversationId: string; messageId: string }) => {
       if (payload.conversationId !== id) return;
       markDeleted(qc, id, payload.messageId);
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     });
 
     // 상대가 메시지 수정 → 교체
     socket.on('message:edited', (msg: Message) => {
       if (msg.conversationId !== id) return;
       replaceMessage(qc, id, msg);
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     });
 
     // 상대가 읽음 → 내 메시지 읽음 표시 갱신
@@ -195,6 +209,7 @@ export function useChatRealtime(id: string) {
     });
 
     return () => {
+      setActiveConversation(null);
       socket.disconnect();
     };
   }, [id, qc]);
