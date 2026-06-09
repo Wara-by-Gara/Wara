@@ -1,9 +1,9 @@
-const LUMA_PATH_PREFIX = '/luma_images/';
+const TEMPLATE_IMAGE_PATH_PREFIX = '/template_images/';
 
-export function isLumaStaticPath(key: string): boolean {
-  if (key.startsWith(LUMA_PATH_PREFIX)) return true;
+export function isTemplateImagePath(key: string): boolean {
+  if (key.startsWith(TEMPLATE_IMAGE_PATH_PREFIX)) return true;
   try {
-    return new URL(key).pathname.startsWith(LUMA_PATH_PREFIX);
+    return new URL(key).pathname.startsWith(TEMPLATE_IMAGE_PATH_PREFIX);
   } catch {
     return false;
   }
