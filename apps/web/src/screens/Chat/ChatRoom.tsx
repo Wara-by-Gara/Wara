@@ -434,7 +434,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
       {/* 메시지 길게 누르기 메뉴 */}
       <Modal open={!!menuTarget} onOpenChange={(open) => !open && setMenuTarget(null)}>
-        <ModalContent className="max-w-[240px]" aria-describedby={undefined}>
+        <ModalContent className="max-w-[240px] py-2" aria-describedby={undefined}>
           <ModalPrimitive.Title className="sr-only">메시지 메뉴</ModalPrimitive.Title>
           <div className="flex flex-col">
             <button
