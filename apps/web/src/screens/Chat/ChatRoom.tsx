@@ -129,9 +129,22 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
 
     if (sendMutation.isPending) return;
-    sendMutation.mutate({ content, replyToMessageId: replyTarget?.id });
+    // 입력은 즉시 비우되(스냅감), 실패하면 내용·답장 대상을 복원하고 알린다.
+    const reply = replyTarget;
     setText("");
     setReplyTarget(null);
+    sendMutation.mutate(
+      { content, replyToMessageId: reply?.id },
+      {
+        onError: (err) => {
+          setText(content);
+          setReplyTarget(reply);
+          toast.error("메시지를 보내지 못했어요. 다시 시도해주세요");
+          // 관측용: 전송 실패를 태그와 함께 남김 (원격 트래커 도입 시 이 지점에서 전송)
+          console.warn("[dm] send failed", err);
+        },
+      },
+    );
   };
 
   // 헤더 이름·아바타 또는 상대 말풍선 아바타 클릭 → 상대 프로필(친구 화면 재사용)
