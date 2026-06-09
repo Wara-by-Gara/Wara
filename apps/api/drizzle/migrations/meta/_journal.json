@@ -92,6 +92,13 @@
       "when": 1781000000006,
       "tag": "0013_cuddly_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1780988002999,
+      "tag": "0014_red_sunspot",
+      "breakpoints": true
     }
   ]
 }
