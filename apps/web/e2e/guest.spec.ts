@@ -31,7 +31,7 @@ test.describe("guest", () => {
       await page.goto(`/friends/${firstFriend.id}`, { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(800);
       await expectNotCrashed(page);
-      await expect(page.getByText("함께한 초대")).toBeVisible();
+      await expect(page.getByText(/함께한 모임 \d+회/)).toBeVisible();
     }
     expectNoPageErrors(pageErrors);
   });
