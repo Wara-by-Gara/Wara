@@ -117,7 +117,7 @@ export class ParticipantsService {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
-    if (viewer.memberRole !== 'HOST' && info.eventStartAt && info.eventStartAt < new Date()) {
+    if (viewer.memberRole !== 'HOST' && info.eventStartAt && info.eventStartAt <= new Date()) {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 

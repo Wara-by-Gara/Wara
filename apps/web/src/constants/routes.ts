@@ -8,6 +8,9 @@ export const ROUTES = {
     LIST: "/friends",
     DETAIL: (id: string) => `/friends/${id}`,
   },
+  CHAT: {
+    ROOM: (id: string) => `/chats/${id}`,
+  },
   SIGNUP: "/signup",
   LOGIN: "/login",
   INVITATIONS: {
@@ -50,5 +53,6 @@ export const ROUTES = {
     AGREE: "/terms/agree",
     SERVICE: "/terms/service",
     PRIVACY: "/terms/privacy",
+    LOCATION: "/terms/location",
   },
 } as const;

@@ -68,18 +68,19 @@ export class PhotosRepository {
         .then((rows) => rows.findIndex((r) => r.id === cursor));
 
       if (cursorIndex !== -1) {
+        // nextCursor = 다음 페이지 첫 row 의 id. cursor 포함(inclusive)으로 fetch해 다음 호출에서 cursor가 응답 첫 항목으로 재등장.
         const rows = await this.db
           .select()
           .from(photos)
           .where(and(...conditions))
           .orderBy(orderFn(sortCol))
-          .offset(cursorIndex + 1)
+          .offset(cursorIndex)
           .limit(limit + 1);
 
         const hasNext = rows.length > limit;
         return {
           rows: await attachLiked(rows.slice(0, limit)),
-          nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+          nextCursor: hasNext ? (rows[limit]?.id ?? null) : null,
           total,
         };
       }
@@ -95,7 +96,7 @@ export class PhotosRepository {
     const hasNext = rows.length > limit;
     return {
       rows: await attachLiked(rows.slice(0, limit)),
-      nextCursor: hasNext ? (rows[limit - 1]?.id ?? null) : null,
+      nextCursor: hasNext ? (rows[limit]?.id ?? null) : null,
       total,
     };
   }

@@ -13,6 +13,8 @@ export type WsParticipantLocation = {
   accuracy: number;
   isArrived: boolean;
   updatedAt: string;
+  nickname: string | null;
+  profileImageUrl: string | null;
 };
 
 function resolveWsBase(): string {

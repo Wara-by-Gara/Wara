@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
+import { DmSocketMount } from '@/components/chat/dm-socket-mount';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { Toaster } from '@/components/molecules/Toast';
 import './globals.css';
@@ -30,6 +31,7 @@ export default function RootLayout({
         <OAuthCallbackHandler />
         <Providers>
           <NotificationSocketMount />
+          <DmSocketMount />
           {children}
           <Suspense fallback={null}>
             <MainBottomNav />

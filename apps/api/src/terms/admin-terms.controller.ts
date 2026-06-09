@@ -18,6 +18,10 @@ import { CreateTermSchema, type CreateTermDto } from './dto/create-term.dto';
 import { UpdateTermSchema, type UpdateTermDto } from './dto/update-term.dto';
 import { TermsService } from './terms.service';
 
+// .md SoT 우선. `docs/legal/*.md` + `drizzle/seed/legal-loader.ts`가 약관 원본이며,
+// 시드는 `onConflictDoUpdate(target: document_id)`로 동기화한다.
+// 이 컨트롤러로 만들거나 수정한 row도 다음 시드 실행 시 .md 본문/메타로 덮어쓰일 수 있으니,
+// 운영 환경에서 영구 변경은 .md PR로 수행할 것.
 @Controller('admin/terms')
 @AdminOnly()
 export class AdminTermsController {

@@ -112,24 +112,22 @@ export class InvitationsService {
 
   async findPublicExplore(dto: ListPublicInvitationsDto) {
     const { rows, nextCursor } = await this.repository.findPublicExplore(dto);
-    const items = await Promise.all(
-      rows.map(async (inv) => {
-        const participantCount = await this.repository.countPublicParticipants(inv.id);
-        return {
-          id: inv.id,
-          title: inv.title,
-          description: inv.description,
-          category: inv.category,
-          eventStartAt: inv.eventStartAt,
-          mainImageUrl: inv.mainImageKey
-            ? this.s3Service.getPublicUrl(inv.mainImageKey)
-            : null,
-          location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? null,
-          participantCount,
-          host: inv.host,
-        };
-      }),
+    const countMap = await this.repository.countPublicParticipantsByInvitationIds(
+      rows.map((inv) => inv.id),
     );
+    const items = rows.map((inv) => ({
+      id: inv.id,
+      title: inv.title,
+      description: inv.description,
+      category: inv.category,
+      eventStartAt: inv.eventStartAt,
+      mainImageUrl: inv.mainImageKey
+        ? this.s3Service.getPublicUrl(inv.mainImageKey)
+        : null,
+      location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? null,
+      participantCount: countMap.get(inv.id) ?? 0,
+      host: inv.host,
+    }));
     return {
       items,
       nextCursor,
