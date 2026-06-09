@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Icon } from "@/components/icons";
+import { useRouter } from "next/navigation";
 import { Chip } from "@/components/primitives/Chip";
 import { SectionHeader } from "@/components/layout/SectionHeader";
+import { InvitationCard } from "@/components/organisms/InvitationCard";
 import { ROUTES } from "@/constants/routes";
 import { usePublicInvitations } from "@/hooks/usePublicInvitations";
 import type { PublicInvitationExplore } from "@/lib/api/invitations";
@@ -16,6 +16,7 @@ import {
   type EventCategory,
   type ExploreCategory,
 } from "@/lib/recommendedEvents";
+import { resolveInvitationCardStatus } from "@/utils/resolveInvitationCardStatus";
 
 interface RecommendedEventsSectionProps {
   limit?: number;
@@ -27,38 +28,27 @@ function isExploreCategory(value: string): value is ExploreCategory {
 }
 
 function EventListItem({ event }: { event: PublicInvitationExplore }) {
+  const router = useRouter();
   const categoryLabel = isExploreCategory(event.category)
     ? EVENT_CATEGORY_LABELS[event.category]
     : event.category;
+  const chip = resolveInvitationCardStatus({
+    eventStartAt: event.eventStartAt,
+  });
 
   return (
-    <Link
-      href={ROUTES.INVITATIONS.DETAIL(event.id)}
-      className="home-list-item-y flex items-center gap-3 transition-opacity active:opacity-70"
-    >
-      <div className="size-20 shrink-0 overflow-hidden rounded-sm bg-gray-100">
-        {event.mainImageUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={event.mainImageUrl} alt="" className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center text-text-tertiary">
-            <Icon name="image" size="md" color="inactive" decorative />
-          </div>
-        )}
-      </div>
-      <div className="home-card-text min-w-0 flex-1">
-        <span className="type-card-eyebrow">{categoryLabel}</span>
-        <h3 className="type-card-title truncate">{event.title}</h3>
-        <p className="home-meta-row type-meta">
-          <Icon name="clock" size="xs" color="inactive" decorative />
-          <span className="truncate">{formatExploreEventDate(event.eventStartAt)}</span>
-        </p>
-        <p className="home-meta-row type-meta-muted">
-          <Icon name="map-pin" size="xs" color="inactive" decorative />
-          <span className="truncate">{event.location?.trim() || "미정"}</span>
-        </p>
-      </div>
-    </Link>
+    <InvitationCard
+      layout="horizontal"
+      variant={chip?.variant ?? "default"}
+      ddayLabel={chip?.ddayLabel}
+      imageUrl={event.mainImageUrl ?? undefined}
+      subject={chip ? undefined : categoryLabel}
+      title={event.title}
+      date={formatExploreEventDate(event.eventStartAt)}
+      location={event.location ?? undefined}
+      onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(event.id))}
+      className="w-full"
+    />
   );
 }
 

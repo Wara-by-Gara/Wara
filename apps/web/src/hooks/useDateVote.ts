@@ -11,6 +11,7 @@ import {
   confirmSlot,
 } from "@/lib/api/dateVote";
 import type { CreatePollBody, ApiVoteResponse } from "@/lib/api/dateVote";
+import { isOptionalVotePollError } from "@/lib/api/getApiErrorCode";
 
 // ── Queries ──────────────────────────────────────────────────────────────────
 
@@ -18,18 +19,19 @@ import type { CreatePollBody, ApiVoteResponse } from "@/lib/api/dateVote";
  * 투표 + 내 응답 조회. 투표가 없으면 null 반환 (VOTE_POLL_NOT_FOUND → null).
  */
 export function usePoll(invitationId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && !!invitationId;
+
   return useQuery({
     queryKey: QUERY_KEYS.invitations.vote(invitationId),
     queryFn: async () => {
       try {
         return await getPoll(invitationId);
       } catch (err: unknown) {
-        const code = (err as { error?: { code?: string } })?.error?.code;
-        if (code === 'VOTE_POLL_NOT_FOUND') return null;
+        if (isOptionalVotePollError(err)) return null;
         throw err;
       }
     },
-    enabled: (options?.enabled ?? true) && !!invitationId,
+    enabled,
     retry: false,
   });
 }
