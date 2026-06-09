@@ -116,6 +116,8 @@
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
 | `INQUIRY_NOT_FOUND` | 404 | 문의 없음 또는 접근 권한 없음 |
+| `INQUIRY_FORBIDDEN` | 403 | 본인 문의가 아닌 자원에 수정/삭제 시도 |
+| `INQUIRY_NOT_EDITABLE` | 409 | pending이 아닌 상태(answering/answered)의 문의 수정 시도 |
 
 ## Admin
 
