@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
+import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -30,10 +31,15 @@ function haversineMeters(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function syntheticLocationId(invitationId: string, participantId: string): string {
+  return `${invitationId}:${participantId}`;
+}
+
 @Injectable()
 export class LocationsService {
   constructor(
     private readonly repository: LocationsRepository,
+    private readonly redisStore: LocationsRedisStore,
     private readonly kakaoLocal: KakaoLocalService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -54,8 +60,34 @@ export class LocationsService {
     await this.repository.deleteEventLocation(invitationId);
   }
 
-  async getParticipantLocations(invitationId: string) {
-    return this.repository.findAllParticipantLocations(invitationId);
+  async getParticipantLocations(
+    invitationId: string,
+  ): Promise<ParticipantLocationWithUser[]> {
+    const map = await this.redisStore.findAllByInvitation(invitationId);
+    if (map.size === 0) return [];
+
+    const participantIds = Array.from(map.keys());
+    const userInfo =
+      await this.repository.findUserInfoByParticipantIds(participantIds);
+
+    const result: ParticipantLocationWithUser[] = [];
+    for (const [participantId, value] of map.entries()) {
+      const user = userInfo.get(participantId);
+      if (!user) continue; // 참가자 정보 사라진 stale entry
+      result.push({
+        id: syntheticLocationId(invitationId, participantId),
+        invitationId,
+        participantId,
+        lat: value.lat,
+        lng: value.lng,
+        accuracy: value.accuracy,
+        isArrived: value.isArrived,
+        updatedAt: new Date(value.updatedAt),
+        nickname: user.nickname,
+        profileImageUrl: user.profileImageUrl,
+      });
+    }
+    return result;
   }
 
   async searchPlaces(query: string, page: number, size: number) {
@@ -75,26 +107,33 @@ export class LocationsService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
 
-    const raw = await this.repository.upsertParticipantLocation(
-      invitationId,
-      participant.id,
-      dto,
-    );
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    const wasArrived = previous?.isArrived ?? false;
+
+    const now = new Date();
+    const value: GpsRedisValue = {
+      lat: dto.lat,
+      lng: dto.lng,
+      accuracy: dto.accuracy,
+      isArrived: wasArrived,
+      updatedAt: now.toISOString(),
+    };
+    await this.redisStore.upsert(invitationId, participant.id, value);
 
     const location: ParticipantLocationWithUser = {
-      id: raw.id,
-      invitationId: raw.invitationId,
-      participantId: raw.participantId,
-      lat: raw.lat,
-      lng: raw.lng,
-      accuracy: raw.accuracy,
-      isArrived: raw.isArrived,
-      updatedAt: raw.updatedAt,
+      id: syntheticLocationId(invitationId, participant.id),
+      invitationId,
+      participantId: participant.id,
+      lat: dto.lat,
+      lng: dto.lng,
+      accuracy: dto.accuracy,
+      isArrived: wasArrived,
+      updatedAt: now,
       nickname: participant.user.nickname,
       profileImageUrl: participant.user.profileImageUrl,
     };
 
-    if (location.isArrived) {
+    if (wasArrived) {
       return { location, justArrived: false };
     }
 
@@ -114,14 +153,19 @@ export class LocationsService {
       return { location, justArrived: false };
     }
 
-    // Atomically mark arrived — prevents duplicate processing on concurrent updates
-    const marked = await this.repository.setArrivedIfNotYet(
-      participant.id,
+    // SETNX로 중복 도착 처리 방지
+    const claimed = await this.redisStore.claimArrival(
       invitationId,
+      participant.id,
     );
-    if (!marked) {
+    if (!claimed) {
       return { location, justArrived: false };
     }
+
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...value,
+      isArrived: true,
+    });
 
     void this.sendArrivalNotificationsDelayed(invitationId, participant);
 

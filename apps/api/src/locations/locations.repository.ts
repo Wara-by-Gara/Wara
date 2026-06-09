@@ -1,8 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import {
   eventLocations,
+  invitations,
   participantLocations,
   participants,
   users,
@@ -123,6 +124,37 @@ export class LocationsRepository {
       .innerJoin(users, eq(users.id, participants.userId))
       .where(eq(participantLocations.invitationId, invitationId));
     return rows;
+  }
+
+  async findUserInfoByParticipantIds(
+    participantIds: string[],
+  ): Promise<
+    Map<string, { nickname: string | null; profileImageUrl: string | null }>
+  > {
+    if (participantIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({
+        participantId: participants.id,
+        nickname: users.nickname,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(participants)
+      .innerJoin(users, eq(users.id, participants.userId))
+      .where(inArray(participants.id, participantIds));
+    return new Map(
+      rows.map((r) => [
+        r.participantId,
+        { nickname: r.nickname, profileImageUrl: r.profileImageUrl },
+      ]),
+    );
+  }
+
+  async findClosedInvitationIds(): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: invitations.id })
+      .from(invitations)
+      .where(eq(invitations.status, 'closed'));
+    return rows.map((r) => r.id);
   }
 
   async upsertParticipantLocation(

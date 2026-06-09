@@ -13,6 +13,7 @@ import { BlocklistRepository } from '../common/repositories/blocklist.repository
 import { ParticipantRepository } from '../common/repositories/participant.repository';
 import { AuthController } from './auth.controller';
 import { AuthRepository } from './auth.repository';
+import { AuthRedisStore } from './auth.redis-store';
 import { AuthService } from './auth.service';
 import { SocialAuthFactory } from './social-auth.factory';
 import { OauthPolicyService } from './oauth-policy.service';
@@ -53,6 +54,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
   providers: [
     AuthService,
     AuthRepository,
+    AuthRedisStore,
     SocialAuthFactory,
     OauthPolicyService,
     AppleService,
@@ -87,6 +89,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
   exports: [
     AuthService,
     AuthRepository,
+    AuthRedisStore,
     HostGuard,
     BlocklistGuard,
     ParticipantGuard,

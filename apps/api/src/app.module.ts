@@ -33,6 +33,7 @@ import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
+import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from './logger/logger.module';
 
 @Module({
@@ -43,12 +44,17 @@ import { LoggerModule } from './logger/logger.module';
     }),
     LoggerModule,
     ScheduleModule.forRoot(),
+    RedisModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        stores: [createKeyv(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379')],
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('REDIS_URL');
+        if (!url && process.env.NODE_ENV === 'production') {
+          throw new Error('REDIS_URL is required in production');
+        }
+        return { stores: [createKeyv(url ?? 'redis://localhost:6379')] };
+      },
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: process.env.NODE_ENV !== 'production' ? 10000 : 60 }]),
     DatabaseModule,
