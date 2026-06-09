@@ -55,7 +55,7 @@ function collectTemplateImagePaths(): { all: string[]; byFolder: Record<string, 
       all.push(rel);
     }
     if (folderPaths.length > 0) {
-      byFolder[entry.name] = folderPaths.sort();
+      byFolder[entry.name.normalize('NFC')] = folderPaths.sort();
     }
   }
   return { all: all.sort(), byFolder };
@@ -101,19 +101,9 @@ const templateImageUrlFromRel = (rel: string) => {
   return `${base}/${urlPath}`;
 };
 
-/** template_images 폴더에서 대표 미리보기 1장 선택 */
-const templatePreviewFromFolder = (
-  folder: string,
-  imageIndex: number,
-  previewFile?: string,
-) => {
-  if (previewFile) {
-    return templateImageUrlFromRel(`/template_images/${folder}/${previewFile}`);
-  }
-  const pool = TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder];
-  if (!pool?.length) return templatePreviewUrl(`template-${folder}`);
-  return templateImageUrlFromRel(pool[imageIndex % pool.length]!);
-};
+/** template_images AI 풀에서 folder 기반 결정적 미리보기 URL */
+const templatePreviewFromFolder = (folder: string) =>
+  templatePreviewUrl(`template-${folder.normalize('NFC')}`);
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
 // 기본은 dev 작업용 작은 규모. 부하 테스트 시 일시적으로 늘려 사용.
@@ -168,16 +158,16 @@ const MISSION_CONTENT_BASE = [
 ];
 
 const TEMPLATE_DEFS = [
-  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티',   previewFile: 'imgi_10_1f5b32e2-8467-4bfd-9048-8dfd0231b7c1.png' },
-  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일',   previewFile: 'imgi_10_8e9ed34a-cc86-4632-83ec-cb4097a80961.png' },
-  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃',     previewFile: 'imgi_10_1074f31e-22b4-471b-b857-8afcb2698179.png' },
-  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름',   previewFile: 'imgi_10_806d0940-d8e2-46e9-9704-f25ae0e49375.png' },
-  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대',   previewFile: 'imgi_10_468d0b37-6b49-491d-a0f5-bb2af2ef9719.png' },
-  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교',   previewFile: 'imgi_10_51ffeb4e-b392-4fc4-b105-a408c1f96987.png' },
-  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식',   previewFile: 'imgi_10_46a752da-c51b-4e24-b8d7-e3844aa37023.png' },
-  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠', previewFile: 'imgi_12_7b6b9201-46c4-43e1-b394-a401b7db95d3.png' },
-  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료',   previewFile: 'imgi_10_5d8e6e58-f50d-40d4-9ba8-feb9b5a1ef72.png' },
-  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI',     previewFile: 'imgi_100_3c3db379-bc3e-493e-8677-d2fb311882f8.png' },
+  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티' },
+  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일' },
+  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃' },
+  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름' },
+  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대' },
+  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교' },
+  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식' },
+  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠' },
+  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료' },
+  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI' },
 ] as const;
 
 // ── 실재하는 한국 모임 장소 데이터셋 ──────────────────────────────────────────
@@ -553,7 +543,7 @@ function buildSeeds() {
   const templates = TEMPLATE_DEFS.map((t) => ({
     id: templateIdByKey[t.key]!,
     name: t.name,
-    previewImageKey: templatePreviewFromFolder(t.previewFolder, 0, t.previewFile),
+    previewImageKey: templatePreviewFromFolder(t.previewFolder),
     theme: t.theme,
     font: t.font,
     effect: t.effect,

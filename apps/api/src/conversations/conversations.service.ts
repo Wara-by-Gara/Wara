@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ErrorCode } from '../common/constants/error-codes';
+import { FriendsRepository } from '../friends/friends.repository';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsGateway } from './conversations.gateway';
 
@@ -64,6 +65,7 @@ function toMessageItem(
 export class ConversationsService {
   constructor(
     private readonly repository: ConversationsRepository,
+    private readonly friendsRepository: FriendsRepository,
     private readonly gateway: ConversationsGateway,
   ) {}
 
@@ -80,10 +82,19 @@ export class ConversationsService {
 
     const directKey = this.buildDirectKey(userId, targetUserId);
     const existing = await this.repository.findByDirectKey(directKey);
-    const conversation =
-      existing ??
-      (await this.repository.createDirectConversation(directKey, [userId, targetUserId]));
+    if (existing) {
+      return { id: existing.id };
+    }
 
+    const shared = await this.friendsRepository.findSharedInvitations(userId, targetUserId);
+    if (shared.length === 0) {
+      throw new NotFoundException(ErrorCode.FRIEND_NOT_FOUND);
+    }
+
+    const conversation = await this.repository.createDirectConversation(directKey, [
+      userId,
+      targetUserId,
+    ]);
     return { id: conversation.id };
   }
 
@@ -162,6 +173,13 @@ export class ConversationsService {
     replyToMessageId?: string,
   ) {
     await this.assertMember(conversationId, userId);
+
+    if (replyToMessageId) {
+      const replyTarget = await this.repository.findMessageRaw(replyToMessageId);
+      if (!replyTarget || replyTarget.conversationId !== conversationId) {
+        throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+      }
+    }
 
     const row = await this.repository.insertMessage(
       conversationId,
