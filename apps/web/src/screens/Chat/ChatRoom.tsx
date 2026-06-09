@@ -16,6 +16,7 @@ import {
   useChatRealtime,
 } from "@/hooks/useChat";
 import type { Message } from "@/lib/api/conversations";
+import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
 
@@ -46,6 +47,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // PC만 진입 시 입력창 자동 포커스 — 마우스 클릭 없이 바로 타이핑.
+  // 모바일은 진입하자마자 키보드가 올라와 메시지를 가리므로 제외(정밀 포인터 기기만).
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus();
+  }, [id]);
 
   // 메시지 길게 누르기 → 메뉴
   const [menuTarget, setMenuTarget] = useState<Message | null>(null);
@@ -124,12 +132,24 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setReplyTarget(null);
   };
 
+  // 헤더 이름·아바타 또는 상대 말풍선 아바타 클릭 → 상대 프로필(친구 화면 재사용)
+  const partnerId = conversation?.partner?.id;
+  const goProfile = () => {
+    if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
+  };
+
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
       <TopAppBar
         onBack={() => router.back()}
         title={
-          <span className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={goProfile}
+            disabled={!partnerId}
+            aria-label={`${partnerName} 프로필 보기`}
+            className="flex items-center justify-center gap-2 active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+          >
             <Avatar
               size="xs"
               src={conversation?.partner?.avatarUrl ?? undefined}
@@ -139,7 +159,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             <span className="truncate text-[16px] font-bold text-text-primary">
               {partnerName}
             </span>
-          </span>
+          </button>
         }
       />
 
@@ -190,13 +210,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 >
                   {!mine &&
                     (showAvatar ? (
-                      <Avatar
-                        size="sm"
-                        src={conversation?.partner?.avatarUrl ?? undefined}
-                        alt={partnerName}
-                        initial={partnerName[0]}
-                        className="self-start"
-                      />
+                      <button
+                        type="button"
+                        onClick={goProfile}
+                        aria-label={`${partnerName} 프로필 보기`}
+                        className="self-start active:opacity-70"
+                      >
+                        <Avatar
+                          size="sm"
+                          src={conversation?.partner?.avatarUrl ?? undefined}
+                          alt={partnerName}
+                          initial={partnerName[0]}
+                        />
+                      </button>
                     ) : (
                       <span className="w-9 shrink-0" aria-hidden />
                     ))}
@@ -211,11 +237,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       onPointerLeave={cancelPress}
                       onPointerCancel={cancelPress}
                       onContextMenu={(e) => e.preventDefault()}
-                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${bubbleClass}`}
+                      // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
+                      // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
+                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
+                        m.replyTo ? "min-w-[120px] text-left" : ""
+                      } ${bubbleClass}`}
                     >
                       {m.replyTo && (
                         <div
-                          className={`mb-1 border-b pb-1 ${
+                          className={`mb-2 border-b pb-2 ${
                             mine ? "border-text-inverse/30" : "border-text-tertiary/30"
                           }`}
                         >
@@ -333,8 +363,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         )}
         <div className="flex items-center gap-2">
         <input
+          ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          // 한글 조합 중 Enter는 글자 확정용 → 전송(폼 submit) 막아 오발송·글자깨짐 방지
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
+          }}
           placeholder={editing ? "수정 메시지 입력" : "메시지를 입력하세요"}
           className="h-10 flex-1 rounded-full bg-background-soft px-4 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
         />
