@@ -19,7 +19,7 @@ const WsLocationUpdateSchema = UpdateParticipantLocationSchema.extend({
   invitationId: z.string().min(1),
 });
 
-@WebSocketGateway({ namespace: '/locations', cors: true })
+@WebSocketGateway({ namespace: '/locations' })
 export class LocationsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 

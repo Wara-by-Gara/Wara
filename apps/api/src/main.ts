@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module';
+import { WaraIoAdapter } from './adapters/socket-io.adapter';
 import { DbTimeInterceptor } from './common/interceptors/db-time.interceptor';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -89,6 +90,10 @@ async function bootstrap() {
     throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
   app.use(cookieParser(cookieSecret));
+
+  // Socket.IO CORS는 namespace가 아닌 서버 레벨에서만 설정 가능.
+  // 모든 gateway가 ConfigService 기반 origin을 공유하도록 어댑터에서 일괄 적용.
+  app.useWebSocketAdapter(new WaraIoAdapter(app));
 
   // CSRF 방어 — 쿠키 인증 요청에만 적용. 모바일(Bearer 헤더 인증)은 면제.
   // 변경 작업(POST/PUT/PATCH/DELETE)에서 Origin/Referer가 FRONTEND_URL과 일치해야 함.

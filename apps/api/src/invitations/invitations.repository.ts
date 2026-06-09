@@ -75,17 +75,24 @@ export class InvitationsRepository {
     };
   }
 
-  async countPublicParticipants(invitationId: string): Promise<number> {
-    const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
+  async countPublicParticipantsByInvitationIds(
+    invitationIds: string[],
+  ): Promise<Map<string, number>> {
+    if (invitationIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({
+        invitationId: participants.invitationId,
+        count: sql<number>`count(*)::int`,
+      })
       .from(participants)
       .where(
         and(
-          eq(participants.invitationId, invitationId),
+          inArray(participants.invitationId, invitationIds),
           ne(participants.rsvpStatus, RsvpStatus.ABSENT),
         ),
-      );
-    return row?.count ?? 0;
+      )
+      .groupBy(participants.invitationId);
+    return new Map(rows.map((r) => [r.invitationId, r.count]));
   }
 
   async findAllByUserId(userId: string) {

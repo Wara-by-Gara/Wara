@@ -10,7 +10,6 @@ import type { Notification } from '../database/schema';
 
 @WebSocketGateway({
   namespace: '/notifications',
-  cors: { origin: process.env.FRONTEND_URL, credentials: true },
 })
 export class NotificationsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;

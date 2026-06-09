@@ -61,12 +61,15 @@ export class InquiriesService {
     }
     if (inquiry.userId !== userId) {
       throw new ForbiddenException({
-        code: ErrorCode.INQUIRY_NOT_FOUND,
-        message: '문의를 찾을 수 없습니다.',
+        code: ErrorCode.INQUIRY_FORBIDDEN,
+        message: ErrorCode.INQUIRY_FORBIDDEN,
       });
     }
     if (inquiry.status !== 'pending') {
-      throw new ConflictException('답변 중이거나 완료된 문의는 수정할 수 없습니다.');
+      throw new ConflictException({
+        code: ErrorCode.INQUIRY_NOT_EDITABLE,
+        message: ErrorCode.INQUIRY_NOT_EDITABLE,
+      });
     }
     return this.repository.update(inquiryId, {
       title: dto.title,
@@ -85,8 +88,8 @@ export class InquiriesService {
     }
     if (inquiry.userId !== userId) {
       throw new ForbiddenException({
-        code: ErrorCode.INQUIRY_NOT_FOUND,
-        message: '문의를 찾을 수 없습니다.',
+        code: ErrorCode.INQUIRY_FORBIDDEN,
+        message: ErrorCode.INQUIRY_FORBIDDEN,
       });
     }
     await this.repository.softDelete(inquiryId);
