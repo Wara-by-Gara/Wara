@@ -16,6 +16,7 @@ import {
   useChatRealtime,
 } from "@/hooks/useChat";
 import type { Message } from "@/lib/api/conversations";
+import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
 
@@ -131,12 +132,24 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setReplyTarget(null);
   };
 
+  // 헤더 이름·아바타 또는 상대 말풍선 아바타 클릭 → 상대 프로필(친구 화면 재사용)
+  const partnerId = conversation?.partner?.id;
+  const goProfile = () => {
+    if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
+  };
+
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
       <TopAppBar
         onBack={() => router.back()}
         title={
-          <span className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={goProfile}
+            disabled={!partnerId}
+            aria-label={`${partnerName} 프로필 보기`}
+            className="flex items-center justify-center gap-2 active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+          >
             <Avatar
               size="xs"
               src={conversation?.partner?.avatarUrl ?? undefined}
@@ -146,7 +159,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             <span className="truncate text-[16px] font-bold text-text-primary">
               {partnerName}
             </span>
-          </span>
+          </button>
         }
       />
 
@@ -197,13 +210,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 >
                   {!mine &&
                     (showAvatar ? (
-                      <Avatar
-                        size="sm"
-                        src={conversation?.partner?.avatarUrl ?? undefined}
-                        alt={partnerName}
-                        initial={partnerName[0]}
-                        className="self-start"
-                      />
+                      <button
+                        type="button"
+                        onClick={goProfile}
+                        aria-label={`${partnerName} 프로필 보기`}
+                        className="self-start active:opacity-70"
+                      >
+                        <Avatar
+                          size="sm"
+                          src={conversation?.partner?.avatarUrl ?? undefined}
+                          alt={partnerName}
+                          initial={partnerName[0]}
+                        />
+                      </button>
                     ) : (
                       <span className="w-9 shrink-0" aria-hidden />
                     ))}
