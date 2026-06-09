@@ -86,7 +86,13 @@ export class LocationsGateway implements OnGatewayConnection {
       return location;
     } catch (err) {
       if (err instanceof HttpException) {
-        throw new WsException(err.message);
+        // err.message raw 노출 금지 — ErrorCode 객체일 때만 code, 외엔 generic
+        const response = err.getResponse();
+        const code =
+          typeof response === 'object' && response !== null && 'code' in response
+            ? String((response as { code: unknown }).code)
+            : 'HTTP_ERROR';
+        throw new WsException(code);
       }
       throw new WsException('INTERNAL_ERROR');
     }
