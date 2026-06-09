@@ -46,6 +46,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // PC만 진입 시 입력창 자동 포커스 — 마우스 클릭 없이 바로 타이핑.
+  // 모바일은 진입하자마자 키보드가 올라와 메시지를 가리므로 제외(정밀 포인터 기기만).
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) inputRef.current?.focus();
+  }, [id]);
 
   // 메시지 길게 누르기 → 메뉴
   const [menuTarget, setMenuTarget] = useState<Message | null>(null);
@@ -333,8 +340,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         )}
         <div className="flex items-center gap-2">
         <input
+          ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          // 한글 조합 중 Enter는 글자 확정용 → 전송(폼 submit) 막아 오발송·글자깨짐 방지
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
+          }}
           placeholder={editing ? "수정 메시지 입력" : "메시지를 입력하세요"}
           className="h-10 flex-1 rounded-full bg-background-soft px-4 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
         />
