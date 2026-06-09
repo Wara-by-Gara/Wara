@@ -10,6 +10,7 @@ import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNa
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { useDmUnreadCount } from "@/hooks/useConversations";
+import { useTermsCompliance } from "@/hooks/useTermsCompliance";
 import { API_BASE } from "@/lib/env";
 import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { ReactNode } from "react";
@@ -51,7 +52,8 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
   const { isLoggedIn, hydrated, hydrate } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
-  const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn);
+  const { isCompliant } = useTermsCompliance();
+  const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn && isCompliant === true);
 
   function handleSocialLogin(provider: SocialProvider) {
     setLoadingProvider(provider);

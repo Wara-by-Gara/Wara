@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
+import { TermsComplianceRedirect } from '@/components/auth/terms-compliance-redirect';
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
 import { DmSocketMount } from '@/components/chat/dm-socket-mount';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
         <OAuthCallbackHandler />
         <Providers>
+          <TermsComplianceRedirect />
           <NotificationSocketMount />
           <DmSocketMount />
           {children}

@@ -1,10 +1,10 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { FriendProfile } from "@/screens/FriendProfile/FriendProfile";
 
-export default function FriendProfilePage() {
-  const params = useParams();
-  const id = params.id as string;
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function FriendProfilePage({ params }: Props) {
+  const { id } = await params;
   return <FriendProfile id={id} />;
 }
