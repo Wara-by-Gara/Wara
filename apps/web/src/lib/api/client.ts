@@ -37,7 +37,7 @@ async function tryRefresh(): Promise<boolean | 'suspicious'> {
   return refreshPromise;
 }
 
-async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
+async function request<T>(fetchFn: () => Promise<Response>, path?: string): Promise<T> {
   let res = await fetchFn();
 
   if (res.status === 401) {
@@ -45,6 +45,9 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
     const code = body.error?.code;
     // TOKEN_EXPIRED: 토큰 만료 / TOKEN_INVALID: 쿠키 소멸 — 둘 다 refresh 시도
     if (code === "TOKEN_EXPIRED" || code === "TOKEN_INVALID") {
+      // /users/me는 auth probe 용도로도 쓰이므로 refresh/redirect 없이 throw.
+      // 세션 만료 시 다른 API 호출이 refresh를 트리거함.
+      if (path === "/users/me") throw new Error(code);
       const refreshed = await tryRefresh();
       if (refreshed === true) {
         res = await fetchFn();
@@ -82,6 +85,7 @@ async function request<T>(fetchFn: () => Promise<Response>): Promise<T> {
 export function apiGet<T>(path: string): Promise<T> {
   return request<T>(
     () => fetch(`${API_BASE}${path}`, { credentials: "include" }),
+    path,
   );
 }
 
