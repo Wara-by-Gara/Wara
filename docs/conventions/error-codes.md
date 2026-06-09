@@ -116,6 +116,8 @@
 | 코드 | 상태코드 | 상황 |
 |------|:--------:|------|
 | `INQUIRY_NOT_FOUND` | 404 | 문의 없음 또는 접근 권한 없음 |
+| `INQUIRY_FORBIDDEN` | 403 | 본인 문의가 아닌 자원에 수정/삭제 시도 |
+| `INQUIRY_NOT_EDITABLE` | 409 | pending이 아닌 상태(answering/answered)의 문의 수정 시도 |
 
 ## Admin
 
@@ -143,6 +145,16 @@
 | `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
 | `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
 | `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+
+## DM (1:1 채팅)
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `CONVERSATION_NOT_FOUND` | 404 | 대화방 없음 |
+| `CONVERSATION_FORBIDDEN` | 403 | 내가 참여한 대화방이 아님 |
+| `MESSAGE_NOT_FOUND` | 404 | 메시지 없음 또는 해당 대화방 소속 아님 |
+| `MESSAGE_FORBIDDEN` | 403 | 본인이 보낸 메시지가 아님 (삭제 시도) |
+| `CANNOT_MESSAGE_SELF` | 400 | 자기 자신과 대화 생성 시도 |
 
 ## Terms
 

@@ -78,7 +78,7 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
                 {item.badge ? (
                   <span
                     aria-hidden
-                    className="absolute -right-1 -top-1 size-2 rounded-full bg-primary ring-2 ring-white/60"
+                    className="absolute -right-1 -top-1 size-2 rounded-full bg-red-500 ring-2 ring-white/60"
                   />
                 ) : null}
               </span>

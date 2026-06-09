@@ -175,6 +175,7 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async refreshTokens(
     @Req() req: Request,
     @Body() body: { refreshToken?: string },
@@ -197,6 +198,7 @@ export class AuthController {
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async logout(
     @Req() req: Request,
     @Body() body: { refreshToken?: string },

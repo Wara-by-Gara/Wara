@@ -1,146 +1,103 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { SearchBar } from "@/components/molecules/SearchBar";
+import { useRouter, useSearchParams } from "next/navigation";
 import { StickyHeader } from "@/components/layout/StickyHeader";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { toast } from "@/components/molecules/Toast";
-import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
-import { ROUTES } from "@/constants/routes";
-import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
-import { useFriends } from "@/hooks/useFriends";
+import { mobileMainScroll } from "@/lib/mobilePageLayout";
+import { useDmUnreadCount } from "@/hooks/useConversations";
+import { useScrolled } from "@/hooks/useScrolled";
+import { cn } from "@/lib/cn";
+import { FriendsList } from "./FriendsList";
+import { ChatList } from "./ChatList";
 
-const DM_TOAST = "DM 기능은 곧 만나요";
+type Tab = "friends" | "chat";
 
 export const Friends = () => {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const { friends, recentFriends, isLoading, isError, refetch } = useFriends();
-
-  const keyword = query.trim();
-  const filtered = keyword
-    ? friends.filter((f) => f.name?.includes(keyword))
-    : friends;
-
-  const goDetail = (id: string) => router.push(ROUTES.FRIENDS.DETAIL(id));
+  const searchParams = useSearchParams();
+  // 세그먼트 탭을 URL로 관리 → 채팅방에서 뒤로가기 시 채팅 탭으로 복귀
+  const tab: Tab = searchParams.get("tab") === "chat" ? "chat" : "friends";
+  const setTab = (next: Tab) =>
+    router.replace(next === "chat" ? "/friends?tab=chat" : "/friends", {
+      scroll: false,
+    });
+  const { data: dmUnread } = useDmUnreadCount();
+  // 최상단이 아니면 세그먼트를 '유령 모드'로 — 배경·블러 제거하고 글자/선택표시를
+  // 연하게 해서 뒤 친구 리스트를 가리지 않게 한다.
+  const ghost = useScrolled();
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
-      <StickyHeader title="친구" />
-      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
-        {isLoading ? (
-          <FriendsPageSkeleton />
-        ) : isError ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-page">
-            <EmptyState icon="users" title="친구 목록을 불러오지 못했어요" />
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="text-[14px] font-bold text-primary active:opacity-70"
-            >
-              다시 시도
-            </button>
-          </div>
-        ) : friends.length === 0 ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center px-page">
-            <EmptyState
-              icon="users"
-              title="아직 친구가 없어요"
-              description="모임에 함께 참여하면 자동으로 친구가 돼요"
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 pb-6">
-            {/* 최근 함께한 친구 — 스토리 형태 (그라데이션 링) */}
-            <section className="pt-3">
-              <h2 className="px-page pb-2 text-[14px] font-bold text-text-primary">최근 함께한 친구</h2>
-              <div className="flex gap-5 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {recentFriends.map((f) => {
-                  const name = f.name ?? "이름 없음";
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => goDetail(f.id)}
-                      className="flex w-20 shrink-0 flex-col items-center gap-1.5 active:opacity-70"
-                    >
-                      <span className="inline-flex rounded-full bg-gradient-to-tr from-primary via-pink-400 to-yellow-300 p-[2.5px]">
-                        <span className="inline-flex rounded-full bg-background-soft p-[2px]">
-                          <Avatar size="xl" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
-                        </span>
-                      </span>
-                      <span className="w-full truncate text-center text-[12px] text-text-secondary">
-                        {name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+      {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당 */}
+      <StickyHeader />
 
-            {/* 친구 목록 — 함께한 모임 많은 순 */}
-            <section>
-              <h2 className="px-page pb-1 text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
-              <div className="px-page py-3">
-                <SearchBar
-                  placeholder="친구 이름으로 검색"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-              {filtered.length === 0 ? (
-                <EmptyState icon="search" title="검색 결과가 없어요" />
-              ) : (
-                <ul className="divide-y divide-border bg-surface">
-                  {filtered.map((f) => {
-                    const name = f.name ?? "이름 없음";
-                    return (
-                      <li key={f.id}>
-                        <div
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => goDetail(f.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              goDetail(f.id);
-                            }
-                          }}
-                          className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
-                        >
-                          <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[15px] font-bold text-text-primary">{name}</p>
-                            <p className="truncate text-[12px] text-text-tertiary">함께한 모임 {f.sharedCount}회</p>
-                            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[12px] text-text-tertiary">
-                              <Icon name="clock" size="sm" color="inactive" decorative />
-                              <span className="truncate">{f.lastSharedTitle}</span>
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            aria-label={`${name}님에게 메시지`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toast.show(DM_TOAST);
-                            }}
-                            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-text-secondary active:bg-surface"
-                          >
-                            <Icon name="message-circle" size="sm" color="currentColor" decorative />
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
-          </div>
-        )}
+      {/* 친구 | 채팅 세그먼트 — 상단 고정 글래스 알약.
+          이 셸은 main이 아닌 window가 스크롤되므로 sticky가 안 먹어 fixed로 고정한다.
+          z-40: 빈 헤더(z-30)보다 위에 둬야 헤더가 알약 상단 클릭을 가로채지 않는다. */}
+      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page">
+        <div
+          className={cn(
+            "flex gap-1 rounded-full p-1 transition-all duration-300",
+            ghost
+              ? "bg-transparent ring-0"
+              : "bg-surface/45 ring-1 ring-border-strong/50 backdrop-blur-md",
+          )}
+        >
+          <SegmentTab
+            label="친구"
+            active={tab === "friends"}
+            ghost={ghost}
+            onClick={() => setTab("friends")}
+          />
+          <SegmentTab
+            label="채팅"
+            active={tab === "chat"}
+            ghost={ghost}
+            onClick={() => setTab("chat")}
+            count={dmUnread?.count ?? 0}
+          />
+        </div>
+      </div>
+
+      <main className={`relative z-10 ${mobileMainScroll} pt-[80px]`}>
+        {tab === "friends" ? <FriendsList /> : <ChatList />}
       </main>
     </div>
   );
 };
+
+const SegmentTab = ({
+  label,
+  active,
+  ghost,
+  onClick,
+  count = 0,
+}: {
+  label: string;
+  active: boolean;
+  ghost: boolean;
+  onClick: () => void;
+  count?: number;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-[14px] font-bold transition-all duration-300",
+      // 유령 모드: 흰 배경 대신 선택탭은 테두리만, 글자는 연하게 → 리스트 안 가림
+      ghost
+        ? active
+          ? "ring-1 ring-inset ring-text-primary/12 text-text-primary/55"
+          : "text-text-secondary/35 active:opacity-70"
+        : active
+          ? "bg-surface/85 text-text-primary shadow-sm"
+          : "text-text-secondary active:opacity-70",
+    )}
+  >
+    {label}
+    {count > 0 && (
+      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+        {count > 99 ? "99+" : count}
+      </span>
+    )}
+  </button>
+);

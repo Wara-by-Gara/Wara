@@ -19,24 +19,29 @@ export interface MyPageProps {
   user?: MockUser;
   /** 최근/내가 만든/참여한 — props로 주입 */
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
+  /** 총 참여한 모임 수 */
+  participatedCount?: number;
   onInvitationClick?: (id: string) => void;
   onSettings?: () => void;
   onProfileEdit?: () => void;
   onInquiries?: () => void;
   onAccount?: () => void;
   onSupport?: () => void;
+  onHiddenFriends?: () => void;
 }
 
 export const MyPage = ({
   state = "default",
   user = mockMe,
   recentInvitations = [],
+  participatedCount = 0,
   onInvitationClick,
   onSettings,
   onProfileEdit,
   onInquiries,
   onAccount,
   onSupport,
+  onHiddenFriends,
 }: MyPageProps) => {
   if (state === "loggedOut") {
     return (
@@ -116,6 +121,12 @@ export const MyPage = ({
             <p className="text-[14px] text-text-tertiary">@{user.nickname}</p>
           ) : null}
         </div>
+        <div className="flex items-center gap-1.5 rounded-full bg-background-soft px-3.5 py-1.5">
+          <Icon name="users-round" size="sm" color="primary" decorative />
+          <span className="text-[13px] text-text-secondary">
+            참여한 모임 <span className="font-bold text-text-primary">{participatedCount}</span>
+          </span>
+        </div>
       </section>
 
       <section className="py-3">
@@ -141,6 +152,13 @@ export const MyPage = ({
 
       <section className="py-2">
         <div className="divide-y divide-border bg-surface">
+          <MenuItem
+            leftIcon="user-x"
+            onClick={onHiddenFriends}
+            rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
+          >
+            삭제한 친구
+          </MenuItem>
           <MenuItem
             leftIcon="message-circle"
             onClick={onInquiries}

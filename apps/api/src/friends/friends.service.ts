@@ -59,7 +59,8 @@ export class FriendsService {
   }
 
   async getFriends(myUserId: string): Promise<{ friends: FriendListItem[] }> {
-    const rows = await this.repository.findCoParticipationRows(myUserId);
+    const hiddenIds = await this.repository.findHiddenIds(myUserId);
+    const rows = await this.repository.findCoParticipationRows(myUserId, hiddenIds);
 
     const grouped = new Map<
       string,
@@ -110,6 +111,31 @@ export class FriendsService {
     });
 
     return { friends };
+  }
+
+  // 친구 삭제 = 영구 숨김 (목록에서 제외)
+  async hideFriend(myUserId: string, targetUserId: string): Promise<void> {
+    await this.repository.addHide(myUserId, targetUserId);
+  }
+
+  // 삭제한 친구 복원
+  async restoreFriend(myUserId: string, targetUserId: string): Promise<void> {
+    await this.repository.removeHide(myUserId, targetUserId);
+  }
+
+  // 삭제(숨김)한 친구 목록 — 복원 화면용
+  async getHiddenFriends(myUserId: string) {
+    const rows = await this.repository.findHiddenFriends(myUserId);
+    return {
+      friends: await Promise.all(
+        rows.map(async (r) => ({
+          id: r.id,
+          name: r.name,
+          avatarUrl: await this.resolveImageUrl(r.profileImageUrl),
+          hiddenAt: r.hiddenAt,
+        })),
+      ),
+    };
   }
 
   async getFriendProfile(

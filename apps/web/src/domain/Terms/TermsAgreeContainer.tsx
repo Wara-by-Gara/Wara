@@ -5,7 +5,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAgreeTerms, useMyAgreements, useTerms } from '@/hooks/useTerms';
 import { useAuthStore } from '@/stores/authStore';
 import { TermsAgreeSkeleton } from '@/components/organisms/Skeleton';
-import type { ServiceTerm } from '@/lib/api/terms';
+import { TermContent } from '@/domain/Terms/TermContent';
+import type { ServiceTerm, TermType } from '@/lib/api/terms';
+
+const TERM_DISPLAY_ORDER: Record<TermType, number> = {
+  age: 0,
+  service: 1,
+  privacy: 2,
+  location: 3,
+  marketing: 4,
+  analytics: 5,
+};
 
 function TermItem({
   term,
@@ -49,8 +59,8 @@ function TermItem({
         </button>
       </label>
       {expanded && (
-        <div className="px-4 py-3 border-t border-border bg-background-soft text-xs text-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto">
-          {term.content}
+        <div className="px-4 py-3 border-t border-border bg-gray-50 text-[11.5px] leading-relaxed text-text-secondary max-h-64 overflow-y-auto">
+          <TermContent content={term.content} variant="compact" />
         </div>
       )}
     </div>
@@ -75,10 +85,12 @@ export function TermsAgreeContainer() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState('');
 
-  const pendingTerms = useMemo(
-    () => terms?.filter((t) => !myAgreements?.some((a) => a.termId === t.id)) ?? [],
-    [terms, myAgreements],
-  );
+  const pendingTerms = useMemo(() => {
+    const filtered = terms?.filter((t) => !myAgreements?.some((a) => a.termId === t.id)) ?? [];
+    return [...filtered].sort(
+      (a, b) => (TERM_DISPLAY_ORDER[a.termType] ?? 99) - (TERM_DISPLAY_ORDER[b.termType] ?? 99),
+    );
+  }, [terms, myAgreements]);
   const pendingRequired = useMemo(
     () => pendingTerms.filter((t) => t.isRequired),
     [pendingTerms],

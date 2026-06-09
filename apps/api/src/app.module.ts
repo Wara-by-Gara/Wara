@@ -31,6 +31,8 @@ import { DateVoteModule } from './date-vote/date-vote.module';
 import { DevAuthModule } from './dev/dev-auth.module';
 import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -74,6 +76,8 @@ import { FriendsModule } from './friends/friends.module';
     DateVoteModule,
     WeatherModule,
     FriendsModule,
+    ConversationsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
