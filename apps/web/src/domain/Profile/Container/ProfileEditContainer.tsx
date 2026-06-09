@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMe, useUpdateMe } from '@/hooks/useUsers';
 import { getProfileImagePresignedUrl } from '@/lib/api/users';
 import { getCroppedImageBlob } from '@/utils/cropImage';
 import { ProfileEdit } from '@/screens/ProfileEdit';
+import { ProfileImageCropScreen } from '@/components/organisms/ProfileImageCropScreen';
 import { ROUTES } from '@/constants/routes';
 import type { Area } from 'react-easy-crop';
+
+type ImageChange =
+  | { key: string; preview: string }  // 새 이미지
+  | { key: null; preview: null };     // 삭제
 
 export default function ProfileEditContainer() {
   const router = useRouter();
@@ -15,25 +20,10 @@ export default function ProfileEditContainer() {
   const { mutate: updateMe, isPending, isError, reset } = useUpdateMe();
 
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-
-  const handleCropComplete = useCallback(async (croppedAreaPixels: Area) => {
-    if (!cropImageSrc) return;
-    const blob = await getCroppedImageBlob(cropImageSrc, croppedAreaPixels);
-    const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-    const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, 'image/jpeg');
-    await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, body: file });
-    updateMe({ profileImageUrl: key }, {
-      onSuccess: () => setCropImageSrc(null),
-    });
-  }, [cropImageSrc, updateMe]);
+  const [imageChange, setImageChange] = useState<ImageChange | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   if (isLoading || !me) return null;
-
-  const handleSave = (nickname: string) => {
-    updateMe({ nickname }, {
-      onSuccess: () => router.push(ROUTES.PROFILE.ME),
-    });
-  };
 
   const handleImageSelect = (file: File) => {
     const reader = new FileReader();
@@ -41,25 +31,65 @@ export default function ProfileEditContainer() {
     reader.readAsDataURL(file);
   };
 
-  const handleImageDelete = () => {
-    updateMe({ profileImageUrl: null });
+  async function handleCropConfirm(croppedAreaPixels: Area) {
+    if (!cropImageSrc) return;
+    setIsUploadingImage(true);
+    try {
+      const blob = await getCroppedImageBlob(cropImageSrc, croppedAreaPixels);
+      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+      const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, 'image/jpeg');
+      await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, body: file });
+      setImageChange({ key, preview: URL.createObjectURL(blob) });
+      setCropImageSrc(null);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
+  const handleSave = (nickname: string) => {
+    updateMe(
+      {
+        nickname,
+        ...(imageChange !== null ? { profileImageUrl: imageChange.key } : {}),
+      },
+      { onSuccess: () => router.push(ROUTES.PROFILE.ME) },
+    );
   };
+
+  const handleImageDelete = () => {
+    setImageChange({ key: null, preview: null });
+  };
+
+  const avatarUrl =
+    imageChange === null
+      ? me.profileImageUrl ?? undefined
+      : imageChange.key === null
+      ? undefined
+      : imageChange.preview;
+
+  if (cropImageSrc) {
+    return (
+      <ProfileImageCropScreen
+        imageSrc={cropImageSrc}
+        isConfirming={isUploadingImage}
+        onBack={() => setCropImageSrc(null)}
+        onConfirm={handleCropConfirm}
+      />
+    );
+  }
 
   return (
     <ProfileEdit
-      state={cropImageSrc ? 'imageCrop' : isError ? 'saveFailed' : 'default'}
-      isUploading={isPending}
+      state={isPending || isUploadingImage ? 'saveLoading' : isError ? 'saveFailed' : 'default'}
       defaultName={me.name ?? undefined}
       defaultNickname={me.nickname ?? me.name ?? ''}
-      avatarUrl={me.profileImageUrl ?? undefined}
-      cropImageSrc={cropImageSrc ?? undefined}
+      avatarUrl={avatarUrl}
       onBack={() => {
         if (cropImageSrc) { setCropImageSrc(null); return; }
         router.back();
       }}
       onSave={handleSave}
       onImageSelect={handleImageSelect}
-      onCropComplete={handleCropComplete}
       onImageDelete={handleImageDelete}
       onRetry={reset}
     />

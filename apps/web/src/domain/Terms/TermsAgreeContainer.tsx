@@ -157,7 +157,7 @@ export function TermsAgreeContainer() {
             onChange={(e) => handleToggleAll(e.target.checked)}
             className="w-4 h-4 accent-primary"
           />
-          <span className="text-sm font-medium" style={{ color: '#000' }}>
+          <span className="text-sm font-medium text-black">
             전체 동의
           </span>
         </label>
