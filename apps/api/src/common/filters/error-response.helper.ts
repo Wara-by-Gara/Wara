@@ -79,6 +79,12 @@ function pickCode(raw: unknown, status: number): string {
   if (typeof message === 'string' && CODE_PATTERN.test(message)) {
     return message;
   }
+  if (raw && typeof raw === 'object' && 'code' in raw) {
+    const code = (raw as { code: unknown }).code;
+    if (typeof code === 'string' && CODE_PATTERN.test(code)) {
+      return code;
+    }
+  }
   return statusToDefaultCode(status);
 }
 
