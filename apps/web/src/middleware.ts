@@ -26,7 +26,6 @@ export const config = {
     "/profile/:path*",
     "/notifications/:path*",
     "/meetings/:path*",
-    "/friends/:path*",
     "/calendar/:path*",
     "/edit/:path*",
   ],

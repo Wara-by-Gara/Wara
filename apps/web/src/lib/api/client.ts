@@ -48,6 +48,8 @@ async function request<T>(fetchFn: () => Promise<Response>, path?: string): Prom
       // /users/me는 auth probe 용도로도 쓰이므로 refresh/redirect 없이 throw.
       // 세션 만료 시 다른 API 호출이 refresh를 트리거함.
       if (path === "/users/me") throw new Error(code);
+      // 이미 로그아웃 상태면 queryClient.clear() 후 재요청된 쿼리 — redirect 불필요
+      if (!useAuthStore.getState().isLoggedIn) throw new Error(code);
       const refreshed = await tryRefresh();
       if (refreshed === true) {
         res = await fetchFn();
