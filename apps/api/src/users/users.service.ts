@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
+import { AuthRedisStore } from '../auth/auth.redis-store';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { DeleteUserDto } from './dto/delete-user.dto';
@@ -13,6 +14,7 @@ export class UsersService {
   constructor(
     private readonly repository: UsersRepository,
     private readonly s3Service: S3Service,
+    private readonly refreshStore: AuthRedisStore,
   ) {}
 
   async generatePresignedUrl(userId: string, dto: ProfileImagePresignedUrlDto) {
@@ -63,6 +65,8 @@ export class UsersService {
       reason: dto.reason,
       detail: dto.detail,
     });
+    // 다른 디바이스 잔존 세션 즉시 무효화
+    await this.refreshStore.revokeAllByUserId(userId);
   }
 
   async getMySocials(userId: string) {
