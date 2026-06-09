@@ -124,7 +124,14 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       if (editMutation.isPending) return;
       editMutation.mutate(
         { messageId: editing.id, content },
-        { onSuccess: cancelEdit },
+        {
+          onSuccess: cancelEdit,
+          // 실패해도 수정 상태/입력은 유지해 재시도 가능하게 하고 알림만 (send와 대칭)
+          onError: (err) => {
+            toast.error("메시지를 수정하지 못했어요. 다시 시도해주세요");
+            console.warn("[dm] edit failed", err);
+          },
+        },
       );
       return;
     }
