@@ -237,11 +237,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       onPointerLeave={cancelPress}
                       onPointerCancel={cancelPress}
                       onContextMenu={(e) => e.preventDefault()}
-                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${bubbleClass}`}
+                      // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
+                      // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
+                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
+                        m.replyTo ? "min-w-[120px] text-left" : ""
+                      } ${bubbleClass}`}
                     >
                       {m.replyTo && (
                         <div
-                          className={`mb-1 border-b pb-1 ${
+                          className={`mb-2 border-b pb-2 ${
                             mine ? "border-text-inverse/30" : "border-text-tertiary/30"
                           }`}
                         >
