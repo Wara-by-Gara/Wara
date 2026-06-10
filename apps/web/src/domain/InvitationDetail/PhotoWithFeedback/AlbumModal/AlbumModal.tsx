@@ -93,15 +93,37 @@ export default function AlbumModal({
 
   const timelineGroups = useMemo(() => {
     const buckets = new Map<string, typeof sortedPhotos>();
+    const addressTimeBuckets = new Map<string, Set<string>>(); // address → Set<timeBucketKey>
 
+    // 1단계: takenAt 있는 사진으로 시간 버킷 구성
     for (const photo of sortedPhotos) {
+      if (!photo.takenAt) continue;
+      const d = new Date(photo.takenAt);
+      d.setMinutes(0, 0, 0);
+      const key = d.toISOString();
+      const bucket = buckets.get(key) ?? [];
+      bucket.push(photo);
+      buckets.set(key, bucket);
+      const addr = photo.exifMetadata?.gps_address;
+      if (addr) {
+        const s = addressTimeBuckets.get(addr) ?? new Set();
+        s.add(key);
+        addressTimeBuckets.set(addr, s);
+      }
+    }
+
+    // 2단계: takenAt 없는 사진 처리
+    for (const photo of sortedPhotos) {
+      if (photo.takenAt) continue;
+      const addr = photo.exifMetadata?.gps_address;
+      const matching = addr ? addressTimeBuckets.get(addr) : undefined;
       let key: string;
-      if (photo.takenAt) {
-        const d = new Date(photo.takenAt);
-        d.setMinutes(0, 0, 0);
-        key = d.toISOString();
-      } else if (photo.exifMetadata?.gps_address) {
-        key = `loc:${photo.exifMetadata.gps_address}`;
+      if (matching?.size === 1) {
+        key = [...matching][0]; // 유일한 시간버킷에 병합
+      } else if (matching && matching.size >= 2) {
+        key = '__no_time__';    // 여러 시간버킷에 걸쳐있어 특정 불가 → 그 외 사진
+      } else if (addr) {
+        key = `loc:${addr}`;    // 매칭 시간버킷 없음 → 위치 버킷
       } else {
         key = '__no_time__';
       }
