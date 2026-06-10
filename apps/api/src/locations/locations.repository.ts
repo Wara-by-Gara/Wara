@@ -158,6 +158,20 @@ export class LocationsRepository {
     return rows.map((r) => r.id);
   }
 
+  // 사용자 탈퇴 시 Redis GPS entry를 정리하기 위해 user의 모든 participants 매핑 조회.
+  // soft deleted 초대장도 포함 (24h TTL이 자연 만료 전까지 stale broadcast 방지).
+  async findParticipantsByUserId(
+    userId: string,
+  ): Promise<Array<{ invitationId: string; participantId: string }>> {
+    return this.db
+      .select({
+        invitationId: participants.invitationId,
+        participantId: participants.id,
+      })
+      .from(participants)
+      .where(eq(participants.userId, userId));
+  }
+
   async findAllParticipantUserIds(invitationId: string): Promise<string[]> {
     const rows = await this.db
       .select({ userId: participants.userId })

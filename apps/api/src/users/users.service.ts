@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { AuthRedisStore } from '../auth/auth.redis-store';
+import { LocationsService } from '../locations/locations.service';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { DeleteUserDto } from './dto/delete-user.dto';
@@ -15,6 +16,7 @@ export class UsersService {
     private readonly repository: UsersRepository,
     private readonly s3Service: S3Service,
     private readonly refreshStore: AuthRedisStore,
+    private readonly locationsService: LocationsService,
   ) {}
 
   async generatePresignedUrl(userId: string, dto: ProfileImagePresignedUrlDto) {
@@ -67,6 +69,9 @@ export class UsersService {
     });
     // 다른 디바이스 잔존 세션 즉시 무효화
     await this.refreshStore.revokeAllByUserId(userId);
+    // 참여 중이던 초대장의 Redis GPS entry + arrived lock 정리.
+    // 미정리 시 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 봄.
+    await this.locationsService.cleanupUserGpsData(userId);
   }
 
   async getMySocials(userId: string) {
