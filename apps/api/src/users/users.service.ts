@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { UsersRepository } from './users.repository';
@@ -20,6 +20,8 @@ import { ulid } from 'ulid';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly repository: UsersRepository,
     private readonly s3Service: S3Service,
@@ -131,8 +133,16 @@ export class UsersService {
     // 다른 디바이스 잔존 세션 즉시 무효화
     await this.refreshStore.revokeAllByUserId(userId);
     // 참여 중이던 초대장의 Redis GPS entry + arrived lock 정리.
-    // 미정리 시 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 봄.
-    await this.locationsService.cleanupUserGpsData(userId);
+    // softDelete + refresh revoke는 이미 끝났으므로 GPS 정리 실패는 best-effort.
+    // 사용자 관점에서는 탈퇴 성공으로 응답하고, 미정리 entry는 24h TTL 안전망으로 회수.
+    try {
+      await this.locationsService.cleanupUserGpsData(userId);
+    } catch (err) {
+      this.logger.error(
+        { err, userId },
+        'cleanupUserGpsData failed during account deletion — relying on 24h TTL',
+      );
+    }
   }
 
   async getMySocials(userId: string) {
