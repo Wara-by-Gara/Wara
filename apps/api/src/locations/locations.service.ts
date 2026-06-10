@@ -58,6 +58,10 @@ export class LocationsService {
 
   async deleteEventLocation(invitationId: string) {
     await this.repository.deleteEventLocation(invitationId);
+    // 호스트가 event location을 해제하면 위치 공유 컨텍스트가 끝난 것이므로
+    // Redis의 모든 참여자 GPS hash + arrived lock을 즉시 정리.
+    // 24h TTL을 기다리지 않고 즉시 broadcast 차단.
+    await this.redisStore.deleteInvitation(invitationId);
   }
 
   async getParticipantLocations(
