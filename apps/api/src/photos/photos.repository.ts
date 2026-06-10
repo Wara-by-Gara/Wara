@@ -137,6 +137,14 @@ export class PhotosRepository {
     return row;
   }
 
+  //워커가 섬네일 업로드 후 호출
+  async updateThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(photos)
+      .set({ thumbnailKey, updatedAt: new Date() })
+      .where(eq(photos.id, id));
+  }
+
   //사진 조회수 올리기
   async incrementViewCount(id: string) {
     await this.db
