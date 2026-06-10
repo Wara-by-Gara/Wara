@@ -16,14 +16,15 @@ interface Props {
 }
 
 const triggerDownloads = (items: PhotoDownloadItem[]) => {
-  items.forEach(({ url }) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  items.forEach(({ url }, i) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 150);
   });
 };
 
