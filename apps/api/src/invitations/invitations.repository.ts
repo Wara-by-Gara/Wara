@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { eventLocations, invitations, participants, users } from '../database/schema';
+import { dateVotePolls, eventLocations, invitations, participants, users } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
@@ -195,6 +195,19 @@ export class InvitationsRepository {
         },
       },
     });
+  }
+
+  async findDateVotePollStatus(
+    invitationId: string,
+  ): Promise<'open' | 'closed' | 'confirmed' | null> {
+    const poll = await this.db.query.dateVotePolls.findFirst({
+      where: and(
+        eq(dateVotePolls.invitationId, invitationId),
+        isNull(dateVotePolls.deletedAt),
+      ),
+      columns: { status: true },
+    });
+    return poll?.status ?? null;
   }
 
   async countGuests(invitationId: string): Promise<number> {

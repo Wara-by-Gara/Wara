@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { findDuplicateVoteSlotKey } from '../vote-slot.util';
 
 const slotSchema = z.object({
   date:      z.string()
@@ -15,6 +16,14 @@ export const createPollSchema = z.object({
                 .optional(),
   isAnonymous: z.boolean().default(false),
   slots:       z.array(slotSchema).min(1).max(30),
+}).superRefine((dto, ctx) => {
+  if (findDuplicateVoteSlotKey(dto.slots)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'duplicate date+startTime in slots',
+      path: ['slots'],
+    });
+  }
 });
 
 export type CreatePollDto = z.infer<typeof createPollSchema>;

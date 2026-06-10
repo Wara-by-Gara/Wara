@@ -184,6 +184,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
+  const [votePollError, setVotePollError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
@@ -427,8 +428,16 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         return;
       }
       setCreatedInvitationId(data.id);
+      setVotePollError(false);
       if (voteDraft) {
-        try { await createPoll(data.id, voteDraft); } catch { /* invitation은 이미 생성됨 */ }
+        try {
+          await createPoll(data.id, voteDraft);
+          await queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.invitations.detail(data.id),
+          });
+        } catch {
+          setVotePollError(true);
+        }
       }
       setPublished(true);
     },
@@ -613,7 +622,13 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">초대장이 만들어졌어요!</p>
-          <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
+          {votePollError ? (
+            <p className="text-[14px] font-medium text-[var(--color-warning)]">
+              날짜 투표 설정에 실패했어요. 초대장 상세에서 다시 설정해주세요.
+            </p>
+          ) : (
+            <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
+          )}
           <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
             <Button size="lg" variant="primary" fullWidth onClick={() => setShareSheetOpen(true)}>
               공유하기

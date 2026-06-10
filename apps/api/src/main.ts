@@ -1,3 +1,6 @@
+// Sentry.init은 다른 모듈 import보다 먼저 실행되어야 자동 계측이 동작 (공식 가이드).
+// prod + DSN 둘 다 있을 때만 init, 아니면 no-op.
+import './sentry/instrument';
 import { NestFactory } from '@nestjs/core';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';

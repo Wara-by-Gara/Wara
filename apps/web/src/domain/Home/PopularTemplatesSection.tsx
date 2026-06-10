@@ -29,7 +29,7 @@ export function PopularTemplatesSection() {
         return {
           id: apiTemplate?.id ?? catalog.name,
           name: catalog.name,
-          imageUrl: catalog.imageUrl,
+          imageUrl: apiTemplate?.previewImageKey ?? catalog.imageUrl,
           canNavigate: Boolean(apiTemplate?.id),
         };
       }),

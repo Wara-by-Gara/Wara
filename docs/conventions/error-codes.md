@@ -135,6 +135,7 @@
 | `VOTE_POLL_CLOSED` | 422 | 마감된 투표에 응답/수정 시도, 또는 closed가 아닌 상태에서 날짜 확정 시도 |
 | `VOTE_SLOT_NOT_FOUND` | 404 | 슬롯 없음 또는 해당 폴에 속하지 않음 |
 | `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
+| `VOTE_SLOT_DUPLICATE` | 422 | 동일 날짜·시간 슬롯 중복 등록 |
 | `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
 
 ## AI

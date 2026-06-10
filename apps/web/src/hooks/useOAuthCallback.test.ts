@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useOAuthCallback } from './useOAuthCallback';
 
 const mockReplace = vi.fn();
@@ -10,6 +10,11 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mockReplace }),
   usePathname: () => '/invitations/create',
   useSearchParams: () => ({ get: mockGetParam }),
+}));
+
+vi.mock('@/lib/api/terms', () => ({
+  getTerms: vi.fn().mockResolvedValue([]),
+  getMyAgreements: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('@/stores/authStore', () => ({
@@ -51,21 +56,25 @@ describe('useOAuthCallback', () => {
     expect(mockLogin).toHaveBeenCalledWith();
   });
 
-  it('온보딩 미완료 시 /onboarding으로 이동한다', () => {
+  it('온보딩 미완료 시 /onboarding으로 이동한다', async () => {
     mockGetParam.mockImplementation((key: string) =>
       key === 'auth_success' ? '1' : null,
     );
     renderHook(() => useOAuthCallback());
-    expect(mockReplace).toHaveBeenCalledWith('/onboarding');
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/onboarding');
+    });
   });
 
-  it('온보딩 완료 시 returnTo로 이동한다', () => {
+  it('온보딩 완료 시 returnTo로 이동한다', async () => {
     localStorage.setItem('wara_onboarding_done', '1');
     sessionStorage.setItem('wara_oauth_return', '/invitations/create');
     mockGetParam.mockImplementation((key: string) =>
       key === 'auth_success' ? '1' : null,
     );
     renderHook(() => useOAuthCallback());
-    expect(mockReplace).toHaveBeenCalledWith('/invitations/create');
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/invitations/create');
+    });
   });
 });

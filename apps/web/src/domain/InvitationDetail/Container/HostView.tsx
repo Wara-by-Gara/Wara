@@ -43,7 +43,9 @@ type Props = {
 export default function HostView({ invitationId, invitation, participantsData }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: pollData } = usePoll(invitationId);
+  const { data: pollData } = usePoll(invitationId, {
+    enabled: invitation.dateVotePollStatus != null,
+  });
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: hasPoll });
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
