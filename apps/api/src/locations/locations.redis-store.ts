@@ -80,7 +80,23 @@ export class LocationsRedisStore {
     return res === 'OK';
   }
 
+  // GPS hash + 모든 참여자의 arrived lock을 atomically 삭제.
+  // arrived lock 누락 시 다음 cycle에 stale "처음 도착" 처리 발생 가능.
   async deleteInvitation(invitationId: string): Promise<void> {
-    await this.redis.del(hashKey(invitationId));
+    const participantIds = await this.redis.hkeys(hashKey(invitationId));
+    const pipeline = this.redis.multi();
+    pipeline.del(hashKey(invitationId));
+    for (const pid of participantIds) {
+      pipeline.del(arrivedKey(invitationId, pid));
+    }
+    await pipeline.exec();
+  }
+
+  // 단일 참여자의 GPS entry + arrived lock 삭제. 사용자가 자기 공유를 끄거나 탈퇴할 때 사용.
+  async deleteParticipant(invitationId: string, participantId: string): Promise<void> {
+    const pipeline = this.redis.multi();
+    pipeline.hdel(hashKey(invitationId), participantId);
+    pipeline.del(arrivedKey(invitationId, participantId));
+    await pipeline.exec();
   }
 }
