@@ -14,8 +14,14 @@ import {
   useEditMessage,
   useDeleteMessage,
   useChatRealtime,
+  useToggleReaction,
 } from "@/hooks/useChat";
-import type { Message } from "@/lib/api/conversations";
+import {
+  REACTION_EMOJIS,
+  REACTION_EMOJI_CHAR,
+  type Message,
+  type ReactionEmoji,
+} from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
@@ -43,6 +49,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const sendMutation = useSendMessage(id);
   const editMutation = useEditMessage(id);
   const deleteMutation = useDeleteMessage(id);
+  const reactMutation = useToggleReaction(id);
   useChatRealtime(id);
 
   const [text, setText] = useState("");
@@ -76,6 +83,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       navigator.clipboard?.writeText(menuTarget.content);
       toast.show("복사했어요");
     }
+    setMenuTarget(null);
+  };
+  const handleReact = (emoji: ReactionEmoji) => {
+    if (menuTarget) reactMutation.mutate({ messageId: menuTarget.id, emoji });
     setMenuTarget(null);
   };
   const openDelete = () => {
@@ -283,6 +294,31 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         </div>
                       )}
                       {m.content}
+                      {!m.deleted && m.reactions.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {m.reactions.map((r) => (
+                            <button
+                              key={r.emoji}
+                              type="button"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={() =>
+                                reactMutation.mutate({
+                                  messageId: m.id,
+                                  emoji: r.emoji as ReactionEmoji,
+                                })
+                              }
+                              className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] ${
+                                mine
+                                  ? "bg-black/15 text-text-inverse"
+                                  : "bg-background-soft text-text-secondary"
+                              } ${m.myReaction === r.emoji ? "ring-1 ring-brand" : ""}`}
+                            >
+                              <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
+                              <span className="font-bold">{r.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   <div
@@ -437,6 +473,22 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         <ModalContent className="max-w-[240px] py-2" aria-describedby={undefined}>
           <ModalPrimitive.Title className="sr-only">메시지 메뉴</ModalPrimitive.Title>
           <div className="flex flex-col">
+            {/* 이모지 리액션 행 (메뉴 최상단) */}
+            <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+              {REACTION_EMOJIS.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-label={`${key} 리액션`}
+                  onClick={() => handleReact(key)}
+                  className={`flex size-8 items-center justify-center rounded-full text-[19px] active:bg-background-soft ${
+                    menuTarget?.myReaction === key ? "bg-background-soft" : ""
+                  }`}
+                >
+                  {REACTION_EMOJI_CHAR[key]}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={handleCopy}

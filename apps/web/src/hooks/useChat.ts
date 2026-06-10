@@ -17,9 +17,12 @@ import {
   editMessage as apiEditMessage,
   markConversationRead,
   deleteMessage as apiDeleteMessage,
+  toggleReaction as apiToggleReaction,
   type ConversationDetail,
   type Message,
   type MessagesPage,
+  type ReactionEmoji,
+  type ReactionSummary,
 } from '@/lib/api/conversations';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { SOCKET_BASE } from '@/lib/env';
@@ -68,6 +71,38 @@ function markDeleted(qc: QueryClient, id: string, messageId: string) {
               ...p,
               messages: p.messages.map((m) =>
                 m.id === messageId ? { ...m, deleted: true, content: '' } : m,
+              ),
+            })),
+          }
+        : old,
+  );
+}
+
+// 메시지의 리액션 집계(+ 선택적으로 내 리액션)를 캐시에 반영
+function applyReaction(
+  qc: QueryClient,
+  id: string,
+  messageId: string,
+  reactions: ReactionSummary[],
+  myReaction?: string | null,
+) {
+  qc.setQueryData<InfiniteData<MessagesPage>>(
+    QUERY_KEYS.conversations.messages(id),
+    (old) =>
+      old
+        ? {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              messages: p.messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      reactions,
+                      // myReaction 인자가 주어진 경우(내 토글)만 갱신, 상대 이벤트면 유지
+                      myReaction: myReaction === undefined ? m.myReaction : myReaction,
+                    }
+                  : m,
               ),
             })),
           }
@@ -156,6 +191,18 @@ export function useDeleteMessage(id: string) {
   });
 }
 
+export function useToggleReaction(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, emoji }: { messageId: string; emoji: ReactionEmoji }) =>
+      apiToggleReaction(id, messageId, emoji),
+    onSuccess: (res) => {
+      // 서버가 집계 + 내 리액션을 권위있게 반환 -> 그대로 반영
+      applyReaction(qc, id, res.messageId, res.reactions, res.myReaction);
+    },
+  });
+}
+
 // 대화방 입장 시 읽음 처리 + 실시간 수신
 export function useChatRealtime(id: string) {
   const qc = useQueryClient();
@@ -198,6 +245,15 @@ export function useChatRealtime(id: string) {
       if (msg.conversationId !== id) return;
       replaceMessage(qc, id, msg);
     });
+
+    // 상대가 리액션 변경 -> 집계만 갱신 (내 myReaction은 유지)
+    socket.on(
+      'message:reaction',
+      (payload: { conversationId: string; messageId: string; reactions: ReactionSummary[] }) => {
+        if (payload.conversationId !== id) return;
+        applyReaction(qc, id, payload.messageId, payload.reactions);
+      },
+    );
 
     // 상대가 읽음 -> 내 메시지 읽음 표시 갱신
     socket.on('message:read', (payload: { conversationId: string; readerId: string }) => {

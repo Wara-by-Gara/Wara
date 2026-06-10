@@ -660,3 +660,45 @@ test.describe("dm-batch5-resilience", () => {
     await context.close();
   });
 });
+
+test.describe("dm-batch6-reactions", () => {
+  test("이모지 리액션을 달면 말풍선에 배지가 뜨고, 다시 누르면 취소된다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+    const msg = `E2E 리액션 ${Date.now()}`;
+    await send(page, msg);
+    await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+    const row = page.locator("li").filter({ hasText: msg });
+
+    // 길게눌러 메뉴 -> heart 리액션
+    await longPress(page, page.getByText(msg));
+    await page.getByRole("button", { name: "heart 리액션" }).click();
+    await expect(row.getByText("❤️")).toBeVisible({ timeout: 10_000 });
+
+    // 다시 heart -> 취소(배지 사라짐)
+    await longPress(page, page.getByText(msg));
+    await page.getByRole("button", { name: "heart 리액션" }).click();
+    await expect(row.getByText("❤️")).toHaveCount(0, { timeout: 10_000 });
+
+    await context.close();
+  });
+
+  test("리액션이 상대 화면에 실시간 반영된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    const msg = `E2E 리액션실시간 ${Date.now()}`;
+    await send(host.page, msg);
+    await expect(guest.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    await longPress(host.page, host.page.getByText(msg));
+    await host.page.getByRole("button", { name: "thumbsup 리액션" }).click();
+
+    const guestRow = guest.page.locator("li").filter({ hasText: msg });
+    await expect(guestRow.getByText("👍")).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await guest.context.close();
+  });
+});

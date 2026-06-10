@@ -28,6 +28,32 @@ export type ReplyPreview = {
   deleted: boolean;
 };
 
+// 이모지 리액션 키 (백엔드 react-message.dto REACTION_EMOJIS와 일치)
+export const REACTION_EMOJIS = [
+  "heart",
+  "thumbsup",
+  "check",
+  "smile",
+  "surprise",
+  "cry",
+] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+
+// 키 -> 실제 이모지 문자
+export const REACTION_EMOJI_CHAR: Record<ReactionEmoji, string> = {
+  heart: "❤️",
+  thumbsup: "👍",
+  check: "✅",
+  smile: "😄",
+  surprise: "😮",
+  cry: "😢",
+};
+
+export type ReactionSummary = {
+  emoji: string;
+  count: number;
+};
+
 export type Message = {
   id: string;
   conversationId: string;
@@ -37,7 +63,26 @@ export type Message = {
   deleted: boolean;
   edited: boolean;
   replyTo: ReplyPreview | null;
+  reactions: ReactionSummary[];
+  myReaction: string | null;
 };
+
+export type ToggleReactionResult = {
+  messageId: string;
+  reactions: ReactionSummary[];
+  myReaction: string | null;
+};
+
+export function toggleReaction(
+  conversationId: string,
+  messageId: string,
+  emoji: ReactionEmoji,
+) {
+  return apiPost<ToggleReactionResult>(
+    `/conversations/${conversationId}/messages/${messageId}/reactions`,
+    { emoji },
+  );
+}
 
 export type MessagesPage = {
   messages: Message[];
