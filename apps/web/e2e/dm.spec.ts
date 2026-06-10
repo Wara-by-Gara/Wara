@@ -62,7 +62,8 @@ async function longPress(page: Page, target: Locator) {
   // 새 메시지 도착으로 스크롤이 흔들릴 수 있어 위치를 안정화하고,
   // hover로 포인터를 요소 중심에 확실히 올린 뒤 길게 누른다 (LONG_PRESS_MS=500ms).
   await target.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(150);
+  // 실시간 수신으로 인한 자동 스크롤/리렌더가 끝나도록 충분히 대기 후 좌표를 잡는다.
+  await page.waitForTimeout(400);
   await target.hover();
   await page.mouse.down();
   await page.waitForTimeout(700);
