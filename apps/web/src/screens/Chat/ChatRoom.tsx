@@ -9,6 +9,7 @@ import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/mo
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { toast } from "@/components/molecules/Toast";
 import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
+import { PhotoViewer } from "@/screens/Chat/PhotoViewer";
 import { useMe } from "@/hooks/useUsers";
 import {
   useConversation,
@@ -61,6 +62,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
   const [text, setText] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -108,8 +110,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
   };
   const pressTimer = useRef<number | null>(null);
+  const pressFired = useRef(false); // 길게누르기 발동 여부 (탭=사진 뷰어 / 길게=메뉴 구분)
   const startPress = (m: Message) => {
-    pressTimer.current = window.setTimeout(() => setMenuTarget(m), LONG_PRESS_MS);
+    pressFired.current = false;
+    pressTimer.current = window.setTimeout(() => {
+      pressFired.current = true;
+      setMenuTarget(m);
+    }, LONG_PRESS_MS);
   };
   const cancelPress = () => {
     if (pressTimer.current) {
@@ -340,6 +347,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         onPointerLeave={cancelPress}
                         onPointerCancel={cancelPress}
                         onContextMenu={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (pressFired.current) return; // 길게누르기였으면 메뉴만
+                          if (m.imageUrl) setViewerUrl(m.imageUrl);
+                        }}
                         className="relative max-w-full cursor-pointer select-none overflow-hidden rounded-2xl"
                       >
                         {/* presigned S3 URL은 만료·쿼리파라미터라 next/image 부적합 (기존 사진 기능 관례) */}
@@ -750,7 +761,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       </BottomSheet>
 
       {/* 우측 슬라이딩 서랍 — 사진/대화상대/초대 */}
-      <ChatDrawer open={drawerOpen} onOpenChange={setDrawerOpen} conversationId={id} />
+      <ChatDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        conversationId={id}
+        onPhotoClick={setViewerUrl}
+      />
+
+      {/* 사진 크게 보기 + 다운로드 */}
+      <PhotoViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
     </div>
   );
 };

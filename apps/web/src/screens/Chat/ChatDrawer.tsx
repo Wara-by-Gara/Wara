@@ -13,10 +13,12 @@ export function ChatDrawer({
   open,
   onOpenChange,
   conversationId,
+  onPhotoClick,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conversationId: string;
+  onPhotoClick: (url: string) => void;
 }) {
   const { data: me } = useMe();
   // 서랍 열릴 때만 조회 (enabled = open)
@@ -45,13 +47,19 @@ export function ChatDrawer({
               ) : (
                 <div className="grid grid-cols-3 gap-1">
                   {photos.map((p) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <button
                       key={p.messageId}
-                      src={p.imageUrl}
-                      alt="사진"
-                      className="aspect-square w-full rounded-md object-cover"
-                    />
+                      type="button"
+                      onClick={() => onPhotoClick(p.imageUrl)}
+                      className="aspect-square overflow-hidden rounded-md active:opacity-70"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.imageUrl}
+                        alt="사진"
+                        className="size-full object-cover"
+                      />
+                    </button>
                   ))}
                 </div>
               )}

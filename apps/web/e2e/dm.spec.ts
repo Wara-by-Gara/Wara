@@ -837,4 +837,27 @@ test.describe("dm-batch8-drawer", () => {
 
     await context.close();
   });
+
+  test("사진 메시지를 누르면 크게 보기가 열리고 저장 버튼이 있다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    await page.setInputFiles('input[type="file"]', {
+      name: "viewer.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+    await page.getByRole("button", { name: "보내기", exact: true }).click();
+    const sent = page.locator('img[alt="사진"]').last();
+    await expect(sent).toBeVisible({ timeout: 15_000 });
+
+    // 사진 탭 -> 크게 보기 + 저장 버튼
+    await sent.click();
+    await expect(
+      page.getByRole("img", { name: "사진 크게 보기" }),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "사진 저장" })).toBeVisible();
+
+    await context.close();
+  });
 });
