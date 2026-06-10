@@ -350,7 +350,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                                 emoji: r.emoji as ReactionEmoji,
                               })
                             }
-                            className={`inline-flex items-center gap-0.5 rounded-full bg-surface px-1.5 py-0.5 text-[11px] text-text-secondary shadow-sm ring-1 active:opacity-70 ${
+                            className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-secondary shadow-sm ring-1 active:opacity-70 ${
                               m.myReaction === r.emoji ? "ring-brand" : "ring-border"
                             }`}
                           >
@@ -527,18 +527,18 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
       {/* 메시지 길게 누르기 메뉴 */}
       <Modal open={!!menuTarget} onOpenChange={(open) => !open && setMenuTarget(null)}>
-        <ModalContent className="max-w-[240px] py-2" aria-describedby={undefined}>
+        <ModalContent className="max-w-[260px] px-3 py-2" aria-describedby={undefined}>
           <ModalPrimitive.Title className="sr-only">메시지 메뉴</ModalPrimitive.Title>
           <div className="flex flex-col">
             {/* 이모지 리액션 행 (메뉴 최상단) */}
-            <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+            <div className="mb-1 flex items-center justify-between border-b border-border px-1 pb-2">
               {REACTION_EMOJIS.map((key) => (
                 <button
                   key={key}
                   type="button"
                   aria-label={`${key} 리액션`}
                   onClick={() => handleReact(key)}
-                  className={`flex size-8 items-center justify-center rounded-full text-[19px] active:bg-background-soft ${
+                  className={`flex size-7 items-center justify-center rounded-full text-[16px] active:bg-background-soft ${
                     menuTarget?.myReaction === key ? "bg-background-soft" : ""
                   }`}
                 >
