@@ -20,6 +20,7 @@ export type ParticipantLocationWithUser = {
   lng: number;
   accuracy: number;
   isArrived: boolean;
+  statusMessage: string | null;
   updatedAt: Date;
   nickname: string | null;
   profileImageUrl: string | null;
@@ -116,6 +117,7 @@ export class LocationsRepository {
         lng: participantLocations.lng,
         accuracy: participantLocations.accuracy,
         isArrived: participantLocations.isArrived,
+        statusMessage: participantLocations.statusMessage,
         updatedAt: participantLocations.updatedAt,
         nickname: users.nickname,
         profileImageUrl: users.profileImageUrl,
@@ -203,16 +205,18 @@ export class LocationsRepository {
     invitationId: string,
     participantId: string,
     dto: UpdateParticipantLocationDto,
+    statusMessage: string | null = null,
   ) {
+    const values = { ...dto, statusMessage };
     const [result] = await this.db
       .insert(participantLocations)
-      .values({ invitationId, participantId, ...dto })
+      .values({ invitationId, participantId, ...values })
       .onConflictDoUpdate({
         target: [
           participantLocations.invitationId,
           participantLocations.participantId,
         ],
-        set: { ...dto, updatedAt: new Date() },
+        set: { ...values, updatedAt: new Date() },
       })
       .returning();
     return result!;

@@ -27,11 +27,12 @@ export class LocationsFlushScheduler {
       if (map.size === 0) continue;
 
       for (const [participantId, value] of map.entries()) {
-        await this.repository.upsertParticipantLocation(invitationId, participantId, {
-          lat: value.lat,
-          lng: value.lng,
-          accuracy: value.accuracy,
-        });
+        await this.repository.upsertParticipantLocation(
+          invitationId,
+          participantId,
+          { lat: value.lat, lng: value.lng, accuracy: value.accuracy },
+          value.statusMessage,
+        );
         if (value.isArrived) {
           await this.repository.setArrivedIfNotYet(participantId, invitationId);
         }
