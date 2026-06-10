@@ -34,6 +34,8 @@ export interface LocationSelectorProps {
   onModeChange?: (mode: "search" | "manual") => void;
   error?: string;
   className?: string;
+  /** 토글 표시 여부 */
+  hideToggle?: boolean;
 }
 
 export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps>(
@@ -53,6 +55,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
       onModeChange,
       error,
       className,
+      hideToggle = false,
     },
     ref,
   ) {
@@ -138,16 +141,18 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
           />
         )}
 
-        <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
-          <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
-          <Switch
-            checked={effectiveUnknown}
-            onCheckedChange={(v) => {
-              if (unknown === undefined) setInternalUnknown(v);
-              onUnknownChange?.(v);
-            }}
-          />
-        </label>
+        {!hideToggle && (
+          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
+            <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
+            <Switch
+              checked={effectiveUnknown}
+              onCheckedChange={(v) => {
+                if (unknown === undefined) setInternalUnknown(v);
+                onUnknownChange?.(v);
+              }}
+            />
+          </label>
+        )}
 
         {error ? <span className="text-[13px] text-danger">{error}</span> : null}
       </div>

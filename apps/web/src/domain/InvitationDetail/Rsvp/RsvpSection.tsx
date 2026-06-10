@@ -15,6 +15,7 @@ export type RsvpSectionProps = Pick<
   | "closed"
   | "loading"
   | "helperText"
+  | "disabled"
 >;
 
 export function RsvpSection({
@@ -25,6 +26,7 @@ export function RsvpSection({
   closed,
   loading,
   helperText,
+  disabled,
 }: RsvpSectionProps) {
   return (
     <section>
@@ -41,6 +43,7 @@ export function RsvpSection({
           closed={closed}
           loading={loading}
           helperText={helperText}
+          disabled={disabled}
         />
       </div>
     </section>

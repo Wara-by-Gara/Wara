@@ -145,7 +145,12 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    return this.toResponse(invitation);
+    // eventLocation 관계 join은 deletedAt을 필터하지 못함(Drizzle one 관계 제약).
+    // soft-delete된 장소가 응답에 남지 않도록 여기서 제거.
+    const eventLocation = invitation.eventLocation?.deletedAt
+      ? null
+      : invitation.eventLocation;
+    return this.toResponse({ ...invitation, eventLocation });
   }
 
   private async validateTemplateId(templateId: string) {

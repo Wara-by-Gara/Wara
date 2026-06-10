@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/icons';
 import type { IconName } from '@/components/icons';
@@ -31,6 +32,7 @@ export interface CreateCanvasProps {
   titleError: boolean;
   titleFocused: boolean;
   onTitleFocus: () => void;
+  onTitleBlur: () => void;
   /* 폰트 */
   designFont: DesignFont;
   onFontChange: (f: DesignFont) => void;
@@ -117,6 +119,7 @@ export function CreateCanvas({
   titleError,
   titleFocused,
   onTitleFocus,
+  onTitleBlur,
   designFont,
   onFontChange,
   coverImageUrl,
@@ -141,6 +144,15 @@ export function CreateCanvas({
   onEditAnimation,
 }: CreateCanvasProps) {
   const hasCover = !!coverImageUrl || !!coverGifUrl;
+
+  // 제목 textarea 자동 높이 — 내용에 따라 1~2줄(max-h로 상한)
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [title, designFont]);
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -216,15 +228,19 @@ export function CreateCanvas({
 
         {/* 제목 — 투명 인풋 (배경 비침) + 폰트 즉시 반영 */}
         <div className="flex flex-col gap-2">
-          <input
+          <textarea
+            ref={titleRef}
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             onFocus={onTitleFocus}
+            onBlur={onTitleBlur}
             placeholder="초대장 제목"
-            maxLength={10}
+            maxLength={20}
+            rows={1}
             aria-label="모임 이름"
             className={cn(
-              'w-full bg-transparent text-center text-[32px] font-extrabold leading-snug outline-none',
+              // resize-none + overflow-hidden + max-h-[2.75em](leading-snug 1.375 × 2줄) → 최대 2줄
+              'w-full resize-none overflow-hidden bg-transparent text-left text-[32px] font-extrabold leading-snug outline-none max-h-[2.75em]',
               bgClass.includes('aurora') || bgClass.includes('starry')
                 ? 'text-white placeholder:text-white/50'
                 : 'text-text-primary placeholder:text-text-tertiary/50',
@@ -232,7 +248,7 @@ export function CreateCanvas({
             )}
           />
           {titleError && (
-            <p className="text-center text-[13px] text-danger">
+            <p className="text-left text-[13px] text-danger">
               모임 이름을 입력해주세요
             </p>
           )}
@@ -242,6 +258,8 @@ export function CreateCanvas({
                 <button
                   key={id}
                   type="button"
+                  // mousedown 시 preventDefault → textarea 포커스 유지(blur로 폰트픽커 닫히지 않게)
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => onFontChange(id)}
                   className={cn(
                     'flex shrink-0 flex-col items-center gap-1 rounded-md border-2 px-3 py-2.5 transition-colors',

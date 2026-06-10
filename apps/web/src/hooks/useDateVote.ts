@@ -24,13 +24,14 @@ export function usePoll(invitationId: string, options?: { enabled?: boolean }) {
       try {
         return await getPoll(invitationId);
       } catch (err: unknown) {
-        const code = (err as { error?: { code?: string } })?.error?.code;
+        const code = (err as Error).message;
         if (code === 'VOTE_POLL_NOT_FOUND') return null;
         throw err;
       }
     },
     enabled: (options?.enabled ?? true) && !!invitationId,
     retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -41,6 +42,7 @@ export function useVoteResults(invitationId: string, options?: { enabled?: boole
     queryFn: () => getVoteResults(invitationId),
     enabled: (options?.enabled ?? true) && !!invitationId,
     retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

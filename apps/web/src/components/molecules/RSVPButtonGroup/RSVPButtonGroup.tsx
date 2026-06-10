@@ -61,6 +61,7 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
       options,
       layout,
       shape,
+      disabled,
       fullCapacity,
       closed,
       loading,
@@ -85,11 +86,11 @@ export const RSVPButtonGroup = forwardRef<HTMLDivElement, RSVPButtonGroupProps>(
       : OPTIONS;
 
     return (
-      <div ref={ref} className={cn(groupVariants({ layout, shape, disabled: closed || loading }), className)}>
+      <div ref={ref} className={cn(groupVariants({ layout, shape, disabled: closed || loading || disabled }), className)}>
         {resolvedOptions.map((opt) => {
           const active = current === opt.value;
           const itemDisabled =
-            closed || loading || (fullCapacity && opt.value === "attending");
+            closed || loading || disabled || (fullCapacity && opt.value === "attending");
           return (
             <button
               key={opt.value}

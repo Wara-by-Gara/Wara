@@ -6,7 +6,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/icons';
 import { Button } from '@/components/primitives/Button';
-import { Badge } from '@/components/primitives/Badge';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { InvitationDetailHero } from '@/domain/InvitationDetail/InvitationDetailHero';
 import { InvitationDescriptionBox } from '@/domain/InvitationDetail/InvitationDescriptionBox';
@@ -24,6 +23,7 @@ import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryB
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import { ParticipantSummaryCard } from '@/components/organisms/ParticipantSummaryCard';
+import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
 import { ParticipantItem } from '@/components/organisms/ParticipantItem';
 import {
@@ -77,6 +77,13 @@ export default function HostView({
 
   const summary = participantsData?.summary;
   const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];
+
+  // 호스트는 응답을 바꿀 수 없지만 게스트가 보는 RSVP 위치를 그대로 노출(읽기 전용)
+  const rsvpOptions = [
+    { value: 'attending' as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    { value: 'maybe' as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    { value: 'declined' as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  ];
 
   const { mutate: submitStatusChange, isPending: isStatusPending } =
     useMutation({
@@ -184,11 +191,6 @@ export default function HostView({
               schedule={schedule}
               fontClass={fontClass}
               isDarkBg={isDarkBg}
-              meta={
-                <Badge variant="host" size="md">
-                  호스트
-                </Badge>
-              }
               cover={
                 <InvitationCover
                   variant={cover.variant}
@@ -228,6 +230,13 @@ export default function HostView({
               isDarkBg={isDarkBg}
             />
           )}
+
+          <RsvpSection
+            value="attending"
+            options={rsvpOptions}
+            disabled
+            helperText="호스트는 참석으로 표시돼요"
+          />
 
           {hasPoll && pollData?.poll.status !== 'confirmed' && (
             <VotePreviewCard

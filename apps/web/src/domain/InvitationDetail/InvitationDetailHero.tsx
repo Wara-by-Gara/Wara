@@ -28,7 +28,7 @@ export function InvitationDetailHero({
         <div className="flex flex-col gap-2">
           <h1
             className={cn(
-              'text-[28px] font-bold leading-[1.15] tracking-tight',
+              'line-clamp-2 break-words text-[28px] font-bold leading-[1.15] tracking-tight',
               isDarkBg ? 'text-white' : 'text-text-primary',
               fontClass,
             )}

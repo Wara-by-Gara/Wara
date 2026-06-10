@@ -65,6 +65,11 @@ export interface MapPageProps {
   onSearchQueryChange?: (q: string) => void;
   searchResults?: SearchResult[];
   onSelectPlace?: (place: SearchResult) => void;
+  /** 검색 결과 무한스크롤 */
+  onLoadMoreSearch?: () => void;
+  isLoadingMoreSearch?: boolean;
+  /** Kakao 45개 상한에 막혀 일부만 노출됨 → 구체화 안내 */
+  searchCapReached?: boolean;
 
   /** 길찾기 */
   onOpenKakaoMap?: () => void;
@@ -107,6 +112,9 @@ export const MapPage = ({
   onSearchQueryChange,
   searchResults,
   onSelectPlace,
+  onLoadMoreSearch,
+  isLoadingMoreSearch,
+  searchCapReached,
   onOpenKakaoMap,
   onOpenNaverMap,
   onOpenGoogleMap,
@@ -249,6 +257,13 @@ export const MapPage = ({
             state === "searchEmpty" ? mobileMainCenter : mobileMainScroll,
             state !== "searchEmpty" && "px-3",
           )}
+          onScroll={(e) => {
+            if (state !== "searchResults") return;
+            const el = e.currentTarget;
+            if (el.scrollHeight - el.scrollTop - el.clientHeight <= 100) {
+              onLoadMoreSearch?.();
+            }
+          }}
         >
           {state === "searchEmpty" ? (
             <EmptyState
@@ -271,6 +286,16 @@ export const MapPage = ({
                   </div>
                 </li>
               ))}
+              {isLoadingMoreSearch && (
+                <li className="py-3 text-center text-[12px] text-text-tertiary">
+                  불러오는 중...
+                </li>
+              )}
+              {searchCapReached && !isLoadingMoreSearch && (
+                <li className="py-3 text-center text-[12px] text-text-tertiary">
+                  더 많은 결과가 있어요. 키워드를 더 구체적으로 입력해보세요
+                </li>
+              )}
             </ul>
           ) : (
             <p className="px-3 py-6 text-center text-[13px] text-text-tertiary">

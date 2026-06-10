@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { MapPage, type MapPageState, type SearchResult } from "@/screens/MapPage/MapPage";
 import { KakaoMap, type KakaoMapHandle, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
-import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
+import { useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
 import { useInvitation } from "@/hooks/useInvitations";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocket";
@@ -55,13 +55,15 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   }, [searchQuery]);
 
   // ── 서버 데이터 ───────────────────────────────────────────────────────
+  // 장소는 invitation 상세에 포함된 eventLocation에서 파생.
+  // (별도 GET /location은 장소 미설정 시 404를 던져 불필요한 에러 노이즈 발생)
   const {
-    data: eventLocation,
+    data: invitation,
     isLoading: locationLoading,
     isError: locationError,
     refetch,
-  } = useEventLocation(invitationId);
-  const { data: invitation } = useInvitation(invitationId);
+  } = useInvitation(invitationId);
+  const eventLocation = invitation?.eventLocation ?? null;
   const { data: participantsData } = useParticipants(invitationId);
   const { data: initialLocations } = useParticipantLocations(invitationId);
   const { mutate: saveLocation, isPending: isSavingPlace } = useSetEventLocation(invitationId);
@@ -107,9 +109,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
 
   // 검색은 내 위치 기반 거리 정렬을 사용하므로 myLocation 선언 뒤에 호출.
-  const { data: searchData, isFetching: isSearching } = useLocationSearch(
-    debouncedQuery,
-    myLocation,
+  const {
+    data: searchData,
+    isLoading: isSearching,
+    fetchNextPage: fetchNextSearchPage,
+    hasNextPage: hasMoreSearch,
+    isFetchingNextPage: isLoadingMoreSearch,
+  } = useLocationSearch(debouncedQuery, myLocation);
+  const searchPlacesFlat = useMemo(
+    () => searchData?.pages.flatMap((p) => p.places) ?? [],
+    [searchData],
   );
 
   // ── WebSocket ─────────────────────────────────────────────────────────
@@ -152,10 +161,15 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       setPageState("noLocation");
       return;
     }
-    if (!pageState.startsWith("search") && pageState !== "directionBottomSheet" && pageState !== "selectedPlace") {
-      setPageState("fullscreen");
+    if (
+      !pageState.startsWith("search") &&
+      pageState !== "directionBottomSheet" &&
+      pageState !== "selectedPlace"
+    ) {
+      // 장소 미설정(eventLocation null)이면 noLocation, 설정됐으면 지도 전체화면
+      setPageState(eventLocation ? "fullscreen" : "noLocation");
     }
-  }, [locationLoading, locationError]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [locationLoading, locationError, eventLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 호스트가 미설정 상태로 들어오면 곧바로 검색창 진입 ───────────────
   useEffect(() => {
@@ -174,9 +188,9 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       setPageState("searchInitial");
     } else if (isSearching) {
       setPageState("searchTyping");
-    } else if (searchData && searchData.places.length === 0) {
+    } else if (searchData && searchPlacesFlat.length === 0) {
       setPageState("searchEmpty");
-    } else if (searchData && searchData.places.length > 0) {
+    } else if (searchPlacesFlat.length > 0) {
       setPageState("searchResults");
     }
   }, [searchQuery, isSearching, searchData, pageState]);
@@ -376,20 +390,32 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const handleBack = () => {
     if (pageState === "selectedPlace" && pendingPlace) {
       setPendingPlace(null);
-      setPageState(searchData && searchData.places.length > 0 ? "searchResults" : "searchInitial");
+      setPageState(searchPlacesFlat.length > 0 ? "searchResults" : "searchInitial");
       return;
     }
     router.back();
   };
 
-  const searchResultsForPage: SearchResult[] =
-    searchData?.places.map((p: Place) => ({
+  const handleLoadMoreSearch = () => {
+    if (hasMoreSearch && !isLoadingMoreSearch) fetchNextSearchPage();
+  };
+
+  // Kakao 45개 상한에 막혀 매칭 결과 일부만 노출된 경우 → 구체화 안내
+  const lastSearchMeta = searchData?.pages.at(-1)?.meta;
+  const searchCapReached =
+    !hasMoreSearch &&
+    !!lastSearchMeta &&
+    lastSearchMeta.totalCount > searchPlacesFlat.length;
+
+  const searchResultsForPage: SearchResult[] = searchPlacesFlat.map(
+    (p: Place) => ({
       placeId: p.placeId,
       placeName: p.placeName,
       address: p.roadAddress || p.address,
       lat: p.lat,
       lng: p.lng,
-    })) ?? [];
+    }),
+  );
 
   const resolvedState: MapPageState = isDirectionOpen ? "directionBottomSheet" : pageState;
 
@@ -438,6 +464,9 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         searchQuery={searchQuery}
         onSearchQueryChange={handleSearchQueryChange}
         searchResults={searchResultsForPage}
+        onLoadMoreSearch={handleLoadMoreSearch}
+        isLoadingMoreSearch={isLoadingMoreSearch}
+        searchCapReached={searchCapReached}
         onSelectPlace={handleSelectPlace}
         onOpenKakaoMap={handleOpenKakaoMap}
         onOpenNaverMap={handleOpenNaverMap}

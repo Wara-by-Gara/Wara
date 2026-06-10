@@ -189,6 +189,7 @@ export default function InvitationCreateContainer({
     hydrate();
   }, [hydrate]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentScrollRef = useRef<HTMLElement>(null);
   const [titleError, setTitleError] = useState(false);
   const [titleFocused, setTitleFocused] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -212,6 +213,8 @@ export default function InvitationCreateContainer({
   // 더 불러올 결과가 있는지 — Kakao meta(totalCount/pageableCount 기반 isEnd)로 판단.
   // pageableCount = min(totalCount, 45)가 실제 fetch 가능 상한.
   const [locationHasMore, setLocationHasMore] = useState(false);
+  // Kakao 검색 매칭 총수 — 45 상한에 막혀 일부만 노출될 때 안내용
+  const [locationTotalCount, setLocationTotalCount] = useState(0);
   const [locationUnknown, setLocationUnknown] = useState(true);
   const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -311,6 +314,14 @@ export default function InvitationCreateContainer({
         label: editInvitation.rsvpDeclinedLabel,
       },
     });
+    // 적용된 이모지로 팩을 역매칭 (안 하면 수정 시 드롭다운이 '기본'으로 떠 오류처럼 보임)
+    const matchedPack = RSVP_PACKS.find(
+      (p) =>
+        p.attending === editInvitation.rsvpAttendingEmoji &&
+        p.maybe === editInvitation.rsvpMaybeEmoji &&
+        p.declined === editInvitation.rsvpDeclinedEmoji,
+    );
+    setSelectedPackId(matchedPack?.id ?? '');
     if (editInvitation.mainCoverType === 'gif' && editInvitation.mainGifUrl) {
       setMainGifUrl(editInvitation.mainGifUrl);
     } else if (editInvitation.mainImageUrl) {
@@ -427,7 +438,8 @@ export default function InvitationCreateContainer({
           title: form.title,
           description: form.description,
           templateId: form.templateId || null,
-          eventStartAt: toEventStartAt(form.date, form.time) ?? null,
+          eventStartAt:
+            toEventStartAt(form.date, timeUnknown ? form.time : '') ?? null,
           bgColor: designBgColor,
           font: designFont,
           animation: selectedAnimation,
@@ -464,7 +476,7 @@ export default function InvitationCreateContainer({
         description: form.description,
         ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
         templateId: form.templateId || undefined,
-        eventStartAt: toEventStartAt(form.date, form.time),
+        eventStartAt: toEventStartAt(form.date, timeUnknown ? form.time : ''),
         bgColor: designBgColor,
         font: designFont,
         animation: selectedAnimation,
@@ -618,6 +630,7 @@ export default function InvitationCreateContainer({
       setLocationSearchState('default');
       setLocationPage(1);
       setLocationHasMore(false);
+      setLocationTotalCount(0);
       return;
     }
     setLocationSearchState('loading');
@@ -628,6 +641,7 @@ export default function InvitationCreateContainer({
       try {
         const { places, meta } = await searchPlaces(q, 1);
         setLocationResults(places);
+        setLocationTotalCount(meta.totalCount);
         // 아직 못 받은 노출가능 결과가 남았는지 (places.length < pageableCount && !isEnd)
         setLocationHasMore(!meta.isEnd && places.length < meta.pageableCount);
         setLocationSearchState(places.length === 0 ? 'no-result' : 'default');
@@ -844,6 +858,7 @@ export default function InvitationCreateContainer({
         titleError={titleError}
         titleFocused={titleFocused}
         onTitleFocus={() => setTitleFocused(true)}
+        onTitleBlur={() => setTitleFocused(false)}
         designFont={designFont}
         onFontChange={setDesignFont}
         coverImageUrl={
@@ -879,7 +894,10 @@ export default function InvitationCreateContainer({
         onEditAnimation={() => setAnimationSheetOpen(true)}
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5">
+      <main
+        ref={contentScrollRef}
+        className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5"
+      >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen}>
           <BottomSheetContent title="대표 이미지">
@@ -1159,8 +1177,11 @@ export default function InvitationCreateContainer({
                   unknown={timeUnknown}
                   onUnknownChange={(v) => {
                     setTimeUnknown(v);
-                    if (v && !form.time) {
-                      set({ time: '14:00' });
+                    if (v) {
+                      if (!form.time) set({ time: '14:00' });
+                    } else {
+                      // 토글 OFF → 시간 초기화 (안 지우면 저장 시 stale 시간이 반영됨)
+                      set({ time: '' });
                     }
                     if (timeError) setTimeError(false);
                   }}
@@ -1327,6 +1348,12 @@ export default function InvitationCreateContainer({
                     </span>
                   </button>
                 ))}
+                {!locationHasMore &&
+                  locationTotalCount > locationResults.length && (
+                    <p className="border-t border-border px-4 py-3 text-center text-[12px] text-text-tertiary">
+                      더 많은 결과가 있어요. 키워드를 더 구체적으로 입력해보세요
+                    </p>
+                  )}
               </div>
             )}
             {form.placeName && locationMode === 'selected' && (
@@ -1373,6 +1400,13 @@ export default function InvitationCreateContainer({
             onCheckedChange={(v) => {
               setMissionEnabled(v);
               setMissionError(false);
+              // 미션 UI가 펼쳐진 뒤(다음 프레임) 맨 아래로 스크롤
+              if (v) {
+                requestAnimationFrame(() => {
+                  const el = contentScrollRef.current;
+                  if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+                });
+              }
             }}
           />
         </div>
@@ -1587,7 +1621,7 @@ export default function InvitationCreateContainer({
                 </button>
 
                 {packDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-surface shadow-lg">
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[200px] overflow-y-auto rounded-md border border-border bg-surface shadow-lg">
                     {RSVP_PACKS.map((pack) => (
                       <button
                         key={pack.id}
