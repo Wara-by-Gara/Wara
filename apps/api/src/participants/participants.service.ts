@@ -55,30 +55,6 @@ export class ParticipantsService {
     return { summary, participants };
   }
 
-  async getProfile(invitationId: string, participantId: string) {
-    const result = await this.repository.findByIdWithUser(participantId);
-    if (!result || result.participant.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return result;
-  }
-
-  async getMutual(invitationId: string, participantId: string, viewer: Participant) {
-    const target = await this.repository.findById(participantId);
-    if (!target || target.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return this.repository.getMutualParticipants(viewer.userId, target.userId);
-  }
-
-  async getSharedInvitations(invitationId: string, participantId: string, viewer: Participant) {
-    const target = await this.repository.findById(participantId);
-    if (!target || target.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return this.repository.getSharedInvitations(viewer.userId, target.userId, invitationId);
-  }
-
   async join(userId: string, invitationId: string, dto: JoinInvitationDto) {
     const existing = await this.repository.findByUserAndInvitation(userId, invitationId);
     if (existing) {
