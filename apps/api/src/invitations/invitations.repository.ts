@@ -271,4 +271,11 @@ export class InvitationsRepository {
       },
     });
   }
+
+  async updateMainImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(invitations)
+      .set({ mainImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(invitations.id, id));
+  }
 }

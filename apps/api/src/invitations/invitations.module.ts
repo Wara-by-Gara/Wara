@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { BullModule } from '@nestjs/bullmq';
 import { AuthModule } from '../auth/auth.module';
 import { TemplatesModule } from '../templates/templates.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -10,9 +11,17 @@ import { AiImageJobsRepository } from './ai-image-jobs.repository';
 import { S3Module } from '../s3/s3.module';
 import { OgImageController } from './og-image.controller';
 import { OgImageService } from './og-image.service';
+import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
 
 @Module({
-  imports: [AuthModule, TemplatesModule, S3Module, NotificationsModule, HttpModule],
+  imports: [
+    AuthModule,
+    TemplatesModule,
+    S3Module,
+    NotificationsModule,
+    HttpModule,
+    BullModule.registerQueue({ name: IMAGE_PROCESSING_QUEUE }),
+  ],
   controllers: [InvitationsController, OgImageController],
   providers: [InvitationsService, InvitationsRepository, AiImageJobsRepository, OgImageService],
 })

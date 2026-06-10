@@ -9,8 +9,16 @@ import {
   GatewayTimeoutException,
   Logger,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { InvitationsRepository } from './invitations.repository';
 import { AiImageJobsRepository } from './ai-image-jobs.repository';
+import { ImageProcessingService } from '../image-processing/image-processing.service';
+import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
+import {
+  IMAGE_PROCESSING_JOB,
+  IMAGE_PROCESSING_QUEUE,
+} from '../queues/queue.constants';
 import { TemplatesRepository } from '../templates/templates.repository';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
@@ -50,8 +58,38 @@ export class InvitationsService {
     private readonly aiService: AiService,
     private readonly aiMonitoringService: AiMonitoringService,
     private readonly notificationsService: NotificationsService,
+    private readonly imageProcessing: ImageProcessingService,
+    private readonly imageJobs: ImageProcessingJobsRepository,
+    @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
   ) {
     this.bucket = this.config.getOrThrow('AWS_S3_BUCKET');
+  }
+
+  // S3 PUT된 main image의 검증 결과를 받아 BullMQ 워커에 섬네일 생성을 위임.
+  // 검증(verifyUpload)은 호출자가 미리 수행하여 결과를 전달 (검증 → DB write → enqueue 순서 보장).
+  private async enqueueMainImageThumbnail(
+    invitationId: string,
+    mainImageKey: string,
+    mime: string,
+    sizeBytes: number,
+  ) {
+    const job = await this.imageJobs.create({
+      targetType: 'invitation_main',
+      targetId: invitationId,
+      sourceKey: mainImageKey,
+      mimeType: mime,
+      sizeBytes,
+    });
+    await this.imageQueue.add(
+      IMAGE_PROCESSING_JOB.GENERATE_THUMBNAIL,
+      { jobId: job.id },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
   }
 
   async generatePresignedUrl(dto: InvitationPresignedUrlDto) {
@@ -62,6 +100,7 @@ export class InvitationsService {
   private toResponse(invitation: {
     mainCoverType: string;
     mainImageKey: string | null;
+    mainImageThumbnailKey?: string | null;
     mainGifUrl: string | null;
     [key: string]: unknown;
   }) {
@@ -69,6 +108,9 @@ export class InvitationsService {
       ...invitation,
       mainImageUrl: invitation.mainImageKey
         ? this.s3Service.getPublicUrl(invitation.mainImageKey)
+        : null,
+      mainImageThumbnailUrl: invitation.mainImageThumbnailKey
+        ? this.s3Service.getPublicUrl(invitation.mainImageThumbnailKey)
         : null,
       mainGifUrl: invitation.mainGifUrl ?? null,
     };
@@ -167,12 +209,25 @@ export class InvitationsService {
 
     // GIF면 image 필드를 null, image면 gif 필드를 null로 명시 (XOR 보장)
     const isGif = !!dto.mainGifUrl;
+    // image 모드이고 mainImageKey가 들어왔으면 매직넘버 sniff + 크기 검증.
+    // 통과하지 못하면 invitation 자체가 생성되지 않음.
+    const verified = !isGif && dto.mainImageKey
+      ? await this.imageProcessing.verifyUpload(dto.mainImageKey)
+      : null;
     const invitation = await this.repository.create(userId, {
       ...dto,
       mainCoverType: isGif ? 'gif' : 'image',
       mainImageKey: isGif ? undefined : dto.mainImageKey,
       mainGifUrl: isGif ? dto.mainGifUrl : undefined,
     });
+    if (verified && dto.mainImageKey) {
+      await this.enqueueMainImageThumbnail(
+        invitation.id,
+        dto.mainImageKey,
+        verified.mime,
+        verified.contentLength,
+      );
+    }
     return this.toResponse(invitation);
   }
 
@@ -190,21 +245,38 @@ export class InvitationsService {
     const coverPatch: {
       mainCoverType?: 'image' | 'gif';
       mainImageKey?: string | null;
+      mainImageThumbnailKey?: string | null;
       mainGifUrl?: string | null;
     } = {};
 
+    let verifiedImage: { mime: string; contentLength: number } | null = null;
     if (dto.mainGifUrl) {
       coverPatch.mainCoverType = 'gif';
       coverPatch.mainGifUrl = dto.mainGifUrl;
       coverPatch.mainImageKey = null;
+      // image → gif 전환 시 기존 main 섬네일 키도 초기화 (orphan 표시값 방지)
+      coverPatch.mainImageThumbnailKey = null;
     } else if (dto.mainImageKey) {
+      // 새 이미지 검증. 통과 못하면 update 자체가 막힘.
+      verifiedImage = await this.imageProcessing.verifyUpload(dto.mainImageKey);
       coverPatch.mainCoverType = 'image';
       coverPatch.mainImageKey = dto.mainImageKey;
       coverPatch.mainGifUrl = null;
+      // 새 이미지 들어왔으니 이전 섬네일은 무효 — 워커가 재생성 전까지 null
+      coverPatch.mainImageThumbnailKey = null;
     }
 
     const updated = await this.repository.update(id, { ...dto, ...coverPatch });
     if (!updated) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+
+    if (verifiedImage && dto.mainImageKey) {
+      await this.enqueueMainImageThumbnail(
+        updated.id,
+        dto.mainImageKey,
+        verifiedImage.mime,
+        verifiedImage.contentLength,
+      );
+    }
 
     return this.toResponse(updated);
   }

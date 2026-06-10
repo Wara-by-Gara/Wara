@@ -6,6 +6,7 @@ export const users = pgTable('users', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
   email: varchar('email', { length: 255 }),
   profileImageUrl: text('profile_image_url'),
+  profileImageThumbnailKey: text('profile_image_thumbnail_key'),
   name: varchar('name', { length: 100 }),
   nickname: varchar('nickname', { length: 20 }),
   birthYear: integer('birth_year'),
