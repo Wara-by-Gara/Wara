@@ -19,6 +19,7 @@ export class UsersRepository {
         name: true,
         birthYear: true,
         profileImageUrl: true,
+        profileImageThumbnailKey: true,
       },
     });
   }
@@ -35,8 +36,17 @@ export class UsersRepository {
         name: users.name,
         birthYear: users.birthYear,
         profileImageUrl: users.profileImageUrl,
+        profileImageThumbnailKey: users.profileImageThumbnailKey,
       });
     return updated;
+  }
+
+  // 워커가 profile 섬네일 업로드 후 호출
+  async updateProfileImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ profileImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(users.id, id));
   }
 
   async softDeleteUser(
@@ -116,6 +126,7 @@ export class UsersRepository {
         nickname: true,
         name: true,
         profileImageUrl: true,
+        profileImageThumbnailKey: true,
       },
     });
   }

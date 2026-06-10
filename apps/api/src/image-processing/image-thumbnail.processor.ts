@@ -5,6 +5,7 @@ import { Job } from 'bullmq';
 import { ulid } from 'ulid';
 import { PhotosRepository } from '../photos/photos.repository';
 import { InvitationsRepository } from '../invitations/invitations.repository';
+import { UsersRepository } from '../users/users.repository';
 import { ImageProcessingJobsRepository } from './image-processing-jobs.repository';
 import { ImageProcessingService } from './image-processing.service';
 import {
@@ -78,8 +79,8 @@ export class ImageThumbnailProcessor extends WorkerHost {
         return;
       }
       case 'user_profile': {
-        // Phase 4에서 활성화
-        this.logger.warn(`user_profile thumbnail not yet wired (jobId=${targetId})`);
+        const repo = this.moduleRef.get(UsersRepository, { strict: false });
+        await repo.updateProfileImageThumbnailKey(targetId, thumbnailKey);
         return;
       }
     }
