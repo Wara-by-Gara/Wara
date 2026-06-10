@@ -1,9 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, notExists } from 'drizzle-orm';
 import {
   eventLocations,
   invitations,
+  notifications,
   participantLocations,
   participants,
   users,
@@ -155,6 +156,47 @@ export class LocationsRepository {
       .from(invitations)
       .where(eq(invitations.status, 'closed'));
     return rows.map((r) => r.id);
+  }
+
+  async findAllParticipantUserIds(invitationId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ userId: participants.userId })
+      .from(participants)
+      .where(eq(participants.invitationId, invitationId));
+    return rows.map((r) => r.userId);
+  }
+
+  /** 모임 시작 15분 이내이고 사전 GPS 알림 미발송인 초대장 */
+  async findInvitationsForPreEventNotification(now = new Date()) {
+    const windowEnd = new Date(now.getTime() + 15 * 60 * 1000);
+    const preEventSentSubquery = this.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.invitationId, invitations.id),
+          eq(notifications.type, 'invitation_date'),
+        ),
+      );
+
+    return this.db
+      .select({
+        id: invitations.id,
+        title: invitations.title,
+        eventStartAt: invitations.eventStartAt,
+      })
+      .from(invitations)
+      .innerJoin(eventLocations, eq(eventLocations.invitationId, invitations.id))
+      .where(
+        and(
+          isNull(invitations.deletedAt),
+          eq(invitations.status, 'active'),
+          isNull(eventLocations.deletedAt),
+          gt(invitations.eventStartAt, now),
+          lte(invitations.eventStartAt, windowEnd),
+          notExists(preEventSentSubquery),
+        ),
+      );
   }
 
   async upsertParticipantLocation(

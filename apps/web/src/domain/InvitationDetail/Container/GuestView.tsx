@@ -61,14 +61,17 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   }
 
   const isLoggedIn = !!me;
+  const mayHaveDateVote = invitation.dateVotePollStatus != null;
 
-  const { data: pollData } = usePoll(invitationId);
-  const hasPoll = !!pollData?.poll;
-  const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
   const { data: myParticipant, isLoading: isLoadingMyParticipant } = useMyParticipant(
     invitationId,
     { enabled: isLoggedIn },
   );
+  const { data: pollData } = usePoll(invitationId, {
+    enabled: mayHaveDateVote && isLoggedIn && !!myParticipant,
+  });
+  const hasPoll = !!pollData?.poll;
+  const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
   const updateRsvp = useUpdateRsvp(invitationId);
   const joinInvitation = useJoinInvitation(invitationId);
   const canViewFeed = !!myParticipant;

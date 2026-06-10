@@ -99,6 +99,7 @@ export interface Invitation {
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+  dateVotePollStatus?: 'open' | 'closed' | 'confirmed' | null;
 }
 
 export interface InvitationParticipantAvatar {

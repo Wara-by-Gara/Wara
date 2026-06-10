@@ -56,11 +56,16 @@ export interface KakaoMapProps {
   photoMarkers?: PhotoMarker[];
   /** 사진 핀 클릭 콜백 — markerId는 클러스터 대표 사진 ID */
   onPhotoMarkerClick?: (markerId: string) => void;
+  /** 호스트: 참가자 핀 탭 */
+  onParticipantClick?: (pin: ParticipantPin) => void;
 }
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 }; // 서울 시청
 
-function createParticipantOverlayContent(pin: ParticipantPin): HTMLElement {
+function createParticipantOverlayContent(
+  pin: ParticipantPin,
+  onClick?: (pin: ParticipantPin) => void,
+): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `
     position: relative;
@@ -68,7 +73,13 @@ function createParticipantOverlayContent(pin: ParticipantPin): HTMLElement {
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    cursor: ${onClick ? "pointer" : "default"};
   `;
+  wrapper.setAttribute("data-testid", "participant-pin");
+  wrapper.setAttribute("data-participant-id", pin.participantId);
+  if (onClick) {
+    wrapper.addEventListener("click", () => onClick(pin));
+  }
 
   const bubble = document.createElement("div");
   bubble.style.cssText = `
@@ -246,7 +257,16 @@ function createPhotoMarkerContent(url: string, count: number, onClick: () => voi
 }
 
 export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap(
-  { ready, eventLocation, participants = [], className, myLocation, photoMarkers = [], onPhotoMarkerClick },
+  {
+    ready,
+    eventLocation,
+    participants = [],
+    className,
+    myLocation,
+    photoMarkers = [],
+    onPhotoMarkerClick,
+    onParticipantClick,
+  },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -348,7 +368,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
 
       const overlay = new maps.CustomOverlay({
         position: pos,
-        content: createParticipantOverlayContent(pin),
+        content: createParticipantOverlayContent(pin, onParticipantClick),
         map: mapRef.current!,
         yAnchor: 1.5,
         zIndex: 5,
@@ -357,7 +377,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
     }
 
     fitBounds();
-  }, [participants]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [participants, onParticipantClick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 사진 핀 갱신
   useEffect(() => {

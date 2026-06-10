@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from "./client";
+import { apiGet, apiPost, apiPut } from "./client";
 
 export interface EventLocation {
   id: string;
@@ -86,6 +86,15 @@ export function updateMyLocation(
   return apiPut<ParticipantLocation>(
     `/invitations/${invitationId}/participant/me/location`,
     payload,
+  );
+}
+
+export function nudgeParticipant(
+  invitationId: string,
+  participantId: string,
+): Promise<void> {
+  return apiPost<void>(
+    `/invitations/${invitationId}/participants/${participantId}/nudge`,
   );
 }
 

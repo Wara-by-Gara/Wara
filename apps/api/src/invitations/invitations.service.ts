@@ -143,7 +143,11 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    return this.toResponse(invitation);
+    const dateVotePollStatus = await this.repository.findDateVotePollStatus(id);
+    return {
+      ...this.toResponse(invitation),
+      dateVotePollStatus,
+    };
   }
 
   private async validateTemplateId(templateId: string) {

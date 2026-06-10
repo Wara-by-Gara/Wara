@@ -172,6 +172,26 @@ export class LocationsService {
     return { location: { ...location, isArrived: true }, justArrived: true };
   }
 
+  async processPreEventNotifications() {
+    const targets = await this.repository.findInvitationsForPreEventNotification();
+    for (const inv of targets) {
+      const userIds = await this.repository.findAllParticipantUserIds(inv.id);
+      await Promise.all(
+        userIds.map((userId) =>
+          this.notifications.notify({
+            userId,
+            type: 'invitation_date',
+            content: `[${inv.title}] 모임이 곧 시작해요. 위치 공유를 위해 GPS 권한을 허용해주세요.`,
+            targetType: 'invitation',
+            targetId: inv.id,
+            invitationId: inv.id,
+          }),
+        ),
+      );
+    }
+    return { processed: targets.length };
+  }
+
   async nudgeParticipant(
     invitationId: string,
     hostUserId: string,
