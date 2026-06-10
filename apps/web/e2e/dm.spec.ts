@@ -724,6 +724,8 @@ test.describe("dm-batch7-image", () => {
       mimeType: "image/png",
       buffer: PNG_1x1,
     });
+    // 미리보기 모달에서 전송 확인
+    await page.getByRole("button", { name: "보내기", exact: true }).click();
 
     await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
     await context.close();
@@ -747,6 +749,8 @@ test.describe("dm-batch7-image", () => {
       mimeType: "image/png",
       buffer: PNG_1x1,
     });
+    // 미리보기 모달에서 전송 확인
+    await host.page.getByRole("button", { name: "보내기", exact: true }).click();
 
     await expect(guest.page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
     await host.context.close();

@@ -71,6 +71,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   // 메시지 길게 누르기 -> 메뉴
   const [menuTarget, setMenuTarget] = useState<Message | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+
+  // 사진 전송: 선택 즉시 보내지 않고 미리보기 후 확인 -> 오발송 방지 (카톡과 동일 흐름)
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!previewFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(previewFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [previewFile]);
   const pressTimer = useRef<number | null>(null);
   const startPress = (m: Message) => {
     pressTimer.current = window.setTimeout(() => setMenuTarget(m), LONG_PRESS_MS);
@@ -102,7 +115,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       toast.error("10MB 이하 이미지만 보낼 수 있어요");
       return;
     }
-    imageMutation.mutate(file, {
+    setPreviewFile(file); // 바로 보내지 않고 미리보기 모달 띄움
+  };
+  const handleSendImage = () => {
+    if (!previewFile) return;
+    imageMutation.mutate(previewFile, {
+      onSuccess: () => setPreviewFile(null),
       onError: () => toast.error("사진을 보내지 못했어요. 다시 시도해주세요"),
     });
   };
@@ -609,6 +627,47 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
             >
               삭제
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      {/* 사진 전송 미리보기 + 확인 */}
+      <Modal
+        open={!!previewFile}
+        onOpenChange={(open) => {
+          if (!open && !imageMutation.isPending) setPreviewFile(null);
+        }}
+      >
+        <ModalContent className="max-w-[320px]" aria-describedby={undefined}>
+          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+            사진 보내기
+          </ModalPrimitive.Title>
+          {previewUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt="보낼 사진 미리보기"
+              className="mt-3 max-h-80 w-full rounded-lg bg-background-soft object-contain"
+            />
+          )}
+          <div className="mt-6 flex justify-end gap-6">
+            <ModalClose asChild>
+              <button
+                type="button"
+                disabled={imageMutation.isPending}
+                className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
+              >
+                취소
+              </button>
+            </ModalClose>
+            <button
+              type="button"
+              disabled={imageMutation.isPending}
+              onClick={handleSendImage}
+              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
+            >
+              {imageMutation.isPending ? "보내는 중..." : "보내기"}
             </button>
           </div>
         </ModalContent>
