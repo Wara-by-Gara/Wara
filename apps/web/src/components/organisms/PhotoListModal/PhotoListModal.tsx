@@ -1,15 +1,20 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { PhotoGrid } from "@/components/organisms/PhotoGrid";
-import { PhotoGridItem } from "@/components/organisms/PhotoGridItem";
-import { PhotoViewer } from "@/components/organisms/PhotoViewer";
-import { Modal, ModalOverlay, ModalPortal, ModalPrimitive } from "@/components/molecules/Modal";
-import { AlbumGridSkeleton } from "@/components/organisms/Skeleton";
-import { cn } from "@/lib/cn";
-import type { PhotoViewerComment } from "@/components/organisms/PhotoViewer";
+import { useMemo, useState } from 'react';
+import { Icon } from '@/components/icons';
+import { Button } from '@/components/primitives/Button';
+import { PhotoGrid } from '@/components/organisms/PhotoGrid';
+import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
+import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import {
+  Modal,
+  ModalOverlay,
+  ModalPortal,
+  ModalPrimitive,
+} from '@/components/molecules/Modal';
+import { AlbumGridSkeleton } from '@/components/organisms/Skeleton';
+import { cn } from '@/lib/cn';
+import type { PhotoViewerComment } from '@/components/organisms/PhotoViewer';
 
 export interface PhotoListModalPhoto {
   id: string;
@@ -30,6 +35,7 @@ export interface PhotoListModalProps {
   /** 제목 (예: "전체 사진 12장") */
   title?: string;
   photos?: PhotoListModalPhoto[];
+  groups?: Array<{ label: string; photos: PhotoListModalPhoto[] }>;
   /** Storybook 베젤 등 부모(relative) 안에 맞출 때 */
   contained?: boolean;
   onPhotoLike?: (photoId: string) => void;
@@ -49,6 +55,7 @@ export const PhotoListModal = ({
   onOpenChange,
   title,
   photos = [],
+  groups,
   contained = false,
   onPhotoLike,
   onCommentSubmit,
@@ -60,6 +67,17 @@ export const PhotoListModal = ({
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const flatPhotos = useMemo(
+    () => (groups ? groups.flatMap((g) => g.photos) : photos),
+    [groups, photos],
+  );
+
+  const flatIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    flatPhotos.forEach((p, i) => map.set(p.id, i));
+    return map;
+  }, [flatPhotos]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -82,40 +100,44 @@ export const PhotoListModal = ({
   };
 
   const handleDownloadAll = () => {
-    onDownloadAll?.(photos.map((p) => p.id));
+    onDownloadAll?.(flatPhotos.map((p) => p.id));
   };
 
-  const handlePhotoClick = (idx: number, photoId: string) => {
+  const handlePhotoClick = (photoId: string) => {
     if (selectMode) { toggleSelect(photoId); return; }
+    const idx = flatIndexMap.get(photoId) ?? 0;
     if (onPhotoClick) { onPhotoClick(idx, photoId); }
     else { setViewingIndex(idx); }
   };
 
-  const viewingPhoto = viewingIndex !== null ? photos[viewingIndex] : null;
+  const viewingPhoto = viewingIndex !== null ? (flatPhotos[viewingIndex] ?? null) : null;
 
   const overlayClass = cn(
-    "z-50 bg-black/60 data-[state=open]:animate-in data-[state=open]:fade-in",
-    contained ? "absolute inset-0" : "fixed inset-0",
+    'z-50 bg-black/60 data-[state=open]:animate-in data-[state=open]:fade-in',
+    contained ? 'absolute inset-0' : 'fixed inset-0',
   );
   const contentClass = cn(
-    "z-50 flex h-[80vh] max-h-[80dvh] flex-col overflow-hidden rounded-lg bg-surface shadow-xl focus:outline-none",
-    "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
+    'z-50 flex h-[80vh] max-h-[80dvh] flex-col overflow-hidden rounded-lg bg-surface shadow-xl focus:outline-none',
+    'data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95',
     contained
-      ? "absolute inset-x-4 bottom-4 top-16 h-[80%] max-h-[80%]"
-      : "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-md",
+      ? 'absolute inset-x-4 bottom-4 top-16 h-[80%] max-h-[80%]'
+      : 'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-md',
   );
 
   const modalBody = (
     <>
       <ModalOverlay className={overlayClass} />
-      <ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
+      <ModalPrimitive.Content
+        className={contentClass}
+        aria-describedby={undefined}
+      >
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-page py-4">
           <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
             {selectMode
               ? selectedIds.size > 0
                 ? `${selectedIds.size}장 선택됨`
-                : "사진을 선택하세요"
+                : '사진을 선택하세요'
               : (title ?? `전체 사진 ${photos.length}장`)}
           </ModalPrimitive.Title>
           <button
@@ -128,7 +150,7 @@ export const PhotoListModal = ({
                 onOpenChange(false);
               }
             }}
-            aria-label={selectMode ? "선택 취소" : "닫기"}
+            aria-label={selectMode ? '선택 취소' : '닫기'}
             className="inline-flex size-8 items-center justify-center rounded-full text-text-secondary hover:bg-gray-50 transition-colors duration-150"
           >
             <Icon name="x" size="md" color="currentColor" decorative />
@@ -137,28 +159,48 @@ export const PhotoListModal = ({
 
         {/* 사진 그리드 — min-h-0 없으면 flex 자식이 줄어들지 않아 스크롤 불가 */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-          {photos.length === 0 ? (
+          {flatPhotos.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-text-tertiary">
               <Icon name="camera" size="xl" color="inactive" decorative />
               <p className="text-[14px]">사진이 없어요</p>
             </div>
           ) : (
             <>
-              <PhotoGrid columns={3} selectMode={selectMode}>
-                {photos.map((photo, idx) => (
-                  <PhotoGridItem
-                    key={photo.id}
-                    src={photo.src}
-                    alt={photo.alt ?? ""}
-                    hostManageMode={selectMode}
-                    status={selectedIds.has(photo.id) ? "selected" : "default"}
-                    likeCount={photo.likeCount}
-                    liked={photo.liked}
-                    onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
-                    onClick={() => handlePhotoClick(idx, photo.id)}
-                  />
-                ))}
-              </PhotoGrid>
+              {groups ? (
+                groups.map((group) => (
+                  <PhotoGrid key={group.label} columns={3} groupLabel={group.label} selectMode={selectMode}>
+                    {group.photos.map((photo) => (
+                      <PhotoGridItem
+                        key={photo.id}
+                        src={photo.src}
+                        alt={photo.alt ?? ''}
+                        hostManageMode={selectMode}
+                        status={selectedIds.has(photo.id) ? 'selected' : 'default'}
+                        likeCount={photo.likeCount}
+                        liked={photo.liked}
+                        onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
+                        onClick={() => handlePhotoClick(photo.id)}
+                      />
+                    ))}
+                  </PhotoGrid>
+                ))
+              ) : (
+                <PhotoGrid columns={3} selectMode={selectMode}>
+                  {photos.map((photo) => (
+                    <PhotoGridItem
+                      key={photo.id}
+                      src={photo.src}
+                      alt={photo.alt ?? ''}
+                      hostManageMode={selectMode}
+                      status={selectedIds.has(photo.id) ? 'selected' : 'default'}
+                      likeCount={photo.likeCount}
+                      liked={photo.liked}
+                      onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
+                      onClick={() => handlePhotoClick(photo.id)}
+                    />
+                  ))}
+                </PhotoGrid>
+              )}
               {isLoadingMore ? (
                 <div className="py-4">
                   <AlbumGridSkeleton count={3} />
@@ -169,26 +211,32 @@ export const PhotoListModal = ({
         </div>
 
         {/* 하단 액션 바 */}
-        {photos.length > 0 ? (
+        {flatPhotos.length > 0 ? (
           <div className="shrink-0 border-t border-border px-4 py-3">
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 fullWidth
                 onClick={handleSelectDownload}
-                className={cn(selectMode && selectedIds.size > 0 && "border-primary text-primary")}
+                className={cn(
+                  selectMode &&
+                    selectedIds.size > 0 &&
+                    'border-primary text-primary',
+                )}
               >
                 {selectMode
                   ? selectedIds.size > 0
                     ? `${selectedIds.size}장 다운`
-                    : "선택 취소"
-                  : "선택 다운"}
+                    : '선택 취소'
+                  : '선택 다운'}
               </Button>
-              <Button
-                fullWidth
-                onClick={handleDownloadAll}
-              >
-                <Icon name="download" size="sm" color="currentColor" decorative />
+              <Button fullWidth onClick={handleDownloadAll}>
+                <Icon
+                  name="download"
+                  size="sm"
+                  color="currentColor"
+                  decorative
+                />
                 전체 다운
               </Button>
             </div>

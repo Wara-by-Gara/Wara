@@ -9,6 +9,12 @@ export interface Photo {
   feedbackCount: number;
   url: string;
   createdAt: string;
+  takenAt: string | null;
+  exifMetadata: {
+    gps_lat?: number | null;
+    gps_lng?: number | null;
+    gps_address?: string | null;
+  } | null;
   liked?: boolean;
 }
 
@@ -83,7 +89,10 @@ export function registerPhoto(
     exifMetadata?: { gps_lat: number; gps_lng: number };
   },
 ): Promise<Photo> {
-  return apiPost<Photo>(`/invitations/${invitationId}/photos`, { imageKey, ...meta });
+  return apiPost<Photo>(`/invitations/${invitationId}/photos`, {
+    imageKey,
+    ...meta,
+  });
 }
 
 export interface PhotoLocation extends Photo {
@@ -114,6 +123,9 @@ export function getBest9(invitationId: string): Promise<Best9Photo[]> {
   return apiGet<Best9Photo[]>(`/invitations/${invitationId}/photos/best9`);
 }
 
-export function deletePhoto(invitationId: string, photoId: string): Promise<void> {
+export function deletePhoto(
+  invitationId: string,
+  photoId: string,
+): Promise<void> {
   return apiDelete(`/invitations/${invitationId}/photos/${photoId}`);
 }
