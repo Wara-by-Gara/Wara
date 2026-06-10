@@ -113,7 +113,7 @@ export default function AlbumModal({
     return Array.from(buckets.entries()).map(([key, groupPhotos]) => {
       let label: string;
       if (key === '__no_time__') {
-        label = '날짜 정보 없음';
+        label = '그 외 사진';
       } else if (key.startsWith('loc:')) {
         label = key.slice(4);
       } else {

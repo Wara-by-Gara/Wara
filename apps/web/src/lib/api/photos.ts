@@ -90,6 +90,7 @@ export function registerPhoto(
     exifMetadata?: {
       gps_lat?: number;
       gps_lng?: number;
+      gps_address?: string;
       make?: string;
       model?: string;
     };
