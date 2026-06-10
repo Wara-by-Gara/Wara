@@ -28,6 +28,7 @@ export const invitations = pgTable('invitations', {
   description: text('description').notNull(),
   mainCoverType: mainCoverTypeEnum('main_cover_type').notNull().default('image'),
   mainImageKey: text('main_image_key'),
+  mainImageThumbnailKey: text('main_image_thumbnail_key'),
   mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),

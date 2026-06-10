@@ -259,4 +259,12 @@ export class InvitationsRepository {
       .set({ deletedAt: new Date() })
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
+
+  // 워커가 main image 섬네일 업로드 후 호출
+  async updateMainImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(invitations)
+      .set({ mainImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(invitations.id, id));
+  }
 }
