@@ -232,6 +232,22 @@ export class PhotosRepository {
       .orderBy(desc(photos.createdAt));
   }
 
+  // exif fingerprint로 중복 사진 조회
+  async findByFingerprint(invitationId: string, fingerprint: string) {
+    const [row] = await this.db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(
+        and(
+          eq(photos.invitationId, invitationId),
+          eq(photos.exifFingerprint, fingerprint),
+          isNull(photos.deletedAt),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  }
+
   //리마인드 앨범
   //viewCount(1회 : 0.5) + likeCount (1회 : 1.0) + feedbackCount(1댓글 : 1.5) = best9에 들어갈수 있음.
   async findBest9(invitationId: string) {

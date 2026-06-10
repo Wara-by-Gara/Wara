@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -59,12 +60,29 @@ export class PhotosService {
 
   // 사진 정보 DB 저장
   async uploadPhoto(invitationId: string, participantId: string, dto: UploadPhotoDto) {
+    let exifFingerprint: string | undefined;
+    if (dto.takenAt) {
+      const meta = dto.exifMetadata ?? {};
+      exifFingerprint = [
+        dto.takenAt,
+        meta.make ?? '',
+        meta.model ?? '',
+        dto.fileSize ?? '',
+        meta.gps_lat ?? '',
+        meta.gps_lng ?? '',
+      ].join('|');
+
+      const existing = await this.repository.findByFingerprint(invitationId, exifFingerprint);
+      if (existing) throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
+    }
+
     return this.repository.create({
       invitationId,
       participantId,
       imageKey: dto.imageKey,
       takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
       exifMetadata: dto.exifMetadata,
+      exifFingerprint,
     });
   }
 

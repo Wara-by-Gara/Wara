@@ -103,6 +103,7 @@
 | `PHOTO_FORBIDDEN` | 403 | 본인 사진이 아님 |
 | `PHOTO_LIKE_ALREADY_EXISTS` | 409 | 이미 좋아요한 사진 |
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
+| `PHOTO_DUPLICATE` | 409 | 동일 초대장에 이미 업로드된 사진 (takenAt+기기+GPS+파일크기 조합 일치) |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 
 ## Friends

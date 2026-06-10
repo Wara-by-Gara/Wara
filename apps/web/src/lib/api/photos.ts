@@ -86,7 +86,13 @@ export function registerPhoto(
   imageKey: string,
   meta?: {
     takenAt?: string;
-    exifMetadata?: { gps_lat: number; gps_lng: number };
+    fileSize?: number;
+    exifMetadata?: {
+      gps_lat?: number;
+      gps_lng?: number;
+      make?: string;
+      model?: string;
+    };
   },
 ): Promise<Photo> {
   return apiPost<Photo>(`/invitations/${invitationId}/photos`, {
