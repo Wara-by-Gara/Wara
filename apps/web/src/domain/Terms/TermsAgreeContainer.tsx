@@ -74,9 +74,6 @@ export function TermsAgreeContainer() {
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const hydrated = useAuthStore((s) => s.hydrated);
-  const hydrate = useAuthStore((s) => s.hydrate);
-
-  useEffect(() => { hydrate(); }, [hydrate]);
 
   const { data: terms, isLoading: termsLoading } = useTerms();
   const { data: myAgreements, isLoading: agreementsLoading } = useMyAgreements();
