@@ -2,9 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
+import { LocationsGateway } from './locations.gateway';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -42,6 +45,9 @@ export class LocationsService {
     private readonly redisStore: LocationsRedisStore,
     private readonly kakaoLocal: KakaoLocalService,
     private readonly notifications: NotificationsService,
+    // Gateway ↔ Service 순환 의존 회피 — Gateway는 Service를 주입받음.
+    @Inject(forwardRef(() => LocationsGateway))
+    private readonly gateway: LocationsGateway,
   ) {}
 
   async getEventLocation(invitationId: string) {
@@ -126,6 +132,8 @@ export class LocationsService {
       updatedAt: now.toISOString(),
     });
 
+    this.gateway.emitStatusMessageUpdated(invitationId, participant.id, message, now);
+
     return { participantId: participant.id, statusMessage: message, updatedAt: now };
   }
 
@@ -139,7 +147,7 @@ export class LocationsService {
     }
 
     const previous = await this.redisStore.findOne(invitationId, participant.id);
-    // 위치 공유 OFF거나 이미 null이면 idempotent — broadcast만 하지 않으면 됨.
+    // 위치 공유 OFF거나 이미 null이면 idempotent — broadcast 없이 종료.
     if (!previous || previous.statusMessage === null) {
       return { participantId: participant.id };
     }
@@ -149,6 +157,8 @@ export class LocationsService {
       statusMessage: null,
       updatedAt: new Date().toISOString(),
     });
+
+    this.gateway.emitStatusMessageRemoved(invitationId, participant.id);
 
     return { participantId: participant.id };
   }
