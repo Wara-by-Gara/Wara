@@ -18,13 +18,14 @@ interface Props {
 const triggerDownloads = (items: PhotoDownloadItem[]) => {
   items.forEach(({ url }, i) => {
     setTimeout(() => {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, i * 150);
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      }, 60_000);
+    }, i * 300);
   });
 };
 
