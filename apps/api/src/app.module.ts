@@ -34,6 +34,8 @@ import { FriendsModule } from './friends/friends.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
 import { RedisModule } from './redis/redis.module';
+import { QueueModule } from './queues/queue.module';
+import { ImageProcessingModule } from './image-processing/image-processing.module';
 import { LoggerModule } from './logger/logger.module';
 
 @Module({
@@ -45,6 +47,8 @@ import { LoggerModule } from './logger/logger.module';
     LoggerModule,
     ScheduleModule.forRoot(),
     RedisModule,
+    QueueModule,
+    ImageProcessingModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],

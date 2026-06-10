@@ -32,6 +32,10 @@ if (dsn && isProd) {
           'code',
           'providerToken',
           'idToken',
+          // 위치 좌표 — 5xx 발생 시 Sentry로 좌표 전송 차단 (개인정보보호 정책)
+          'lat',
+          'lng',
+          'accuracy',
         ]) {
           if (key in bag) bag[key] = '[REDACTED]';
         }

@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PhotosRepository } from './photos.repository';
 import { PresignedUrlDto } from './dto/presigned-url.dto';
 import { ulid } from 'ulid';
@@ -10,6 +12,12 @@ import { ListPhotosDto } from './dto/list-photos.dto';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { S3Service } from '../s3/s3.service';
+import { ImageProcessingService } from '../image-processing/image-processing.service';
+import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
+import {
+  IMAGE_PROCESSING_JOB,
+  IMAGE_PROCESSING_QUEUE,
+} from '../queues/queue.constants';
 
 const MAX_DOWNLOAD_LIMIT = 9999;
 
@@ -18,6 +26,9 @@ export class PhotosService {
   constructor(
     private readonly repository: PhotosRepository,
     private readonly s3Service: S3Service,
+    private readonly imageProcessing: ImageProcessingService,
+    private readonly imageJobs: ImageProcessingJobsRepository,
+    @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
   ) {}
 
   // 업로드용 presigned URL 발급 (15분)
@@ -34,6 +45,9 @@ export class PhotosService {
       rows.map(async (photo) => ({
         ...photo,
         url: await this.s3Service.getViewPresignedUrl(photo.imageKey),
+        thumbnailUrl: photo.thumbnailKey
+          ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+          : null,
         score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
       })),
     );
@@ -47,25 +61,53 @@ export class PhotosService {
 
     await this.repository.incrementViewCount(id);
     const url = await this.s3Service.getViewPresignedUrl(photo.imageKey);
+    const thumbnailUrl = photo.thumbnailKey
+      ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+      : null;
     const liked = !!(await this.repository.findLike(id, participantId));
 
     return {
       ...photo,
       url,
+      thumbnailUrl,
       liked,
       score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
     };
   }
 
-  // 사진 정보 DB 저장
+  // 사진 정보 DB 저장. presigned PUT 직후 호출되며 S3 객체를 매직넘버 sniff + 크기로 검증한 뒤 enqueue.
   async uploadPhoto(invitationId: string, participantId: string, dto: UploadPhotoDto) {
-    return this.repository.create({
+    const { mime, contentLength } = await this.imageProcessing.verifyUpload(dto.imageKey);
+
+    const photo = await this.repository.create({
       invitationId,
       participantId,
       imageKey: dto.imageKey,
       takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
       exifMetadata: dto.exifMetadata,
     });
+    if (!photo) throw new Error('photo 생성 실패');
+
+    const job = await this.imageJobs.create({
+      targetType: 'photo',
+      targetId: photo.id,
+      sourceKey: dto.imageKey,
+      mimeType: mime,
+      sizeBytes: contentLength,
+    });
+
+    await this.imageQueue.add(
+      IMAGE_PROCESSING_JOB.GENERATE_THUMBNAIL,
+      { jobId: job.id },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
+
+    return photo;
   }
 
   // 다운로드용 URL 발급 (낱개, 선택)
@@ -150,6 +192,9 @@ export class PhotosService {
       rows.map(async (photo) => ({
         ...photo,
         url: await this.s3Service.getViewPresignedUrl(photo.imageKey),
+        thumbnailUrl: photo.thumbnailKey
+          ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+          : null,
         score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
       })),
     );
