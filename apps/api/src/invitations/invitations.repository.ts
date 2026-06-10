@@ -259,4 +259,16 @@ export class InvitationsRepository {
       .set({ deletedAt: new Date() })
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
+
+  findCoverById(id: string) {
+    return this.db.query.invitations.findFirst({
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.id, id), isNull(inv.deletedAt)),
+      columns: {
+        mainCoverType: true,
+        mainGifUrl: true,
+        mainImageKey: true,
+      },
+    });
+  }
 }
