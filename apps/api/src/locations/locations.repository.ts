@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq, gt, inArray, isNull, lte, notExists } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, notExists, sql } from 'drizzle-orm';
 import {
   eventLocations,
   invitations,
@@ -150,11 +150,15 @@ export class LocationsRepository {
     );
   }
 
-  async findClosedInvitationIds(): Promise<string[]> {
+  // GPS flush 대상 — status='closed' 또는 soft deleted 초대장.
+  // 기존엔 closed만 처리 → soft delete된 active 초대장의 GPS hash가 24h TTL까지 남는 누락.
+  async findInvitationsForGpsFlush(): Promise<string[]> {
     const rows = await this.db
       .select({ id: invitations.id })
       .from(invitations)
-      .where(eq(invitations.status, 'closed'));
+      .where(
+        sql`${invitations.status} = 'closed' OR ${invitations.deletedAt} IS NOT NULL`,
+      );
     return rows.map((r) => r.id);
   }
 
