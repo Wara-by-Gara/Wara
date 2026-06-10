@@ -98,6 +98,18 @@ export class LocationsService {
     return this.kakaoLocal.searchByKeyword(query, page, size);
   }
 
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
+  async stopMyLocationSharing(invitationId: string, userId: string): Promise<void> {
+    const participant = await this.repository.findParticipantWithUser(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    await this.redisStore.deleteParticipant(invitationId, participant.id);
+  }
+
   async updateMyLocation(
     invitationId: string,
     userId: string,
