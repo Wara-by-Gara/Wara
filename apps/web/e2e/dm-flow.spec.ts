@@ -4,7 +4,6 @@ import {
   DM_USER_A,
   DM_USER_B,
   DM_USER_C,
-  DM_USER_D,
   FAKE_ULID,
   createConversation,
   deleteMessage,
