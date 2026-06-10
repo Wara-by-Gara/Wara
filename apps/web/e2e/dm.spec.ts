@@ -812,3 +812,29 @@ test.describe("dm-batch7-image", () => {
     await guest.context.close();
   });
 });
+
+test.describe("dm-batch8-drawer", () => {
+  test("대화방 서랍에 대화상대 목록과 보낸 사진 갤러리가 보인다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    // 사진 1장 전송 -> 갤러리에 떠야 함
+    await page.setInputFiles('input[type="file"]', {
+      name: "gallery.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+    await page.getByRole("button", { name: "보내기", exact: true }).click();
+    await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+
+    // 우측 상단 메뉴 -> 서랍 열기
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer.getByText(/대화상대/)).toBeVisible({ timeout: 10_000 });
+    await expect(drawer.getByRole("button", { name: /초대하기/ })).toBeVisible();
+    // 갤러리에 보낸 사진
+    await expect(drawer.locator('img[alt="사진"]').first()).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+});

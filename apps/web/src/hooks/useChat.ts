@@ -19,6 +19,8 @@ import {
   deleteMessage as apiDeleteMessage,
   toggleReaction as apiToggleReaction,
   getMessageReactors,
+  getConversationParticipants,
+  getConversationPhotos,
   getMessageImagePresignedUrl,
   uploadFileToPresignedUrl,
   sendImageMessage as apiSendImageMessage,
@@ -214,6 +216,23 @@ export function useDeleteMessage(id: string) {
       markDeleted(qc, id, messageId);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     },
+  });
+}
+
+// 대화방 서랍(참여자/사진) - 서랍 열릴 때만 조회
+export function useConversationParticipants(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.participants(id),
+    queryFn: () => getConversationParticipants(id),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+export function useConversationPhotos(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.photos(id),
+    queryFn: () => getConversationPhotos(id),
+    enabled: Boolean(id) && enabled,
   });
 }
 

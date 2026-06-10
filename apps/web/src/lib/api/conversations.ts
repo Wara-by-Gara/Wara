@@ -133,6 +133,31 @@ export function getMessageReactors(conversationId: string, messageId: string) {
   );
 }
 
+// 대화방 서랍: 참여자 목록 + 사진 갤러리
+export type ConversationParticipant = {
+  userId: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
+export function getConversationParticipants(conversationId: string) {
+  return apiGet<{ participants: ConversationParticipant[] }>(
+    `/conversations/${conversationId}/participants`,
+  );
+}
+
+export type ConversationPhoto = {
+  messageId: string;
+  imageUrl: string;
+  createdAt: string;
+};
+
+export function getConversationPhotos(conversationId: string) {
+  return apiGet<{ photos: ConversationPhoto[] }>(
+    `/conversations/${conversationId}/photos`,
+  );
+}
+
 export type MessagesPage = {
   messages: Message[];
   nextCursor: string | null;

@@ -8,6 +8,7 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { toast } from "@/components/molecules/Toast";
+import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
 import { useMe } from "@/hooks/useUsers";
 import {
   useConversation,
@@ -59,6 +60,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   useChatRealtime(id);
 
   const [text, setText] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -243,6 +245,16 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
           >
             {partnerName}
+          </button>
+        }
+        rightSlot={
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="대화방 메뉴"
+            className="flex size-9 items-center justify-center rounded-full text-text-secondary active:opacity-70"
+          >
+            <Icon name="menu" size="lg" color="currentColor" decorative />
           </button>
         }
       />
@@ -736,6 +748,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           </ul>
         </BottomSheetContent>
       </BottomSheet>
+
+      {/* 우측 슬라이딩 서랍 — 사진/대화상대/초대 */}
+      <ChatDrawer open={drawerOpen} onOpenChange={setDrawerOpen} conversationId={id} />
     </div>
   );
 };

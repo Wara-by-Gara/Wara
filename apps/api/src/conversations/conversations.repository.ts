@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, ne, lt, gt, desc, isNull, inArray, or, sql } from 'drizzle-orm';
+import { and, eq, ne, lt, gt, desc, isNull, isNotNull, inArray, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   conversations,
@@ -407,6 +407,45 @@ export class ConversationsRepository {
       )
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  // 대화방 참여자 전체 (표시정보 포함) — 멤버 목록/초대 패널용
+  async listParticipants(conversationId: string) {
+    return this.db
+      .select({
+        userId: users.id,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+      })
+      .from(conversationParticipants)
+      .innerJoin(users, eq(users.id, conversationParticipants.userId))
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          isNull(conversationParticipants.leftAt),
+          isNull(users.deletedAt),
+        ),
+      );
+  }
+
+  // 대화방에 올라온 사진(이미지 메시지)만 최신순 — 갤러리용
+  async listPhotos(conversationId: string, leftAt: Date | null) {
+    return this.db
+      .select({
+        messageId: messages.id,
+        imageKey: messages.imageKey,
+        createdAt: messages.createdAt,
+      })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.conversationId, conversationId),
+          isNotNull(messages.imageKey),
+          isNull(messages.deletedAt),
+          leftAt ? gt(messages.createdAt, leftAt) : undefined,
+        ),
+      )
+      .orderBy(desc(messages.id));
   }
 
   // 대화방의 나를 제외한 참가자 id들 (1:1이면 1명, 그룹 대비 배열).

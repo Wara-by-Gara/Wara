@@ -137,6 +137,24 @@ export class ConversationsController {
     return this.conversationsService.getMessageReactors(user.id, id, messageId);
   }
 
+  // 대화방 참여자 목록
+  @Get(':id/participants')
+  getParticipants(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.getParticipants(user.id, id);
+  }
+
+  // 대화방 사진 갤러리
+  @Get(':id/photos')
+  getPhotos(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.getPhotos(user.id, id);
+  }
+
   @Post(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   markRead(

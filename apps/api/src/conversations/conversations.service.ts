@@ -385,6 +385,27 @@ export class ConversationsService {
     return { reactors };
   }
 
+  // 대화방 참여자 목록 (멤버/초대 패널용)
+  async getParticipants(userId: string, conversationId: string) {
+    await this.assertMember(conversationId, userId);
+    const participants = await this.repository.listParticipants(conversationId);
+    return { participants };
+  }
+
+  // 대화방 사진 갤러리 — 이미지 메시지의 조회용 presigned URL 생성
+  async getPhotos(userId: string, conversationId: string) {
+    const participant = await this.assertMember(conversationId, userId);
+    const rows = await this.repository.listPhotos(conversationId, participant.leftAt);
+    const photos = await Promise.all(
+      rows.map(async (r) => ({
+        messageId: r.messageId,
+        imageUrl: await this.s3Service.getViewPresignedUrl(r.imageKey!),
+        createdAt: r.createdAt,
+      })),
+    );
+    return { photos };
+  }
+
   // 채팅방 나가기 (나만 — 상대 기록은 유지)
   async leaveConversation(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
