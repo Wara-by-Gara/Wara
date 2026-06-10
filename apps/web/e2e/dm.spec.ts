@@ -1,6 +1,6 @@
 import { test, expect, expectNotCrashed } from "./fixtures";
 import { authFile } from "./personas";
-import type { Browser, Page } from "@playwright/test";
+import type { Browser, Page, Locator } from "@playwright/test";
 
 // DM 실시간 테스트 — 두 유저가 친구여야 친구 프로필에서 1:1 채팅을 시작할 수 있다.
 // host001(newHost) <-> guest001(guest) 는 같은 모임 참여(=친구). 시드 고정 id.
@@ -33,6 +33,16 @@ async function hostEnterDmWithGuest(page: Page): Promise<string> {
 async function send(page: Page, text: string) {
   await page.getByPlaceholder(MSG_INPUT).fill(text);
   await page.getByLabel("전송").click();
+}
+
+// 메시지 말풍선 길게 누르기 -> 메뉴 모달 (LONG_PRESS_MS=500ms 보다 길게 hold)
+async function longPress(page: Page, target: Locator) {
+  const box = await target.boundingBox();
+  if (!box) throw new Error("longPress: 대상 boundingBox 없음");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(650);
+  await page.mouse.up();
 }
 
 test.describe("dm-batch1", () => {
@@ -135,5 +145,151 @@ test.describe("dm-batch1", () => {
 
     await host.context.close();
     await guest.context.close();
+  });
+});
+
+test.describe("dm-batch2", () => {
+  test("빈 메시지는 전송 버튼이 비활성이고, 입력하면 활성화된다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    await expect(page.getByLabel("전송")).toBeDisabled();
+    await page.getByPlaceholder(MSG_INPUT).fill("a");
+    await expect(page.getByLabel("전송")).toBeEnabled();
+
+    await context.close();
+  });
+
+  test("입력창 maxLength=2000이고 한도 근처에서 글자수 카운터가 보인다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    const input = page.getByPlaceholder(MSG_INPUT);
+    await expect(input).toHaveAttribute("maxlength", "2000");
+    await input.fill("가".repeat(1950));
+    await expect(page.getByText("1950/2000")).toBeVisible();
+
+    await context.close();
+  });
+
+  test("Enter 키로 메시지를 보낼 수 있다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    const msg = `E2E Enter ${Date.now()}`;
+    await page.getByPlaceholder(MSG_INPUT).fill(msg);
+    await page.getByPlaceholder(MSG_INPUT).press("Enter");
+
+    await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+    await context.close();
+  });
+
+  test("내 메시지를 길게 누르면 복사/답장/수정/삭제 메뉴가 나온다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    const msg = `E2E 메뉴 ${Date.now()}`;
+    await send(page, msg);
+    await expect(page.getByText(msg)).toBeVisible();
+
+    await longPress(page, page.getByText(msg));
+    await expect(page.getByRole("button", { name: "복사" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "답장" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "수정" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "삭제" })).toBeVisible();
+
+    await context.close();
+  });
+
+  test("상대 메시지를 길게 누르면 수정/삭제 없이 복사/답장만 있다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    await expect(guest.page.getByPlaceholder(MSG_INPUT)).toBeVisible();
+
+    const msg = `E2E 상대메뉴 ${Date.now()}`;
+    await send(guest.page, msg);
+    await expect(host.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    await longPress(host.page, host.page.getByText(msg));
+    await expect(host.page.getByRole("button", { name: "복사" })).toBeVisible();
+    await expect(host.page.getByRole("button", { name: "답장" })).toBeVisible();
+    await expect(host.page.getByRole("button", { name: "수정" })).toHaveCount(0);
+    await expect(host.page.getByRole("button", { name: "삭제" })).toHaveCount(0);
+
+    await host.context.close();
+    await guest.context.close();
+  });
+
+  test("메시지를 수정하면 양쪽 화면에 반영된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+
+    const orig = `E2E 원본 ${Date.now()}`;
+    await send(host.page, orig);
+    await expect(guest.page.getByText(orig)).toBeVisible({ timeout: 10_000 });
+
+    await longPress(host.page, host.page.getByText(orig));
+    await host.page.getByRole("button", { name: "수정" }).click();
+    const edited = `E2E 수정됨 ${Date.now()}`;
+    await host.page.getByPlaceholder("수정 메시지 입력").fill(edited);
+    await host.page.getByLabel("수정 완료").click();
+
+    await expect(host.page.getByText(edited)).toBeVisible({ timeout: 10_000 });
+    await expect(guest.page.getByText(edited)).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await guest.context.close();
+  });
+
+  test("메시지를 삭제하면 양쪽에 '삭제된 메시지'로 표시된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+
+    const msg = `E2E 삭제대상 ${Date.now()}`;
+    await send(host.page, msg);
+    await expect(guest.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    await longPress(host.page, host.page.getByText(msg));
+    await host.page.getByRole("button", { name: "삭제" }).click();
+    // 확인 모달이 열린 뒤 확인 버튼 클릭
+    await expect(host.page.getByText("이 메시지를 삭제하면 상대방 화면에서도 사라집니다.")).toBeVisible();
+    await host.page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
+
+    await expect(host.page.getByText("삭제된 메시지입니다")).toBeVisible({ timeout: 10_000 });
+    await expect(guest.page.getByText(/삭제된 메시지/)).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await guest.context.close();
+  });
+
+  test("답장하면 인용 미리보기가 뜨고, 보낸 답장에 원본 인용이 표시된다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    const orig = `E2E 답장원본 ${Date.now()}`;
+    await send(page, orig);
+    await expect(page.getByText(orig)).toBeVisible();
+
+    await longPress(page, page.getByText(orig));
+    await page.getByRole("button", { name: "답장" }).click();
+    // 입력창 위에 "...에게 답장" 인용 배너
+    await expect(page.getByText(/에게 답장/)).toBeVisible();
+
+    const reply = `E2E 답장내용 ${Date.now()}`;
+    await send(page, reply);
+    await expect(page.getByText(reply)).toBeVisible({ timeout: 10_000 });
+    // 원본 텍스트가 2곳(원본 말풍선 + 답장 말풍선 인용)에 보인다
+    await expect(page.getByText(orig)).toHaveCount(2, { timeout: 10_000 });
+
+    await context.close();
   });
 });
