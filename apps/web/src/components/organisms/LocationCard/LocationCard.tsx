@@ -28,6 +28,7 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   weatherSlot?: ReactNode;
   /** 초대장 상세 글래스 배경용 */
   immersive?: boolean;
+  isDarkBg?: boolean;
 }
 
 async function copyToClipboard(text: string, successMessage: string) {
@@ -99,6 +100,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       onGetDirections,
       weatherSlot,
       immersive = false,
+      isDarkBg = false,
       ...props
     },
     ref,
@@ -147,10 +149,10 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
           {...props}
         >
           <Icon name="map-pin" size="lg" color="inactive" decorative className="mx-auto" />
-          <p className="text-[15px] font-semibold text-text-primary">
+          <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>
             장소가 아직 정해지지 않았어요
           </p>
-          <p className="text-[13px] text-text-tertiary">
+          <p className={cn("text-[13px]", isDarkBg ? "text-white/70" : "text-text-tertiary")}>
             호스트가 장소를 정하면 알려드릴게요
           </p>
         </div>
@@ -171,8 +173,8 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
             <Icon name="globe" size="lg" color="currentColor" decorative />
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold text-text-primary">온라인 모임</p>
-            <p className="truncate text-[13px] text-text-secondary">{onlineLink}</p>
+            <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>온라인 모임</p>
+            <p className={cn("truncate text-[13px]", isDarkBg ? "text-white/70" : "text-text-secondary")}>{onlineLink}</p>
           </div>
           <Button
             size="sm"
@@ -200,12 +202,12 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[16px] font-semibold text-text-primary">
+            <p className={cn("text-[16px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>
               {placeName}
             </p>
             {address ? (
               <div className="mt-0.5 flex items-center gap-[3px]">
-                <p className="min-w-0 text-[14px] leading-[1.4] text-text-secondary">
+                <p className={cn("min-w-0 text-[14px] leading-[1.4]", isDarkBg ? "text-white/80" : "text-text-secondary")}>
                   {address}
                 </p>
                 <span className="relative shrink-0">
@@ -215,7 +217,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                     aria-expanded={addressMenuOpen}
                     aria-haspopup="menu"
                     onClick={() => setAddressMenuOpen((open) => !open)}
-                    className="inline-flex size-5 -translate-x-[2px] translate-y-[2px] items-center justify-center text-text-tertiary transition-colors duration-150 hover:text-text-primary"
+                    className={cn("inline-flex size-5 -translate-x-[2px] translate-y-[2px] items-center justify-center transition-colors duration-150", isDarkBg ? "text-white/70 hover:text-white" : "text-text-tertiary hover:text-text-primary")}
                   >
                     <Icon name="map" size={14} color="currentColor" decorative />
                   </button>

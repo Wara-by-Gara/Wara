@@ -39,11 +39,12 @@ export interface InvitationInfoCardProps
   badge?: ReactNode;
   /** 우측 화살표 (클릭 가능 카드일 때) */
   chevron?: boolean;
+  isDarkBg?: boolean;
 }
 
 export const InvitationInfoCard = forwardRef<HTMLDivElement, InvitationInfoCardProps>(
   function InvitationInfoCard(
-    { className, variant, title, time, description, badge, chevron, children, ...props },
+    { className, variant, title, time, description, badge, chevron, children, isDarkBg, ...props },
     ref,
   ) {
     return (
@@ -60,18 +61,18 @@ export const InvitationInfoCard = forwardRef<HTMLDivElement, InvitationInfoCardP
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[12px] font-medium text-text-tertiary">{LABEL_MAP[variant]}</p>
+            <p className={cn("text-[12px] font-medium", isDarkBg ? "text-white/70" : "text-text-tertiary")}>{LABEL_MAP[variant]}</p>
             {badge ? <span className="ml-auto">{badge}</span> : null}
           </div>
-          <p className="mt-0.5 text-[16px] font-semibold text-text-primary truncate">{title}</p>
+          <p className={cn("mt-0.5 text-[16px] font-semibold truncate", isDarkBg ? "text-white" : "text-text-primary")}>{title}</p>
           {variant === "datetime" && (time || description) ? (
-            <p className="mt-0.5 text-[13px] text-text-secondary">
-              {time ? <span className="font-medium text-text-primary">{time}</span> : null}
-              {time && description ? <span className="text-text-tertiary"> · </span> : null}
+            <p className={cn("mt-0.5 text-[13px]", isDarkBg ? "text-white/80" : "text-text-secondary")}>
+              {time ? <span className={cn("font-medium", isDarkBg ? "text-white" : "text-text-primary")}>{time}</span> : null}
+              {time && description ? <span className={isDarkBg ? "text-white/50" : "text-text-tertiary"}> · </span> : null}
               {description ? <span>{description}</span> : null}
             </p>
           ) : description ? (
-            <p className="mt-0.5 text-[13px] text-text-secondary truncate">{description}</p>
+            <p className={cn("mt-0.5 text-[13px] truncate", isDarkBg ? "text-white/80" : "text-text-secondary")}>{description}</p>
           ) : null}
           {children ? <div className="mt-2">{children}</div> : null}
         </div>

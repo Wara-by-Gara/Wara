@@ -89,11 +89,13 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
+  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry');
 
   return (
     <div
       className={cn(
-        "relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard text-text-primary",
+        "relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard",
+        isDarkBg ? "text-white" : "text-text-primary",
         pageBgClass,
       )}
     >
@@ -120,6 +122,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             title={invitation.title}
             schedule={schedule}
             fontClass={fontClass}
+            isDarkBg={isDarkBg}
             cover={
               <InvitationCover
                 variant={cover.variant}
@@ -133,7 +136,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           />
 
           {invitation.description ? (
-            <InvitationDescriptionBox fontClass={fontClass}>
+            <InvitationDescriptionBox fontClass={fontClass} bgColor={invitation.bgColor}>
               {invitation.description}
             </InvitationDescriptionBox>
           ) : null}
@@ -152,12 +155,13 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             showWeather={isLoggedIn}
             hideDateInHeader
             immersive
+            bgColor={invitation.bgColor}
           />
 
           {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-[15px] font-bold text-text-primary">
+                <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text-primary")}>
                   참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
                 </h3>
                 <button
@@ -211,7 +215,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/70 backdrop-blur-sm">
-              <p className="text-[15px] font-semibold text-text-primary">로그인하면 앨범과 댓글을 볼 수 있어요</p>
+              <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>로그인하면 앨범과 댓글을 볼 수 있어요</p>
               <button
                 type="button"
                 onClick={() => setLoginSheetOpen(true)}
@@ -227,15 +231,15 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="rounded-md border border-dashed border-border bg-surface px-4 py-8 text-center">
-            <p className="text-[14px] font-medium text-text-primary">참석 여부를 선택하면</p>
-            <p className="mt-1 text-[13px] text-text-secondary">앨범과 댓글을 볼 수 있어요</p>
+            <p className={cn("text-[14px] font-medium", isDarkBg ? "text-white" : "text-text-primary")}>참석 여부를 선택하면</p>
+            <p className={cn("mt-1 text-[13px]", isDarkBg ? "text-white/70" : "text-text-secondary")}>앨범과 댓글을 볼 수 있어요</p>
           </div>
           )}
         </div>
       </main>
 
       {!isLoggedIn && (
-        <div className="shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] text-text-secondary backdrop-blur-md">
+        <div className={cn("shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] backdrop-blur-md", isDarkBg ? "text-white/70" : "text-text-secondary")}>
           로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       )}

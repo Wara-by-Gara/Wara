@@ -11,6 +11,7 @@ type Props = {
   showWeather?: boolean;
   hideDateInHeader?: boolean;
   immersive?: boolean;
+  bgColor?: string;
 };
 
 export default function InformationsContainer({
@@ -21,6 +22,7 @@ export default function InformationsContainer({
   showWeather,
   hideDateInHeader,
   immersive,
+  bgColor,
 }: Props) {
   return (
     <LocationWithDate
@@ -31,6 +33,7 @@ export default function InformationsContainer({
       showWeather={showWeather}
       hideDateInHeader={hideDateInHeader}
       immersive={immersive}
+      bgColor={bgColor}
     />
   );
 }

@@ -18,7 +18,7 @@ export const DESIGN_BG_THEMES = [
 
 export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
 
-export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[0].cls;
+export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[1].cls;
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */
 export const DESIGN_FONTS = [

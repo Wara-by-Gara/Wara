@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
-import { cn } from "@/lib/cn";
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/cn';
 
 type Props = {
   cover: ReactNode;
@@ -9,6 +9,7 @@ type Props = {
   schedule?: string;
   fontClass?: string;
   meta?: ReactNode;
+  isDarkBg?: boolean;
 };
 
 export function InvitationDetailHero({
@@ -17,6 +18,7 @@ export function InvitationDetailHero({
   schedule,
   fontClass,
   meta,
+  isDarkBg = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 pt-4">
@@ -26,14 +28,22 @@ export function InvitationDetailHero({
         <div className="flex flex-col gap-2">
           <h1
             className={cn(
-              "text-[28px] font-bold leading-[1.15] tracking-tight text-text-primary",
+              'text-[28px] font-bold leading-[1.15] tracking-tight',
+              isDarkBg ? 'text-white' : 'text-text-primary',
               fontClass,
             )}
           >
             {title}
           </h1>
           {schedule ? (
-            <p className="text-[17px] leading-[1.35] text-text-secondary">{schedule}</p>
+            <p
+              className={cn(
+                'text-[17px] leading-[1.35] text-text-secondary',
+                isDarkBg ? 'text-white' : 'text-text-secondary',
+              )}
+            >
+              {schedule}
+            </p>
           ) : null}
         </div>
       </header>

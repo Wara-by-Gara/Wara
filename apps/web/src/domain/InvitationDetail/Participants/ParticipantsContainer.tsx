@@ -151,6 +151,8 @@ export default function ParticipantsContainer() {
     setSheetMode("action");
   }
 
+  const isDarkBg = invitation?.bgColor?.includes('aurora') || invitation?.bgColor?.includes('starry') || false;
+
   return (
     <>
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -298,6 +300,7 @@ export default function ParticipantsContainer() {
             declined: summary?.absentCount ?? 0,
           }}
           rsvpLabels={rsvpLabels}
+          isDarkBg={false}
         />
 
         {showSearch && (
