@@ -254,73 +254,78 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     ) : (
                       <span className="w-9 shrink-0" aria-hidden />
                     ))}
-                  {m.deleted ? (
-                    <div className="max-w-[72%] rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
-                      삭제된 메시지입니다
-                    </div>
-                  ) : (
-                    <div
-                      onPointerDown={() => startPress(m)}
-                      onPointerUp={cancelPress}
-                      onPointerLeave={cancelPress}
-                      onPointerCancel={cancelPress}
-                      onContextMenu={(e) => e.preventDefault()}
-                      // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
-                      // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
-                      className={`relative max-w-[72%] cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
-                        m.replyTo ? "min-w-[120px] text-left" : ""
-                      } ${bubbleClass}`}
-                    >
-                      {m.replyTo && (
-                        <div
-                          className={`mb-2 border-b pb-2 ${
-                            mine ? "border-text-inverse/30" : "border-text-tertiary/30"
-                          }`}
-                        >
-                          <p
-                            className={`text-[11px] font-bold ${
-                              mine ? "text-text-inverse/90" : "text-text-secondary"
+                  {/* 말풍선 + (그 아래) 리액션 배지를 세로로 묶는다 */}
+                  <div
+                    className={`flex min-w-0 max-w-[72%] flex-col gap-1 ${
+                      mine ? "items-end" : "items-start"
+                    }`}
+                  >
+                    {m.deleted ? (
+                      <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
+                        삭제된 메시지입니다
+                      </div>
+                    ) : (
+                      <div
+                        onPointerDown={() => startPress(m)}
+                        onPointerUp={cancelPress}
+                        onPointerLeave={cancelPress}
+                        onPointerCancel={cancelPress}
+                        onContextMenu={(e) => e.preventDefault()}
+                        // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
+                        // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
+                        className={`relative max-w-full cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
+                          m.replyTo ? "min-w-[120px] text-left" : ""
+                        } ${bubbleClass}`}
+                      >
+                        {m.replyTo && (
+                          <div
+                            className={`mb-2 border-b pb-2 ${
+                              mine ? "border-text-inverse/30" : "border-text-tertiary/30"
                             }`}
                           >
-                            {m.replyTo.senderId === myId ? "나" : partnerName}
-                          </p>
-                          <p
-                            className={`truncate text-[12px] ${
-                              mine ? "text-text-inverse/70" : "text-text-tertiary"
-                            }`}
-                          >
-                            {m.replyTo.deleted ? "삭제된 메시지" : m.replyTo.content}
-                          </p>
-                        </div>
-                      )}
-                      {m.content}
-                      {!m.deleted && m.reactions.length > 0 && (
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {m.reactions.map((r) => (
-                            <button
-                              key={r.emoji}
-                              type="button"
-                              onPointerDown={(e) => e.stopPropagation()}
-                              onClick={() =>
-                                reactMutation.mutate({
-                                  messageId: m.id,
-                                  emoji: r.emoji as ReactionEmoji,
-                                })
-                              }
-                              className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] ${
-                                mine
-                                  ? "bg-black/15 text-text-inverse"
-                                  : "bg-background-soft text-text-secondary"
-                              } ${m.myReaction === r.emoji ? "ring-1 ring-brand" : ""}`}
+                            <p
+                              className={`text-[11px] font-bold ${
+                                mine ? "text-text-inverse/90" : "text-text-secondary"
+                              }`}
                             >
-                              <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
-                              <span className="font-bold">{r.count}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                              {m.replyTo.senderId === myId ? "나" : partnerName}
+                            </p>
+                            <p
+                              className={`truncate text-[12px] ${
+                                mine ? "text-text-inverse/70" : "text-text-tertiary"
+                              }`}
+                            >
+                              {m.replyTo.deleted ? "삭제된 메시지" : m.replyTo.content}
+                            </p>
+                          </div>
+                        )}
+                        {m.content}
+                      </div>
+                    )}
+                    {/* 리액션 배지 — 말풍선 외부 아래, 페이지 배경 위 칩 */}
+                    {!m.deleted && m.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 px-0.5">
+                        {m.reactions.map((r) => (
+                          <button
+                            key={r.emoji}
+                            type="button"
+                            onClick={() =>
+                              reactMutation.mutate({
+                                messageId: m.id,
+                                emoji: r.emoji as ReactionEmoji,
+                              })
+                            }
+                            className={`inline-flex items-center gap-0.5 rounded-full bg-surface px-1.5 py-0.5 text-[11px] text-text-secondary shadow-sm ring-1 active:opacity-70 ${
+                              m.myReaction === r.emoji ? "ring-brand" : "ring-border"
+                            }`}
+                          >
+                            <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
+                            <span className="font-bold">{r.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div
                     className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
                       mine ? "items-end" : "items-start"
