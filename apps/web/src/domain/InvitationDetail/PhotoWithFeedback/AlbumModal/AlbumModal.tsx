@@ -119,7 +119,7 @@ export default function AlbumModal({
       const matching = addr ? addressTimeBuckets.get(addr) : undefined;
       let key: string;
       if (matching?.size === 1) {
-        key = [...matching][0]; // 유일한 시간버킷에 병합
+        key = [...matching][0]!; // 유일한 시간버킷에 병합 (size === 1 보장)
       } else if (matching && matching.size >= 2) {
         key = '__no_time__';    // 여러 시간버킷에 걸쳐있어 특정 불가 → 그 외 사진
       } else if (addr) {
