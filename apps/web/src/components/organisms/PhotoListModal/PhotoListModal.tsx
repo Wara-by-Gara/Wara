@@ -93,7 +93,10 @@ export const PhotoListModal = ({
       setSelectMode(true);
       return;
     }
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {
+      setSelectMode(false);
+      return;
+    }
     onSelectDownload?.(Array.from(selectedIds));
     setSelectMode(false);
     setSelectedIds(new Set());
@@ -169,7 +172,7 @@ export const PhotoListModal = ({
               {groups ? (
                 groups.map((group, i) => (
                   <div key={group.label}>
-                    <PhotoGrid columns={3} groupLabel={group.label} selectMode={selectMode}>
+                    <PhotoGrid columns={3} groupLabel={group.label} selectMode={i === groups.length - 1 ? selectMode : false}>
                       {group.photos.map((photo) => (
                         <PhotoGridItem
                           key={photo.id}
