@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { UsersRepository } from './users.repository';
 import { AuthRedisStore } from '../auth/auth.redis-store';
 import { LocationsService } from '../locations/locations.service';
@@ -8,15 +10,26 @@ import type { DeleteUserDto } from './dto/delete-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 import type { ProfileImagePresignedUrlDto } from './dto/profile-image-presigned-url.dto';
 import { S3Service } from '../s3/s3.service';
+import { ImageProcessingService } from '../image-processing/image-processing.service';
+import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
+import {
+  IMAGE_PROCESSING_JOB,
+  IMAGE_PROCESSING_QUEUE,
+} from '../queues/queue.constants';
 import { ulid } from 'ulid';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly repository: UsersRepository,
     private readonly s3Service: S3Service,
     private readonly refreshStore: AuthRedisStore,
     private readonly locationsService: LocationsService,
+    private readonly imageProcessing: ImageProcessingService,
+    private readonly imageJobs: ImageProcessingJobsRepository,
+    @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
   ) {}
 
   async generatePresignedUrl(userId: string, dto: ProfileImagePresignedUrlDto) {
@@ -32,22 +45,72 @@ export class UsersService {
     return this.s3Service.getPublicUrl(key);
   }
 
+  // 응답 객체에 profileImageUrl / profileImageThumbnailUrl을 일관되게 부착.
+  private withProfileUrls<T extends { profileImageUrl?: string | null; profileImageThumbnailKey?: string | null }>(user: T) {
+    const profileImageUrl =
+      user.profileImageUrl && this.isS3Key(user.profileImageUrl)
+        ? this.getViewUrl(user.profileImageUrl)
+        : user.profileImageUrl ?? null;
+    const profileImageThumbnailUrl = user.profileImageThumbnailKey
+      ? this.s3Service.getPublicUrl(user.profileImageThumbnailKey)
+      : null;
+    return { ...user, profileImageUrl, profileImageThumbnailUrl };
+  }
+
   async getMe(userId: string) {
     const user = await this.repository.findById(userId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
-      return { ...user, profileImageUrl: this.getViewUrl(user.profileImageUrl) };
-    }
-    return user;
+    return this.withProfileUrls(user);
   }
 
   async updateMe(userId: string, data: UpdateUserDto) {
-    const updated = await this.repository.updateUser(userId, data);
+    // 새 프로필 이미지가 S3 key로 들어온 경우 매직넘버 sniff + 크기 검증.
+    // dicebear 등 외부 URL은 그대로 통과 (검증 대상 아님).
+    const newProfile = data.profileImageUrl;
+    const isNewS3Upload =
+      typeof newProfile === 'string' && this.isS3Key(newProfile);
+    const verified = isNewS3Upload
+      ? await this.imageProcessing.verifyUpload(newProfile)
+      : null;
+    // 새 이미지가 들어왔으면 기존 섬네일 키 초기화 (워커가 재생성)
+    const patched: UpdateUserDto & { profileImageThumbnailKey?: string | null } =
+      isNewS3Upload ? { ...data, profileImageThumbnailKey: null } : data;
+    const updated = await this.repository.updateUser(userId, patched);
     if (!updated) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    if (updated.profileImageUrl && this.isS3Key(updated.profileImageUrl)) {
-      return { ...updated, profileImageUrl: this.getViewUrl(updated.profileImageUrl) };
+    if (verified && isNewS3Upload) {
+      await this.enqueueProfileThumbnail(
+        userId,
+        newProfile,
+        verified.mime,
+        verified.contentLength,
+      );
     }
-    return updated;
+    return this.withProfileUrls(updated);
+  }
+
+  private async enqueueProfileThumbnail(
+    userId: string,
+    sourceKey: string,
+    mime: string,
+    sizeBytes: number,
+  ) {
+    const job = await this.imageJobs.create({
+      targetType: 'user_profile',
+      targetId: userId,
+      sourceKey,
+      mimeType: mime,
+      sizeBytes,
+    });
+    await this.imageQueue.add(
+      IMAGE_PROCESSING_JOB.GENERATE_THUMBNAIL,
+      { jobId: job.id },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
   }
 
   async deleteMe(userId: string, dto: DeleteUserDto = {}) {
@@ -70,8 +133,16 @@ export class UsersService {
     // 다른 디바이스 잔존 세션 즉시 무효화
     await this.refreshStore.revokeAllByUserId(userId);
     // 참여 중이던 초대장의 Redis GPS entry + arrived lock 정리.
-    // 미정리 시 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 봄.
-    await this.locationsService.cleanupUserGpsData(userId);
+    // softDelete + refresh revoke는 이미 끝났으므로 GPS 정리 실패는 best-effort.
+    // 사용자 관점에서는 탈퇴 성공으로 응답하고, 미정리 entry는 24h TTL 안전망으로 회수.
+    try {
+      await this.locationsService.cleanupUserGpsData(userId);
+    } catch (err) {
+      this.logger.error(
+        { err, userId },
+        'cleanupUserGpsData failed during account deletion — relying on 24h TTL',
+      );
+    }
   }
 
   async getMySocials(userId: string) {
@@ -98,9 +169,6 @@ export class UsersService {
   async getUserById(targetId: string) {
     const user = await this.repository.findPublicById(targetId);
     if (!user) throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
-    if (user.profileImageUrl && this.isS3Key(user.profileImageUrl)) {
-      return { ...user, profileImageUrl: this.getViewUrl(user.profileImageUrl) };
-    }
-    return user;
+    return this.withProfileUrls(user);
   }
 }

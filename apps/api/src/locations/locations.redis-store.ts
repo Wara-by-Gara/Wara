@@ -20,6 +20,17 @@ function arrivedKey(invitationId: string, participantId: string): string {
   return `location:arrived:${invitationId}:${participantId}`;
 }
 
+// hash key 안의 모든 participantId를 읽어 hash + 각 arrived lock을 atomically 삭제.
+// KEYS[1] = hash key, ARGV[1] = arrived key prefix (location:arrived:<invId>:)
+const DELETE_INVITATION_SCRIPT = `
+local ids = redis.call('HKEYS', KEYS[1])
+redis.call('DEL', KEYS[1])
+for _, pid in ipairs(ids) do
+  redis.call('DEL', ARGV[1] .. pid)
+end
+return #ids
+`;
+
 @Injectable()
 export class LocationsRedisStore {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
@@ -81,15 +92,15 @@ export class LocationsRedisStore {
   }
 
   // GPS hash + 모든 참여자의 arrived lock을 atomically 삭제.
+  // hkeys 조회와 pipeline 사이의 race(다른 코드가 새 entry 추가) 차단 위해 Lua script로 단일 실행.
   // arrived lock 누락 시 다음 cycle에 stale "처음 도착" 처리 발생 가능.
   async deleteInvitation(invitationId: string): Promise<void> {
-    const participantIds = await this.redis.hkeys(hashKey(invitationId));
-    const pipeline = this.redis.multi();
-    pipeline.del(hashKey(invitationId));
-    for (const pid of participantIds) {
-      pipeline.del(arrivedKey(invitationId, pid));
-    }
-    await pipeline.exec();
+    await this.redis.eval(
+      DELETE_INVITATION_SCRIPT,
+      1,
+      hashKey(invitationId),
+      `location:arrived:${invitationId}:`,
+    );
   }
 
   // 단일 참여자의 GPS entry + arrived lock 삭제. 사용자가 자기 공유를 끄거나 탈퇴할 때 사용.
