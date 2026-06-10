@@ -23,6 +23,11 @@ export type ReplyPreview = {
   deleted: boolean;
 } | null;
 
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+}
+
 export interface MessageItem {
   id: string;
   conversationId: string;
@@ -32,6 +37,9 @@ export interface MessageItem {
   deleted: boolean;
   edited: boolean;
   replyTo: ReplyPreview;
+  // 이모지별 집계 + 내가 누른 이모지(없으면 null)
+  reactions: ReactionSummary[];
+  myReaction: string | null;
 }
 
 // 메시지 행을 클라이언트 응답 형태로 변환 (삭제된 메시지는 내용 숨김)
@@ -46,6 +54,8 @@ function toMessageItem(
     editedAt: Date | null;
   },
   replyTo: ReplyPreview = null,
+  reactions: ReactionSummary[] = [],
+  myReaction: string | null = null,
 ): MessageItem {
   const deleted = row.deletedAt != null;
   return {
@@ -57,7 +67,16 @@ function toMessageItem(
     deleted,
     edited: row.editedAt != null,
     replyTo,
+    reactions,
+    myReaction,
   };
+}
+
+// 리액션 행들을 이모지별 집계로 변환
+function aggregateReactions(rows: { emoji: string }[]): ReactionSummary[] {
+  const counts = new Map<string, number>();
+  for (const r of rows) counts.set(r.emoji, (counts.get(r.emoji) ?? 0) + 1);
+  return [...counts.entries()].map(([emoji, count]) => ({ emoji, count }));
 }
 
 @Injectable()
@@ -138,6 +157,19 @@ export class ConversationsService {
     const hasMore = rows.length === limit;
     const nextCursor = hasMore ? rows[rows.length - 1]!.id : null;
 
+    // 이 페이지 메시지들의 리액션을 한 번에 조회해 메시지별 집계/내 리액션 맵을 만든다.
+    const reactionRows = await this.repository.getReactionsForMessages(
+      rows.map((r) => r.id),
+    );
+    const byMessage = new Map<string, { emoji: string }[]>();
+    const myReactionMap = new Map<string, string>();
+    for (const r of reactionRows) {
+      const list = byMessage.get(r.messageId) ?? [];
+      list.push({ emoji: r.emoji });
+      byMessage.set(r.messageId, list);
+      if (r.userId === userId) myReactionMap.set(r.messageId, r.emoji);
+    }
+
     // 최신순으로 가져온 뒤 화면 표시용으로 오래된→최신 정렬
     const messages = rows.reverse().map((row) =>
       toMessageItem(
@@ -150,6 +182,8 @@ export class ConversationsService {
               deleted: row.replyToDeletedAt != null,
             }
           : null,
+        aggregateReactions(byMessage.get(row.id) ?? []),
+        myReactionMap.get(row.id) ?? null,
       ),
     );
     return { messages, nextCursor };
@@ -252,6 +286,43 @@ export class ConversationsService {
     }
 
     return message;
+  }
+
+  // 메시지 이모지 리액션 토글 (유저당 1개: 같은 이모지면 취소, 다른 이모지면 교체)
+  async toggleReaction(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+  ) {
+    await this.assertMember(conversationId, userId);
+
+    const message = await this.repository.findMessageById(messageId);
+    if (!message || message.conversationId !== conversationId) {
+      throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+    }
+
+    const existing = await this.repository.findUserReaction(messageId, userId);
+    let myReaction: string | null;
+    if (existing && existing.emoji === emoji) {
+      await this.repository.deleteUserReaction(messageId, userId);
+      myReaction = null;
+    } else {
+      await this.repository.setUserReaction(messageId, userId, emoji);
+      myReaction = emoji;
+    }
+
+    const reactions = aggregateReactions(
+      await this.repository.getMessageReactions(messageId),
+    );
+
+    // 상대에게 집계 실시간 동기화 (수신자의 myReaction은 각자 유지되므로 집계만 전달)
+    const others = await this.repository.otherParticipantIds(conversationId, userId);
+    for (const otherId of others) {
+      this.gateway.sendReactionToUser(otherId, { conversationId, messageId, reactions });
+    }
+
+    return { messageId, reactions, myReaction };
   }
 
   // 채팅방 나가기 (나만 — 상대 기록은 유지)

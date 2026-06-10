@@ -4,6 +4,7 @@ import {
   timestamp,
   primaryKey,
   index,
+  uniqueIndex,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
@@ -75,8 +76,32 @@ export const messages = pgTable(
   ],
 );
 
+// 메시지 이모지 리액션. 유저당 메시지에 1개(다른 이모지로 교체, 같은 이모지면 취소).
+export const messageReactions = pgTable(
+  'message_reactions',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => ulid()),
+    messageId: text('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // 허용 키: heart | thumbsup | check | smile | surprise | cry
+    emoji: text('emoji').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('uq_message_reactions_message_user').on(t.messageId, t.userId),
+  ],
+);
+
 export type Conversation = typeof conversations.$inferSelect;
 export type NewConversation = typeof conversations.$inferInsert;
 export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+export type MessageReaction = typeof messageReactions.$inferSelect;
+export type NewMessageReaction = typeof messageReactions.$inferInsert;

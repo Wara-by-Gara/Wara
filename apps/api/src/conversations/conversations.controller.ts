@@ -24,6 +24,7 @@ import {
   ListMessagesQuerySchema,
   ListMessagesQueryDto,
 } from './dto/list-messages.query.dto';
+import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -94,6 +95,17 @@ export class ConversationsController {
     @Body(new ZodValidationPipe(SendMessageSchema)) dto: SendMessageDto,
   ) {
     return this.conversationsService.editMessage(user.id, id, messageId, dto.content);
+  }
+
+  // 이모지 리액션 토글
+  @Post(':id/messages/:messageId/reactions')
+  toggleReaction(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+    @Body(new ZodValidationPipe(ReactMessageSchema)) dto: ReactMessageDto,
+  ) {
+    return this.conversationsService.toggleReaction(user.id, id, messageId, dto.emoji);
   }
 
   @Post(':id/read')

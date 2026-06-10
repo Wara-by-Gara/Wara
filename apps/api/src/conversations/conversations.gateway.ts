@@ -66,6 +66,18 @@ export class ConversationsGateway implements OnGatewayConnection {
     this.server.to(`user:${userId}`).emit('message:edited', message);
   }
 
+  // 이모지 리액션 변경 동기화 (집계만 전달, 수신자의 myReaction은 각자 유지)
+  sendReactionToUser(
+    userId: string,
+    payload: {
+      conversationId: string;
+      messageId: string;
+      reactions: { emoji: string; count: number }[];
+    },
+  ) {
+    this.server.to(`user:${userId}`).emit('message:reaction', payload);
+  }
+
   private extractToken(client: Socket): string {
     const token = client.handshake.auth?.token as string | undefined;
     if (typeof token === 'string' && token.length > 0) return token;

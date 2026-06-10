@@ -5,6 +5,7 @@ import {
   conversations,
   conversationParticipants,
   messages,
+  messageReactions,
   users,
 } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
@@ -308,6 +309,58 @@ export class ConversationsRepository {
       .where(eq(messages.id, messageId))
       .returning();
     return rows[0]!;
+  }
+
+  // ---- 메시지 이모지 리액션 ----
+
+  // 여러 메시지의 리액션을 한 번에 (리스트 응답 조립용)
+  async getReactionsForMessages(messageIds: string[]) {
+    if (messageIds.length === 0) return [];
+    return this.db
+      .select({
+        messageId: messageReactions.messageId,
+        emoji: messageReactions.emoji,
+        userId: messageReactions.userId,
+      })
+      .from(messageReactions)
+      .where(inArray(messageReactions.messageId, messageIds));
+  }
+
+  async getMessageReactions(messageId: string) {
+    return this.db
+      .select({ emoji: messageReactions.emoji, userId: messageReactions.userId })
+      .from(messageReactions)
+      .where(eq(messageReactions.messageId, messageId));
+  }
+
+  async findUserReaction(messageId: string, userId: string) {
+    const rows = await this.db
+      .select({ emoji: messageReactions.emoji })
+      .from(messageReactions)
+      .where(
+        and(eq(messageReactions.messageId, messageId), eq(messageReactions.userId, userId)),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  // 유저당 메시지 1개 — 있으면 이모지 교체, 없으면 추가 (unique(message_id,user_id))
+  async setUserReaction(messageId: string, userId: string, emoji: string) {
+    await this.db
+      .insert(messageReactions)
+      .values({ messageId, userId, emoji })
+      .onConflictDoUpdate({
+        target: [messageReactions.messageId, messageReactions.userId],
+        set: { emoji },
+      });
+  }
+
+  async deleteUserReaction(messageId: string, userId: string) {
+    await this.db
+      .delete(messageReactions)
+      .where(
+        and(eq(messageReactions.messageId, messageId), eq(messageReactions.userId, userId)),
+      );
   }
 
   async softDeleteMessage(messageId: string) {
