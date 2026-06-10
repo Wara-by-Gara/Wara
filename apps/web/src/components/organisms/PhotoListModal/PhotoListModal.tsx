@@ -167,22 +167,27 @@ export const PhotoListModal = ({
           ) : (
             <>
               {groups ? (
-                groups.map((group) => (
-                  <PhotoGrid key={group.label} columns={3} groupLabel={group.label} selectMode={selectMode}>
-                    {group.photos.map((photo) => (
-                      <PhotoGridItem
-                        key={photo.id}
-                        src={photo.src}
-                        alt={photo.alt ?? ''}
-                        hostManageMode={selectMode}
-                        status={selectedIds.has(photo.id) ? 'selected' : 'default'}
-                        likeCount={photo.likeCount}
-                        liked={photo.liked}
-                        onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
-                        onClick={() => handlePhotoClick(photo.id)}
-                      />
-                    ))}
-                  </PhotoGrid>
+                groups.map((group, i) => (
+                  <div key={group.label}>
+                    <PhotoGrid columns={3} groupLabel={group.label} selectMode={selectMode}>
+                      {group.photos.map((photo) => (
+                        <PhotoGridItem
+                          key={photo.id}
+                          src={photo.src}
+                          alt={photo.alt ?? ''}
+                          hostManageMode={selectMode}
+                          status={selectedIds.has(photo.id) ? 'selected' : 'default'}
+                          likeCount={photo.likeCount}
+                          liked={photo.liked}
+                          onLike={onPhotoLike && !selectMode ? () => onPhotoLike(photo.id) : undefined}
+                          onClick={() => handlePhotoClick(photo.id)}
+                        />
+                      ))}
+                    </PhotoGrid>
+                    {i < groups.length - 1 && (
+                      <div className="my-3 border-t border-border" />
+                    )}
+                  </div>
                 ))
               ) : (
                 <PhotoGrid columns={3} selectMode={selectMode}>
