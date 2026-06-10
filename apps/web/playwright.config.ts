@@ -48,6 +48,15 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], storageState: authFile("admin") },
     },
     {
+      // DM은 두 유저(송신/수신)가 필요해 테스트 내부에서 두 컨텍스트를 직접 생성한다.
+      // 프로젝트 storageState는 쓰지 않고, setup이 만든 auth 파일을 newContext로 로드한다.
+      name: "dm",
+      // 앞에 / 를 둬 "admin.spec.ts"(a-dm-in) 오매칭을 막는다.
+      testMatch: /\/dm.*\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
       name: "anon",
       testMatch: /anon.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
