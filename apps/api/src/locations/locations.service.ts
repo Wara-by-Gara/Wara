@@ -132,6 +132,16 @@ export class LocationsService {
     }
   }
 
+  // 게스트가 초대장에서 나가거나 호스트가 kick할 때 호출 — 해당 participant의 GPS 정리 + broadcast.
+  // ParticipantsService.leave에서 호출. 미정리 시 24h TTL까지 stale 좌표 노출.
+  async cleanupParticipantGpsData(
+    invitationId: string,
+    participantId: string,
+  ): Promise<void> {
+    await this.redisStore.deleteParticipant(invitationId, participantId);
+    this.gateway.emitLocationRemoved(invitationId, participantId);
+  }
+
   // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
   async stopMyLocationSharing(invitationId: string, userId: string): Promise<void> {
     const participant = await this.repository.findParticipantWithUser(
