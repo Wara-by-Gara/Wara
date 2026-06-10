@@ -28,6 +28,8 @@ export const participantLocations = pgTable('participant_locations', {
   lat: doublePrecision('lat').notNull(),
   lng: doublePrecision('lng').notNull(),
   isArrived: boolean('is_arrived').notNull().default(false),
+  // 미도착 멤버가 broadcast하는 짧은 상태 텍스트 (예: "5분 늦어요"). 위치 공유 중에만 의미 있음.
+  statusMessage: varchar('status_message', { length: 100 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
