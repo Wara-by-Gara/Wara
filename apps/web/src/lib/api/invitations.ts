@@ -33,6 +33,7 @@ interface CreateInvitationPayload {
   isMissionEnabled?: boolean;
   bgColor?: string;
   font?: string;
+  animation?: string;
   rsvpAttendingEmoji?: string;
   rsvpAttendingLabel?: string;
   rsvpMaybeEmoji?: string;
@@ -54,6 +55,7 @@ interface UpdateInvitationPayload {
   status?: 'active' | 'closed';
   bgColor?: string;
   font?: string;
+  animation?: string;
   rsvpAttendingEmoji?: string;
   rsvpAttendingLabel?: string;
   rsvpMaybeEmoji?: string;
@@ -85,6 +87,7 @@ export interface Invitation {
   isMissionEnabled: boolean;
   bgColor: string;
   font: string;
+  animation?: string;
   rsvpAttendingEmoji: string;
   rsvpAttendingLabel: string;
   rsvpMaybeEmoji: string;

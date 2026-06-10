@@ -26,6 +26,7 @@ export const UpdateInvitationSchema = z
   rsvpMaybeLabel: z.string().max(20).optional(),
     rsvpDeclinedEmoji: z.string().max(10).optional(),
     rsvpDeclinedLabel: z.string().max(20).optional(),
+    animation: z.string().max(50).optional(),
   })
   .refine((d) => !d.mainGifUrl || !d.mainImageKey, {
     message: 'mainImageKey and mainGifUrl are mutually exclusive',

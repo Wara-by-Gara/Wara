@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from "./client";
+import { apiGet, apiPut, apiDelete } from "./client";
 
 export interface EventLocation {
   id: string;
@@ -69,6 +69,10 @@ export function setEventLocation(
   payload: SetEventLocationPayload,
 ): Promise<EventLocation> {
   return apiPut<EventLocation>(`/invitations/${invitationId}/location`, payload);
+}
+
+export function deleteEventLocation(invitationId: string): Promise<void> {
+  return apiDelete(`/invitations/${invitationId}/location`);
 }
 
 export function getParticipantLocations(

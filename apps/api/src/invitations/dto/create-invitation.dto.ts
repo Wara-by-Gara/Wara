@@ -25,6 +25,7 @@ export const CreateInvitationSchema = z
   rsvpMaybeLabel: z.string().max(20).optional(),
   rsvpDeclinedEmoji: z.string().max(10).optional(),
   rsvpDeclinedLabel: z.string().max(20).optional(),
+  animation: z.string().max(50).optional(),
 })
 .refine((d) => !!d.mainImageKey || !!d.mainGifUrl, {
   message: 'mainImageKey or mainGifUrl is required',

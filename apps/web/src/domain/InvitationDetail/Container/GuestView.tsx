@@ -53,7 +53,10 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
   const isLoggedIn = !!me;
 
-  const { data: pollData } = usePoll(invitationId);
+  // eventStartAt이 확정된 초대장은 진행 중인 투표가 있을 수 없음 → 불필요한 vote 조회(404) 방지
+  const { data: pollData } = usePoll(invitationId, {
+    enabled: !invitation.eventStartAt,
+  });
   const hasPoll = !!pollData?.poll;
   const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
   const { data: myParticipant, isLoading: isLoadingMyParticipant } = useMyParticipant(

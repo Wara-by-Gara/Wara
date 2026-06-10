@@ -39,6 +39,7 @@ export const invitations = pgTable('invitations', {
   rsvpMaybeLabel: varchar('rsvp_maybe_label', { length: 20 }).notNull().default('미정'),
   rsvpDeclinedEmoji: varchar('rsvp_declined_emoji', { length: 10 }).notNull().default('😭'),
   rsvpDeclinedLabel: varchar('rsvp_declined_label', { length: 20 }).notNull().default('불참'),
+  animation: varchar('animation', { length: 50 }),
   /** true: 탐색·추천 이벤트 노출 / false: 비공개(링크 초대만) */
   isPublic: boolean('is_public').notNull().default(false),
   /** 탐색 필터용 — tech, fitness, food, art, culture, health */

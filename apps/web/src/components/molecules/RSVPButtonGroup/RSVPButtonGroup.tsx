@@ -7,9 +7,9 @@ import { cn } from "@/lib/cn";
 export type RSVPValue = "attending" | "maybe" | "declined";
 
 const OPTIONS: { value: RSVPValue; label: string; activeColor: string }[] = [
-  { value: "attending", label: "참석 👍", activeColor: "bg-primary text-text-inverse border-primary" },
+  { value: "attending", label: "참석 👍", activeColor: "bg-green-50 text-green-600 border-green-200" },
   { value: "maybe", label: "미정 🤔", activeColor: "bg-yellow-50 text-yellow-600 border-yellow-200" },
-  { value: "declined", label: "불참 😢", activeColor: "bg-gray-800 text-text-inverse border-gray-800" },
+  { value: "declined", label: "불참 😢", activeColor: "bg-red-50 text-red-600 border-red-200" },
 ];
 
 const groupVariants = cva("w-full", {
