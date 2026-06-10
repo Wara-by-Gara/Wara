@@ -6,6 +6,7 @@ import { Avatar } from "@/components/primitives/Avatar";
 import { Icon } from "@/components/icons";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
+import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { toast } from "@/components/molecules/Toast";
 import { useMe } from "@/hooks/useUsers";
 import {
@@ -16,6 +17,7 @@ import {
   useDeleteMessage,
   useChatRealtime,
   useToggleReaction,
+  useMessageReactors,
   useSendImageMessage,
 } from "@/hooks/useChat";
 import {
@@ -84,6 +86,25 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [previewFile]);
+
+  // 리액션 배지 꾸욱 누르기 -> 누가 어떤 이모지를 눌렀는지 상세 시트
+  const [reactionDetail, setReactionDetail] = useState<Message | null>(null);
+  const reactorsQuery = useMessageReactors(id, reactionDetail?.id ?? null);
+  const reactionPressTimer = useRef<number | null>(null);
+  const reactionLongPressed = useRef(false);
+  const startReactionPress = (m: Message) => {
+    reactionLongPressed.current = false;
+    reactionPressTimer.current = window.setTimeout(() => {
+      reactionLongPressed.current = true;
+      setReactionDetail(m);
+    }, LONG_PRESS_MS);
+  };
+  const cancelReactionPress = () => {
+    if (reactionPressTimer.current) {
+      clearTimeout(reactionPressTimer.current);
+      reactionPressTimer.current = null;
+    }
+  };
   const pressTimer = useRef<number | null>(null);
   const startPress = (m: Message) => {
     pressTimer.current = window.setTimeout(() => setMenuTarget(m), LONG_PRESS_MS);
@@ -362,12 +383,20 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                           <button
                             key={r.emoji}
                             type="button"
-                            onClick={() =>
+                            // 꾸욱 누르면 상세 시트, 짧게 탭하면 토글
+                            onPointerDown={() => startReactionPress(m)}
+                            onPointerUp={cancelReactionPress}
+                            onPointerLeave={cancelReactionPress}
+                            onClick={() => {
+                              if (reactionLongPressed.current) {
+                                reactionLongPressed.current = false;
+                                return;
+                              }
                               reactMutation.mutate({
                                 messageId: m.id,
                                 emoji: r.emoji as ReactionEmoji,
-                              })
-                            }
+                              });
+                            }}
                             className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-secondary shadow-sm ring-1 active:opacity-70 ${
                               m.myReaction === r.emoji ? "ring-brand" : "ring-border"
                             }`}
@@ -672,6 +701,41 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           </div>
         </ModalContent>
       </Modal>
+
+      {/* 리액션 상세 — 누가 어떤 이모지를 눌렀는지 */}
+      <BottomSheet
+        open={!!reactionDetail}
+        onOpenChange={(open) => !open && setReactionDetail(null)}
+      >
+        <BottomSheetContent title="리액션">
+          {/* 상단 이모지+카운트 요약 칩 */}
+          <div className="flex flex-wrap gap-2 pb-2">
+            {reactionDetail?.reactions.map((r) => (
+              <span
+                key={r.emoji}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] ring-1 ring-border"
+              >
+                <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
+                <span className="font-bold text-text-secondary">{r.count}</span>
+              </span>
+            ))}
+          </div>
+          {/* 리액션한 사람 목록 */}
+          <ul className="flex flex-col">
+            {reactorsQuery.data?.reactors.map((rc) => (
+              <li key={rc.userId} className="flex items-center gap-3 py-2">
+                <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
+                <span className="flex-1 text-[15px] text-text-primary">
+                  {rc.name ?? "사용자"}
+                </span>
+                <span className="text-[20px]">
+                  {REACTION_EMOJI_CHAR[rc.emoji as ReactionEmoji] ?? rc.emoji}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </BottomSheetContent>
+      </BottomSheet>
     </div>
   );
 };

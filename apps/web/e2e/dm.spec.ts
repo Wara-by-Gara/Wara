@@ -701,6 +701,28 @@ test.describe("dm-batch6-reactions", () => {
     await host.context.close();
     await guest.context.close();
   });
+
+  test("리액션 배지를 길게 누르면 누가 눌렀는지 상세 시트가 뜬다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+    const msg = `E2E 리액션상세 ${Date.now()}`;
+    await send(page, msg);
+    await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+    const row = page.locator("li").filter({ hasText: msg });
+
+    await longPress(page, page.getByText(msg));
+    await page.getByRole("button", { name: "heart 리액션" }).click();
+    const badge = row.locator("button", { hasText: "❤️" });
+    await expect(badge).toBeVisible({ timeout: 10_000 });
+
+    // 배지를 꾸욱 -> 리액션 상세 시트(제목 + 이모지)
+    await longPress(page, badge);
+    const sheet = page.getByRole("dialog");
+    await expect(sheet.getByText("리액션", { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(sheet.getByText("❤️").first()).toBeVisible();
+
+    await context.close();
+  });
 });
 
 // 1x1 PNG (S3 mock 응답 + 업로드 파일용)

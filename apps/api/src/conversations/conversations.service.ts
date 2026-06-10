@@ -368,6 +368,23 @@ export class ConversationsService {
     return { messageId, reactions, myReaction };
   }
 
+  // 메시지 리액션 상세: 누가 어떤 이모지를 눌렀는지 (바텀시트용)
+  async getMessageReactors(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+  ) {
+    await this.assertMember(conversationId, userId);
+
+    const message = await this.repository.findMessageById(messageId);
+    if (!message || message.conversationId !== conversationId) {
+      throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+    }
+
+    const reactors = await this.repository.getMessageReactionsWithUsers(messageId);
+    return { reactors };
+  }
+
   // 채팅방 나가기 (나만 — 상대 기록은 유지)
   async leaveConversation(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);

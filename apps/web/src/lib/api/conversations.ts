@@ -119,6 +119,20 @@ export function toggleReaction(
   );
 }
 
+// 리액션 상세: 누가 어떤 이모지를 눌렀는지
+export type MessageReactor = {
+  userId: string;
+  name: string | null;
+  avatarUrl: string | null;
+  emoji: string;
+};
+
+export function getMessageReactors(conversationId: string, messageId: string) {
+  return apiGet<{ reactors: MessageReactor[] }>(
+    `/conversations/${conversationId}/messages/${messageId}/reactions`,
+  );
+}
+
 export type MessagesPage = {
   messages: Message[];
   nextCursor: string | null;

@@ -127,6 +127,16 @@ export class ConversationsController {
     return this.conversationsService.toggleReaction(user.id, id, messageId, dto.emoji);
   }
 
+  // 리액션 상세 (누가 어떤 이모지를 눌렀는지)
+  @Get(':id/messages/:messageId/reactions')
+  getMessageReactors(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+  ) {
+    return this.conversationsService.getMessageReactors(user.id, id, messageId);
+  }
+
   @Post(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   markRead(

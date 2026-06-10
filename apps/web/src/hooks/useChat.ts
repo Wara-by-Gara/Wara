@@ -18,6 +18,7 @@ import {
   markConversationRead,
   deleteMessage as apiDeleteMessage,
   toggleReaction as apiToggleReaction,
+  getMessageReactors,
   getMessageImagePresignedUrl,
   uploadFileToPresignedUrl,
   sendImageMessage as apiSendImageMessage,
@@ -211,6 +212,15 @@ export function useDeleteMessage(id: string) {
       markDeleted(qc, id, messageId);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
     },
+  });
+}
+
+// 리액션 상세(누가 어떤 이모지) - 바텀시트 열릴 때만 조회
+export function useMessageReactors(id: string, messageId: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.reactors(id, messageId ?? ""),
+    queryFn: () => getMessageReactors(id, messageId!),
+    enabled: Boolean(id && messageId),
   });
 }
 

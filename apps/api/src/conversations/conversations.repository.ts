@@ -335,6 +335,21 @@ export class ConversationsRepository {
       .where(eq(messageReactions.messageId, messageId));
   }
 
+  // 리액션 상세(누가 어떤 이모지) — 유저 표시정보 조인, 먼저 누른 순
+  async getMessageReactionsWithUsers(messageId: string) {
+    return this.db
+      .select({
+        userId: messageReactions.userId,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+        emoji: messageReactions.emoji,
+      })
+      .from(messageReactions)
+      .innerJoin(users, eq(users.id, messageReactions.userId))
+      .where(eq(messageReactions.messageId, messageId))
+      .orderBy(messageReactions.createdAt);
+  }
+
   async findUserReaction(messageId: string, userId: string) {
     const rows = await this.db
       .select({ emoji: messageReactions.emoji })
