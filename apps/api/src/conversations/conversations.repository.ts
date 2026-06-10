@@ -167,6 +167,7 @@ export class ConversationsRepository {
         conversationId: messages.conversationId,
         senderId: messages.senderId,
         content: messages.content,
+        imageKey: messages.imageKey,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
         editedAt: messages.editedAt,
@@ -207,10 +208,11 @@ export class ConversationsRepository {
     senderId: string,
     content: string,
     replyToMessageId?: string,
+    imageKey?: string,
   ) {
     const rows = await this.db
       .insert(messages)
-      .values({ conversationId, senderId, content, replyToMessageId })
+      .values({ conversationId, senderId, content, replyToMessageId, imageKey })
       .returning();
     return rows[0]!;
   }

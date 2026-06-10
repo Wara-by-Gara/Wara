@@ -5,6 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ErrorCode } from '../common/constants/error-codes';
+import { ulid } from 'ulid';
+import { S3Service } from '../s3/s3.service';
+import type { MessageImagePresignedDto } from './dto/send-message.dto';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsGateway } from './conversations.gateway';
 
@@ -33,6 +36,8 @@ export interface MessageItem {
   conversationId: string;
   senderId: string;
   content: string;
+  // 이미지 메시지의 조회용 presigned URL (텍스트 메시지는 null)
+  imageUrl: string | null;
   createdAt: Date;
   deleted: boolean;
   edited: boolean;
@@ -56,6 +61,7 @@ function toMessageItem(
   replyTo: ReplyPreview = null,
   reactions: ReactionSummary[] = [],
   myReaction: string | null = null,
+  imageUrl: string | null = null,
 ): MessageItem {
   const deleted = row.deletedAt != null;
   return {
@@ -63,6 +69,7 @@ function toMessageItem(
     conversationId: row.conversationId,
     senderId: row.senderId,
     content: deleted ? '' : row.content,
+    imageUrl: deleted ? null : imageUrl,
     createdAt: row.createdAt,
     deleted,
     edited: row.editedAt != null,
@@ -84,7 +91,19 @@ export class ConversationsService {
   constructor(
     private readonly repository: ConversationsRepository,
     private readonly gateway: ConversationsGateway,
+    private readonly s3Service: S3Service,
   ) {}
+
+  // 이미지 업로드용 presigned URL 발급 (대화 참여자만)
+  async generateImagePresignedUrl(
+    userId: string,
+    conversationId: string,
+    dto: MessageImagePresignedDto,
+  ) {
+    await this.assertMember(conversationId, userId);
+    const key = `dm/${conversationId}/${ulid()}/${dto.fileName}`;
+    return this.s3Service.getUploadPresignedUrl(key, dto.contentType);
+  }
 
   // 1:1 대화방 생성 또는 기존 방 재사용 (directKey 멱등)
   async createOrGet(userId: string, targetUserId: string) {
@@ -170,6 +189,16 @@ export class ConversationsService {
       if (r.userId === userId) myReactionMap.set(r.messageId, r.emoji);
     }
 
+    // 이미지 메시지의 조회용 presigned URL 생성
+    const imageUrlMap = new Map<string, string>();
+    await Promise.all(
+      rows
+        .filter((r) => r.imageKey)
+        .map(async (r) => {
+          imageUrlMap.set(r.id, await this.s3Service.getViewPresignedUrl(r.imageKey!));
+        }),
+    );
+
     // 최신순으로 가져온 뒤 화면 표시용으로 오래된→최신 정렬
     const messages = rows.reverse().map((row) =>
       toMessageItem(
@@ -184,6 +213,7 @@ export class ConversationsService {
           : null,
         aggregateReactions(byMessage.get(row.id) ?? []),
         myReactionMap.get(row.id) ?? null,
+        imageUrlMap.get(row.id) ?? null,
       ),
     );
     return { messages, nextCursor };
@@ -194,6 +224,7 @@ export class ConversationsService {
     conversationId: string,
     content: string,
     replyToMessageId?: string,
+    imageKey?: string,
   ) {
     await this.assertMember(conversationId, userId);
 
@@ -202,12 +233,24 @@ export class ConversationsService {
       userId,
       content,
       replyToMessageId,
+      imageKey,
     );
-    await this.repository.updateLastMessage(conversationId, content, row.createdAt);
+    // 목록 미리보기: 이미지 메시지는 '사진'으로 표시
+    const preview = content || (imageKey ? '사진' : '');
+    await this.repository.updateLastMessage(conversationId, preview, row.createdAt);
     // 보낸 사람은 자기 메시지를 읽은 것으로 처리
     await this.repository.updateLastRead(conversationId, userId, row.createdAt);
 
-    const message = toMessageItem(row, await this.resolveReply(replyToMessageId));
+    const imageUrl = imageKey
+      ? await this.s3Service.getViewPresignedUrl(imageKey)
+      : null;
+    const message = toMessageItem(
+      row,
+      await this.resolveReply(replyToMessageId),
+      [],
+      null,
+      imageUrl,
+    );
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     for (const otherId of others) {
       this.gateway.sendMessageToUser(otherId, message);

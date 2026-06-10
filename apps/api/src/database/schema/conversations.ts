@@ -60,6 +60,8 @@ export const messages = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
+    // 이미지 메시지의 S3 key (텍스트 메시지는 null). 조회 시 view presigned URL로 변환.
+    imageKey: text('image_key'),
     // 답장 대상 메시지 (자기 참조). 원본 삭제 시 null.
     replyToMessageId: text('reply_to_message_id').references(
       (): AnyPgColumn => messages.id,
