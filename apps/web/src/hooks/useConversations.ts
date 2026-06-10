@@ -113,7 +113,14 @@ export function useDmGlobalSocket() {
       // 어떤 메시지가 마지막인지 캐시만으론 알 수 없어, 드문 작업이므로 1회 invalidate.
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
     });
+    // 재연결: 끊긴 동안 놓친 이벤트는 replay되지 않으므로 목록/안읽음을 강제 재동기화한다.
+    const onReconnect = () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.unreadCount() });
+    };
+    socket.io.on('reconnect', onReconnect);
     return () => {
+      socket.io.off('reconnect', onReconnect);
       socket.disconnect();
     };
   }, [qc]);
