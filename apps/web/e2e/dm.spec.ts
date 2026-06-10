@@ -1,4 +1,5 @@
-import { test, expect, expectNotCrashed } from "./fixtures";
+import { test, expect, expectNotCrashed, meaningfulConsoleErrors } from "./fixtures";
+import { mockApiRouteFailure } from "./helpers";
 import { authFile } from "./personas";
 import type { Browser, Page, Locator } from "@playwright/test";
 
@@ -33,6 +34,17 @@ async function hostEnterDmWithGuest(page: Page): Promise<string> {
 async function send(page: Page, text: string) {
   await page.getByPlaceholder(MSG_INPUT).fill(text);
   await page.getByLabel("전송").click();
+}
+
+// 페이지의 uncaught 예외 / console.error 수집 (두 컨텍스트 테스트는 fixture를 못 써 수동 수집)
+function collectErrors(page: Page) {
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (e) => pageErrors.push(e.message));
+  page.on("console", (m) => {
+    if (m.type() === "error") consoleErrors.push(m.text());
+  });
+  return { pageErrors, consoleErrors };
 }
 
 // 메시지 말풍선 길게 누르기 -> 메뉴 모달 (LONG_PRESS_MS=500ms 보다 길게 hold)
@@ -108,8 +120,8 @@ test.describe("dm-batch1", () => {
       await expect(guest.page.getByText(m)).toBeVisible({ timeout: 12_000 });
     }
     // 순서: 마지막 메시지가 이전 메시지들보다 뒤(아래)에 있다
-    const firstBox = await guest.page.getByText(msgs[0]).boundingBox();
-    const lastBox = await guest.page.getByText(msgs[4]).boundingBox();
+    const firstBox = await guest.page.getByText(msgs[0]!).boundingBox();
+    const lastBox = await guest.page.getByText(msgs[msgs.length - 1]!).boundingBox();
     expect(firstBox && lastBox && lastBox.y > firstBox.y).toBeTruthy();
 
     expect(host429, "host 429 발생").toEqual([]);
@@ -291,5 +303,62 @@ test.describe("dm-batch2", () => {
     await expect(page.getByText(orig)).toHaveCount(2, { timeout: 10_000 });
 
     await context.close();
+  });
+});
+
+test.describe("dm-batch3", () => {
+  test("채팅방 헤더의 상대 이름을 누르면 친구 프로필로 이동한다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    // 헤더 이름 버튼이 DOM상 첫 "프로필 보기" (말풍선 아바타보다 앞)
+    await page.getByRole("button", { name: /프로필 보기/ }).first().click();
+    await page.waitForURL(new RegExp(`/friends/${GUEST001_ID}`), { timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "1:1 채팅" })).toBeVisible();
+
+    await context.close();
+  });
+
+  test("전송 실패 시 토스트가 뜨고 입력 내용이 복원된다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    // 메시지 전송(POST) 엔드포인트만 실패시킨다
+    await mockApiRouteFailure(page, /\/api\/conversations\/[^/]+\/messages/, {
+      method: "POST",
+      status: 500,
+    });
+
+    const msg = `E2E 전송실패 ${Date.now()}`;
+    await page.getByPlaceholder(MSG_INPUT).fill(msg);
+    await page.getByLabel("전송").click();
+
+    await expect(page.getByText(/보내지 못했어요/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toHaveValue(msg);
+
+    await context.close();
+  });
+
+  test("DM 흐름에서 크래시/유의미한 콘솔 에러가 없다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    const hostErr = collectErrors(host.page);
+    const guestErr = collectErrors(guest.page);
+
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    await send(host.page, `E2E 스모크 ${Date.now()}`);
+    await guest.page.waitForTimeout(600);
+    await host.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+
+    await expectNotCrashed(host.page);
+    await expectNotCrashed(guest.page);
+    expect(hostErr.pageErrors, "host uncaught 예외").toEqual([]);
+    expect(guestErr.pageErrors, "guest uncaught 예외").toEqual([]);
+    expect(meaningfulConsoleErrors(hostErr.consoleErrors), "host 콘솔 에러").toEqual([]);
+    expect(meaningfulConsoleErrors(guestErr.consoleErrors), "guest 콘솔 에러").toEqual([]);
+
+    await host.context.close();
+    await guest.context.close();
   });
 });
