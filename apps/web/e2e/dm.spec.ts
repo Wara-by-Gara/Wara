@@ -723,6 +723,39 @@ test.describe("dm-batch6-reactions", () => {
 
     await context.close();
   });
+
+  test("상세 시트가 열린 채 상대가 리액션을 취소하면 목록에서 즉시 사라진다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    const msg = `E2E 리액션라이브 ${Date.now()}`;
+    await send(host.page, msg);
+    await expect(guest.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    // 둘 다 heart -> host 화면 배지 ❤️ 2
+    await longPress(host.page, host.page.getByText(msg));
+    await host.page.getByRole("button", { name: "heart 리액션" }).click();
+    await longPress(guest.page, guest.page.getByText(msg));
+    await guest.page.getByRole("button", { name: "heart 리액션" }).click();
+
+    const hostRow = host.page.locator("li").filter({ hasText: msg });
+    const heartBadge = hostRow.locator("button", { hasText: "❤️" });
+    await expect(heartBadge.getByText("2")).toBeVisible({ timeout: 10_000 });
+
+    // host가 상세 시트 오픈 -> 리액터 2명
+    await longPress(host.page, heartBadge);
+    const sheet = host.page.getByRole("dialog");
+    await expect(sheet.locator("ul li")).toHaveCount(2, { timeout: 10_000 });
+
+    // guest가 취소 -> host의 열린 시트 목록이 1명으로 즉시 갱신
+    await longPress(guest.page, guest.page.getByText(msg));
+    await guest.page.getByRole("button", { name: "heart 리액션" }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(1, { timeout: 10_000 });
+
+    await host.context.close();
+    await guest.context.close();
+  });
 });
 
 // 1x1 PNG (S3 mock 응답 + 업로드 파일용)

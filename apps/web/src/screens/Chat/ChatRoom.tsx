@@ -707,7 +707,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         open={!!reactionDetail}
         onOpenChange={(open) => !open && setReactionDetail(null)}
       >
-        <BottomSheetContent title="리액션">
+        <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
           {/* 상단 이모지+카운트 요약 칩 */}
           <div className="flex flex-wrap gap-2 pb-2">
             {reactionDetail?.reactions.map((r) => (

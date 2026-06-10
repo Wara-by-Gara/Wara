@@ -112,6 +112,8 @@ function applyReaction(
           }
         : old,
   );
+  // 리액션 상세 시트(누가 눌렀는지) 캐시 무효화 -> 열려있으면 즉시 갱신, 닫혀있으면 재오픈 시 최신
+  qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.reactors(id, messageId) });
 }
 
 // 캐시에서 특정 메시지를 교체 (수정 반영)
