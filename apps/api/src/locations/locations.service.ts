@@ -67,7 +67,18 @@ export class LocationsService {
 
   async getParticipantLocations(
     invitationId: string,
+    viewerUserId: string,
   ): Promise<ParticipantLocationWithUser[]> {
+    // 불참(absent) 게스트가 다른 참여자의 GPS 좌표를 열람하면 개인정보 누출.
+    // HOST는 모니터링 목적으로 RSVP 무관 허용.
+    const viewer = await this.repository.findParticipant(viewerUserId, invitationId);
+    if (!viewer) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (viewer.memberRole !== 'HOST' && viewer.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
     const map = await this.redisStore.findAllByInvitation(invitationId);
     if (map.size === 0) return [];
 

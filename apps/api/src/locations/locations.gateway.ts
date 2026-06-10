@@ -57,6 +57,11 @@ export class LocationsGateway implements OnGatewayConnection {
     );
     if (!participant) throw new WsException('PARTICIPANT_NOT_FOUND');
 
+    // 불참(absent) 게스트는 다른 참여자의 GPS 열람 차단. HOST는 모니터링 위해 RSVP 무관.
+    if (participant.memberRole !== 'HOST' && participant.rsvpStatus === 'absent') {
+      throw new WsException('RSVP_PERMISSION_DENIED');
+    }
+
     client.join(`invitation:${invitationId}`);
     return { invitationId };
   }
