@@ -3,9 +3,12 @@ import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
+import { LocationsGateway } from './locations.gateway';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -43,6 +46,9 @@ export class LocationsService {
     private readonly redisStore: LocationsRedisStore,
     private readonly kakaoLocal: KakaoLocalService,
     private readonly notifications: NotificationsService,
+    // Gateway ↔ Service 순환 의존 회피 — Gateway는 Service를 주입받음.
+    @Inject(forwardRef(() => LocationsGateway))
+    private readonly gateway: LocationsGateway,
   ) {}
 
   async getEventLocation(invitationId: string) {
@@ -120,6 +126,10 @@ export class LocationsService {
         this.redisStore.deleteParticipant(invitationId, participantId),
       ),
     );
+    // 다른 클라이언트에 즉시 marker 제거 알림. 정리는 Redis에서 끝났으므로 emit만.
+    for (const { invitationId, participantId } of pairs) {
+      this.gateway.emitLocationRemoved(invitationId, participantId);
+    }
   }
 
   // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
@@ -132,6 +142,7 @@ export class LocationsService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
     await this.redisStore.deleteParticipant(invitationId, participant.id);
+    this.gateway.emitLocationRemoved(invitationId, participant.id);
   }
 
   async updateMyLocation(

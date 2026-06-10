@@ -74,6 +74,16 @@ export class LocationsGateway implements OnGatewayConnection {
     client.leave(`invitation:${result.data.invitationId}`);
   }
 
+  /**
+   * 특정 participant의 GPS marker를 다른 클라이언트에서 즉시 제거.
+   * stopMyLocationSharing / leave / 회원탈퇴 등에서 호출.
+   */
+  emitLocationRemoved(invitationId: string, participantId: string): void {
+    this.server
+      .to(`invitation:${invitationId}`)
+      .emit('location:removed', { invitationId, participantId });
+  }
+
   @SubscribeMessage('location:update')
   async handleLocationUpdate(client: Socket, payload: unknown) {
     const result = WsLocationUpdateSchema.safeParse(payload);
