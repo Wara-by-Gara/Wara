@@ -15,3 +15,6 @@ export const API_BASE = '/api';
 
 /** Socket.IO 베이스. WebSocket 은 rewrites 프록시 대상이 아니라 직접 연결한다. */
 export const SOCKET_BASE = RAW_API_URL;
+
+/** 프론트엔드 origin. OG 메타태그 metadataBase 등 절대 URL 생성 시 사용. */
+export const FRONTEND_ORIGIN = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'http://localhost:3000';

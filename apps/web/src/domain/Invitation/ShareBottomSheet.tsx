@@ -18,7 +18,7 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
   const shareImageUrl =
     invitation?.mainCoverType === "gif"
       ? `${API_ORIGIN}/api/og-image?id=${invitationId}`
-      : (invitation?.mainImageUrl ?? undefined);
+      : (invitation?.mainImageThumbnailUrl ?? invitation?.mainImageUrl ?? undefined);
 
   const { copyLink, shareViaKakao, shareViaSms, shareViaInstagram, copied } =
     useShareInvitation(invitationId, invitation?.title, invitation?.description, shareImageUrl);
