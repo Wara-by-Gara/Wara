@@ -13,12 +13,13 @@ export class LocationsFlushScheduler {
   ) {}
 
   /**
-   * 종료(status='closed')된 초대장의 마지막 GPS 좌표를 DB에 1회 기록 후 Redis에서 제거.
-   * 매시간 정시 실행. Redis 키가 없는 closed 초대장은 빠르게 skip.
+   * 종료(status='closed') 또는 soft deleted된 초대장의 마지막 GPS 좌표를 DB에 1회 기록 후
+   * Redis에서 제거. 매시간 정시 실행. Redis 키가 없는 대상은 빠르게 skip.
+   * soft deleted 누락 시 24h TTL까지 stale broadcast 가능.
    */
   @Cron(CronExpression.EVERY_HOUR)
   async flush(): Promise<void> {
-    const ids = await this.repository.findClosedInvitationIds();
+    const ids = await this.repository.findInvitationsForGpsFlush();
     if (ids.length === 0) return;
 
     let flushed = 0;

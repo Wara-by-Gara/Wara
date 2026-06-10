@@ -75,6 +75,17 @@ export class LocationsController {
     return this.locationsService.updateMyLocation(invitationId, user.id, dto);
   }
 
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry만 정리, 다른 참여자 무영향.
+  @Delete('participant/me/location')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BlocklistGuard, ParticipantGuard)
+  stopMyLocationSharing(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.stopMyLocationSharing(invitationId, user.id);
+  }
+
   @Post('participants/:participantId/nudge')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(HostGuard)
