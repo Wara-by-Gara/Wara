@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
@@ -127,6 +128,17 @@ export class LocationsService {
     userId: string,
     dto: UpdateParticipantLocationDto,
   ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
+    // 마감/삭제된 초대장에 GPS 계속 upsert되면 flush scheduler 정시까지 stale broadcast.
+    // upsert 시점에 차단해 진입 자체를 막음.
+    const invitationStatus = await this.repository.findInvitationStatus(invitationId);
+    if (
+      !invitationStatus ||
+      invitationStatus.status === 'closed' ||
+      invitationStatus.deletedAt !== null
+    ) {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+
     const participant = await this.repository.findParticipantWithUser(
       userId,
       invitationId,
