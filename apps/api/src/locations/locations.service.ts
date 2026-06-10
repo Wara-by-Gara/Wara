@@ -64,6 +64,10 @@ export class LocationsService {
 
   async deleteEventLocation(invitationId: string) {
     await this.repository.deleteEventLocation(invitationId);
+    // 호스트가 event location을 해제하면 위치 공유 컨텍스트가 끝난 것이므로
+    // Redis의 모든 참여자 GPS hash + arrived lock을 즉시 정리.
+    // 24h TTL을 기다리지 않고 즉시 broadcast 차단.
+    await this.redisStore.deleteInvitation(invitationId);
   }
 
   async getParticipantLocations(
@@ -162,6 +166,30 @@ export class LocationsService {
     this.gateway.emitStatusMessageRemoved(invitationId, participant.id);
 
     return { participantId: participant.id };
+  }
+
+  // 사용자 탈퇴 시 호출 — 참여하던 모든 초대장의 Redis GPS entry + arrived lock 정리.
+  // 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 보는 것을 차단.
+  async cleanupUserGpsData(userId: string): Promise<void> {
+    const pairs = await this.repository.findParticipantsByUserId(userId);
+    if (pairs.length === 0) return;
+    await Promise.all(
+      pairs.map(({ invitationId, participantId }) =>
+        this.redisStore.deleteParticipant(invitationId, participantId),
+      ),
+    );
+  }
+
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
+  async stopMyLocationSharing(invitationId: string, userId: string): Promise<void> {
+    const participant = await this.repository.findParticipantWithUser(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    await this.redisStore.deleteParticipant(invitationId, participant.id);
   }
 
   async updateMyLocation(

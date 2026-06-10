@@ -1,6 +1,6 @@
 {
-  "id": "8f1d8ae0-e9b5-414c-bd92-35f5c8c0bbfc",
-  "prevId": "abfcbfe8-313d-429c-a969-360750dfc30b",
+  "id": "c60b0380-8001-47ca-b243-34e0896bcbb9",
+  "prevId": "b586e384-89cc-43ff-8301-d5a4d6f00d04",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -150,6 +150,12 @@
         },
         "profile_image_url": {
           "name": "profile_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_image_thumbnail_key": {
+          "name": "profile_image_thumbnail_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -794,6 +800,12 @@
         },
         "main_image_key": {
           "name": "main_image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "main_image_thumbnail_key": {
+          "name": "main_image_thumbnail_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1572,6 +1584,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "status_message": {
+          "name": "status_message",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
