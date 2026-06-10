@@ -130,18 +130,11 @@ export default function Album({
         ]);
         const make = (exifFull?.Make as string | undefined) ?? undefined;
         const model = (exifFull?.Model as string | undefined) ?? undefined;
-        let gpsAddress: string | undefined;
-        if (gps) {
-          const geo = await fetch(`/api/geocode?lat=${gps.latitude}&lng=${gps.longitude}`)
-            .then((r) => r.json() as Promise<{ address: string | null }>)
-            .catch(() => ({ address: null }));
-          gpsAddress = geo.address ?? undefined;
-        }
         await registerPhoto(invitationId, key, {
           takenAt: (exifFull?.DateTimeOriginal as Date | undefined)?.toISOString(),
           fileSize: file.size,
           exifMetadata: gps
-            ? { gps_lat: gps.latitude, gps_lng: gps.longitude, gps_address: gpsAddress, make, model }
+            ? { gps_lat: gps.latitude, gps_lng: gps.longitude, make, model }
             : (make || model)
               ? { make, model }
               : undefined,

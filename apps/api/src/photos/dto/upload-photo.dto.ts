@@ -14,7 +14,6 @@ export const UploadPhotoSchema = z.object({
     .object({
       gps_lat: z.number().nullable().optional(),
       gps_lng: z.number().nullable().optional(),
-      gps_address: z.string().nullable().optional(),
       make: z.string().nullable().optional(),
       model: z.string().nullable().optional(),
     })

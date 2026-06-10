@@ -11,6 +11,7 @@ import { ListPhotosDto } from './dto/list-photos.dto';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { S3Service } from '../s3/s3.service';
+import { KakaoLocalService } from '../locations/kakao-local.service';
 
 const MAX_DOWNLOAD_LIMIT = 9999;
 
@@ -19,6 +20,7 @@ export class PhotosService {
   constructor(
     private readonly repository: PhotosRepository,
     private readonly s3Service: S3Service,
+    private readonly kakaoLocalService: KakaoLocalService,
   ) {}
 
   // 업로드용 presigned URL 발급 (15분)
@@ -76,12 +78,22 @@ export class PhotosService {
       if (existing) throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
     }
 
+    // GPS 좌표 있으면 역지오코딩 (DB 캐시 우선 조회)
+    let exifMetadata = dto.exifMetadata;
+    if (exifMetadata?.gps_lat && exifMetadata?.gps_lng) {
+      const address = await this.kakaoLocalService.reverseGeocode(
+        exifMetadata.gps_lat,
+        exifMetadata.gps_lng,
+      );
+      if (address) exifMetadata = { ...exifMetadata, gps_address: address };
+    }
+
     return this.repository.create({
       invitationId,
       participantId,
       imageKey: dto.imageKey,
       takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
-      exifMetadata: dto.exifMetadata,
+      exifMetadata,
       exifFingerprint,
     });
   }

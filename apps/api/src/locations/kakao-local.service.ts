@@ -1,7 +1,10 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import { geocodeCache } from '../database/schema';
+import { and, eq } from 'drizzle-orm';
 
 interface KakaoDocument {
   id: string;
@@ -55,6 +58,7 @@ export class KakaoLocalService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
   ) {
     this.apiKey = this.configService.getOrThrow<string>('KAKAO_REST_API_KEY');
   }
@@ -86,6 +90,53 @@ export class KakaoLocalService {
     } catch {
       throw new InternalServerErrorException('KAKAO_API_ERROR');
     }
+  }
+
+  async reverseGeocode(lat: number, lng: number): Promise<string | null> {
+    const latKey = lat.toFixed(3);
+    const lngKey = lng.toFixed(3);
+
+    // DB 캐시 조회
+    const [cached] = await this.db
+      .select()
+      .from(geocodeCache)
+      .where(and(eq(geocodeCache.latKey, latKey), eq(geocodeCache.lngKey, lngKey)))
+      .limit(1);
+    if (cached) return cached.address; // null이어도 캐시 hit (주소 없는 지역)
+
+    // Kakao coord2address 호출 (원본 좌표 — 반올림은 캐시 키 전용)
+    interface KakaoCoord2AddressResponse {
+      documents?: Array<{
+        address?: {
+          region_1depth_name?: string;
+          region_2depth_name?: string;
+          region_3depth_name?: string;
+        };
+      }>;
+    }
+    const res = await firstValueFrom(
+      this.httpService.get<KakaoCoord2AddressResponse>(
+        `${this.baseUrl}/v2/local/geo/coord2address.json`,
+        {
+          headers: { Authorization: `KakaoAK ${this.apiKey}` },
+          params: { x: lng, y: lat },
+        },
+      ),
+    ).catch(() => null);
+
+    const addr = res?.data?.documents?.[0]?.address;
+    const address = addr
+      ? [addr.region_1depth_name, addr.region_2depth_name, addr.region_3depth_name]
+          .filter(Boolean)
+          .join(' ') || null
+      : null;
+
+    await this.db
+      .insert(geocodeCache)
+      .values({ latKey, lngKey, address })
+      .onConflictDoNothing();
+
+    return address;
   }
 
   private mapDocument(doc: KakaoDocument): PlaceResult {
