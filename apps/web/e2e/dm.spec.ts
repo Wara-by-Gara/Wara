@@ -702,3 +702,54 @@ test.describe("dm-batch6-reactions", () => {
     await guest.context.close();
   });
 });
+
+// 1x1 PNG (S3 mock 응답 + 업로드 파일용)
+const PNG_1x1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+  "base64",
+);
+
+test.describe("dm-batch7-image", () => {
+  test("사진을 보내면 이미지 메시지가 말풍선에 표시된다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    // dev 더미 S3 버킷의 PUT(업로드)/GET(조회)을 mock
+    await page.route(/dev-dummy-bucket\.s3\.[^/]+\.amazonaws\.com/, (route) => {
+      if (route.request().method() === "PUT") return route.fulfill({ status: 200 });
+      return route.fulfill({ status: 200, contentType: "image/png", body: PNG_1x1 });
+    });
+
+    await hostEnterDmWithGuest(page);
+    await page.setInputFiles('input[type="file"]', {
+      name: "e2e.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+
+    await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    await context.close();
+  });
+
+  test("이미지 메시지가 상대 화면에 실시간 표시된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    for (const p of [host.page, guest.page]) {
+      await p.route(/dev-dummy-bucket\.s3\.[^/]+\.amazonaws\.com/, (route) => {
+        if (route.request().method() === "PUT") return route.fulfill({ status: 200 });
+        return route.fulfill({ status: 200, contentType: "image/png", body: PNG_1x1 });
+      });
+    }
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    await expect(guest.page.getByPlaceholder(MSG_INPUT)).toBeVisible();
+
+    await host.page.setInputFiles('input[type="file"]', {
+      name: "e2e.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+
+    await expect(guest.page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    await host.context.close();
+    await guest.context.close();
+  });
+});

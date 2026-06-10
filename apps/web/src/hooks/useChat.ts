@@ -18,6 +18,9 @@ import {
   markConversationRead,
   deleteMessage as apiDeleteMessage,
   toggleReaction as apiToggleReaction,
+  getMessageImagePresignedUrl,
+  uploadFileToPresignedUrl,
+  sendImageMessage as apiSendImageMessage,
   type ConversationDetail,
   type Message,
   type MessagesPage,
@@ -161,6 +164,26 @@ export function useSendMessage(id: string) {
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
       // 목록 캐시 직접 갱신 (내 메시지 -> 안읽음 안 올림). 캐시에 없으면 1회 폴백.
+      if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      }
+    },
+  });
+}
+
+// 이미지 메시지 전송: presigned URL 발급 -> S3 업로드 -> 메시지 전송
+export function useSendImageMessage(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const subtype = file.type.split('/')[1] ?? 'jpg';
+      const fileName = `${Date.now()}.${subtype === 'jpeg' ? 'jpg' : subtype}`;
+      const { presignedUrl, key } = await getMessageImagePresignedUrl(id, fileName, file.type);
+      await uploadFileToPresignedUrl(presignedUrl, file);
+      return apiSendImageMessage(id, key);
+    },
+    onSuccess: (msg) => {
+      appendMessage(qc, id, msg);
       if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       }

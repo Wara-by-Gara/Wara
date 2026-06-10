@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/primitives/Avatar";
+import { Icon } from "@/components/icons";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
 import { toast } from "@/components/molecules/Toast";
@@ -15,10 +16,12 @@ import {
   useDeleteMessage,
   useChatRealtime,
   useToggleReaction,
+  useSendImageMessage,
 } from "@/hooks/useChat";
 import {
   REACTION_EMOJIS,
   REACTION_EMOJI_CHAR,
+  MESSAGE_IMAGE_TYPES,
   type Message,
   type ReactionEmoji,
 } from "@/lib/api/conversations";
@@ -50,6 +53,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const editMutation = useEditMessage(id);
   const deleteMutation = useDeleteMessage(id);
   const reactMutation = useToggleReaction(id);
+  const imageMutation = useSendImageMessage(id);
   useChatRealtime(id);
 
   const [text, setText] = useState("");
@@ -88,6 +92,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const handleReact = (emoji: ReactionEmoji) => {
     if (menuTarget) reactMutation.mutate({ messageId: menuTarget.id, emoji });
     setMenuTarget(null);
+  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // 같은 파일 재선택 허용
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("10MB 이하 이미지만 보낼 수 있어요");
+      return;
+    }
+    imageMutation.mutate(file, {
+      onError: () => toast.error("사진을 보내지 못했어요. 다시 시도해주세요"),
+    });
   };
   const openDelete = () => {
     setDeleteTarget(menuTarget);
@@ -264,6 +281,24 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
                         삭제된 메시지입니다
                       </div>
+                    ) : m.imageUrl ? (
+                      // 이미지 메시지 — 테두리/배경 없이 이미지만 (길게눌러 리액션/답장/삭제 가능)
+                      <div
+                        onPointerDown={() => startPress(m)}
+                        onPointerUp={cancelPress}
+                        onPointerLeave={cancelPress}
+                        onPointerCancel={cancelPress}
+                        onContextMenu={(e) => e.preventDefault()}
+                        className="relative max-w-full cursor-pointer select-none overflow-hidden rounded-2xl"
+                      >
+                        {/* presigned S3 URL은 만료·쿼리파라미터라 next/image 부적합 (기존 사진 기능 관례) */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.imageUrl}
+                          alt="사진"
+                          className="block max-h-64 max-w-full"
+                        />
+                      </div>
                     ) : (
                       <div
                         onPointerDown={() => startPress(m)}
@@ -430,6 +465,23 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           </p>
         )}
         <div className="flex items-center gap-2">
+        {/* 사진 보내기 (모바일 웹에선 카메라/갤러리 선택) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={MESSAGE_IMAGE_TYPES.join(",")}
+          className="hidden"
+          onChange={handlePickImage}
+        />
+        <button
+          type="button"
+          aria-label="사진 보내기"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={imageMutation.isPending || !!editing}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-text-secondary active:opacity-70 disabled:opacity-40"
+        >
+          <Icon name="image" size="lg" color="currentColor" decorative />
+        </button>
         <input
           ref={inputRef}
           value={text}

@@ -65,7 +65,42 @@ export type Message = {
   replyTo: ReplyPreview | null;
   reactions: ReactionSummary[];
   myReaction: string | null;
+  // 이미지 메시지의 조회용 URL (텍스트 메시지는 null)
+  imageUrl: string | null;
 };
+
+// 메시지 이미지 업로드 허용 타입 (백엔드 enum과 일치)
+export const MESSAGE_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+] as const;
+
+export function getMessageImagePresignedUrl(
+  conversationId: string,
+  fileName: string,
+  contentType: string,
+) {
+  return apiPost<{ presignedUrl: string; key: string }>(
+    `/conversations/${conversationId}/messages/presigned-url`,
+    { fileName, contentType },
+  );
+}
+
+export async function uploadFileToPresignedUrl(presignedUrl: string, file: File): Promise<void> {
+  const res = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!res.ok) throw new Error("IMAGE_UPLOAD_FAILED");
+}
+
+export function sendImageMessage(conversationId: string, imageKey: string) {
+  return apiPost<Message>(`/conversations/${conversationId}/messages`, { imageKey });
+}
 
 export type ToggleReactionResult = {
   messageId: string;
