@@ -164,13 +164,10 @@ export function PhotoModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-md ring-1 ring-white/20">
-          {/* 위치 */}
+          {/* 위치 (주소만, 좌표 제거) */}
           <div className="flex items-start gap-2.5">
             <Icon name="map-pin" size="sm" color="inverse" decorative />
-            <div className="flex-1">
-              <p className="text-[14px] font-semibold text-white">{photo.address}</p>
-              <p className="mt-0.5 text-[11px] font-mono text-white/50">{photo.gps}</p>
-            </div>
+            <p className="flex-1 text-[14px] font-semibold text-white">{photo.address}</p>
           </div>
 
           <div className="my-3 h-px bg-white/10" />
@@ -243,35 +240,44 @@ function PlaceLogMap({ onSelect }: { onSelect: (p: PlacePhoto) => void }) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   Place Log 사진 목록
+   Place Log 사진 목록 — 그리드 레이아웃
 ───────────────────────────────────────────────────────── */
 function PlaceLogPhotoList({ onSelect }: { onSelect: (p: PlacePhoto) => void }) {
   return (
-    <div className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+    <div className="grid grid-cols-2 gap-2">
       {PLACE_PHOTOS.map((photo) => (
         <button
           key={photo.id}
           type="button"
           onClick={() => onSelect(photo)}
-          className="flex items-center gap-3 px-3 py-3 text-left transition-colors active:bg-background-soft"
+          className="group relative overflow-hidden rounded-2xl bg-surface ring-1 ring-border transition-opacity active:opacity-80"
         >
-          <div className="relative size-[56px] shrink-0 overflow-hidden rounded-xl">
-            <Image src={photo.thumb} alt={photo.caption} fill className="object-cover" sizes="56px" />
+          {/* 사진 */}
+          <div className="relative aspect-square w-full">
+            <Image
+              src={photo.thumb}
+              alt={photo.caption}
+              fill
+              className="object-cover"
+              sizes="(max-width: 480px) 50vw, 240px"
+            />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-bold text-text-primary">{photo.caption}</p>
-            <div className="mt-0.5 flex items-center gap-1">
-              <Icon name="map-pin" size="xs" color="inactive" decorative />
-              <p className="truncate text-[11px] text-text-tertiary">{photo.address}</p>
+
+          {/* 하단 정보 */}
+          <div className="p-2.5">
+            <p className="truncate text-left text-[12px] font-bold text-text-primary">
+              {photo.caption}
+            </p>
+            <div className="mt-0.5 flex items-center justify-between">
+              <div className="flex min-w-0 items-center gap-1">
+                <Icon name="map-pin" size="xs" color="inactive" decorative />
+                <p className="truncate text-[10px] text-text-tertiary">{photo.takenAt.split("·")[1]?.trim()}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <Icon name="heart" size="xs" color="inactive" decorative />
+                <span className="text-[10px] text-text-tertiary">{photo.likeCount}</span>
+              </div>
             </div>
-            <div className="mt-0.5 flex items-center gap-1">
-              <Icon name="clock" size="xs" color="inactive" decorative />
-              <p className="text-[11px] text-text-tertiary">{photo.takenAt}</p>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-col items-center gap-0.5">
-            <Icon name="heart" size="sm" color="inactive" decorative />
-            <span className="text-[11px] text-text-tertiary">{photo.likeCount}</span>
           </div>
         </button>
       ))}
