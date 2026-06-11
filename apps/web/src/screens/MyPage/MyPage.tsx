@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/organisms/ErrorState";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mockMe, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
+import { PlaceLogPreview } from "./PlaceLogPreview";
 
 export type MyPageState = "default" | "loggedOut" | "noProfile" | "loading" | "error";
 
@@ -205,7 +206,7 @@ export const MyPage = ({
 
           {/* ── Place log ── */}
           <div className="bg-surface px-4 py-4 shadow-sm">
-            <div className="flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">📍</span>
                 <span className="text-[14px] font-bold text-text-primary">Place log</span>
@@ -219,6 +220,7 @@ export const MyPage = ({
                 <Icon name="external-link" size="xs" color="inactive" decorative />
               </button>
             </div>
+            <PlaceLogPreview onViewAll={onPhotoMap} />
           </div>
 
         </div>
