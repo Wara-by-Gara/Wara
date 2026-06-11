@@ -299,20 +299,28 @@ function createMyLocationOverlayContent(
 
 function createPhotoMarkerContent(url: string, count: number, onClick: () => void): HTMLElement {
   const wrapper = document.createElement("div");
+  // wrapper에 명시적 width — 카카오 SDK가 content를 narrow한 container 안에 넣어
+  // 자식 width가 잠식되는 케이스 회피.
   wrapper.style.cssText = `
     position: relative;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 52px;
   `;
 
   const img = document.createElement("img");
   img.src = url;
   img.alt = "";
+  // 보조로 HTML attribute에도 dimension 명시 — CSS가 잠식돼도 박스 유지.
+  img.width = 52;
+  img.height = 52;
   img.style.cssText = `
     width: 52px;
     height: 52px;
+    min-width: 52px;
+    min-height: 52px;
     object-fit: cover;
     border-radius: 10px;
     border: 2.5px solid white;
