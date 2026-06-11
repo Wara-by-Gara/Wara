@@ -342,6 +342,9 @@ const meta: Meta<typeof PlaceLogView> = {
   title: "Pages/17 My Page/Place Log",
   component: PlaceLogView,
   parameters: pageStoryParameters,
+  // PhotoModal, PLACE_PHOTOS 는 재사용 컴포넌트/데이터 export 이므로
+  // Storybook이 스토리로 렌더링하지 않도록 제외
+  excludeStories: ["PhotoModal", "PLACE_PHOTOS"],
 };
 export default meta;
 type Story = StoryObj<typeof PlaceLogView>;
