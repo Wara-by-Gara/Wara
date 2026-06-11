@@ -154,7 +154,6 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
           userId={selectedMutualFriend.id}
           name={selectedMutualFriend.name ?? undefined}
           avatarUrl={selectedMutualFriend.avatarUrl ?? undefined}
-          onDm={() => startChat.mutate(selectedMutualFriend.id)}
         />
       ) : null}
     </div>

@@ -486,7 +486,6 @@ export const InvitationDetailGuest = ({ state = "public", onBack, onRsvp: _onRsv
           isHost={selectedParticipant.isHost}
           companionCount={selectedParticipant.companionCount}
           requestPreview={selectedParticipant.requestPreview}
-          onDm={() => {}}
         />
       ) : null}
     </div>

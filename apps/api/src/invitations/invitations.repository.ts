@@ -141,6 +141,7 @@ export class InvitationsRepository {
         and(
           eq(participants.userId, userId),
           isNull(invitations.deletedAt),
+          eq(participants.isHidden, false),
         ),
       )
       .orderBy(desc(invitations.createdAt));

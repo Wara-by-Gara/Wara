@@ -52,7 +52,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   function handleSocialLogin(provider: SocialProvider) {
     setLoadingProvider(provider);
@@ -74,7 +74,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const { data: resultsData } = useVoteResults(invitationId, { enabled: isLoggedIn && hasPoll });
   const updateRsvp = useUpdateRsvp(invitationId);
   const joinInvitation = useJoinInvitation(invitationId);
-  const canViewFeed = !!myParticipant;
+const canViewFeed = !!myParticipant;
 
   const rsvpOptions = [
     { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
@@ -256,7 +256,8 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 
-      <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
+
+<BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
           <div className="flex flex-col gap-2 pt-2">
             {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
