@@ -61,8 +61,13 @@ export interface KakaoMapProps {
   };
   participants?: ParticipantPin[];
   className?: string;
-  /** 내 현재 위치 — 파란 점으로 표시 */
-  myLocation?: { lat: number; lng: number };
+  /** 내 현재 위치 — 파란 테두리 프로필 마커 */
+  myLocation?: {
+    lat: number;
+    lng: number;
+    profileImageUrl?: string | null;
+    nickname?: string | null;
+  };
   /** 사진 위치 핀 목록 */
   photoMarkers?: PhotoMarker[];
   /** 사진 핀 클릭 콜백 — markerId는 클러스터 대표 사진 ID */
@@ -211,6 +216,83 @@ function createEventMarkerContent(placeName: string): HTMLElement {
   label.textContent = placeName;
 
   wrapper.appendChild(pin);
+  wrapper.appendChild(label);
+  return wrapper;
+}
+
+// 본인 위치 마커 — 참여자 핀과 같은 구조, 테두리만 파랑(#3b82f6).
+function createMyLocationOverlayContent(
+  profileImageUrl: string | null,
+  nickname: string | null,
+): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  `;
+  wrapper.setAttribute("data-testid", "my-location-pin");
+
+  const bubble = document.createElement("div");
+  bubble.style.cssText = `
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #3b82f6;
+    overflow: hidden;
+    background: #f5f5f5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  `;
+
+  if (profileImageUrl) {
+    const img = document.createElement("img");
+    img.src = profileImageUrl;
+    img.alt = nickname ?? "";
+    img.style.cssText = "width: 100%; height: 100%; object-fit: cover;";
+    bubble.appendChild(img);
+  } else {
+    const initials = document.createElement("div");
+    initials.style.cssText = `
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #737373;
+    `;
+    initials.textContent = (nickname ?? "나").charAt(0).toUpperCase();
+    bubble.appendChild(initials);
+  }
+
+  const tail = document.createElement("div");
+  tail.style.cssText = `
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #3b82f6;
+    margin-top: -2px;
+  `;
+
+  const label = document.createElement("div");
+  label.style.cssText = `
+    background: #3b82f6;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 999px;
+    white-space: nowrap;
+  `;
+  label.textContent = "나";
+
+  wrapper.appendChild(bubble);
+  wrapper.appendChild(tail);
   wrapper.appendChild(label);
   return wrapper;
 }
@@ -474,23 +556,15 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
 
     if (!myLocation) return;
 
-    const dot = document.createElement("div");
-    dot.style.cssText = `
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #3b82f6;
-      border: 3px solid white;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.3), 0 2px 6px rgba(0,0,0,0.2);
-    `;
-
     const pos = new maps.LatLng(myLocation.lat, myLocation.lng);
     myLocationOverlayRef.current = new maps.CustomOverlay({
       position: pos,
-      content: dot,
+      content: createMyLocationOverlayContent(
+        myLocation.profileImageUrl ?? null,
+        myLocation.nickname ?? null,
+      ),
       map: mapRef.current,
-      yAnchor: 0.5,
-      xAnchor: 0.5,
+      yAnchor: 1.5,
       zIndex: 20,
     });
     // 새 myLocation이 들어오면 다른 마커와 함께 fit — eventLocation만 보이는 상태 회피.

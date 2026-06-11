@@ -494,7 +494,15 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           : undefined
       }
       participants={participantPins}
-      myLocation={myLocation}
+      myLocation={
+        myLocation
+          ? {
+              ...myLocation,
+              profileImageUrl: me?.profileImageUrl ?? null,
+              nickname: me?.nickname ?? null,
+            }
+          : undefined
+      }
       onParticipantClick={isHost ? handleParticipantPinClick : undefined}
       className="absolute inset-0"
     />
