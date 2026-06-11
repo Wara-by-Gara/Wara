@@ -85,6 +85,15 @@ export class ConversationsRepository {
       });
   }
 
+  // 주어진 id들의 이름 (시스템 메시지 문구용)
+  async getUserNames(userIds: string[]) {
+    if (userIds.length === 0) return [];
+    return this.db
+      .select({ id: users.id, name: users.name })
+      .from(users)
+      .where(inArray(users.id, userIds));
+  }
+
   // 주어진 id 중 실제 존재하는(미탈퇴) 유저만 반환 — 초대 대상 검증용
   async filterActiveUserIds(userIds: string[]) {
     if (userIds.length === 0) return [];

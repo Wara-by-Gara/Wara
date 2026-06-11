@@ -8,6 +8,7 @@ import {
   BottomSheet,
   BottomSheetContent,
 } from "@/components/molecules/BottomSheet";
+import { SearchBar } from "@/components/molecules/SearchBar";
 import {
   Modal,
   ModalContent,
@@ -25,6 +26,7 @@ import {
   useSetAlias,
 } from "@/hooks/useChat";
 import { ROUTES } from "@/constants/routes";
+import { matchName } from "@/screens/Friends/initials";
 import type { ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 
 // 채팅방 우측 슬라이딩 서랍 — 사진 갤러리 + 대화상대 목록 + 초대
@@ -290,11 +292,15 @@ function InvitePickerContent({
   const invite = useInvite(conversationId);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState("");
+  const [query, setQuery] = useState("");
 
   const friends = useFriends().data?.friends ?? [];
   const memberSet = new Set(memberIds);
-  // 이미 대화방에 있는 친구는 제외
-  const candidates = friends.filter((f) => !memberSet.has(f.id));
+  const keyword = query.trim();
+  // 이미 대화방에 있는 친구는 제외 + 이름 검색
+  const candidates = friends
+    .filter((f) => !memberSet.has(f.id))
+    .filter((f) => (keyword ? matchName(f.name, keyword) : true));
 
   const toggle = (id: string) =>
     setSelected((prev) => {
@@ -330,9 +336,16 @@ function InvitePickerContent({
           className="mb-3 w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
         />
       )}
+      <div className="mb-2">
+        <SearchBar
+          placeholder="이름으로 친구 검색"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
       {candidates.length === 0 ? (
         <p className="py-6 text-center text-[13px] text-text-tertiary">
-          초대할 수 있는 친구가 없어요
+          {keyword ? "검색 결과가 없어요" : "초대할 수 있는 친구가 없어요"}
         </p>
       ) : (
         <ul className="flex max-h-[50vh] flex-col overflow-y-auto">

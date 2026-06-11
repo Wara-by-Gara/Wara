@@ -155,6 +155,37 @@ export class ConversationsService {
     return { conversationId };
   }
 
+  // 시스템 메시지 1건 삽입 + 미리보기 갱신 + 남은 멤버에게 실시간 전송
+  private async postSystemMessage(
+    conversationId: string,
+    actorId: string,
+    text: string,
+  ) {
+    const row = await this.repository.insertSystemMessage(conversationId, actorId, text);
+    await this.repository.updateLastMessage(conversationId, text, row.createdAt);
+    const message = toMessageItem(row);
+    const others = await this.repository.otherParticipantIds(conversationId, actorId);
+    for (const otherId of others) {
+      this.gateway.sendMessageToUser(otherId, message);
+    }
+  }
+
+  // "OOO님, OOO님이 들어왔습니다" 입장 안내
+  private async postJoinMessage(
+    conversationId: string,
+    inviterId: string,
+    inviteeIds: string[],
+  ) {
+    const rows = await this.repository.getUserNames(inviteeIds);
+    const nameMap = new Map(rows.map((r) => [r.id, r.name]));
+    const names = inviteeIds.map((id) => nameMap.get(id) ?? '사용자');
+    await this.postSystemMessage(
+      conversationId,
+      inviterId,
+      `${names.join('님, ')}님이 들어왔습니다.`,
+    );
+  }
+
   // 초대: direct에서 부르면 새 group 생성(1:1 유지), group에서 부르면 멤버 추가.
   // title은 direct->group 최초 생성 시 방장(생성자)이 정하는 공유 이름.
   async invite(
@@ -185,6 +216,7 @@ export class ConversationsService {
         throw new BadRequestException(ErrorCode.GROUP_MEMBER_LIMIT_EXCEEDED);
       }
       await this.repository.addParticipants(conversationId, invitees);
+      await this.postJoinMessage(conversationId, userId, invitees);
       return { conversationId };
     }
 
@@ -198,6 +230,7 @@ export class ConversationsService {
       cleanTitle && cleanTitle.length > 0 ? cleanTitle : null,
       groupMembers,
     );
+    await this.postJoinMessage(group.id, userId, invitees);
     return { conversationId: group.id };
   }
 
@@ -552,14 +585,11 @@ export class ConversationsService {
     // 그룹이면 남은 멤버에게 "OOO님이 나갔습니다" 시스템 메시지
     if (conversation?.type === 'group') {
       const user = await this.repository.findUserById(userId);
-      const text = `${user?.name ?? '사용자'}님이 나갔습니다.`;
-      const row = await this.repository.insertSystemMessage(conversationId, userId, text);
-      await this.repository.updateLastMessage(conversationId, text, row.createdAt);
-      const message = toMessageItem(row);
-      const others = await this.repository.otherParticipantIds(conversationId, userId);
-      for (const otherId of others) {
-        this.gateway.sendMessageToUser(otherId, message);
-      }
+      await this.postSystemMessage(
+        conversationId,
+        userId,
+        `${user?.name ?? '사용자'}님이 나갔습니다.`,
+      );
     }
   }
 

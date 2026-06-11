@@ -915,18 +915,20 @@ test.describe("dm-batch9-group", () => {
     const dmPath = await hostEnterDmWithGuest(page); // guest001과 1:1
     const dmId = dmPath.split("/").pop()!;
 
-    // 서랍 -> 초대하기
+    // 서랍 -> 초대하기 -> 친구 검색 -> 선택 -> 초대
     await page.getByRole("button", { name: "대화방 메뉴" }).click();
     await page.getByRole("button", { name: "초대하기" }).click();
-
-    // 초대 시트에서 친구 1명 선택 -> 초대
     const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
-    await sheet.locator("ul li button").first().click();
+    await sheet.getByPlaceholder("이름으로 친구 검색").fill(GUEST002_NAME);
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
     await sheet.getByRole("button", { name: /초대/ }).click();
 
-    // 새 단톡방으로 이동 완료 대기 (1:1과 다른 방 id) 후 메시지 전송
+    // 새 단톡방으로 이동 + 입장 시스템 메시지
     await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByText(`${GUEST002_NAME}님이 들어왔습니다.`),
+    ).toBeVisible({ timeout: 10_000 });
     const msg = `E2E 단톡 ${Date.now()}`;
     await send(page, msg);
     await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });

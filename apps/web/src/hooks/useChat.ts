@@ -247,6 +247,8 @@ export function useInvite(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+      // group에 멤버 추가 시 초대자 화면에도 입장 안내가 보이도록
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
     },
   });
 }
