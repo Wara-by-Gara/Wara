@@ -32,6 +32,7 @@ export interface MyPageProps {
   onAccount?: () => void;
   onSupport?: () => void;
   onHiddenFriends?: () => void;
+  onHiddenInvitations?: () => void;
   onPhotoMap?: () => void;
 }
 
@@ -47,6 +48,7 @@ export const MyPage = ({
   onAccount,
   onSupport,
   onHiddenFriends,
+  onHiddenInvitations,
   onPhotoMap,
 }: MyPageProps) => {
   const [recentExpanded, setRecentExpanded] = useState(false);
@@ -194,6 +196,13 @@ export const MyPage = ({
               rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
             >
               삭제한 친구
+            </MenuItem>
+            <MenuItem
+              leftIcon="eye-off"
+              onClick={onHiddenInvitations}
+              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
+            >
+              숨긴 초대장
             </MenuItem>
             <MenuItem
               leftIcon="message-circle"

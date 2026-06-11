@@ -67,6 +67,7 @@ export function useHideInvitation() {
     onSuccess: (_, { invitationId }) => {
       queryClient.setQueryData(QUERY_KEYS.invitations.myParticipant(invitationId), undefined);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.all() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myList() });
     },
   });
 }

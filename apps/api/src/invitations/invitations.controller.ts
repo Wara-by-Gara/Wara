@@ -80,6 +80,11 @@ export class InvitationsController {
     return this.invitationsService.findPublicForMap(dto);
   }
 
+  @Get('hidden')
+  findHidden(@CurrentUser() user: JwtPayload) {
+    return this.invitationsService.findHidden(user.id);
+  }
+
   @Public()
   @Get(':invitationId')
   findOne(@Param('invitationId', ParseUlidPipe) id: string) {

@@ -26,6 +26,7 @@ export const ROUTES = {
     COMMENTS: (id: string) => `/invitations/${id}/comments`,
     LOCATION: (id: string) => `/invitations/${id}/location`,
     VOTE: (id: string) => `/invitations/${id}/vote`,
+    HIDDEN: "/invitations/hidden",
   },
   PUBLIC: {
     INVITATION: (id: string) => `/i/${id}`,

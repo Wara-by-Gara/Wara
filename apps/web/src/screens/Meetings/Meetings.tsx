@@ -181,13 +181,16 @@ export function Meetings() {
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
                       className="flex-1 min-w-0"
                     />
-                    <IconButton
-                      icon="more-horizontal"
-                      variant="ghost"
-                      size="sm"
-                      aria-label="더보기"
-                      onClick={() => setMoreMenuInvId(ev.id)}
-                    />
+                    {ev.myRole === 'GUEST' && (
+                      <IconButton
+                        icon="more-horizontal"
+                        variant="ghost"
+                        size="sm"
+                        aria-label="더보기"
+                        disabled={hideInvitation.isPending}
+                        onClick={() => setMoreMenuInvId(ev.id)}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

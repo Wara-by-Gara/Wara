@@ -51,6 +51,7 @@ export default function ProfileContainer() {
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
       onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
       onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
+      onHiddenInvitations={() => router.push(ROUTES.INVITATIONS.HIDDEN)}
       onPhotoMap={() => router.push(ROUTES.PHOTOS.MAP)}
     />
   );

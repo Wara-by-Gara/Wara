@@ -244,3 +244,7 @@ export function getAiJobStatus(
     `/invitations/${invitationId}/main-image/ai/jobs/${jobId}`,
   );
 }
+
+export function getHiddenInvitations(): Promise<Invitation[]> {
+  return apiGet<Invitation[]>("/invitations/hidden");
+}
