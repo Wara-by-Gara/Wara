@@ -102,19 +102,6 @@ export class InvitationsRepository {
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
 
-  async countPublicParticipants(invitationId: string): Promise<number> {
-    const [row] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-  .from(participants)
-      .where(
-        and(
-          inArray(participants.invitationId, invitationIds),
-          ne(participants.rsvpStatus, RsvpStatus.ABSENT),
-        ),
-      )
-      .groupBy(participants.invitationId);
-    return new Map(rows.map((r) => [r.invitationId, r.count]));
-  }
   async countPublicParticipantsByInvitationIds(
     invitationIds: string[],
   ): Promise<Map<string, number>> {
