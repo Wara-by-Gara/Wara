@@ -170,10 +170,23 @@ export function getConversationPhotos(conversationId: string) {
 }
 
 // 초대 (direct -> 새 그룹 / group -> 멤버 추가). 이동할 conversationId 반환.
-export function inviteToConversation(conversationId: string, userIds: string[]) {
+// title은 새 그룹 최초 생성 시 공유 방 이름(선택).
+export function inviteToConversation(
+  conversationId: string,
+  userIds: string[],
+  title?: string,
+) {
   return apiPost<{ conversationId: string }>(
     `/conversations/${conversationId}/invite`,
-    { userIds },
+    { userIds, ...(title ? { title } : {}) },
+  );
+}
+
+// 내 개인 방 별명 설정/해제 (빈 문자열이면 기본 이름으로)
+export function setConversationAlias(conversationId: string, alias: string) {
+  return apiPatch<{ conversationId: string }>(
+    `/conversations/${conversationId}/alias`,
+    { alias },
   );
 }
 

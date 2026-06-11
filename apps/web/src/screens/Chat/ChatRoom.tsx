@@ -814,6 +814,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         conversationId={id}
+        isDirect={!isGroup}
+        roomTitle={headerTitle}
         onPhotoClick={(photos, index) => setViewer({ photos, index })}
       />
 

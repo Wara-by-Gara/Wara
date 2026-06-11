@@ -936,6 +936,42 @@ test.describe("dm-batch9-group", () => {
 
     await context.close();
   });
+
+  test("생성 시 방 이름을 정하고, 내 별명으로 바꾸면 내 화면만 바뀐다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+
+    // 초대 + 공유 방 이름 설정
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByPlaceholder("단톡방 이름 (선택)").fill("E2E모임");
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+
+    // 헤더에 공유 이름
+    await expect(page.getByRole("button", { name: /E2E모임/ })).toBeVisible({ timeout: 10_000 });
+
+    // 헤더(그룹명) 탭 -> 서랍 -> 이름 변경(내 별명)
+    await page.getByRole("button", { name: /E2E모임/ }).click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer.getByText("채팅방 이름")).toBeVisible({ timeout: 10_000 });
+    await drawer.getByRole("button", { name: "변경" }).click();
+    const aliasSheet = page.getByRole("dialog").filter({ hasText: "채팅방 이름 변경" });
+    await aliasSheet.getByPlaceholder("나만 보이는 방 이름").fill("내방별명");
+    await aliasSheet.getByRole("button", { name: "저장" }).click();
+
+    // 내 별명이 반영됨 (드로어 방 이름) + 드로어 닫으면 헤더도 별명으로
+    await expect(drawer.getByText("내방별명")).toBeVisible({ timeout: 10_000 });
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: /내방별명/ })).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
 });
 
 test.describe("dm-batch10-group-realtime", () => {

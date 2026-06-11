@@ -15,6 +15,7 @@ import {
   useConversationParticipants,
   useConversationPhotos,
   useInvite,
+  useSetAlias,
 } from "@/hooks/useChat";
 import { ROUTES } from "@/constants/routes";
 import type { ViewerPhoto } from "@/screens/Chat/PhotoViewer";
@@ -24,15 +25,20 @@ export function ChatDrawer({
   open,
   onOpenChange,
   conversationId,
+  isDirect,
+  roomTitle,
   onPhotoClick,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conversationId: string;
+  isDirect: boolean;
+  roomTitle: string;
   onPhotoClick: (photos: ViewerPhoto[], index: number) => void;
 }) {
   const { data: me } = useMe();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [aliasOpen, setAliasOpen] = useState(false);
   // 서랍 열릴 때만 조회 (enabled = open)
   const photos = useConversationPhotos(conversationId, open).data?.photos ?? [];
   const participants =
@@ -48,6 +54,25 @@ export function ChatDrawer({
             메뉴
           </Drawer.Title>
           <div className="flex-1 overflow-y-auto px-page pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+            {/* 방 이름 (그룹) — 내 개인 별명 변경 */}
+            {!isDirect && (
+              <section className="mb-4 flex items-center gap-2 border-b border-border pb-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] text-text-tertiary">채팅방 이름</p>
+                  <p className="truncate text-[15px] font-bold text-text-primary">
+                    {roomTitle}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAliasOpen(true)}
+                  className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[13px] font-bold text-text-secondary active:opacity-70"
+                >
+                  변경
+                </button>
+              </section>
+            )}
+
             {/* 사진 갤러리 */}
             <section className="pb-6">
               <h3 className="mb-2 text-[14px] font-bold text-text-secondary">
@@ -125,6 +150,7 @@ export function ChatDrawer({
           <InvitePickerContent
             conversationId={conversationId}
             memberIds={memberIds}
+            canSetTitle={isDirect}
             onDone={() => {
               setPickerOpen(false);
               onOpenChange(false);
@@ -132,7 +158,62 @@ export function ChatDrawer({
           />
         </BottomSheetContent>
       </BottomSheet>
+
+      {/* 방 이름(개인 별명) 변경 시트 */}
+      <BottomSheet open={aliasOpen} onOpenChange={setAliasOpen}>
+        <BottomSheetContent title="채팅방 이름 변경">
+          <AliasEditContent
+            conversationId={conversationId}
+            current={roomTitle}
+            onDone={() => setAliasOpen(false)}
+          />
+        </BottomSheetContent>
+      </BottomSheet>
     </Drawer.Root>
+  );
+}
+
+// 내 개인 방 별명 편집 (나만 보임)
+function AliasEditContent({
+  conversationId,
+  current,
+  onDone,
+}: {
+  conversationId: string;
+  current: string;
+  onDone: () => void;
+}) {
+  const setAlias = useSetAlias(conversationId);
+  const [value, setValue] = useState(current);
+
+  const save = () => {
+    setAlias.mutate(value, {
+      onSuccess: onDone,
+      onError: () => toast.error("이름을 바꾸지 못했어요"),
+    });
+  };
+
+  return (
+    <div>
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        maxLength={50}
+        placeholder="나만 보이는 방 이름"
+        className="w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+      />
+      <p className="mt-1 px-1 text-[12px] text-text-tertiary">
+        이 이름은 나에게만 보여요. 비우면 기본 이름으로 돌아갑니다.
+      </p>
+      <button
+        type="button"
+        onClick={save}
+        disabled={setAlias.isPending}
+        className="mt-4 w-full rounded-lg bg-primary py-3 text-[15px] font-bold text-text-inverse disabled:opacity-40"
+      >
+        {setAlias.isPending ? "저장 중..." : "저장"}
+      </button>
+    </div>
   );
 }
 
@@ -140,15 +221,18 @@ export function ChatDrawer({
 function InvitePickerContent({
   conversationId,
   memberIds,
+  canSetTitle,
   onDone,
 }: {
   conversationId: string;
   memberIds: string[];
+  canSetTitle: boolean;
   onDone: () => void;
 }) {
   const router = useRouter();
   const invite = useInvite(conversationId);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [title, setTitle] = useState("");
 
   const friends = useFriends().data?.friends ?? [];
   const memberSet = new Set(memberIds);
@@ -165,17 +249,30 @@ function InvitePickerContent({
 
   const handleInvite = () => {
     if (selected.size === 0) return;
-    invite.mutate([...selected], {
-      onSuccess: (res) => {
-        onDone();
-        router.push(ROUTES.CHAT.ROOM(res.conversationId));
+    invite.mutate(
+      { userIds: [...selected], title: canSetTitle ? title : undefined },
+      {
+        onSuccess: (res) => {
+          onDone();
+          router.push(ROUTES.CHAT.ROOM(res.conversationId));
+        },
+        onError: () => toast.error("초대하지 못했어요. 다시 시도해주세요"),
       },
-      onError: () => toast.error("초대하지 못했어요. 다시 시도해주세요"),
-    });
+    );
   };
 
   return (
     <div>
+      {/* 새 단톡방 생성 시(1:1에서 초대) 공유 방 이름 — 생성자만 1회 */}
+      {canSetTitle && (
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={50}
+          placeholder="단톡방 이름 (선택)"
+          className="mb-3 w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+        />
+      )}
       {candidates.length === 0 ? (
         <p className="py-6 text-center text-[13px] text-text-tertiary">
           초대할 수 있는 친구가 없어요

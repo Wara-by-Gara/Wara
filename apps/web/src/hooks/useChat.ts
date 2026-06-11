@@ -22,6 +22,7 @@ import {
   getConversationParticipants,
   getConversationPhotos,
   inviteToConversation,
+  setConversationAlias,
   getMessageImagePresignedUrl,
   uploadFileToPresignedUrl,
   sendImageMessage as apiSendImageMessage,
@@ -241,10 +242,23 @@ export function useConversationPhotos(id: string, enabled: boolean) {
 export function useInvite(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (userIds: string[]) => inviteToConversation(id, userIds),
+    mutationFn: ({ userIds, title }: { userIds: string[]; title?: string }) =>
+      inviteToConversation(id, userIds, title),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+    },
+  });
+}
+
+// 내 개인 방 별명 설정 -> 상세/목록 갱신
+export function useSetAlias(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alias: string) => setConversationAlias(id, alias),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.detail(id) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
     },
   });
 }

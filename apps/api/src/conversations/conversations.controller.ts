@@ -32,7 +32,7 @@ import {
   ListMessagesQueryDto,
 } from './dto/list-messages.query.dto';
 import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
-import { InviteSchema, InviteDto } from './dto/invite.dto';
+import { InviteSchema, InviteDto, SetAliasSchema, SetAliasDto } from './dto/invite.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -145,7 +145,17 @@ export class ConversationsController {
     @Param('id', ParseUlidPipe) id: string,
     @Body(new ZodValidationPipe(InviteSchema)) dto: InviteDto,
   ) {
-    return this.conversationsService.invite(user.id, id, dto.userIds);
+    return this.conversationsService.invite(user.id, id, dto.userIds, dto.title);
+  }
+
+  // 내 개인 방 별명 설정/해제
+  @Patch(':id/alias')
+  setAlias(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(SetAliasSchema)) dto: SetAliasDto,
+  ) {
+    return this.conversationsService.setAlias(user.id, id, dto.alias);
   }
 
   // 대화방 참여자 목록

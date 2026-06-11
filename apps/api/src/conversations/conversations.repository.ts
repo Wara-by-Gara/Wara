@@ -95,6 +95,23 @@ export class ConversationsRepository {
     return rows.map((r) => r.id);
   }
 
+  // 내 개인 방 별명 설정/해제 (빈 값이면 null)
+  async setParticipantAlias(
+    conversationId: string,
+    userId: string,
+    alias: string | null,
+  ) {
+    await this.db
+      .update(conversationParticipants)
+      .set({ alias })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId),
+        ),
+      );
+  }
+
   async countParticipants(conversationId: string) {
     const rows = await this.db
       .select({ count: sql<number>`count(*)::int` })
@@ -136,6 +153,7 @@ export class ConversationsRepository {
         id: conversations.id,
         type: conversations.type,
         title: conversations.title,
+        alias: myP.alias,
         lastMessageText: conversations.lastMessageText,
         lastMessageAt: conversations.lastMessageAt,
         myLastReadAt: myP.lastReadAt,

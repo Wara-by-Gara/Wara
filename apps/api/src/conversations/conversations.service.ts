@@ -139,8 +139,26 @@ export class ConversationsService {
     return { id: conversation.id };
   }
 
+  // 내 개인 방 별명 설정 (빈 문자열이면 해제 -> 기본 이름)
+  async setAlias(userId: string, conversationId: string, alias: string) {
+    await this.assertMember(conversationId, userId);
+    const trimmed = alias.trim();
+    await this.repository.setParticipantAlias(
+      conversationId,
+      userId,
+      trimmed.length > 0 ? trimmed : null,
+    );
+    return { conversationId };
+  }
+
   // 초대: direct에서 부르면 새 group 생성(1:1 유지), group에서 부르면 멤버 추가.
-  async invite(userId: string, conversationId: string, inviteeIds: string[]) {
+  // title은 direct->group 최초 생성 시 방장(생성자)이 정하는 공유 이름.
+  async invite(
+    userId: string,
+    conversationId: string,
+    inviteeIds: string[],
+    title?: string,
+  ) {
     await this.assertMember(conversationId, userId);
     const conversation = await this.repository.findConversationById(conversationId);
     if (!conversation) {
@@ -171,7 +189,11 @@ export class ConversationsService {
     if (groupMembers.length > MAX_GROUP_MEMBERS) {
       throw new BadRequestException(ErrorCode.GROUP_MEMBER_LIMIT_EXCEEDED);
     }
-    const group = await this.repository.createGroupConversation(null, groupMembers);
+    const cleanTitle = title?.trim();
+    const group = await this.repository.createGroupConversation(
+      cleanTitle && cleanTitle.length > 0 ? cleanTitle : null,
+      groupMembers,
+    );
     return { conversationId: group.id };
   }
 
@@ -180,28 +202,33 @@ export class ConversationsService {
   }
 
   async getDetail(userId: string, conversationId: string) {
-    await this.assertMember(conversationId, userId);
+    const me = await this.assertMember(conversationId, userId);
     const conversation = await this.repository.findConversationById(conversationId);
     const isGroup = conversation?.type === 'group';
-    const partner = await this.repository.getPartner(conversationId, userId);
 
     if (isGroup) {
       const members = await this.repository.listParticipants(conversationId);
       const others = members.filter((m) => m.userId !== userId);
+      // 우선순위: 내 별명 > 공유 이름 > 멤버 자동 이름
+      const title =
+        me.alias ??
+        conversation?.title ??
+        autoGroupTitle(others.map((m) => m.name ?? '사용자'));
       return {
         id: conversationId,
         type: 'group' as const,
-        title: conversation?.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')),
+        title,
         memberCount: members.length,
         partner: null,
         partnerLastReadAt: null,
       };
     }
 
+    const partner = await this.repository.getPartner(conversationId, userId);
     return {
       id: conversationId,
       type: 'direct' as const,
-      title: partner?.name ?? '상대',
+      title: me.alias ?? partner?.name ?? '상대',
       memberCount: 2,
       partner: partner
         ? { id: partner.id, name: partner.name, avatarUrl: partner.avatarUrl }
@@ -233,12 +260,14 @@ export class ConversationsService {
       const members = byConv.get(r.id) ?? [];
       const others = members.filter((m) => m.userId !== userId);
       const isGroup = r.type === 'group';
+      const base = isGroup
+        ? (r.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')))
+        : (others[0]?.name ?? '상대');
       return {
         id: r.id,
         type: isGroup ? ('group' as const) : ('direct' as const),
-        title: isGroup
-          ? (r.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')))
-          : (others[0]?.name ?? '상대'),
+        // 우선순위: 내 별명 > (그룹) 공유 이름/자동 · (1:1) 상대 이름
+        title: r.alias ?? base,
         avatarUrl: isGroup ? null : (others[0]?.avatarUrl ?? null),
         memberCount: members.length,
         lastMessageText: r.lastMessageText,
