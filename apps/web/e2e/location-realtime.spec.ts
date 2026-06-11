@@ -1,27 +1,49 @@
 /**
  * 트랙 A — 실시간 마커 동기화 회귀 방지 (그룹 2 P0)
  *
- * REST로 검증 가능한 시나리오만 작성. WS broadcast(location:removed 등)는
- * socket.io-client 헬퍼 부재로 후속 PR에서 보강.
- *
  * 검증 대상:
  * - PR-A2: deleteEventLocation 시 Redis hash 일괄 삭제 → 후속 GET 빈 결과
- * - 기존: 도착 감지 (justArrived=true)
- * - 기존: 중복 도착 방지 (두 번째 update에선 justArrived=false)
+ * - PR-A2/A3: stopMyLocationSharing / leave / kick / 회원탈퇴 시 location:removed broadcast
+ * - 기존: 도착 감지 (justArrived=true) + 중복 도착 방지 (NX)
  */
 import { test, expect } from "./fixtures";
 import {
   DEFAULT_VENUE,
   LOC_GUEST_EMAILS,
   deleteEventLocation,
+  deleteMyAccount,
   getMyParticipant,
   getParticipantLocations,
+  leaveOrKickParticipant,
   offsetLatLng,
   setupLocationInvitation,
+  stopMyLocationSharing,
   updateMyLocation,
   updateRsvp,
 } from "./location-flow-api";
 import { minutesFromNow } from "./location-flow-api";
+import {
+  createLocationSocket,
+  disconnect,
+  subscribeToInvitation,
+  waitForConnect,
+  waitForEvent,
+} from "./location-ws-helpers";
+import type { Socket } from "socket.io-client";
+
+/** 관찰자 게스트가 WS subscribe하고 location:removed 수신할 준비를 마침 */
+async function setupObserverSubscribed(token: string, invitationId: string): Promise<Socket> {
+  const socket = createLocationSocket(token);
+  await waitForConnect(socket);
+  const sub = await subscribeToInvitation(socket, invitationId);
+  if (!sub.ok) {
+    disconnect(socket);
+    throw new Error(`observer subscribe failed: ${sub.error}`);
+  }
+  return socket;
+}
+
+type LocationRemovedPayload = { invitationId: string; participantId: string };
 
 test.describe("위치 공유 · 실시간 마커 동기화 (그룹 2)", () => {
   test("LOC-RT-05 · deleteEventLocation 후 GET /participant/locations → 빈 결과", async ({
@@ -117,5 +139,161 @@ test.describe("위치 공유 · 실시간 마커 동기화 (그룹 2)", () => {
     expect(second.data?.justArrived).toBe(false);
     // 그러나 위치는 여전히 도착 상태 유지
     expect(second.data?.location.isArrived).toBe(true);
+  });
+});
+
+test.describe("위치 공유 · location:removed broadcast (그룹 2 WS)", () => {
+  let observerSocket: Socket | undefined;
+
+  test.afterEach(() => {
+    disconnect(observerSocket);
+    observerSocket = undefined;
+  });
+
+  test("LOC-RT-01 · stopMyLocationSharing → 다른 참여자에게 location:removed", async ({
+    request,
+  }) => {
+    const fx = await setupLocationInvitation(request, {
+      eventStartAt: minutesFromNow(10),
+      guestEmails: [LOC_GUEST_EMAILS[0]!, LOC_GUEST_EMAILS[1]!],
+    });
+    const [g1Token, g2Token] = fx.guestTokens;
+
+    // 두 게스트 모두 attending
+    for (const t of [g1Token!, g2Token!]) {
+      const me = await getMyParticipant(request, t, fx.invitationId);
+      await updateRsvp(request, t, fx.invitationId, me.data!.participant.id, "attending");
+    }
+
+    // guest1 GPS update로 Redis entry 생성
+    await updateMyLocation(request, g1Token!, fx.invitationId, {
+      lat: DEFAULT_VENUE.lat,
+      lng: DEFAULT_VENUE.lng,
+    });
+
+    // guest2가 observer로 subscribe
+    observerSocket = await setupObserverSubscribed(g2Token!, fx.invitationId);
+    const removedPromise = waitForEvent<LocationRemovedPayload>(
+      observerSocket,
+      "location:removed",
+      8000,
+    );
+
+    // guest1이 본인 공유 종료
+    const stop = await stopMyLocationSharing(request, g1Token!, fx.invitationId);
+    expect([200, 204]).toContain(stop.status);
+
+    const payload = await removedPromise;
+    expect(payload.invitationId).toBe(fx.invitationId);
+    expect(typeof payload.participantId).toBe("string");
+  });
+
+  test("LOC-RT-03 · participant leave → location:removed", async ({ request }) => {
+    const fx = await setupLocationInvitation(request, {
+      eventStartAt: minutesFromNow(10),
+      guestEmails: [LOC_GUEST_EMAILS[0]!, LOC_GUEST_EMAILS[1]!],
+    });
+    const [g1Token, g2Token] = fx.guestTokens;
+
+    for (const t of [g1Token!, g2Token!]) {
+      const me = await getMyParticipant(request, t, fx.invitationId);
+      await updateRsvp(request, t, fx.invitationId, me.data!.participant.id, "attending");
+    }
+    await updateMyLocation(request, g1Token!, fx.invitationId, {
+      lat: DEFAULT_VENUE.lat,
+      lng: DEFAULT_VENUE.lng,
+    });
+
+    const g1Me = await getMyParticipant(request, g1Token!, fx.invitationId);
+    const g1ParticipantId = g1Me.data!.participant.id;
+
+    observerSocket = await setupObserverSubscribed(g2Token!, fx.invitationId);
+    const removedPromise = waitForEvent<LocationRemovedPayload>(
+      observerSocket,
+      "location:removed",
+      8000,
+    );
+
+    // guest1 본인 leave
+    const leave = await leaveOrKickParticipant(
+      request,
+      g1Token!,
+      fx.invitationId,
+      g1ParticipantId,
+    );
+    expect([200, 204]).toContain(leave.status);
+
+    const payload = await removedPromise;
+    expect(payload.participantId).toBe(g1ParticipantId);
+  });
+
+  test("LOC-RT-04 · HOST kick → location:removed", async ({ request }) => {
+    const fx = await setupLocationInvitation(request, {
+      eventStartAt: minutesFromNow(10),
+      guestEmails: [LOC_GUEST_EMAILS[0]!, LOC_GUEST_EMAILS[1]!],
+    });
+    const [g1Token, g2Token] = fx.guestTokens;
+
+    for (const t of [g1Token!, g2Token!]) {
+      const me = await getMyParticipant(request, t, fx.invitationId);
+      await updateRsvp(request, t, fx.invitationId, me.data!.participant.id, "attending");
+    }
+    await updateMyLocation(request, g1Token!, fx.invitationId, {
+      lat: DEFAULT_VENUE.lat,
+      lng: DEFAULT_VENUE.lng,
+    });
+
+    const g1Me = await getMyParticipant(request, g1Token!, fx.invitationId);
+    const g1ParticipantId = g1Me.data!.participant.id;
+
+    observerSocket = await setupObserverSubscribed(g2Token!, fx.invitationId);
+    const removedPromise = waitForEvent<LocationRemovedPayload>(
+      observerSocket,
+      "location:removed",
+      8000,
+    );
+
+    // HOST가 guest1 kick
+    const kick = await leaveOrKickParticipant(
+      request,
+      fx.hostToken,
+      fx.invitationId,
+      g1ParticipantId,
+    );
+    expect([200, 204]).toContain(kick.status);
+
+    const payload = await removedPromise;
+    expect(payload.participantId).toBe(g1ParticipantId);
+  });
+
+  test("LOC-RT-02 · 회원 탈퇴 → location:removed", async ({ request }) => {
+    const fx = await setupLocationInvitation(request, {
+      eventStartAt: minutesFromNow(10),
+      guestEmails: [LOC_GUEST_EMAILS[0]!, LOC_GUEST_EMAILS[1]!],
+    });
+    const [g1Token, g2Token] = fx.guestTokens;
+
+    for (const t of [g1Token!, g2Token!]) {
+      const me = await getMyParticipant(request, t, fx.invitationId);
+      await updateRsvp(request, t, fx.invitationId, me.data!.participant.id, "attending");
+    }
+    await updateMyLocation(request, g1Token!, fx.invitationId, {
+      lat: DEFAULT_VENUE.lat,
+      lng: DEFAULT_VENUE.lng,
+    });
+
+    observerSocket = await setupObserverSubscribed(g2Token!, fx.invitationId);
+    const removedPromise = waitForEvent<LocationRemovedPayload>(
+      observerSocket,
+      "location:removed",
+      10000,
+    );
+
+    // guest1 회원 탈퇴 (호스트 권한 없는 게스트라 차단 없이 진행)
+    const del = await deleteMyAccount(request, g1Token!);
+    expect([200, 204]).toContain(del.status);
+
+    const payload = await removedPromise;
+    expect(payload.invitationId).toBe(fx.invitationId);
   });
 });
