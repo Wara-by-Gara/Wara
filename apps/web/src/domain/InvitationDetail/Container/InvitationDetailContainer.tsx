@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/primitives/Button";
@@ -14,9 +13,7 @@ import { useInvitationDetail } from "@/hooks/useInvitationDetail";
 
 export default function InvitationDetailContainer({ invitationId }: { invitationId: string }) {
   const router = useRouter();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
-
-  useEffect(() => { hydrate(); }, [hydrate]);
+  const { isLoggedIn, hydrated } = useAuthStore();
 
   const { invitation, isLoading, isError, me, myParticipant, participantsData } =
     useInvitationDetail(invitationId);

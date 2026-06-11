@@ -29,6 +29,12 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   /** 초대장 상세 글래스 배경용 */
   immersive?: boolean;
   isDarkBg?: boolean;
+  /**
+   * 주소 옆 지도 아이콘 메뉴(길찾기·복사) 펼침 방향.
+   * - "bottom"(default): 아이콘 아래로 펼침
+   * - "top": 위로 펼침. 카드가 화면 하단에 고정된 레이아웃에서 사용.
+   */
+  menuPlacement?: "bottom" | "top";
 }
 
 async function copyToClipboard(text: string, successMessage: string) {
@@ -101,6 +107,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       weatherSlot,
       immersive = false,
       isDarkBg = false,
+      menuPlacement = "bottom",
       ...props
     },
     ref,
@@ -225,7 +232,12 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                     open={addressMenuOpen}
                     onClose={closeAddressMenu}
                     items={addressMenuItems}
-                    className="left-0 top-full mt-1"
+                    className={cn(
+                      "left-0",
+                      menuPlacement === "top"
+                        ? "bottom-full mb-1"
+                        : "top-full mt-1",
+                    )}
                   />
                 </span>
               </div>
@@ -240,13 +252,18 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
               onClick={onViewMap}
               className={cn("w-full overflow-hidden transition-opacity hover:opacity-90", mapRadius)}
             >
-              <KakaoStaticMapPreview
-                lat={mapLat}
-                lng={mapLng}
-                heightOffset={20}
-                className={mapRadius}
-                alt={placeName ?? "지도 미리보기"}
-              />
+              {/* StaticMap 마커는 SDK 기본 핸들러로 카카오 지도 외부 탭을 여는데,
+                  button onClick(우리 페이지로 이동)과 중복 동작이 됨.
+                  pointer-events-none으로 내부 클릭을 차단해 button 흐름만 살림. */}
+              <div className="pointer-events-none">
+                <KakaoStaticMapPreview
+                  lat={mapLat}
+                  lng={mapLng}
+                  heightOffset={20}
+                  className={mapRadius}
+                  alt={placeName ?? "지도 미리보기"}
+                />
+              </div>
             </button>
           ) : (
             <KakaoStaticMapPreview

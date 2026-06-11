@@ -93,6 +93,7 @@ export interface Invitation {
   mainImageKey: string | null;
   mainGifUrl?: string | null;
   mainImageUrl: string | null;
+  mainImageThumbnailUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
   isPublic?: boolean;
@@ -117,6 +118,7 @@ export interface Invitation {
   updatedAt: string;
   deletedAt: string | null;
   eventLocation: EventLocation | null;
+  dateVotePollStatus?: 'open' | 'closed' | 'confirmed' | null;
 }
 
 export interface InvitationParticipantAvatar {
@@ -192,6 +194,37 @@ export function getPublicInvitations(params?: {
   const qs = search.toString();
   return apiGet<PublicInvitationsPage>(
     qs ? `/invitations/explore?${qs}` : "/invitations/explore",
+  );
+}
+
+export interface PublicInvitationMapMarker {
+  id: string;
+  title: string;
+  category: string | null;
+  eventStartAt: string | null;
+  lat: number;
+  lng: number;
+  mainImageThumbnailUrl: string | null;
+}
+
+export function getPublicMapInvitations(params: {
+  neLat: number;
+  neLng: number;
+  swLat: number;
+  swLng: number;
+  category?: string;
+  limit?: number;
+}): Promise<PublicInvitationMapMarker[]> {
+  const search = new URLSearchParams({
+    neLat: String(params.neLat),
+    neLng: String(params.neLng),
+    swLat: String(params.swLat),
+    swLng: String(params.swLng),
+  });
+  if (params.category) search.set("category", params.category);
+  if (params.limit != null) search.set("limit", String(params.limit));
+  return apiGet<PublicInvitationMapMarker[]>(
+    `/invitations/explore/map?${search.toString()}`,
   );
 }
 

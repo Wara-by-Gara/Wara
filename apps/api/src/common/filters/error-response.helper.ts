@@ -79,6 +79,12 @@ function pickCode(raw: unknown, status: number): string {
   if (typeof message === 'string' && CODE_PATTERN.test(message)) {
     return message;
   }
+  if (raw && typeof raw === 'object' && 'code' in raw) {
+    const code = (raw as { code: unknown }).code;
+    if (typeof code === 'string' && CODE_PATTERN.test(code)) {
+      return code;
+    }
+  }
   return statusToDefaultCode(status);
 }
 
@@ -90,10 +96,12 @@ function pickMessage(raw: unknown, status: number): string {
 }
 
 /**
- * `x-request-id` 헤더가 있으면 echo, 없으면 새 UUID 발급.
- * 성공/실패 응답의 `meta.requestId`에 공통 사용.
+ * pino-http가 매 요청에 부여한 `req.id` 우선 사용 → 로그/응답 envelope 동일 ID 보장.
+ * pino 미통과 경로(테스트 등)는 헤더 echo 또는 새 UUID로 폴백.
  */
 export function resolveRequestId(request: Request): string {
+  const fromPino = (request as Request & { id?: string }).id;
+  if (typeof fromPino === 'string' && fromPino.length > 0) return fromPino;
   const header = request.headers['x-request-id'];
   return typeof header === 'string' && header.length > 0 ? header : randomUUID();
 }

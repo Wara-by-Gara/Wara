@@ -70,6 +70,7 @@ export default function Album({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [uploadResult, setUploadResult] = useState<{ successCount: number; duplicateCount: number }>({ successCount: 0, duplicateCount: 0 });
   const [isLoadingAllPhotos, setIsLoadingAllPhotos] = useState(false);
 
   const previewLimit = 5;
@@ -120,6 +121,7 @@ export default function Album({
     setUploadProgress({ done: 0, total: selectedFiles.length });
 
     let successCount = 0;
+    let duplicateCount = 0;
     for (const file of selectedFiles) {
       try {
         const contentType = resolveContentType(file)!;
@@ -127,24 +129,37 @@ export default function Album({
         await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
         const [gps, exifFull] = await Promise.all([
           exifr.gps(file).catch(() => null),
-          exifr.parse(file, ['DateTimeOriginal']).catch(() => null),
+          exifr.parse(file, ['DateTimeOriginal', 'Make', 'Model']).catch(() => null),
         ]);
+        const make = (exifFull?.Make as string | undefined) ?? undefined;
+        const model = (exifFull?.Model as string | undefined) ?? undefined;
         await registerPhoto(invitationId, key, {
           takenAt: (exifFull?.DateTimeOriginal as Date | undefined)?.toISOString(),
-          exifMetadata: gps ? { gps_lat: gps.latitude, gps_lng: gps.longitude } : undefined,
+          fileSize: file.size,
+          exifMetadata: gps
+            ? { gps_lat: gps.latitude, gps_lng: gps.longitude, make, model }
+            : (make || model)
+              ? { make, model }
+              : undefined,
         });
         successCount++;
         setUploadProgress((prev) => ({ ...prev, done: prev.done + 1 }));
-      } catch {
-        // 개별 실패는 무시하고 다음 파일 처리
+      } catch (e) {
+        if (e instanceof Error && e.message === 'PHOTO_DUPLICATE') {
+          duplicateCount++;
+          setUploadProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+        }
+        // 다른 개별 실패는 무시하고 다음 파일 처리
       }
     }
 
+    setUploadResult({ successCount, duplicateCount });
     await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.photos(invitationId) });
 
-    if (successCount === 0) {
+    const failedCount = selectedFiles.length - successCount - duplicateCount;
+    if (successCount === 0 && duplicateCount === 0) {
       setUploadState('failed');
-    } else if (successCount < selectedFiles.length) {
+    } else if (failedCount > 0) {
       setUploadState('partialFailed');
     } else {
       setUploadState('complete');
@@ -262,13 +277,17 @@ export default function Album({
 
       {uploadState === 'complete' && (
         <div className="mt-2 rounded-md bg-green-50 px-4 py-3 text-center text-[14px] font-bold text-green-600">
-          업로드 완료!
+          {uploadResult.successCount > 0
+            ? `${uploadResult.successCount}장 올리기 완료${uploadResult.duplicateCount > 0 ? ` (${uploadResult.duplicateCount}장은 이미 업로드된 사진이에요)` : ''}`
+            : `${uploadResult.duplicateCount}장은 이미 업로드된 사진이에요`}
         </div>
       )}
 
       {(uploadState === 'failed' || uploadState === 'partialFailed') && (
         <div className="mt-2 rounded-md bg-red-50 px-4 py-3 text-center text-[14px] text-danger">
-          {uploadState === 'failed' ? '업로드에 실패했어요' : '일부 사진 업로드에 실패했어요'}
+          {uploadState === 'failed'
+            ? '업로드에 실패했어요'
+            : `일부 사진 업로드에 실패했어요${uploadResult.duplicateCount > 0 ? ` (${uploadResult.duplicateCount}장은 이미 업로드된 사진)` : ''}`}
         </div>
       )}
 

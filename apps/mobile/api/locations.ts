@@ -18,6 +18,8 @@ export type ParticipantLocation = {
   lng: number;
   accuracy: number;
   isArrived: boolean;
+  nickname: string | null;
+  profileImageUrl: string | null;
 };
 
 export function fetchEventLocation(invitationId: string, opts: { signal?: AbortSignal } = {}) {

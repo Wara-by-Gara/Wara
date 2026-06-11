@@ -46,7 +46,6 @@ export class DateVoteController {
   }
 
   @Get()
-  @UseGuards(ParticipantGuard)
   async getPoll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,

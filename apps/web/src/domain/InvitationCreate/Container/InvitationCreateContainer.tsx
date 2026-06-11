@@ -229,8 +229,10 @@ export default function InvitationCreateContainer({
   const locationResultsRef = useRef<HTMLDivElement>(null);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
+  const [votePollError, setVotePollError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
-  const [createdInvitationId, setCreatedInvitationId] = useState<string>('');
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+  const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
   // vote draft
@@ -558,11 +560,15 @@ export default function InvitationCreateContainer({
         return;
       }
       setCreatedInvitationId(data.id);
+      setVotePollError(false);
       if (voteDraft) {
         try {
           await createPoll(data.id, voteDraft);
+          await queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.invitations.detail(data.id),
+          });
         } catch {
-          /* invitation은 이미 생성됨 */
+          setVotePollError(true);
         }
       }
       setPublished(true);
@@ -671,8 +677,11 @@ export default function InvitationCreateContainer({
         // 아직 못 받은 노출가능 결과가 남았는지 (places.length < pageableCount && !isEnd)
         setLocationHasMore(!meta.isEnd && places.length < meta.pageableCount);
         setLocationSearchState(places.length === 0 ? 'no-result' : 'default');
-      } catch {
-        setLocationSearchState('error');
+      } catch (err) {
+        // 디버깅: 실패 원인(에러 코드, 메시지)을 콘솔에 노출.
+        // 카카오 API 키 만료/네트워크 오류/인증 실패 등을 구분하기 위함.
+        console.error("[location-search]", err);
+        setLocationSearchState("error");
       }
     }, 400);
   };

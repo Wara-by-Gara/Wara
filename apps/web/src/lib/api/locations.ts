@@ -29,6 +29,8 @@ export interface ParticipantLocation {
   lng: number;
   accuracy: number;
   isArrived: boolean;
+  nickname: string | null;
+  profileImageUrl: string | null;
 }
 
 export interface UpdateMyLocationPayload {
@@ -88,6 +90,15 @@ export function updateMyLocation(
   return apiPut<ParticipantLocation>(
     `/invitations/${invitationId}/participant/me/location`,
     payload,
+  );
+}
+
+export function nudgeParticipant(
+  invitationId: string,
+  participantId: string,
+): Promise<void> {
+  return apiPost<void>(
+    `/invitations/${invitationId}/participants/${participantId}/nudge`,
   );
 }
 

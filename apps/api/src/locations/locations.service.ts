@@ -2,8 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnprocessableEntityException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
-import { LocationsRepository } from './locations.repository';
+import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
+import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
+import { LocationsGateway } from './locations.gateway';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -30,12 +35,20 @@ function haversineMeters(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function syntheticLocationId(invitationId: string, participantId: string): string {
+  return `${invitationId}:${participantId}`;
+}
+
 @Injectable()
 export class LocationsService {
   constructor(
     private readonly repository: LocationsRepository,
+    private readonly redisStore: LocationsRedisStore,
     private readonly kakaoLocal: KakaoLocalService,
     private readonly notifications: NotificationsService,
+    // Gateway ↔ Service 순환 의존 회피 — Gateway는 Service를 주입받음.
+    @Inject(forwardRef(() => LocationsGateway))
+    private readonly gateway: LocationsGateway,
   ) {}
 
   async getEventLocation(invitationId: string) {
@@ -52,21 +65,176 @@ export class LocationsService {
 
   async deleteEventLocation(invitationId: string) {
     await this.repository.deleteEventLocation(invitationId);
+    // 호스트가 event location을 해제하면 위치 공유 컨텍스트가 끝난 것이므로
+    // Redis의 모든 참여자 GPS hash + arrived lock을 즉시 정리.
+    // 24h TTL을 기다리지 않고 즉시 broadcast 차단.
+    await this.redisStore.deleteInvitation(invitationId);
   }
 
-  async getParticipantLocations(invitationId: string) {
-    return this.repository.findAllParticipantLocations(invitationId);
+  async getParticipantLocations(
+    invitationId: string,
+    viewerUserId: string,
+  ): Promise<ParticipantLocationWithUser[]> {
+    // 불참(absent) 게스트가 다른 참여자의 GPS 좌표를 열람하면 개인정보 누출.
+    // HOST는 모니터링 목적으로 RSVP 무관 허용.
+    const viewer = await this.repository.findParticipant(viewerUserId, invitationId);
+    if (!viewer) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (viewer.memberRole !== 'HOST' && viewer.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
+    const map = await this.redisStore.findAllByInvitation(invitationId);
+    if (map.size === 0) return [];
+
+    const participantIds = Array.from(map.keys());
+    const userInfo =
+      await this.repository.findUserInfoByParticipantIds(participantIds);
+
+    const result: ParticipantLocationWithUser[] = [];
+    for (const [participantId, value] of map.entries()) {
+      const user = userInfo.get(participantId);
+      if (!user) continue; // 참가자 정보 사라진 stale entry
+      result.push({
+        id: syntheticLocationId(invitationId, participantId),
+        invitationId,
+        participantId,
+        lat: value.lat,
+        lng: value.lng,
+        accuracy: value.accuracy,
+        isArrived: value.isArrived,
+        statusMessage: value.statusMessage,
+        updatedAt: new Date(value.updatedAt),
+        nickname: user.nickname,
+        profileImageUrl: user.profileImageUrl,
+      });
+    }
+    return result;
   }
 
   async searchPlaces(query: string, page: number, size: number) {
     return this.kakaoLocal.searchByKeyword(query, page, size);
   }
 
+  // 미도착 상태메시지 설정 — 위치 공유 중인(Redis entry 존재) 참여자만 가능.
+  // absent 게스트는 차단(HOST는 RSVP 무관 허용 — 호스트 본인 상태도 공유 대상).
+  async updateMyStatusMessage(
+    invitationId: string,
+    userId: string,
+    message: string,
+  ): Promise<{
+    participantId: string;
+    statusMessage: string;
+    updatedAt: Date;
+  }> {
+    const participant = await this.repository.findParticipant(userId, invitationId);
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (participant.memberRole !== 'HOST' && participant.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    if (!previous) {
+      // 위치 공유 OFF — 상태메시지는 GPS와 같은 lifecycle이므로 entry 필수.
+      throw new NotFoundException(ErrorCode.LOCATION_NOT_FOUND);
+    }
+
+    const now = new Date();
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...previous,
+      statusMessage: message,
+      updatedAt: now.toISOString(),
+    });
+
+    this.gateway.emitStatusMessageUpdated(invitationId, participant.id, message, now);
+
+    return { participantId: participant.id, statusMessage: message, updatedAt: now };
+  }
+
+  async deleteMyStatusMessage(
+    invitationId: string,
+    userId: string,
+  ): Promise<{ participantId: string }> {
+    const participant = await this.repository.findParticipant(userId, invitationId);
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    // 위치 공유 OFF거나 이미 null이면 idempotent — broadcast 없이 종료.
+    if (!previous || previous.statusMessage === null) {
+      return { participantId: participant.id };
+    }
+
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...previous,
+      statusMessage: null,
+      updatedAt: new Date().toISOString(),
+    });
+
+    this.gateway.emitStatusMessageRemoved(invitationId, participant.id);
+
+    return { participantId: participant.id };
+  }
+
+  // 사용자 탈퇴 시 호출 — 참여하던 모든 초대장의 Redis GPS entry + arrived lock 정리.
+  // 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 보는 것을 차단.
+  async cleanupUserGpsData(userId: string): Promise<void> {
+    const pairs = await this.repository.findParticipantsByUserId(userId);
+    if (pairs.length === 0) return;
+    await Promise.all(
+      pairs.map(({ invitationId, participantId }) =>
+        this.redisStore.deleteParticipant(invitationId, participantId),
+      ),
+    );
+    // 다른 클라이언트에 즉시 marker 제거 알림. 정리는 Redis에서 끝났으므로 emit만.
+    for (const { invitationId, participantId } of pairs) {
+      this.gateway.emitLocationRemoved(invitationId, participantId);
+    }
+  }
+
+  // 게스트가 초대장에서 나가거나 호스트가 kick할 때 호출 — 해당 participant의 GPS 정리 + broadcast.
+  // ParticipantsService.leave에서 호출. 미정리 시 24h TTL까지 stale 좌표 노출.
+  async cleanupParticipantGpsData(
+    invitationId: string,
+    participantId: string,
+  ): Promise<void> {
+    await this.redisStore.deleteParticipant(invitationId, participantId);
+    this.gateway.emitLocationRemoved(invitationId, participantId);
+  }
+
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
+  async stopMyLocationSharing(invitationId: string, userId: string): Promise<void> {
+    const participant = await this.repository.findParticipantWithUser(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    await this.redisStore.deleteParticipant(invitationId, participant.id);
+    this.gateway.emitLocationRemoved(invitationId, participant.id);
+  }
+
   async updateMyLocation(
     invitationId: string,
     userId: string,
     dto: UpdateParticipantLocationDto,
-  ): Promise<{ location: Awaited<ReturnType<LocationsRepository['upsertParticipantLocation']>>; justArrived: boolean }> {
+  ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
+    // 마감/삭제된 초대장에 GPS 계속 upsert되면 flush scheduler 정시까지 stale broadcast.
+    // upsert 시점에 차단해 진입 자체를 막음.
+    const invitationStatus = await this.repository.findInvitationStatus(invitationId);
+    if (
+      !invitationStatus ||
+      invitationStatus.status === 'closed' ||
+      invitationStatus.deletedAt !== null
+    ) {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+
     const participant = await this.repository.findParticipantWithUser(
       userId,
       invitationId,
@@ -75,13 +243,36 @@ export class LocationsService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
 
-    const location = await this.repository.upsertParticipantLocation(
-      invitationId,
-      participant.id,
-      dto,
-    );
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    const wasArrived = previous?.isArrived ?? false;
 
-    if (location.isArrived) {
+    const now = new Date();
+    const value: GpsRedisValue = {
+      lat: dto.lat,
+      lng: dto.lng,
+      accuracy: dto.accuracy,
+      isArrived: wasArrived,
+      // 위치 업데이트 시 기존 상태메시지 유지 — 둘은 독립적으로 갱신.
+      statusMessage: previous?.statusMessage ?? null,
+      updatedAt: now.toISOString(),
+    };
+    await this.redisStore.upsert(invitationId, participant.id, value);
+
+    const location: ParticipantLocationWithUser = {
+      id: syntheticLocationId(invitationId, participant.id),
+      invitationId,
+      participantId: participant.id,
+      lat: dto.lat,
+      lng: dto.lng,
+      accuracy: dto.accuracy,
+      isArrived: wasArrived,
+      statusMessage: previous?.statusMessage ?? null,
+      updatedAt: now,
+      nickname: participant.user.nickname,
+      profileImageUrl: participant.user.profileImageUrl,
+    };
+
+    if (wasArrived) {
       return { location, justArrived: false };
     }
 
@@ -101,18 +292,43 @@ export class LocationsService {
       return { location, justArrived: false };
     }
 
-    // Atomically mark arrived — prevents duplicate processing on concurrent updates
-    const marked = await this.repository.setArrivedIfNotYet(
-      participant.id,
+    // SETNX로 중복 도착 처리 방지
+    const claimed = await this.redisStore.claimArrival(
       invitationId,
+      participant.id,
     );
-    if (!marked) {
+    if (!claimed) {
       return { location, justArrived: false };
     }
+
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...value,
+      isArrived: true,
+    });
 
     void this.sendArrivalNotificationsDelayed(invitationId, participant);
 
     return { location: { ...location, isArrived: true }, justArrived: true };
+  }
+
+  async processPreEventNotifications() {
+    const targets = await this.repository.findInvitationsForPreEventNotification();
+    for (const inv of targets) {
+      const userIds = await this.repository.findAllParticipantUserIds(inv.id);
+      await Promise.all(
+        userIds.map((userId) =>
+          this.notifications.notify({
+            userId,
+            type: 'invitation_date',
+            content: `[${inv.title}] 모임이 곧 시작해요. 위치 공유를 위해 GPS 권한을 허용해주세요.`,
+            targetType: 'invitation',
+            targetId: inv.id,
+            invitationId: inv.id,
+          }),
+        ),
+      );
+    }
+    return { processed: targets.length };
   }
 
   async nudgeParticipant(

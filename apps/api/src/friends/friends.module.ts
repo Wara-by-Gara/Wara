@@ -9,5 +9,6 @@ import { FriendsRepository } from './friends.repository';
   imports: [AuthModule, S3Module],
   controllers: [FriendsController],
   providers: [FriendsService, FriendsRepository],
+  exports: [FriendsRepository],
 })
 export class FriendsModule {}

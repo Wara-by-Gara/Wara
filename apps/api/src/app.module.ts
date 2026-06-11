@@ -31,6 +31,13 @@ import { DateVoteModule } from './date-vote/date-vote.module';
 import { DevAuthModule } from './dev/dev-auth.module';
 import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { HealthModule } from './health/health.module';
+import { RedisModule } from './redis/redis.module';
+import { QueueModule } from './queues/queue.module';
+import { ImageProcessingModule } from './image-processing/image-processing.module';
+import { IdempotencyModule } from './idempotency/idempotency.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -38,15 +45,24 @@ import { FriendsModule } from './friends/friends.module';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
+    LoggerModule,
     ScheduleModule.forRoot(),
+    RedisModule,
+    QueueModule,
+    ImageProcessingModule,
+    IdempotencyModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        stores: [createKeyv(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379')],
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('REDIS_URL');
+        if (!url && process.env.NODE_ENV === 'production') {
+          throw new Error('REDIS_URL is required in production');
+        }
+        return { stores: [createKeyv(url ?? 'redis://localhost:6379')] };
+      },
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: process.env.NODE_ENV !== 'production' ? 10000 : 60 }]),
     DatabaseModule,
     // dev 전용: AuthController의 @Post(':provider/token') 와일드카드가 /auth/dev/token을
     // 가로채지 않도록 AuthModule보다 먼저 등록 (NestJS는 import 순서대로 controller 등록).
@@ -74,6 +90,8 @@ import { FriendsModule } from './friends/friends.module';
     DateVoteModule,
     WeatherModule,
     FriendsModule,
+    ConversationsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

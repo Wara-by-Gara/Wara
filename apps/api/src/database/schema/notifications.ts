@@ -22,6 +22,7 @@ export const notifications = pgTable('notifications', {
 }, (t) => [
   check('check_notification_target', sql`(${t.targetType} IS NOT NULL AND ${t.targetId} IS NOT NULL) OR (${t.targetType} IS NULL AND ${t.targetId} IS NULL)`),
   index('idx_notifications_invitation').on(t.invitationId),
+  index('idx_notifications_user_id').on(t.userId),
 ]);
 
 export const notificationSettings = pgTable('notification_settings', {

@@ -1,7 +1,14 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchFriends, fetchFriendProfile, type Friend } from '@/lib/api/friends';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  fetchFriends,
+  fetchFriendProfile,
+  fetchHiddenFriends,
+  hideFriend,
+  restoreFriend,
+  type Friend,
+} from '@/lib/api/friends';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 
 const RECENT_FRIENDS_LIMIT = 10;
@@ -30,5 +37,34 @@ export function useFriendProfile(id: string) {
     queryKey: QUERY_KEYS.friends.detail(id),
     queryFn: () => fetchFriendProfile(id),
     enabled: Boolean(id),
+  });
+}
+
+export function useHiddenFriends() {
+  return useQuery({
+    queryKey: QUERY_KEYS.friends.hidden(),
+    queryFn: fetchHiddenFriends,
+  });
+}
+
+export function useHideFriend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hideFriend(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friends.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friends.hidden() });
+    },
+  });
+}
+
+export function useRestoreFriend() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => restoreFriend(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friends.list() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.friends.hidden() });
+    },
   });
 }

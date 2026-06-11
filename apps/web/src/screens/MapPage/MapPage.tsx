@@ -91,6 +91,9 @@ export interface MapPageProps {
   /** selectedPlace 상태에서 "이 장소로 설정하기" 버튼 표시 — 호스트가 검색 후 확정할 때 사용 */
   onConfirmSelectedPlace?: () => void;
   isSavingPlace?: boolean;
+
+  /** E2E·접근성: 위치 추적 윈도우 활성 여부 */
+  trackingActive?: boolean;
 }
 
 function MapPlaceholder() {
@@ -126,6 +129,7 @@ export const MapPage = ({
   onLocate,
   onConfirmSelectedPlace,
   isSavingPlace,
+  trackingActive,
 }: MapPageProps) => {
   const placeName = eventLocation?.placeName ?? '';
   const address = eventLocation?.address ?? '';
@@ -320,6 +324,7 @@ export const MapPage = ({
               placeName={placeName}
               address={state === "manualAddress" ? "직접 입력한 주소" : address}
               onGetDirections={onConfirmSelectedPlace ? undefined : onGetDirections}
+              menuPlacement="top"
             />
             {onConfirmSelectedPlace && (
               <Button
@@ -348,6 +353,11 @@ export const MapPage = ({
   return (
     <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title={placeName} onBack={onBack} />
+      {trackingActive !== undefined ? (
+        <span data-testid="location-tracking-active" className="sr-only">
+          {trackingActive ? "active" : "inactive"}
+        </span>
+      ) : null}
 
       <div className="relative flex-1">
         {/* 지도 슬롯 */}
@@ -375,6 +385,7 @@ export const MapPage = ({
             placeName={placeName}
             address={address}
             onGetDirections={onGetDirections}
+            menuPlacement="top"
           />
         </div>
       </div>

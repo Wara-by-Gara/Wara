@@ -1,10 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { eventLocations, invitations, participants, users } from '../database/schema';
+import { dateVotePolls, eventLocations, invitations, participants, users } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
+import { ListPublicMapInvitationsDto } from './dto/list-public-map-invitations.dto';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 
@@ -104,14 +105,67 @@ export class InvitationsRepository {
   async countPublicParticipants(invitationId: string): Promise<number> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
+  .from(participants)
+      .where(
+        and(
+          inArray(participants.invitationId, invitationIds),
+          ne(participants.rsvpStatus, RsvpStatus.ABSENT),
+        ),
+      )
+      .groupBy(participants.invitationId);
+    return new Map(rows.map((r) => [r.invitationId, r.count]));
+  }
+  async countPublicParticipantsByInvitationIds(
+    invitationIds: string[],
+  ): Promise<Map<string, number>> {
+    if (invitationIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({
+        invitationId: participants.invitationId,
+        count: sql<number>`count(*)::int`,
+      })
       .from(participants)
       .where(
         and(
-          eq(participants.invitationId, invitationId),
+          inArray(participants.invitationId, invitationIds),
           ne(participants.rsvpStatus, RsvpStatus.ABSENT),
         ),
-      );
-    return row?.count ?? 0;
+      )
+      .groupBy(participants.invitationId);
+    return new Map(rows.map((r) => [r.invitationId, r.count]));
+  }
+
+  async findPublicForMap(dto: ListPublicMapInvitationsDto) {
+    const conditions = [
+      eq(invitations.isPublic, true),
+      isNull(invitations.deletedAt),
+      eq(invitations.status, 'active'),
+      isNull(eventLocations.deletedAt),
+      sql`${eventLocations.lat} BETWEEN ${dto.swLat} AND ${dto.neLat}`,
+      sql`${eventLocations.lng} BETWEEN ${dto.swLng} AND ${dto.neLng}`,
+    ];
+    if (dto.category) {
+      conditions.push(eq(invitations.category, dto.category));
+    }
+
+    return this.db
+      .select({
+        id: invitations.id,
+        title: invitations.title,
+        category: invitations.category,
+        eventStartAt: invitations.eventStartAt,
+        mainImageKey: invitations.mainImageKey,
+        mainImageThumbnailKey: invitations.mainImageThumbnailKey,
+        lat: eventLocations.lat,
+        lng: eventLocations.lng,
+      })
+      .from(invitations)
+      .innerJoin(
+        eventLocations,
+        eq(eventLocations.invitationId, invitations.id),
+      )
+      .where(and(...conditions))
+      .limit(dto.limit);
   }
 
   async findAllByUserId(userId: string) {
@@ -216,6 +270,19 @@ export class InvitationsRepository {
     });
   }
 
+  async findDateVotePollStatus(
+    invitationId: string,
+  ): Promise<'open' | 'closed' | 'confirmed' | null> {
+    const poll = await this.db.query.dateVotePolls.findFirst({
+      where: and(
+        eq(dateVotePolls.invitationId, invitationId),
+        isNull(dateVotePolls.deletedAt),
+      ),
+      columns: { status: true },
+    });
+    return poll?.status ?? null;
+  }
+
   async countGuests(invitationId: string): Promise<number> {
     const rows = await this.db
       .select({ id: participants.id })
@@ -264,5 +331,24 @@ export class InvitationsRepository {
       .update(invitations)
       .set({ deletedAt: new Date() })
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
+  }
+
+  findCoverById(id: string) {
+    return this.db.query.invitations.findFirst({
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.id, id), isNull(inv.deletedAt)),
+      columns: {
+        mainCoverType: true,
+        mainGifUrl: true,
+        mainImageKey: true,
+      },
+    });
+  }
+
+  async updateMainImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(invitations)
+      .set({ mainImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(invitations.id, id));
   }
 }

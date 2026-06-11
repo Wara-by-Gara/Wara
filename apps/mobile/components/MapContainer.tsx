@@ -59,18 +59,14 @@ export default function MapContainer({ invitationId }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords, connected]);
 
-  // backend의 location.gateway는 페이로드에 participantId만 포함시키고
-  // nickname/profileImageUrl은 보내지 않음 (apps/api/src/locations/locations.gateway.ts).
-  // 별도 PR에서 backend가 user 정보를 같이 emit하거나, 여기서 participants API로
-  // 한 번 fetch 후 캐시해서 매핑하는 방식 검토 필요.
   const participantPins: ParticipantPin[] = useMemo(
     () =>
       Array.from(participantLocations.values()).map((loc: WsParticipantLocation) => ({
         participantId: loc.participantId,
         lat: loc.lat,
         lng: loc.lng,
-        nickname: null,
-        profileImageUrl: null,
+        nickname: loc.nickname,
+        profileImageUrl: loc.profileImageUrl,
         isArrived: loc.isArrived,
       })),
     [participantLocations],

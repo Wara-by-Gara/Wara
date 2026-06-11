@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull, count } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { users, socialAccounts, refreshTokens, invitations } from '../database/schema';
+import { users, socialAccounts, invitations } from '../database/schema';
 import type { UpdateUserDto } from './dto/update-user.dto';
 import type { SocialProvider } from '../common/types/social-provider.type';
 
@@ -19,6 +19,7 @@ export class UsersRepository {
         name: true,
         birthYear: true,
         profileImageUrl: true,
+        profileImageThumbnailKey: true,
       },
     });
   }
@@ -35,8 +36,17 @@ export class UsersRepository {
         name: users.name,
         birthYear: users.birthYear,
         profileImageUrl: users.profileImageUrl,
+        profileImageThumbnailKey: users.profileImageThumbnailKey,
       });
     return updated;
+  }
+
+  // 워커가 profile 섬네일 업로드 후 호출
+  async updateProfileImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ profileImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(users.id, id));
   }
 
   async softDeleteUser(
@@ -53,8 +63,8 @@ export class UsersRepository {
       .where(and(eq(users.id, id), isNull(users.deletedAt)));
   }
 
-  // 회원 탈퇴 시 user soft delete + social 삭제 + refresh token 전부 revoke를 하나의 트랜잭션으로.
-  // 일관성 보장 + 다른 디바이스 잔존 세션 즉시 무효화.
+  // 회원 탈퇴 시 user soft delete + social 삭제 트랜잭션.
+  // refresh token revoke는 service 레이어에서 Redis로 처리.
   async softDeleteUserWithCleanup(
     id: string,
     options: { reason?: string; detail?: string } = {},
@@ -69,15 +79,6 @@ export class UsersRepository {
         })
         .where(and(eq(users.id, id), isNull(users.deletedAt)));
       await tx.delete(socialAccounts).where(eq(socialAccounts.userId, id));
-      await tx
-        .update(refreshTokens)
-        .set({ revokedAt: new Date() })
-        .where(
-          and(
-            eq(refreshTokens.userId, id),
-            isNull(refreshTokens.revokedAt),
-          ),
-        );
     });
   }
 
@@ -125,6 +126,7 @@ export class UsersRepository {
         nickname: true,
         name: true,
         profileImageUrl: true,
+        profileImageThumbnailKey: true,
       },
     });
   }

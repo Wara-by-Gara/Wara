@@ -1,12 +1,19 @@
 export const ROUTES = {
   HOME: "/",
   MEETINGS: "/meetings",
-  EXPLORE: "/explore",
+  EXPLORE: {
+    LIST: "/explore",
+    MAP: "/explore/map",
+  },
   /** @deprecated MEETINGS 사용 */
   CALENDAR: "/meetings",
   FRIENDS: {
     LIST: "/friends",
     DETAIL: (id: string) => `/friends/${id}`,
+    HIDDEN: "/friends/hidden",
+  },
+  CHAT: {
+    ROOM: (id: string) => `/chats/${id}`,
   },
   SIGNUP: "/signup",
   LOGIN: "/login",
@@ -33,6 +40,9 @@ export const ROUTES = {
     SETTINGS: "/profile/settings",
     ACCOUNT: "/profile/account",
   },
+  PHOTOS: {
+    MAP: "/photos/map",
+  },
   ADMIN: {
     DASHBOARD: '/admin',
     INQUIRIES: '/admin/inquiries',
@@ -50,5 +60,6 @@ export const ROUTES = {
     AGREE: "/terms/agree",
     SERVICE: "/terms/service",
     PRIVACY: "/terms/privacy",
+    LOCATION: "/terms/location",
   },
 } as const;

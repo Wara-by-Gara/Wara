@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { AuthRepository } from './auth.repository';
+import { AuthRedisStore } from './auth.redis-store';
 import { SocialAuthFactory } from './social-auth.factory';
 import { OauthPolicyService } from './oauth-policy.service';
 import { Provider } from './enums/provider.enum';
@@ -17,6 +18,7 @@ export class AuthService {
 
   constructor(
     private readonly repository: AuthRepository,
+    private readonly refreshStore: AuthRedisStore,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly socialAuthFactory: SocialAuthFactory,
@@ -109,7 +111,7 @@ export class AuthService {
     const expiresIn = this.config.get<number>('JWT_REFRESH_EXPIRES_IN', 1209600);
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
-    await this.repository.saveRefreshToken({
+    await this.refreshStore.save({
       userId,
       tokenHash,
       expiresAt,
@@ -127,10 +129,10 @@ export class AuthService {
     const tokenHash = this.hashToken(rawRefreshToken);
 
     // find + revoke를 단일 쿼리로 처리 → race condition 방지
-    const stored = await this.repository.revokeValidRefreshToken(tokenHash);
+    const stored = await this.refreshStore.revokeIfValid(tokenHash);
     if (!stored) {
       this.logger.warn('Refresh token not found or invalid');
-      const found = await this.repository.findRefreshTokenByHash(tokenHash);
+      const found = await this.refreshStore.findByHash(tokenHash);
 
       if (found) {
         if (found.revokedAt) {
@@ -138,7 +140,7 @@ export class AuthService {
           this.logger.warn(
             `Suspicious refresh token reuse detected for user ${found.userId}`,
           );
-          await this.repository.revokeAllByUserId(found.userId);
+          await this.refreshStore.revokeAllByUserId(found.userId);
           throw new UnauthorizedException({
             code: ErrorCode.SUSPICIOUS_REFRESH,
             message:
@@ -400,6 +402,8 @@ export class AuthService {
       });
     }
     await this.repository.mergeUserData(sourceUserId, targetUserId);
+    // mergeUserData는 DB 트랜잭션만 처리 → Redis의 source user 활성 세션도 revoke
+    await this.refreshStore.revokeAllByUserId(sourceUserId);
     return { mergedUserId: targetUserId };
   }
 
@@ -407,7 +411,7 @@ export class AuthService {
     const tokenHash = this.hashToken(rawRefreshToken);
 
     // 이미 만료/무효화된 토큰 → idempotent: 로그아웃된 상태로 간주하고 성공 처리
-    const revoked = await this.repository.revokeValidRefreshToken(tokenHash);
+    const revoked = await this.refreshStore.revokeIfValid(tokenHash);
     if (!revoked) {
       this.logger.debug('Logout called with invalid or expired token (idempotent)');
       return;

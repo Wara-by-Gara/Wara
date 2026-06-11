@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Button } from "@/components/primitives/Button";
 import { HeaderGradient } from "@/components/layout/StickyHeader";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { InvitationCard } from "@/components/organisms/InvitationCard";
 import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal/ParticipantProfileModal";
-import { toast } from "@/components/molecules/Toast";
+import { useMutation } from "@tanstack/react-query";
+import { createConversation } from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
 import { resolveInvitationCardStatus } from "@/utils/resolveInvitationCardStatus";
 import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
@@ -16,8 +18,6 @@ import { FriendProfilePageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriendProfile } from "@/hooks/useFriends";
 import type { MutualFriend } from "@/lib/api/friends";
 import { formatInvitationEventDate } from "@/utils/formatInvitationEventDate";
-
-const DM_TOAST = "DM 기능은 곧 만나요";
 
 export interface FriendProfileProps {
   id: string;
@@ -27,6 +27,11 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
   const router = useRouter();
   const { data: friend, isLoading, isError } = useFriendProfile(id);
   const [selectedMutualFriend, setSelectedMutualFriend] = useState<MutualFriend | null>(null);
+
+  const startChat = useMutation({
+    mutationFn: (targetUserId: string) => createConversation(targetUserId),
+    onSuccess: (data) => router.push(ROUTES.CHAT.ROOM(data.id)),
+  });
 
   if (isLoading) {
     return (
@@ -58,13 +63,13 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <HeaderGradient fixed />
       <TopAppBar
-        className="absolute inset-x-0 top-0 z-30"
-        title={name}
+        variant="transparent"
+        className="absolute inset-x-0 top-0 z-30 min-h-0 pt-2"
         onBack={() => router.back()}
       />
-      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
-        {/* 헤더 — 소프트 그라데이션 배경 */}
-        <section className="flex flex-col items-center gap-3 bg-gradient-to-b from-primary-soft/40 to-surface px-page pb-7 pt-8">
+      <main className={`relative z-10 ${mobileMainScroll}`}>
+        {/* 프로필 헤더 - 배경 투명으로 두어 상단 aura 그라데이션(HeaderGradient)이 비치게, 위 여백 축소 */}
+        <section className="flex flex-col items-center gap-3 px-page pb-7 pt-14">
           <Avatar
             size="xl"
             src={friend.avatarUrl ?? undefined}
@@ -76,8 +81,15 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
             <p className="font-gmarket text-[20px] font-medium text-text-primary">{name}</p>
             <p className="text-[13px] text-text-tertiary">함께한 모임 {friend.sharedCount}회</p>
           </div>
-          <Button variant="secondary" fullWidth onClick={() => toast.show(DM_TOAST)} className="mt-1">
-            메시지 보내기
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => startChat.mutate(id)}
+            disabled={startChat.isPending}
+            className="mt-1 rounded-lg border border-border-strong bg-surface/40 backdrop-blur-sm hover:bg-surface/60 active:bg-surface/70"
+          >
+            <Icon name="message-circle" size="sm" color="currentColor" decorative />
+            1:1 채팅
           </Button>
         </section>
 
@@ -142,7 +154,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
           userId={selectedMutualFriend.id}
           name={selectedMutualFriend.name ?? undefined}
           avatarUrl={selectedMutualFriend.avatarUrl ?? undefined}
-          onDm={() => toast.show(DM_TOAST)}
+          onDm={() => startChat.mutate(selectedMutualFriend.id)}
         />
       ) : null}
     </div>

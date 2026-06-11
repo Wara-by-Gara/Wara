@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteMe, deleteMySocial, getMe, getMySocials, getUserProfile, linkSocialUrl, mergeAccounts, updateMe, type DeleteMeInput, type UpdateMeInput } from '@/lib/api/users';
 import { QUERY_KEYS } from '@/constants/queryKeys';
-import { isLoggedInCookieSet } from '@/lib/auth-cookie';
+import { useAuthStore } from '@/stores/authStore';
+import { useTermsCompliance } from '@/hooks/useTermsCompliance';
 
 export function useUserProfile(userId: string | null | undefined) {
   return useQuery({
@@ -15,16 +15,13 @@ export function useUserProfile(userId: string | null | undefined) {
 }
 
 export function useMe() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setIsLoggedIn(isLoggedInCookieSet());
-  }, []);
+  const { isLoggedIn, hydrated } = useAuthStore();
+  const { isCompliant } = useTermsCompliance();
 
   return useQuery({
     queryKey: QUERY_KEYS.users.me(),
     queryFn: () => getMe(),
-    enabled: isLoggedIn,
+    enabled: hydrated && isLoggedIn && isCompliant === true,
   });
 }
 
@@ -45,9 +42,12 @@ export function useDeleteMe() {
 }
 
 export function useGetMySocials() {
+  const { isLoggedIn, hydrated } = useAuthStore();
+  const { isCompliant } = useTermsCompliance();
   return useQuery({
     queryKey: QUERY_KEYS.users.socials(),
     queryFn: () => getMySocials(),
+    enabled: hydrated && isLoggedIn && isCompliant === true,
   });
 }
 

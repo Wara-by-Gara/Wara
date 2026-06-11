@@ -12,6 +12,7 @@ import type { UpdatePollDto } from './dto/update-poll.dto';
 import type { AddSlotDto } from './dto/add-slot.dto';
 import type { SubmitResponsesDto } from './dto/submit-responses.dto';
 import type { ConfirmSlotDto } from './dto/confirm-slot.dto';
+import { findDuplicateVoteSlotKey, voteSlotKey } from './vote-slot.util';
 
 const SLOT_LIMIT = 30;
 
@@ -46,6 +47,8 @@ export class DateVoteService {
         message: '이미 투표가 존재합니다.',
       });
     }
+
+    this.assertNoDuplicateSlots(dto.slots);
 
     const poll = await this.repo.createPoll({
       invitationId,
@@ -132,6 +135,15 @@ export class DateVoteService {
       throw new UnprocessableEntityException({
         code: ErrorCode.VOTE_SLOT_LIMIT_EXCEEDED,
         message: `후보는 최대 ${SLOT_LIMIT}개까지 등록 가능합니다.`,
+      });
+    }
+
+    const existingSlots = await this.repo.findSlotsByPollId(poll.id);
+    const nextKey = voteSlotKey(dto.date, dto.startTime);
+    if (existingSlots.some((s) => voteSlotKey(s.date, s.startTime) === nextKey)) {
+      throw new UnprocessableEntityException({
+        code: ErrorCode.VOTE_SLOT_DUPLICATE,
+        message: '동일한 날짜·시간 후보는 중복 등록할 수 없습니다.',
       });
     }
 
@@ -277,25 +289,48 @@ export class DateVoteService {
 
   async sendReminders() {
     const polls = await this.repo.findPollsNeedingReminder();
-    for (const poll of polls) {
-      const invitation = await this.repo.findInvitationById(poll.invitationId);
-      const title = invitation?.title ?? '모임';
-      const nonVoters = await this.repo.findNonVotersByPoll(poll.id);
-      for (const participant of nonVoters) {
-        await this.notificationsService.notify({
-          userId:       participant.userId,
-          type:         'vote_reminder',
-          content:      `[${title}] 투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!`,
-          targetType:   'invitation',
-          targetId:     poll.invitationId,
-          invitationId: poll.invitationId,
-        });
-      }
-      await this.repo.updatePoll(poll.id, { reminderSentAt: new Date() });
+    if (polls.length === 0) return;
+
+    const allNonVoters = await this.repo.findNonVotersByPollIds(polls);
+
+    //pollId -> userId []그루핑 (in-memory)
+    const nonVotersByPoll = new Map<string, string[]>();
+    for (const v of allNonVoters) {
+      const list = nonVotersByPoll.get(v.pollId) ?? [];
+      list.push(v.userId);
+      nonVotersByPoll.set(v.pollId, list);
     }
+
+    await Promise.allSettled(
+      polls.flatMap((poll) => {
+        const title = poll.invitationTitle ?? '모임';
+        const userIds = nonVotersByPoll.get(poll.id) ?? [];
+        return userIds.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            type: 'vote_reminder',
+            content: `[${title}] 투표 마감 30분 전입니다. 아직 응답하지 않으셨어요!`,
+            targetType: 'invitation',
+            targetId: poll.invitationId,
+            invitationId: poll.invitationId,
+          }),
+        );
+      }),
+    );
+
+    await this.repo.updatePollsReminderSentAt(polls.map((p) => p.id));
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────────
+
+  private assertNoDuplicateSlots(slots: { date: string; startTime?: string | null }[]) {
+    if (findDuplicateVoteSlotKey(slots)) {
+      throw new UnprocessableEntityException({
+        code: ErrorCode.VOTE_SLOT_DUPLICATE,
+        message: '동일한 날짜·시간 후보는 중복 등록할 수 없습니다.',
+      });
+    }
+  }
 
   private assertOpen(poll: { status: string; closesAt: Date }) {
     if (poll.status !== 'open' || new Date() > poll.closesAt) {
