@@ -120,9 +120,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
           </ImmersiveTopBarButton>
         }
         rightSlot={
-          <ImmersiveTopBarButton aria-label="공유" onClick={() => setShareSheetOpen(true)}>
-            <Icon name="share" size="lg" color="currentColor" decorative />
-          </ImmersiveTopBarButton>
+          (isLoggedIn && invitation.isPublic) || !!myParticipant ? (
+            <ImmersiveTopBarButton aria-label="공유" onClick={() => setShareSheetOpen(true)}>
+              <Icon name="share" size="lg" color="currentColor" decorative />
+            </ImmersiveTopBarButton>
+          ) : undefined
         }
       />
 

@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from '../common/constants/error-codes';
 import { LinkEventsRepository } from './link-events.repository';
 import { SendLogsRepository } from './send-logs.repository';
 import type { CreateSendLogDto } from './dto/create-send-log.dto';
@@ -13,6 +14,11 @@ export class SendLogsService {
   ) {}
 
   async create(userId: string, invitationId: string, dto: CreateSendLogDto) {
+    const allowed = await this.sendLogsRepository.canShare(invitationId, userId);
+    if (!allowed) {
+      throw new ForbiddenException({ code: ErrorCode.INSUFFICIENT_ROLE });
+    }
+
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
     const inviteUrl = `${frontendUrl}/invitations/${invitationId}`;
 

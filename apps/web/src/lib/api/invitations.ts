@@ -83,6 +83,7 @@ export interface Invitation {
   mainImageUrl: string | null;
   mainImageThumbnailUrl: string | null;
   eventStartAt: string | null;
+  isPublic: boolean;
   isMissionEnabled: boolean;
   bgColor: string;
   font: string;
