@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -24,13 +24,9 @@ import type { SocialProvider } from "@/components/primitives/SocialLoginButton/p
 
 export default function HomeContainer() {
   const router = useRouter();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
 
   const { data: invitations, isLoading } = useQuery({
     queryKey: QUERY_KEYS.invitations.myList(),

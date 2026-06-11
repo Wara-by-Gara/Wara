@@ -23,7 +23,7 @@ export function ProfileImageCropScreen({ imageSrc, isConfirming = false, onBack,
   }, []);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-black text-white">
+    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md flex-col bg-black text-white">
       <TopAppBar className="shrink-0" title="이미지 자르기" onBack={onBack} variant="transparent" />
       <main className="relative flex-1">
         <Cropper

@@ -81,6 +81,7 @@ export interface Invitation {
   mainImageKey: string | null;
   mainGifUrl?: string | null;
   mainImageUrl: string | null;
+  mainImageThumbnailUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
   bgColor: string;

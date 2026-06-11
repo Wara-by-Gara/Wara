@@ -90,7 +90,7 @@ export default function PublicInvitationContainer({ invitationId }: { invitation
 
 function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   const router = useRouter();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
   const [isEditing, setIsEditing] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
@@ -113,7 +113,6 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   });
 
   useEffect(() => {
-    hydrate();
     const saved = sessionStorage.getItem(FORM_STORAGE_KEY(invitation.id));
     if (saved) {
       const { note, rsvp: savedRsvp } = JSON.parse(saved) as FormValues & { rsvp: RSVPValue };
@@ -122,7 +121,7 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
       sessionStorage.removeItem(FORM_STORAGE_KEY(invitation.id));
       prefilled.current = true;
     }
-  }, [hydrate, invitation.id, rsvp, setValue]);
+  }, [invitation.id, rsvp, setValue]);
 
   useEffect(() => {
     if (!hydrated || !isLoggedIn || isCheckingParticipant) return;

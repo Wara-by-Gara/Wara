@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnprocessableEntityException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
@@ -72,7 +73,18 @@ export class LocationsService {
 
   async getParticipantLocations(
     invitationId: string,
+    viewerUserId: string,
   ): Promise<ParticipantLocationWithUser[]> {
+    // 불참(absent) 게스트가 다른 참여자의 GPS 좌표를 열람하면 개인정보 누출.
+    // HOST는 모니터링 목적으로 RSVP 무관 허용.
+    const viewer = await this.repository.findParticipant(viewerUserId, invitationId);
+    if (!viewer) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (viewer.memberRole !== 'HOST' && viewer.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
     const map = await this.redisStore.findAllByInvitation(invitationId);
     if (map.size === 0) return [];
 
@@ -178,6 +190,20 @@ export class LocationsService {
         this.redisStore.deleteParticipant(invitationId, participantId),
       ),
     );
+    // 다른 클라이언트에 즉시 marker 제거 알림. 정리는 Redis에서 끝났으므로 emit만.
+    for (const { invitationId, participantId } of pairs) {
+      this.gateway.emitLocationRemoved(invitationId, participantId);
+    }
+  }
+
+  // 게스트가 초대장에서 나가거나 호스트가 kick할 때 호출 — 해당 participant의 GPS 정리 + broadcast.
+  // ParticipantsService.leave에서 호출. 미정리 시 24h TTL까지 stale 좌표 노출.
+  async cleanupParticipantGpsData(
+    invitationId: string,
+    participantId: string,
+  ): Promise<void> {
+    await this.redisStore.deleteParticipant(invitationId, participantId);
+    this.gateway.emitLocationRemoved(invitationId, participantId);
   }
 
   // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
@@ -190,6 +216,7 @@ export class LocationsService {
       throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
     await this.redisStore.deleteParticipant(invitationId, participant.id);
+    this.gateway.emitLocationRemoved(invitationId, participant.id);
   }
 
   async updateMyLocation(
@@ -197,6 +224,17 @@ export class LocationsService {
     userId: string,
     dto: UpdateParticipantLocationDto,
   ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
+    // 마감/삭제된 초대장에 GPS 계속 upsert되면 flush scheduler 정시까지 stale broadcast.
+    // upsert 시점에 차단해 진입 자체를 막음.
+    const invitationStatus = await this.repository.findInvitationStatus(invitationId);
+    if (
+      !invitationStatus ||
+      invitationStatus.status === 'closed' ||
+      invitationStatus.deletedAt !== null
+    ) {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+
     const participant = await this.repository.findParticipantWithUser(
       userId,
       invitationId,

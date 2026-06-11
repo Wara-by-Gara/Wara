@@ -65,8 +65,11 @@ export class LocationsController {
 
   @Get('participant/locations')
   @UseGuards(BlocklistGuard, ParticipantGuard)
-  getParticipantLocations(@Param('invitationId') invitationId: string) {
-    return this.locationsService.getParticipantLocations(invitationId);
+  getParticipantLocations(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.getParticipantLocations(invitationId, user.id);
   }
 
   @Put('participant/me/location')

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useDmGlobalSocket } from "@/hooks/useConversations";
 import { useTermsCompliance } from "@/hooks/useTermsCompliance";
@@ -10,12 +9,7 @@ import { useTermsCompliance } from "@/hooks/useTermsCompliance";
 export function DmSocketMount() {
   const hydrated = useAuthStore((s) => s.hydrated);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const hydrate = useAuthStore((s) => s.hydrate);
   const { isCompliant } = useTermsCompliance();
-
-  useEffect(() => {
-    if (!hydrated) hydrate();
-  }, [hydrated, hydrate]);
 
   if (!hydrated || !isLoggedIn || isCompliant !== true) return null;
   return <SocketLifecycle />;
