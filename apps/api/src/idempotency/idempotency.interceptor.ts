@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CallHandler,
   ConflictException,
   ExecutionContext,
@@ -9,7 +10,11 @@ import type { Request, Response } from 'express';
 import { from, Observable, of, throwError } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { ErrorCode } from '../common/constants/error-codes';
-import { IDEMPOTENCY_KEY_HEADER } from './idempotency.constants';
+import {
+  IDEMPOTENCY_KEY_HEADER,
+  IDEMPOTENCY_KEY_PATTERN,
+  IDEMPOTENCY_REPLAYED_HEADER,
+} from './idempotency.constants';
 import {
   IdempotencyKeyParts,
   IdempotencyRedisStore,
@@ -41,6 +46,20 @@ export class IdempotencyInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    if (!IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey)) {
+      return throwError(
+        () =>
+          new BadRequestException({
+            code: ErrorCode.VALIDATION_ERROR,
+            message: ErrorCode.VALIDATION_ERROR,
+            details: {
+              header: 'Idempotency-Key',
+              reason: 'alnum + hyphen, 16~128자',
+            },
+          }),
+      );
+    }
+
     const parts: IdempotencyKeyParts = {
       scope: req.user?.id ?? 'anon',
       method: req.method,
@@ -57,6 +76,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
         }
         if (cached) {
           res.status(cached.status);
+          res.setHeader(IDEMPOTENCY_REPLAYED_HEADER, 'true');
           return of(cached.body);
         }
         return from(this.store.tryLock(parts)).pipe(
