@@ -129,7 +129,8 @@ export default function HostView({
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
   const isDarkBg =
     invitation.bgColor.includes('aurora') ||
-    invitation.bgColor.includes('starry');
+    invitation.bgColor.includes('starry') ||
+    invitation.bgColor.includes('dreamy');
 
   return (
     <div
@@ -213,41 +214,16 @@ export default function HostView({
             ) : null}
           </div>
 
-          {summary && (
-            <ParticipantSummaryCard
-              variant="host"
-              summary={{
-                total: summary.totalCount,
-                attending: summary.attendingCount,
-                maybe: summary.undecidedCount,
-                declined: summary.absentCount,
-                noResponse:
-                  summary.totalCount -
-                  summary.attendingCount -
-                  summary.undecidedCount -
-                  summary.absentCount,
-              }}
-              isDarkBg={isDarkBg}
-            />
-          )}
-
-          <RsvpSection
-            value="attending"
-            options={rsvpOptions}
-            disabled
-            helperText="호스트는 참석으로 표시돼요"
-          />
-
-          {hasPoll && pollData?.poll.status !== 'confirmed' && (
-            <VotePreviewCard
-              pollData={pollData}
-              resultsData={resultsData}
-              isHost
-              onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))}
-            />
-          )}
-
           <div className="flex flex-col gap-8">
+            {hasPoll && pollData?.poll.status !== 'confirmed' && (
+              <VotePreviewCard
+                pollData={pollData}
+                resultsData={resultsData}
+                isHost
+                onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))}
+              />
+            )}
+
             <InformationsContainer
               invitation={invitation}
               isHost
@@ -262,6 +238,25 @@ export default function HostView({
               immersive
               bgColor={invitation.bgColor}
             />
+
+            {/* 호스트 전용: 참석 현황 (요약 + 최근 응답) */}
+            {summary && (
+              <ParticipantSummaryCard
+                variant="host"
+                summary={{
+                  total: summary.totalCount,
+                  attending: summary.attendingCount,
+                  maybe: summary.undecidedCount,
+                  declined: summary.absentCount,
+                  noResponse:
+                    summary.totalCount -
+                    summary.attendingCount -
+                    summary.undecidedCount -
+                    summary.absentCount,
+                }}
+                isDarkBg={isDarkBg}
+              />
+            )}
 
             {recentParticipants.length > 0 ? (
               <section>
@@ -326,6 +321,15 @@ export default function HostView({
                 </p>
               </section>
             )}
+
+            <RsvpSection
+              value="attending"
+              options={rsvpOptions}
+              disabled
+              isDarkBg={isDarkBg}
+              helperText="호스트는 참석으로 표시돼요"
+            />
+
             <PhotoWithFeedbackContainer invitationId={invitationId} />
           </div>
         </main>

@@ -10,6 +10,8 @@ import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSh
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
+import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
+import type { AnimationId } from "@/domain/InvitationCreate/constants";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
 import type { getInvitation } from "@/lib/api/invitations";
@@ -92,7 +94,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
 
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
-  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry');
+  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry') || invitation.bgColor.includes('dreamy');
 
   return (
     <div
@@ -103,6 +105,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
       )}
     >
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+      <InvitationAnimation
+        effect={(invitation.animation as AnimationId) ?? 'none'}
+        bgClass={pageBgClass}
+        className="absolute inset-0 z-[1] pointer-events-none"
+      />
       <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
         className="shrink-0"
@@ -190,6 +197,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               options={rsvpOptions}
               closed={invitation.status === "closed"}
               loading={updateRsvp.isPending || joinInvitation.isPending}
+              isDarkBg={isDarkBg}
             />
           )}
 
