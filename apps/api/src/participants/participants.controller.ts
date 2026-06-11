@@ -116,6 +116,21 @@ export class ParticipantsController {
     return this.participantsService.updateRsvp(invitationId, participantId, dto, viewer);
   }
 
+  @Patch(':participantId/transfer-host')
+  @UseGuards(ParticipantGuard, HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  transferHost(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('participantId', ParseUlidPipe) participantId: string,
+    @CurrentParticipant() viewer: Participant,
+  ) {
+    return this.participantsService.transferHost(
+      invitationId,
+      participantId,
+      viewer,
+    );
+  }
+
   @Delete(':participantId')
   @UseGuards(ParticipantGuard)
   @HttpCode(HttpStatus.NO_CONTENT)

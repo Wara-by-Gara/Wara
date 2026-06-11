@@ -7,7 +7,8 @@ import { z } from 'zod';
 export const UpdateInvitationSchema = z
   .object({
     title: z.string().min(1).max(100).optional(),
-    description: z.string().min(1).optional(),
+    // 빈 설명 허용 (생성 스키마와 일치) — min(1)이면 설명 없는 초대장 수정이 막힘
+    description: z.string().optional(),
     mainImageKey: z.string().min(1).optional(),
     mainGifUrl: z
       .string()

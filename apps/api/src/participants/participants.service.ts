@@ -113,11 +113,9 @@ export class ParticipantsService {
     if (!info) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
     }
+    // 호스트가 명시적으로 마감(status='closed')했을 때만 차단.
+    // 이벤트 시작 시각 기준 자동 차단은 제거 (날짜만 정한 이벤트가 당일 종일 막히는 문제).
     if (info.status === 'closed') {
-      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
-    }
-
-    if (viewer.memberRole !== 'HOST' && info.eventStartAt && info.eventStartAt < new Date()) {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
@@ -155,5 +153,26 @@ export class ParticipantsService {
     if (isHostKick) {
       await this.blocklistRepository.add(viewer.invitationId, target.userId, viewer.userId);
     }
+  }
+
+  /** 호스트 권한 위임 — viewer(현재 HOST)가 target 참가자에게 HOST 이전 */
+  async transferHost(
+    invitationId: string,
+    targetParticipantId: string,
+    viewer: Participant,
+  ) {
+    const target = await this.repository.findById(targetParticipantId);
+    if (!target || target.invitationId !== invitationId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (target.memberRole === 'HOST') {
+      throw new BadRequestException(ErrorCode.PARTICIPANT_ALREADY_HOST);
+    }
+    await this.repository.transferHost(
+      invitationId,
+      viewer.id,
+      target.id,
+      target.userId,
+    );
   }
 }

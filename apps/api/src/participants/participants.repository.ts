@@ -31,6 +31,29 @@ export class ParticipantsRepository {
       );
   }
 
+  /** 호스트 권한 이전 — 기존 호스트→GUEST, 대상→HOST, invitation.userId 갱신 (한 트랜잭션) */
+  async transferHost(
+    invitationId: string,
+    fromParticipantId: string,
+    toParticipantId: string,
+    toUserId: string,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(participants)
+        .set({ memberRole: 'GUEST', updatedAt: new Date() })
+        .where(eq(participants.id, fromParticipantId));
+      await tx
+        .update(participants)
+        .set({ memberRole: 'HOST', updatedAt: new Date() })
+        .where(eq(participants.id, toParticipantId));
+      await tx
+        .update(invitations)
+        .set({ userId: toUserId, updatedAt: new Date() })
+        .where(eq(invitations.id, invitationId));
+    });
+  }
+
   async findById(id: string): Promise<Participant | null> {
     const rows = await this.db
       .select()

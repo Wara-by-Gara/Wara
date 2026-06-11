@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { getParticipants, getMyParticipant, joinInvitation, updateRsvp } from "@/lib/api/participants";
+import { getParticipants, getMyParticipant, joinInvitation, updateRsvp, transferHost } from "@/lib/api/participants";
 import type { RsvpStatus } from "@/lib/api/participants";
 
 export function useParticipants(invitationId: string) {
@@ -54,6 +54,18 @@ export function useJoinInvitation(invitationId: string) {
       queryClient.setQueryData(QUERY_KEYS.invitations.myParticipant(invitationId), participant);
       queryClient.setQueryData(["myParticipant", invitationId], participant);
       invalidateParticipantFeedQueries(queryClient, invitationId);
+    },
+  });
+}
+
+export function useTransferHost(invitationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (participantId: string) => transferHost(invitationId, participantId),
+    onSuccess: () => {
+      invalidateParticipantFeedQueries(queryClient, invitationId);
+      // 소유자(userId)·내 role 변경 → 상세 호스트/게스트 판정 갱신
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.detail(invitationId) });
     },
   });
 }

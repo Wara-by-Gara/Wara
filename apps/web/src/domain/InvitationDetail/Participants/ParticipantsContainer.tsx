@@ -17,7 +17,7 @@ import { ParticipantItem, type ParticipantRsvp } from "@/components/organisms/Pa
 import { ParticipantListSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { useParticipants, useMyParticipant } from "@/hooks/useParticipants";
+import { useParticipants, useMyParticipant, useTransferHost } from "@/hooks/useParticipants";
 import { useInvitation } from "@/hooks/useInvitations";
 import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
@@ -27,7 +27,7 @@ import { ParticipantProfilePanel, type ParticipantRow } from "./ParticipantProfi
 
 type Tab = "all" | RsvpStatus | "memo";
 type SortKey = "joined-asc" | "joined-desc" | "name-asc";
-type SheetMode = "action" | "memo" | "rsvp" | "kick" | null;
+type SheetMode = "action" | "memo" | "rsvp" | "kick" | "transfer" | null;
 
 const RSVP_TO_PARTICIPANT: Record<RsvpStatus, ParticipantRsvp> = {
   attending: "attending",
@@ -122,6 +122,8 @@ export default function ParticipantsContainer() {
     onSuccess: () => { invalidateParticipants(); setSelectedRow(null); setSheetMode(null); },
   });
 
+  const transferMutation = useTransferHost(invitationId);
+
   const filtered = applySort(
     (data?.participants ?? [])
       .filter(({ participant }) => tab === "all" || (tab === "memo" ? !!participant.note : participant.rsvpStatus === tab))
@@ -150,8 +152,6 @@ export default function ParticipantsContainer() {
     setSelectedRow(row);
     setSheetMode("action");
   }
-
-  const isDarkBg = invitation?.bgColor?.includes('aurora') || invitation?.bgColor?.includes('starry') || false;
 
   return (
     <>
@@ -216,6 +216,12 @@ export default function ParticipantsContainer() {
               내보내기
             </button>
           </div>
+          <button
+            className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
+            onClick={() => setSheetMode("transfer")}
+          >
+            호스트 위임
+          </button>
         </BottomSheetContent>
       </BottomSheet>
 
@@ -278,6 +284,21 @@ export default function ParticipantsContainer() {
           </div>
         </BottomSheetContent>
       </BottomSheet>
+
+      {/* 호스트 위임 확인 모달 */}
+      <ConfirmModal
+        open={sheetMode === "transfer"}
+        onOpenChange={(open) => !open && setSheetMode("action")}
+        title="호스트를 위임할까요?"
+        description="이 참석자가 호스트가 되고 나는 게스트로 바뀌어요. 되돌릴 수 없어요."
+        confirmLabel="위임"
+        loading={transferMutation.isPending}
+        onConfirm={() =>
+          transferMutation.mutate(selectedRow!.participant.id, {
+            onSuccess: () => { setSheetMode(null); setSelectedRow(null); },
+          })
+        }
+      />
 
       {/* 강퇴 확인 모달 */}
       <ConfirmModal

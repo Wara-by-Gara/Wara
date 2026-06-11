@@ -198,6 +198,11 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
               closed={invitation.status === "closed"}
               loading={updateRsvp.isPending || joinInvitation.isPending}
               isDarkBg={isDarkBg}
+              helperText={
+                invitation.status === "closed"
+                  ? "호스트가 참석 응답을 마감했어요"
+                  : undefined
+              }
             />
           )}
 

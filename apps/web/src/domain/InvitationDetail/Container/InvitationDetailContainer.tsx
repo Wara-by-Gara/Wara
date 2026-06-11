@@ -18,7 +18,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   useEffect(() => { hydrate(); }, [hydrate]);
 
-  const { invitation, isLoading, isError, me, participantsData } =
+  const { invitation, isLoading, isError, me, myParticipant, participantsData } =
     useInvitationDetail(invitationId);
 
   if (!hydrated || isLoading) {
@@ -45,7 +45,11 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
     );
   }
 
-  const isHost = isLoggedIn && me?.id === invitation.userId;
+  // 호스트 판정은 참가자 role 기준 (권한 위임 후 ex-host가 GuestView로 전환되어 RSVP 가능).
+  // userId 비교는 로딩 중 깜빡임 방지용 fast-path (위임 시 userId도 함께 이동하므로 일관).
+  const isHost =
+    myParticipant?.memberRole === 'HOST' ||
+    (isLoggedIn && me?.id === invitation.userId);
 
   if (isHost) {
     return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} />;

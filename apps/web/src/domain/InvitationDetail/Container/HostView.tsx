@@ -22,10 +22,9 @@ import { InvitationCover } from '@/components/organisms/InvitationCover';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
-import { ParticipantSummaryCard } from '@/components/organisms/ParticipantSummaryCard';
 import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
-import { ParticipantItem } from '@/components/organisms/ParticipantItem';
+import ParticipantAvatarRow from '@/domain/InvitationDetail/Participants/ParticipantAvatarRow';
 import {
   updateInvitationStatus,
   deleteInvitation,
@@ -75,8 +74,9 @@ export default function HostView({
   const cover = getInvitationDetailCover(invitation);
   const schedule = formatInvitationDetailSchedule(invitation.eventStartAt);
 
-  const summary = participantsData?.summary;
-  const recentParticipants = participantsData?.participants.slice(0, 4) ?? [];
+  const attendingParticipants = (participantsData?.participants ?? []).filter(
+    ({ participant }) => participant.rsvpStatus === 'attending',
+  );
 
   // 호스트는 응답을 바꿀 수 없지만 게스트가 보는 RSVP 위치를 그대로 노출(읽기 전용)
   const rsvpOptions = [
@@ -239,41 +239,24 @@ export default function HostView({
               bgColor={invitation.bgColor}
             />
 
-            {/* 호스트 전용: 참석 현황 (요약 + 최근 응답) */}
-            {summary && (
-              <ParticipantSummaryCard
-                variant="host"
-                summary={{
-                  total: summary.totalCount,
-                  attending: summary.attendingCount,
-                  maybe: summary.undecidedCount,
-                  declined: summary.absentCount,
-                  noResponse:
-                    summary.totalCount -
-                    summary.attendingCount -
-                    summary.undecidedCount -
-                    summary.absentCount,
-                }}
-                isDarkBg={isDarkBg}
-              />
-            )}
-
-            {recentParticipants.length > 0 ? (
+            {/* 참석자 — 게스트와 동일 표시 (참석 N명 + 아바타). 요약카드/최근응답 제거 */}
+            {participantsData && participantsData.summary.attendingCount > 0 && (
               <section>
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-3 flex items-center justify-between">
                   <h3
                     className={cn(
-                      'text-[14px] font-bold',
+                      'text-[15px] font-bold',
                       isDarkBg ? 'text-white' : 'text-text-primary',
                     )}
                   >
-                    최근 응답
+                    참석 {participantsData.summary.attendingCount}명/
+                    {participantsData.summary.totalCount}명
                   </h3>
                   <button
                     type="button"
                     className={cn(
                       'text-[13px]',
-                      isDarkBg ? 'text-white' : 'text-text-primary',
+                      isDarkBg ? 'text-white' : 'text-brand',
                     )}
                     onClick={() =>
                       router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))
@@ -282,43 +265,13 @@ export default function HostView({
                     전체보기
                   </button>
                 </div>
-                <div className="divide-y divide-border">
-                  {recentParticipants.map(({ participant, user }) => (
-                    <ParticipantItem
-                      key={participant.id}
-                      name={user.name ?? user.nickname ?? '이름 없음'}
-                      handle={user.nickname ?? undefined}
-                      avatarUrl={user.profileImageUrl ?? undefined}
-                      status={
-                        participant.rsvpStatus === 'attending'
-                          ? 'attending'
-                          : participant.rsvpStatus === 'undecided'
-                            ? 'maybe'
-                            : 'declined'
-                      }
-                      isHost={participant.memberRole === 'HOST'}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : (
-              <section className="text-center">
-                <p
-                  className={cn(
-                    'text-[15px] font-semibold',
-                    isDarkBg ? 'text-white' : 'text-text-primary',
-                  )}
-                >
-                  아직 참석자가 없어요
-                </p>
-                <p
-                  className={cn(
-                    'mt-1 text-[13px]',
-                    isDarkBg ? 'text-white/70' : 'text-text-tertiary',
-                  )}
-                >
-                  링크를 공유해 친구들을 초대해보세요
-                </p>
+                <ParticipantAvatarRow
+                  participants={attendingParticipants}
+                  currentUserId={invitation.userId}
+                  currentUserProfileImageUrl={
+                    invitation.host?.profileImageUrl ?? null
+                  }
+                />
               </section>
             )}
 
