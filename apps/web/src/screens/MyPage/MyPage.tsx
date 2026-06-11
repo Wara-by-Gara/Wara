@@ -220,7 +220,7 @@ export const MyPage = ({
                 <Icon name="external-link" size="xs" color="inactive" decorative />
               </button>
             </div>
-            <PlaceLogPreview onViewAll={onPhotoMap} />
+            <PlaceLogPreview invitationId={memory?.id} onViewAll={onPhotoMap} />
           </div>
 
         </div>
