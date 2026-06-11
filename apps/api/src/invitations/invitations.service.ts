@@ -123,7 +123,7 @@ export class InvitationsService {
           eventStartAt: inv.eventStartAt,
           mainImageUrl: inv.mainImageKey
             ? this.s3Service.getPublicUrl(inv.mainImageKey)
-            : null,
+            : (inv.mainGifUrl ?? null),
           location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? null,
           participantCount,
           host: inv.host,

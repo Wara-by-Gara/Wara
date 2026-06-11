@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { Badge } from "@/components/primitives/Badge";
 import { cn } from "@/lib/cn";
@@ -31,6 +31,7 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
   ) {
     const isSelected = variant === "selected";
     const isLocked = variant === "premium";
+    const [imgError, setImgError] = useState(false);
 
     return (
       <button
@@ -51,9 +52,14 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
             isSelected ? "ring-4 ring-primary" : "ring-1 ring-border",
           )}
         >
-          {imageUrl ? (
+          {imageUrl && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="size-full object-cover" />
+            <img
+              src={imageUrl}
+              alt=""
+              className="size-full object-cover"
+              onError={() => setImgError(true)}
+            />
           ) : (
             <div className="flex size-full items-center justify-center">
               <Icon name="palette" size="xl" color="inactive" decorative />
