@@ -2,19 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
 import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
+import { Icon } from "@/components/icons";
+import { StickyHeader } from "@/components/layout/StickyHeader";
 import { getMyPhotoLocations, type PhotoLocation } from "@/lib/api/photos";
-import dynamic from "next/dynamic";
-
-const PhotoDetailModal = dynamic(
-  () =>
-    import(
-      "@/domain/InvitationDetail/PhotoWithFeedback/PhotoDetailModal/PhotoDetailModal"
-    ),
-  { ssr: false },
-);
+import { PhotoModal } from "./PhotoModal";
 
 // ── 클러스터링 ────────────────────────────────────────────────────────────────
 const CLUSTER_RADIUS_M = 30;
@@ -85,17 +80,22 @@ function clusterPhotos(photos: PhotoLocation[]): Cluster[] {
   return clusters;
 }
 
+function formatTakenAt(takenAt: string | null, createdAt: string): string {
+  const d = new Date(takenAt ?? createdAt);
+  return d.toLocaleString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // ── 컴포넌트 ──────────────────────────────────────────────────────────────────
+// PR #226 PlaceLog Storybook 디자인 — 헤더 + 지도(50vh) + 하단 사진 그리드 + PhotoModal.
 export function PhotoMapPage() {
   const mapSdkReady = useKakaoMapsSdk();
 
-  // 선택된 클러스터 (핀 클릭 시 설정)
-  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
-  // 클러스터 목록 시트에서 선택된 사진 인덱스 (PhotoDetailModal용)
-  const [detailIndex, setDetailIndex] = useState<number | null>(null);
-  // 좋아요 상태 관리
-  const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
-  const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(new Map());
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoLocation | null>(null);
 
   const { data: photoLocations = [], isLoading } = useQuery({
     queryKey: ["photos", "locations"],
@@ -104,6 +104,7 @@ export function PhotoMapPage() {
 
   const clusters = useMemo(() => clusterPhotos(photoLocations), [photoLocations]);
 
+  // 지도 핀은 클러스터링 결과로, 하단 그리드는 모든 사진을 최신순 정렬해 표시.
   const photoMarkers: PhotoMarker[] = clusters.map((c) => ({
     id: c.id,
     lat: c.lat,
@@ -112,115 +113,92 @@ export function PhotoMapPage() {
     count: c.count,
   }));
 
+  const sortedPhotos = useMemo(
+    () =>
+      [...photoLocations].sort((a, b) => {
+        const ta = new Date(a.takenAt ?? a.createdAt).getTime();
+        const tb = new Date(b.takenAt ?? b.createdAt).getTime();
+        return tb - ta;
+      }),
+    [photoLocations],
+  );
+
   function handleMarkerClick(markerId: string) {
     const cluster = clusters.find((c) => c.id === markerId);
     if (!cluster) return;
-
-    if (cluster.count === 1) {
-      // 사진 1장 → 바로 PhotoDetailModal
-      setSelectedCluster(cluster);
-      setDetailIndex(0);
-    } else {
-      // 여러 장 → 위치 목록 시트
-      setSelectedCluster(cluster);
-      setDetailIndex(null);
-    }
+    // 클러스터 대표 사진을 모달로 표시.
+    setSelectedPhoto(cluster.photos[0] ?? null);
   }
-
-  function handleLikeChange(photoId: string, liked: boolean, likeCount: number) {
-    setLikedMap((prev) => new Map(prev).set(photoId, liked));
-    setLikeCountMap((prev) => new Map(prev).set(photoId, likeCount));
-  }
-
-  function closeAll() {
-    setSelectedCluster(null);
-    setDetailIndex(null);
-  }
-
-  const showLocationSheet = selectedCluster !== null && detailIndex === null;
-  const showDetailModal = selectedCluster !== null && detailIndex !== null;
 
   return (
-    <>
-      <div className="relative h-full w-full">
-        {/* 지도 — 첫 마커 셋 도착 시 1회만 fit, 이후 사용자 줌·팬 보존 */}
-        <KakaoMap
-          ready={mapSdkReady}
-          photoMarkers={photoMarkers}
-          onPhotoMarkerClick={handleMarkerClick}
-          autoFit="first"
-          className="h-full w-full"
-        />
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-background">
+      <StickyHeader title="Place log" />
 
-        {/* 로딩 오버레이 */}
-        {(isLoading || !mapSdkReady) && <MapLoadingSkeleton />}
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+        {/* 헤더 카드 — 전체 사진 개수 */}
+        <div className="flex items-center justify-between border-b border-border bg-surface px-page py-3">
+          <span className="text-[14px] font-medium text-text-primary">내 사진</span>
+          <span className="text-[12px] text-text-tertiary">
+            사진 {photoLocations.length}장
+          </span>
+        </div>
 
-        {/* 사진 없음 */}
-        {!isLoading && mapSdkReady && photoLocations.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-xs bg-white/90 px-8 py-6 text-center shadow-md">
-              <p className="text-[16px] font-bold text-text-primary">위치 정보가 있는 사진이 없어요</p>
-              <p className="mt-1 text-[13px] text-text-secondary">
+        {/* 지도 — 50vh 고정 */}
+        <div className="relative h-[50vh] w-full overflow-hidden">
+          <KakaoMap
+            ready={mapSdkReady}
+            photoMarkers={photoMarkers}
+            onPhotoMarkerClick={handleMarkerClick}
+            autoFit="first"
+            className="absolute inset-0"
+          />
+          {(isLoading || !mapSdkReady) && <MapLoadingSkeleton />}
+        </div>
+
+        {/* 하단 그리드 — 모든 사진 (지도 핀과 별개로 최신순) */}
+        {!isLoading && mapSdkReady && (
+          sortedPhotos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-page py-12 text-center">
+              <p className="text-[15px] font-bold text-text-primary">
+                위치 정보가 있는 사진이 없어요
+              </p>
+              <p className="mt-1 text-[12px] text-text-secondary">
                 GPS 정보가 담긴 사진을 업로드하면<br />여기서 확인할 수 있어요
               </p>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* 위치별 사진 목록 시트 */}
-      {showLocationSheet && selectedCluster && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={closeAll}
-          />
-          <div className="relative w-full rounded-t-xs bg-surface pb-safe pt-4">
-            <div className="flex items-center justify-between px-page pb-3">
-              <span className="text-[16px] font-bold text-text-primary">
-                이 장소의 사진 {selectedCluster.count}장
-              </span>
-              <button
-                type="button"
-                onClick={closeAll}
-                className="text-[22px] leading-none text-text-tertiary"
-                aria-label="닫기"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-0.5 max-h-[60vh] overflow-y-auto">
-              {selectedCluster.photos.map((photo, idx) => (
+          ) : (
+            <div className="grid grid-cols-3 gap-0.5 p-0.5">
+              {sortedPhotos.map((photo) => (
                 <button
                   key={photo.id}
                   type="button"
-                  className="aspect-square overflow-hidden bg-gray-100"
-                  onClick={() => setDetailIndex(idx)}
+                  onClick={() => setSelectedPhoto(photo)}
+                  className="relative aspect-square overflow-hidden bg-gray-100 active:opacity-80"
+                  aria-label={`사진 ${formatTakenAt(photo.takenAt, photo.createdAt)}`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={photo.url}
                     alt=""
-                    className="h-full w-full object-cover transition-opacity hover:opacity-80"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 480px) 33vw, 160px"
                   />
+                  {photo.likeCount > 0 && (
+                    <div className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5">
+                      <Icon name="heart" size="xs" color="inverse" decorative />
+                      <span className="text-[10px] font-medium text-white">{photo.likeCount}</span>
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
-          </div>
-        </div>
-      )}
+          )
+        )}
+      </main>
 
-      {/* PhotoDetailModal */}
-      {showDetailModal && selectedCluster && detailIndex !== null && (
-        <PhotoDetailModal
-          photos={selectedCluster.photos}
-          initialIndex={detailIndex}
-          onClose={closeAll}
-          likedMap={likedMap}
-          likeCountMap={likeCountMap}
-          onLikeChange={handleLikeChange}
-        />
+      {selectedPhoto && (
+        <PhotoModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
       )}
-    </>
+    </div>
   );
 }
