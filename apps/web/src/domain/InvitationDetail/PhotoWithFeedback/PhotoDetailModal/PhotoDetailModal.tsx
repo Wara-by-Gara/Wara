@@ -89,13 +89,13 @@ export default function PhotoDetailModal({
   const handleSave = async () => {
     const items = await getDownloadUrls(photo.invitationId, [photo.id]);
     items.forEach(({ url }) => {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '';
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      }, 60_000);
     });
   };
 
