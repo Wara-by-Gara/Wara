@@ -28,10 +28,6 @@ export interface MyPageProps {
   onInvitationClick?: (id: string) => void;
   onSettings?: () => void;
   onProfileEdit?: () => void;
-  onInquiries?: () => void;
-  onAccount?: () => void;
-  onSupport?: () => void;
-  onHiddenFriends?: () => void;
   onPhotoMap?: () => void;
 }
 
@@ -43,10 +39,6 @@ export const MyPage = ({
   onInvitationClick,
   onSettings,
   onProfileEdit,
-  onInquiries,
-  onAccount,
-  onSupport,
-  onHiddenFriends,
   onPhotoMap,
 }: MyPageProps) => {
   const [recentExpanded, setRecentExpanded] = useState(false);
@@ -188,22 +180,6 @@ export const MyPage = ({
             >
               Place log
             </MenuItem>
-            <MenuItem
-              leftIcon="user-x"
-              onClick={onHiddenFriends}
-              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
-            >
-              삭제한 친구
-            </MenuItem>
-            <MenuItem
-              leftIcon="message-circle"
-              onClick={onInquiries}
-              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
-            >
-              문의하기
-            </MenuItem>
-            <MenuItem leftIcon="user-round-cog" onClick={onAccount} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>계정 관리</MenuItem>
-            <MenuItem leftIcon="help-circle" onClick={onSupport} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>고객센터</MenuItem>
           </div>
         </div>
       </section>

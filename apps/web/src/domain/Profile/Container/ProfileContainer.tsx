@@ -47,10 +47,6 @@ export default function ProfileContainer() {
       onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
-      onInquiries={() => router.push(ROUTES.INQUIRIES.HOME)}
-      onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
-      onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
-      onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
       onPhotoMap={() => router.push(ROUTES.PHOTOS.MAP)}
     />
   );
