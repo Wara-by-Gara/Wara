@@ -7,7 +7,9 @@ import { z } from 'zod';
 export const UpdateInvitationSchema = z
   .object({
     title: z.string().min(1).max(100).optional(),
-    description: z.string().min(1).optional(),
+    // CreateInvitationSchema는 description 빈 문자열을 허용하므로 수정도 동일 정책.
+    // 빈 문자열로 생성된 초대장이 수정 시 거부되는 비대칭 방지.
+    description: z.string().optional(),
     mainImageKey: z.string().min(1).optional(),
     mainGifUrl: z
       .string()
