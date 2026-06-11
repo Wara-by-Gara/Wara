@@ -233,6 +233,84 @@ export async function closeInvitation(
   );
 }
 
+/** invitation soft delete (host) */
+export async function softDeleteInvitation(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+) {
+  const res = await request.fetch(
+    `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api/invitations/${invitationId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Origin: process.env.E2E_WEB_URL ?? "http://localhost:3000",
+      },
+    },
+  );
+  return { status: res.status() };
+}
+
+/** participant leave 또는 host kick (둘 다 DELETE /participants/:id) */
+export async function leaveOrKickParticipant(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+  participantId: string,
+) {
+  const res = await request.fetch(
+    `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api/invitations/${invitationId}/participants/${participantId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Origin: process.env.E2E_WEB_URL ?? "http://localhost:3000",
+      },
+    },
+  );
+  return { status: res.status() };
+}
+
+/** 본인 GPS 공유 즉시 종료 */
+export async function stopMyLocationSharing(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+) {
+  const res = await request.fetch(
+    `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api/invitations/${invitationId}/participant/me/location`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Origin: process.env.E2E_WEB_URL ?? "http://localhost:3000",
+      },
+    },
+  );
+  return { status: res.status() };
+}
+
+/** 회원 탈퇴 */
+export async function deleteMyAccount(
+  request: APIRequestContext,
+  token: string,
+) {
+  const res = await request.fetch(
+    `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api/users/me`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Origin: process.env.E2E_WEB_URL ?? "http://localhost:3000",
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify({}),
+    },
+  );
+  return { status: res.status() };
+}
+
 export async function processPreEventNotifications(request: APIRequestContext) {
   const API = `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api`;
   const res = await request.post(`${API}/dev/location/process-pre-event`, {
