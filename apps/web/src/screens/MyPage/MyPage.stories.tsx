@@ -148,7 +148,7 @@ function PhotoModal({
           onClick={onClose}
           className="flex size-10 items-center justify-center rounded-full bg-white shadow-lg transition-opacity active:opacity-70"
         >
-          <Icon name="close" size="md" color="secondary" decorative />
+          <Icon name="close" size="md" color="default" decorative />
         </button>
       </div>
 
@@ -173,14 +173,14 @@ function PhotoModal({
       >
         <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
           <div className="flex items-start gap-2">
-            <Icon name="map-pin" size="sm" color="white" decorative />
+            <Icon name="map-pin" size="sm" color="inverse" decorative />
             <div className="flex-1">
               <p className="text-[13px] font-medium text-white">{photo.address}</p>
               <p className="mt-0.5 text-[11px] text-white/50">{photo.gps}</p>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-1 border-t border-white/10 pt-2">
-            <Icon name="heart" size="xs" color="white" decorative />
+            <Icon name="heart" size="xs" color="inverse" decorative />
             <span className="text-[12px] font-medium text-white">{photo.likeCount}</span>
           </div>
         </div>
@@ -320,31 +320,35 @@ function StatItem({ label, value }: { label: string; value: number }) {
   );
 }
 
+type NavItem =
+  | { key: string; icon: string; label: string; isFab: true }
+  | { key: string; icon: string; label: string; badge?: boolean };
+
 function BottomNav({ active = "profile" }: { active?: string }) {
-  const items = [
+  const items: NavItem[] = [
     { key: "home", icon: "home", label: "홈" },
     { key: "explore", icon: "users-round", label: "모임" },
     { key: "create", icon: "plus", label: "", isFab: true },
     { key: "notifications", icon: "bell", label: "알림", badge: true },
     { key: "profile", icon: "user-round", label: "마이페이지" },
-  ] as const;
+  ];
 
   return (
     <div className="flex items-center border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
         const isActive = item.key === active;
-        if (item.isFab) {
+        if ("isFab" in item && item.isFab) {
           return (
             <div key={item.key} className="flex flex-1 items-center justify-center py-2">
               <div className="flex size-12 items-center justify-center rounded-full bg-brand shadow-md">
-                <Icon name="plus" size="lg" color="white" decorative />
+                <Icon name="plus" size="lg" color="inverse" decorative />
               </div>
             </div>
           );
         }
         return (
           <div key={item.key} className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5">
-            {item.badge && (
+            {"badge" in item && item.badge && (
               <span className="absolute right-[calc(50%-8px)] top-1.5 size-2 rounded-full bg-brand" />
             )}
             <Icon
@@ -381,7 +385,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-4">
         <span className="text-[17px] font-bold text-text-primary">마이페이지</span>
         <button type="button" aria-label="설정" className="inline-flex size-9 items-center justify-center">
-          <Icon name="settings" size="md" color="secondary" decorative />
+          <Icon name="settings" size="md" color="default" decorative />
         </button>
       </div>
 
@@ -400,7 +404,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
     return wrap(
       <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
         <div className="flex size-16 items-center justify-center rounded-full bg-cranberry-5">
-          <Icon name="user-round-cog" size="xl" color="brand" decorative />
+          <Icon name="user-round-cog" size="xl" color="primary" decorative />
         </div>
         <p className="text-[16px] font-bold text-text-primary">로그인이 필요해요</p>
         <p className="text-[13px] text-text-tertiary">
@@ -477,7 +481,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
               aria-label="프로필 사진 변경"
               className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-border"
             >
-              <Icon name="camera" size="xs" color="secondary" decorative />
+              <Icon name="camera" size="xs" color="default" decorative />
             </button>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-1">
@@ -486,7 +490,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
               <span className="text-[18px] font-bold text-text-primary">{name}</span>
               {verified && (
                 <span className="flex size-[18px] items-center justify-center rounded-full bg-blue-500">
-                  <Icon name="check" size="xs" color="white" decorative />
+                  <Icon name="check" size="xs" color="inverse" decorative />
                 </span>
               )}
               <Icon name="chevron-right" size="sm" color="inactive" decorative />

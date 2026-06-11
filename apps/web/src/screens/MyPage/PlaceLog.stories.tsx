@@ -139,7 +139,7 @@ export function PhotoModal({
           onClick={onClose}
           className="flex size-10 items-center justify-center rounded-full bg-white shadow-lg transition-opacity active:opacity-70"
         >
-          <Icon name="close" size="md" color="secondary" decorative />
+          <Icon name="close" size="md" color="default" decorative />
         </button>
       </div>
 
@@ -166,7 +166,7 @@ export function PhotoModal({
         <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-md ring-1 ring-white/20">
           {/* 위치 */}
           <div className="flex items-start gap-2.5">
-            <Icon name="map-pin" size="sm" color="white" decorative />
+            <Icon name="map-pin" size="sm" color="inverse" decorative />
             <div className="flex-1">
               <p className="text-[14px] font-semibold text-white">{photo.address}</p>
               <p className="mt-0.5 text-[11px] font-mono text-white/50">{photo.gps}</p>
@@ -177,7 +177,7 @@ export function PhotoModal({
 
           {/* 좋아요 */}
           <div className="flex items-center gap-1.5">
-            <Icon name="heart" size="sm" color="white" decorative />
+            <Icon name="heart" size="sm" color="inverse" decorative />
             <span className="text-[13px] font-medium text-white">{photo.likeCount}</span>
             <span className="text-[12px] text-white/50">명이 좋아해요</span>
           </div>
@@ -298,7 +298,7 @@ function PlaceLogView({ initialPhotoId }: PlaceLogViewProps) {
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
         <button type="button" aria-label="뒤로가기" className="flex size-9 items-center justify-center">
-          <Icon name="chevron-left" size="md" color="secondary" decorative />
+          <Icon name="chevron-left" size="md" color="default" decorative />
         </button>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="text-[16px] font-bold text-text-primary">Place log</span>
