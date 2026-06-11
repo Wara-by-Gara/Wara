@@ -1,0 +1,1 @@
+ALTER TABLE "participant_locations" ADD COLUMN "status_message" varchar(100);

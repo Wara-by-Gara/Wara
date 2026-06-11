@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Patch,
   Post,
   Delete,
   Param,
@@ -26,6 +27,10 @@ import {
   UpdateParticipantLocationSchema,
   type UpdateParticipantLocationDto,
 } from './dto/update-participant-location.dto';
+import {
+  UpdateStatusMessageSchema,
+  type UpdateStatusMessageDto,
+} from './dto/update-status-message.dto';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
@@ -87,6 +92,32 @@ export class LocationsController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.locationsService.stopMyLocationSharing(invitationId, user.id);
+  }
+
+  // 미도착 멤버가 broadcast하는 상태메시지 설정/수정. 위치 공유 중에만 가능.
+  @Patch('participant/me/status-message')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
+  updateMyStatusMessage(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(UpdateStatusMessageSchema))
+    dto: UpdateStatusMessageDto,
+  ) {
+    return this.locationsService.updateMyStatusMessage(
+      invitationId,
+      user.id,
+      dto.message,
+    );
+  }
+
+  @Delete('participant/me/status-message')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BlocklistGuard, ParticipantGuard)
+  deleteMyStatusMessage(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.deleteMyStatusMessage(invitationId, user.id);
   }
 
   @Post('participants/:participantId/nudge')

@@ -86,6 +86,30 @@ export class LocationsGateway implements OnGatewayConnection {
       .emit('location:removed', { invitationId, participantId });
   }
 
+  /** 미도착 상태메시지 설정/수정 broadcast. service에서 호출. */
+  emitStatusMessageUpdated(
+    invitationId: string,
+    participantId: string,
+    statusMessage: string,
+    updatedAt: Date,
+  ): void {
+    this.server
+      .to(`invitation:${invitationId}`)
+      .emit('status_message:updated', {
+        invitationId,
+        participantId,
+        statusMessage,
+        updatedAt,
+      });
+  }
+
+  /** 미도착 상태메시지 삭제 broadcast. */
+  emitStatusMessageRemoved(invitationId: string, participantId: string): void {
+    this.server
+      .to(`invitation:${invitationId}`)
+      .emit('status_message:removed', { invitationId, participantId });
+  }
+
   @SubscribeMessage('location:update')
   async handleLocationUpdate(client: Socket, payload: unknown) {
     const result = WsLocationUpdateSchema.safeParse(payload);
