@@ -129,6 +129,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
   };
   const menuMine = menuTarget?.senderId === myId;
+  const menuIsImage = !!menuTarget?.imageUrl; // 사진 메시지는 복사/수정 불가
   const handleCopy = () => {
     if (menuTarget) {
       navigator.clipboard?.writeText(menuTarget.content);
@@ -189,6 +190,21 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const groupMembers =
     useConversationParticipants(id, !!isGroup).data?.participants ?? [];
   const memberMap = new Map(groupMembers.map((p) => [p.userId, p]));
+
+  // 발신자 표시 이름 (그룹=멤버맵, 1:1=상대, 내것=내 이름)
+  const displayNameOf = (senderId: string) =>
+    senderId === myId
+      ? (me?.name ?? "나")
+      : isGroup
+        ? (memberMap.get(senderId)?.name ?? "사용자")
+        : partnerName;
+  // 대화 내 사진 메시지 목록 (뷰어 < > 이동용)
+  const imageMessages = messages.filter((m) => m.imageUrl && !m.deleted);
+  const chatPhotos: ViewerPhoto[] = imageMessages.map((m) => ({
+    imageUrl: m.imageUrl!,
+    uploaderName: displayNameOf(m.senderId),
+    createdAt: m.createdAt,
+  }));
 
   // 새 메시지/입장 시 맨 아래로 스크롤
   const lastMessageId = messages[messages.length - 1]?.id;
@@ -391,17 +407,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         onContextMenu={(e) => e.preventDefault()}
                         onClick={() => {
                           if (pressFired.current) return; // 길게누르기였으면 메뉴만
-                          if (m.imageUrl)
-                            setViewer({
-                              photos: [
-                                {
-                                  imageUrl: m.imageUrl,
-                                  uploaderName: mine ? (me?.name ?? "나") : senderName,
-                                  createdAt: m.createdAt,
-                                },
-                              ],
-                              index: 0,
-                            });
+                          if (!m.imageUrl) return;
+                          // 대화 내 전체 사진 중 이 사진부터 -> 뷰어에서 < > 이동
+                          const idx = imageMessages.findIndex((x) => x.id === m.id);
+                          setViewer({ photos: chatPhotos, index: idx < 0 ? 0 : idx });
                         }}
                         className="relative max-w-full cursor-pointer select-none overflow-hidden rounded-2xl"
                       >
@@ -670,13 +679,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
-            >
-              복사
-            </button>
+            {!menuIsImage && (
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+              >
+                복사
+              </button>
+            )}
             <button
               type="button"
               onClick={startReply}
@@ -686,13 +697,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             </button>
             {menuMine && (
               <>
-                <button
-                  type="button"
-                  onClick={startEdit}
-                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
-                >
-                  수정
-                </button>
+                {!menuIsImage && (
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+                  >
+                    수정
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={openDelete}

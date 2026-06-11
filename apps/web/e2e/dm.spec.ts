@@ -907,6 +907,44 @@ test.describe("dm-batch8-drawer", () => {
   });
 });
 
+test.describe("dm-batch8b-chat-photo-nav", () => {
+  test("채팅 사진을 누르면 뷰어에서 좌우로 다른 사진을 넘길 수 있다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    // 빈 그룹 생성 (누적 DM은 느림)
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+
+    // 사진 2장
+    for (const n of ["a", "b"]) {
+      await page.setInputFiles('input[type="file"]', {
+        name: `chat-${n}.png`,
+        mimeType: "image/png",
+        buffer: PNG_1x1,
+      });
+      await page.getByRole("button", { name: "보내기", exact: true }).click();
+      await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    }
+
+    // 첫 사진 메시지 클릭 -> 뷰어 -> 다음 -> 2/N
+    await page.locator('img[alt="사진"]').first().click();
+    await expect(page.getByRole("img", { name: "사진 크게 보기" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+    await page.getByRole("button", { name: "다음 사진" }).click();
+    await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
+
+    await context.close();
+  });
+});
+
 test.describe("dm-batch9-group", () => {
   test("1:1에서 친구를 초대하면 새 단톡방이 만들어지고 메시지를 보낼 수 있다", async ({
     browser,
