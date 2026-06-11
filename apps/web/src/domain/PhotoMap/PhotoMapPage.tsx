@@ -121,7 +121,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
         </div>
 
         {/* 지도 — 50vh 고정 */}
-        <div className="relative h-[50vh] w-full overflow-hidden">
+        <div className="relative h-[40vh] w-full overflow-hidden">
           <KakaoMap
             ready={mapSdkReady}
             photoMarkers={photoMarkers}
@@ -167,6 +167,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
                       </div>
                     </button>
                     {isOpen && (
+                      <div className="max-h-[320px] overflow-y-auto">
                       <div className="grid grid-cols-3 gap-0.5 p-0.5">
                         {cluster.photos.map((photo) => (
                           <button
@@ -191,6 +192,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
                             )}
                           </button>
                         ))}
+                      </div>
                       </div>
                     )}
                   </div>
