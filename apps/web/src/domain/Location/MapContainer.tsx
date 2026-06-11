@@ -19,6 +19,7 @@ import type { Place } from "@/lib/api/locations";
 import { nudgeParticipant } from "@/lib/api/locations";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { Button } from "@/components/primitives/Button";
+import { toast } from "@/components/molecules/Toast";
 import { ROUTES } from "@/constants/routes";
 
 const ARRIVAL_THRESHOLD_METERS = 10;
@@ -308,23 +309,13 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
   const handleLocate = () => {
-    console.info("[handleLocate] click", {
-      permission: gpsPermission,
-      hasGeolocation: !!navigator.geolocation,
-      hasMapRef: !!kakaoMapRef.current,
-    });
     if (!navigator.geolocation) {
-      console.error("[handleLocate] navigator.geolocation unavailable");
+      toast.error("이 브라우저는 위치 기능을 지원하지 않아요");
       setGpsPermission("denied");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (p) => {
-        console.info("[handleLocate] success", {
-          lat: p.coords.latitude,
-          lng: p.coords.longitude,
-          accuracy: p.coords.accuracy,
-        });
         lastPositionRef.current = p;
         setGpsPermission("granted");
         setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
@@ -332,10 +323,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
       },
       (err) => {
         // PositionError.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
-        console.error("[handleLocate] error", { code: err.code, message: err.message });
-        setGpsPermission("denied");
+        if (err.code === 1) {
+          toast.error("위치 권한이 꺼져있어요. 브라우저 주소창 옆 아이콘을 눌러 허용해주세요.");
+          setGpsPermission("denied");
+        } else if (err.code === 3) {
+          toast.error("위치를 가져오는 데 시간이 오래 걸려요. 잠시 후 다시 시도해주세요.");
+        } else {
+          toast.error("현재 위치를 가져올 수 없어요.");
+        }
       },
-      // 무한 대기 방지 + maximumAge=0으로 항상 최신 fetch (이전에는 기본값 무한)
+      // 무한 대기 방지 + maximumAge=0으로 항상 최신 fetch
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
     );
   };
@@ -551,7 +548,7 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         >
           <div className="flex flex-col gap-2 pt-2">
             {nudgeError ? (
-              <p className="text-[13px] text-[var(--color-warning)]">
+              <p className="text-[13px] text-(--color-warning)">
                 알림 전송에 실패했어요. 다시 시도해주세요.
               </p>
             ) : null}
