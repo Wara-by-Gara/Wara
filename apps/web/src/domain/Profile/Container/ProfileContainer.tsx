@@ -50,7 +50,13 @@ export default function ProfileContainer() {
       onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
-      onPhotoMap={() => router.push(ROUTES.PHOTOS.MAP)}
+      onPhotoMap={(invitationId) =>
+        router.push(
+          invitationId
+            ? `${ROUTES.PHOTOS.MAP}?invitationId=${invitationId}`
+            : ROUTES.PHOTOS.MAP,
+        )
+      }
     />
   );
 }

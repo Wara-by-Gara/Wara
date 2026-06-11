@@ -25,7 +25,7 @@ export interface MyPageProps {
   onInvitationClick?: (id: string) => void;
   onSettings?: () => void;
   onProfileEdit?: () => void;
-  onPhotoMap?: () => void;
+  onPhotoMap?: (invitationId?: string) => void;
 }
 
 function StatItem({ label, value }: { label: string; value: number }) {
@@ -213,14 +213,14 @@ export const MyPage = ({
               </div>
               <button
                 type="button"
-                onClick={onPhotoMap}
+                onClick={() => onPhotoMap?.(memory?.id)}
                 className="flex items-center gap-0.5 text-[12px] font-medium text-text-tertiary active:opacity-60"
               >
                 자세히 보기
                 <Icon name="external-link" size="xs" color="inactive" decorative />
               </button>
             </div>
-            <PlaceLogPreview invitationId={memory?.id} onViewAll={onPhotoMap} />
+            <PlaceLogPreview invitationId={memory?.id} onViewAll={() => onPhotoMap?.(memory?.id)} />
           </div>
 
         </div>

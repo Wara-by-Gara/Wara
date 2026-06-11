@@ -9,21 +9,43 @@ import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/Kaka
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { stickyMainTop } from "@/lib/mobilePageLayout";
-import { getMyPhotoLocations, type PhotoLocation } from "@/lib/api/photos";
+import { getMyPhotoLocations, getPhotos, type PhotoLocation } from "@/lib/api/photos";
 import { PhotoModal } from "./PhotoModal";
 import { clusterPhotos, formatTakenAt } from "./photoMapUtils";
 
 // ── 컴포넌트 ──────────────────────────────────────────────────────────────────
-// PR #226 PlaceLog Storybook 디자인 — 헤더 + 지도(50vh) + 하단 사진 그리드 + PhotoModal.
-export function PhotoMapPage() {
+export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
   const mapSdkReady = useKakaoMapsSdk();
 
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoLocation | null>(null);
 
-  const { data: photoLocations = [], isLoading } = useQuery({
+  const { data: invPhotos, isLoading: isLoadingInv } = useQuery({
+    queryKey: ["invitations", invitationId, "photos", "locations"],
+    queryFn: () => getPhotos(invitationId!, undefined, 100),
+    enabled: !!invitationId,
+  });
+
+  const { data: allLocations = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ["photos", "locations"],
     queryFn: getMyPhotoLocations,
+    enabled: !invitationId,
   });
+
+  const isLoading = invitationId ? isLoadingInv : isLoadingAll;
+
+  const photoLocations: PhotoLocation[] = useMemo(() => {
+    if (invitationId) {
+      return (invPhotos?.rows ?? [])
+        .filter((p) => p.exifMetadata?.gps_lat != null && p.exifMetadata?.gps_lng != null)
+        .map((p) => ({
+          ...p,
+          takenAt: p.takenAt,
+          gpsLat: p.exifMetadata!.gps_lat!,
+          gpsLng: p.exifMetadata!.gps_lng!,
+        }));
+    }
+    return allLocations;
+  }, [invitationId, invPhotos, allLocations]);
 
   const clusters = useMemo(() => clusterPhotos(photoLocations), [photoLocations]);
 
@@ -60,7 +82,7 @@ export function PhotoMapPage() {
       <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>
         {/* 헤더 카드 — 전체 사진 개수 */}
         <div className="flex items-center justify-between border-b border-border bg-surface px-page py-3">
-          <span className="text-[14px] font-medium text-text-primary">내 사진</span>
+          <span className="text-[14px] font-medium text-text-primary">{invitationId ? "모임 사진" : "내 사진"}</span>
           <span className="text-[12px] text-text-tertiary">
             사진 {photoLocations.length}장
           </span>
