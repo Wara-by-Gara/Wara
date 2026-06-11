@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { FRONTEND_ORIGIN } from '@/lib/env';
 import Providers from '@/providers';
 import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { TermsComplianceRedirect } from '@/components/auth/terms-compliance-redirect';
@@ -10,6 +11,7 @@ import { Toaster } from '@/components/molecules/Toast';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(FRONTEND_ORIGIN),
   title: 'WARA',
   description: '요즘 모이는 방식',
 };

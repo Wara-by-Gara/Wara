@@ -162,9 +162,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const router = useRouter();
   const queryClient = useQueryClient();
   useLightTheme();
-  const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
-
-  useEffect(() => { hydrate(); }, [hydrate]);
+  const { isLoggedIn, hydrated, login } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [titleError, setTitleError] = useState(false);
   const [titleFocused, setTitleFocused] = useState(false);
