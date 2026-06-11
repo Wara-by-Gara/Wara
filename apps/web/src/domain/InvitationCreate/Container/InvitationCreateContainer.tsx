@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '@/components/icons';
 import { Button } from '@/components/primitives/Button';
 import { TextInput } from '@/components/primitives/TextInput';
+import { Textarea } from '@/components/primitives/Textarea';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { DateTimeSelector } from '@/components/molecules/DateTimeSelector';
 import { LocationSelector } from '@/components/molecules/LocationSelector';
@@ -78,6 +79,9 @@ interface FormData {
   lat: number | null;
   lng: number | null;
   placeId: string;
+  fee: string;
+  dressCode: string;
+  parkingInfo: string;
 }
 
 type MissionItem =
@@ -85,6 +89,9 @@ type MissionItem =
   | { type: 'custom'; localId: string; content: string };
 
 const MAX_MISSIONS = 10;
+
+// 미션 내용 끝에 붙은 일련번호(시드 데이터 잔재) 제거 후 표시
+const stripMissionNumber = (s: string) => s.replace(/\s+\d+$/, '');
 
 function MissionTemplateSection({
   selectedMissions,
@@ -109,7 +116,7 @@ function MissionTemplateSection({
   return (
     <section>
       <p className="mb-2 text-[14px] font-semibold text-text-primary">
-        시스템 미션
+        추천 미션
       </p>
       <div
         className="flex flex-col gap-2 overflow-y-auto"
@@ -143,7 +150,7 @@ function MissionTemplateSection({
                     : 'text-text-primary',
                 )}
               >
-                {t.content}
+                {stripMissionNumber(t.content)}
               </span>
               {isSelected && (
                 <Icon name="check" size="sm" color="primary" decorative />
@@ -237,6 +244,8 @@ export default function InvitationCreateContainer({
     useState<AnimationId>('none');
   const [bgColorSheetOpen, setBgColorSheetOpen] = useState(false);
   const [animationSheetOpen, setAnimationSheetOpen] = useState(false);
+  const [optionsSheetOpen, setOptionsSheetOpen] = useState(false);
+  const [missionSheetOpen, setMissionSheetOpen] = useState(false);
   // rsvp
   const [rsvpOptions, setRsvpOptions] =
     useState<Record<RsvpType, RsvpOption>>(DEFAULT_RSVP);
@@ -253,6 +262,7 @@ export default function InvitationCreateContainer({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   // mission
   const [missionEnabled, setMissionEnabled] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [selectedMissions, setSelectedMissions] = useState<MissionItem[]>([]);
   const [customInput, setCustomInput] = useState('');
   const [missionError, setMissionError] = useState(false);
@@ -272,6 +282,9 @@ export default function InvitationCreateContainer({
     lat: null,
     lng: null,
     placeId: '',
+    fee: '',
+    dressCode: '',
+    parkingInfo: '',
   });
 
   useEffect(() => {
@@ -296,6 +309,9 @@ export default function InvitationCreateContainer({
       lat: editInvitation.eventLocation?.lat ?? null,
       lng: editInvitation.eventLocation?.lng ?? null,
       placeId: editInvitation.eventLocation?.placeId ?? '',
+      fee: editInvitation.fee ?? '',
+      dressCode: editInvitation.dressCode ?? '',
+      parkingInfo: editInvitation.parkingInfo ?? '',
     });
     setDesignBgColor(editInvitation.bgColor as DesignBgColor);
     setDesignFont(editInvitation.font as DesignFont);
@@ -328,6 +344,7 @@ export default function InvitationCreateContainer({
       setLocalPreviewUrl(editInvitation.mainImageUrl);
     }
     setMissionEnabled(editInvitation.isMissionEnabled);
+    setIsPublic(editInvitation.isPublic ?? false);
     if (editInvitation.eventLocation) {
       setLocationMode('selected');
       setLocationUnknown(true);
@@ -437,6 +454,7 @@ export default function InvitationCreateContainer({
         const updated = await updateInvitation(editInvitation.id, {
           title: form.title,
           description: form.description,
+          ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
           templateId: form.templateId || null,
           eventStartAt:
             toEventStartAt(form.date, timeUnknown ? form.time : '') ?? null,
@@ -444,6 +462,10 @@ export default function InvitationCreateContainer({
           font: designFont,
           animation: selectedAnimation,
           isMissionEnabled: missionEnabled,
+          isPublic,
+          fee: form.fee.trim() || null,
+          dressCode: form.dressCode.trim() || null,
+          parkingInfo: form.parkingInfo.trim() || null,
           rsvpAttendingEmoji: rsvpOptions.attending.emoji,
           rsvpAttendingLabel: rsvpOptions.attending.label,
           rsvpMaybeEmoji: rsvpOptions.maybe.emoji,
@@ -481,6 +503,10 @@ export default function InvitationCreateContainer({
         font: designFont,
         animation: selectedAnimation,
         isMissionEnabled: missionEnabled,
+        isPublic,
+        ...(form.fee.trim() ? { fee: form.fee.trim() } : {}),
+        ...(form.dressCode.trim() ? { dressCode: form.dressCode.trim() } : {}),
+        ...(form.parkingInfo.trim() ? { parkingInfo: form.parkingInfo.trim() } : {}),
         rsvpAttendingEmoji: rsvpOptions.attending.emoji,
         rsvpAttendingLabel: rsvpOptions.attending.label,
         rsvpMaybeEmoji: rsvpOptions.maybe.emoji,
@@ -528,7 +554,7 @@ export default function InvitationCreateContainer({
         await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.invitations.myList(),
         });
-        router.push(`/invitations/${editInvitation.id}`);
+        router.replace(`/invitations/${editInvitation.id}`);
         return;
       }
       setCreatedInvitationId(data.id);
@@ -812,7 +838,7 @@ export default function InvitationCreateContainer({
               variant="outline"
               fullWidth
               onClick={() =>
-                router.push(
+                router.replace(
                   createdInvitationId
                     ? `/invitations/${createdInvitationId}`
                     : '/invitations',
@@ -825,7 +851,7 @@ export default function InvitationCreateContainer({
               size="lg"
               variant="text"
               fullWidth
-              onClick={() => router.push('/invitations')}
+              onClick={() => router.replace('/invitations')}
             >
               내 초대장 목록
             </Button>
@@ -884,6 +910,12 @@ export default function InvitationCreateContainer({
         locationError={locationError}
         onEditLocation={() => setLocationSheetOpen(true)}
         locationUnknown={locationUnknown}
+        optionsText={
+          [form.fee, form.dressCode, form.parkingInfo]
+            .filter((v) => v.trim())
+            .join(' · ') || undefined
+        }
+        onEditOptions={() => setOptionsSheetOpen(true)}
         description={form.description}
         onDescriptionChange={(v) => set({ description: v })}
         rsvp={rsvpOptions}
@@ -1383,132 +1415,194 @@ export default function InvitationCreateContainer({
           </BottomSheetContent>
         </BottomSheet>
 
+        {/* 모임 옵션 편집 시트 */}
+        <BottomSheet open={optionsSheetOpen} onOpenChange={setOptionsSheetOpen}>
+          <BottomSheetContent title="모임 옵션">
+            <div className="flex flex-col gap-3">
+              <TextInput
+                value={form.fee}
+                onChange={(e) => set({ fee: e.target.value })}
+                placeholder="회비 (예: 3만원)"
+                maxLength={100}
+              />
+              <TextInput
+                value={form.dressCode}
+                onChange={(e) => set({ dressCode: e.target.value })}
+                placeholder="드레스코드 (예: 캐주얼)"
+                maxLength={100}
+              />
+              <Textarea
+                value={form.parkingInfo}
+                onChange={(e) => set({ parkingInfo: e.target.value })}
+                placeholder="주차 안내"
+                rows={3}
+              />
+            </div>
+          </BottomSheetContent>
+        </BottomSheet>
+
         <div className="h-px bg-border" />
 
-        {/* 7. 미션 */}
+        {/* 공개/비공개 */}
         <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3.5">
           <div>
+            <p className="text-[15px] font-semibold text-text-primary">
+              공개 초대장
+            </p>
+            <p className="text-[13px] text-text-tertiary">
+              켜면 이벤트 추천에 노출돼요. 끄면 링크로만 볼 수 있어요
+            </p>
+          </div>
+          <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+        </div>
+
+        {/* 7. 미션 — 토글 on 시 다이얼로그로 미션 편집 */}
+        <div
+          className={cn(
+            'flex items-center justify-between rounded-md border bg-surface px-4 py-3.5',
+            missionError ? 'border-danger' : 'border-border',
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => missionEnabled && setMissionSheetOpen(true)}
+            className="text-left"
+          >
             <p className="text-[15px] font-semibold text-text-primary">
               미션 사용하기
             </p>
             <p className="text-[13px] text-text-tertiary">
-              게스트에게 미션을 부여할 수 있어요
+              {missionEnabled
+                ? selectedMissions.length > 0
+                  ? `미션 ${selectedMissions.length}개 선택됨 · 탭하여 편집`
+                  : '탭하여 미션을 추가해주세요'
+                : '게스트에게 미션을 부여할 수 있어요'}
             </p>
-          </div>
+          </button>
           <Switch
             checked={missionEnabled}
             onCheckedChange={(v) => {
               setMissionEnabled(v);
               setMissionError(false);
-              // 미션 UI가 펼쳐진 뒤(다음 프레임) 맨 아래로 스크롤
-              if (v) {
-                requestAnimationFrame(() => {
-                  const el = contentScrollRef.current;
-                  if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-                });
-              }
+              if (v) setMissionSheetOpen(true);
             }}
           />
         </div>
 
-        {missionEnabled && (
-          <>
-            <MissionTemplateSection
-              selectedMissions={selectedMissions}
-              onToggle={toggleMissionTemplate}
-              maxReached={selectedMissions.length >= MAX_MISSIONS}
-            />
+        {/* 미션 편집 시트 */}
+        <BottomSheet open={missionSheetOpen} onOpenChange={setMissionSheetOpen}>
+          <BottomSheetContent title="미션">
+            <div className="flex flex-col gap-4">
+              {missionEnabled && (
+                <>
+                  <MissionTemplateSection
+                    selectedMissions={selectedMissions}
+                    onToggle={toggleMissionTemplate}
+                    maxReached={selectedMissions.length >= MAX_MISSIONS}
+                  />
 
-            <section>
-              <p className="mb-2 text-[14px] font-semibold text-text-primary">
-                직접 입력
-              </p>
-              <div className="flex gap-2">
-                <TextInput
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  placeholder="미션 내용을 입력하세요 (최대 200자)"
-                  maxLength={200}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addCustomMission();
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={addCustomMission}
-                  disabled={
-                    !customInput.trim() ||
-                    selectedMissions.length >= MAX_MISSIONS
-                  }
-                >
-                  추가
-                </Button>
-              </div>
-            </section>
-
-            {selectedMissions.length > 0 && (
-              <section>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[14px] font-semibold text-text-primary">
-                    선택된 미션
-                  </p>
-                  <span
-                    className={cn(
-                      'text-[13px]',
-                      selectedMissions.length >= MAX_MISSIONS
-                        ? 'text-danger'
-                        : 'text-text-tertiary',
-                    )}
-                  >
-                    {selectedMissions.length}/{MAX_MISSIONS}
-                  </span>
-                </div>
-                <div
-                  className="flex flex-col gap-2 overflow-y-auto"
-                  style={{ maxHeight: '200px' }}
-                >
-                  {selectedMissions.map((m) => {
-                    const key =
-                      m.type === 'template' ? m.templateId : m.localId;
-                    return (
-                      <div
-                        key={key}
-                        className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3"
+                  <section>
+                    <p className="mb-2 text-[14px] font-semibold text-text-primary">
+                      직접 입력
+                    </p>
+                    <div className="flex gap-2">
+                      <TextInput
+                        value={customInput}
+                        onChange={(e) => setCustomInput(e.target.value)}
+                        placeholder="미션 내용을 입력하세요 (최대 200자)"
+                        maxLength={200}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addCustomMission();
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="md"
+                        onClick={addCustomMission}
+                        disabled={
+                          !customInput.trim() ||
+                          selectedMissions.length >= MAX_MISSIONS
+                        }
                       >
-                        <span className="flex-1 text-[14px] text-text-primary">
-                          {m.content}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeMission(key)}
-                          className="shrink-0 text-text-tertiary hover:text-danger"
-                        >
-                          <Icon
-                            name="x"
-                            size="sm"
-                            color="currentColor"
-                            decorative
-                          />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+                        추가
+                      </Button>
+                    </div>
+                  </section>
 
-            {missionError && (
-              <p className="text-[13px] text-danger">
-                미션을 최소 1개 이상 선택해주세요
-              </p>
-            )}
-          </>
-        )}
+                  {selectedMissions.length > 0 && (
+                    <section>
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-[14px] font-semibold text-text-primary">
+                          선택된 미션
+                        </p>
+                        <span
+                          className={cn(
+                            'text-[13px]',
+                            selectedMissions.length >= MAX_MISSIONS
+                              ? 'text-danger'
+                              : 'text-text-tertiary',
+                          )}
+                        >
+                          {selectedMissions.length}/{MAX_MISSIONS}
+                        </span>
+                      </div>
+                      <div
+                        className="flex flex-col gap-2 overflow-y-auto"
+                        style={{ maxHeight: '200px' }}
+                      >
+                        {selectedMissions.map((m) => {
+                          const key =
+                            m.type === 'template' ? m.templateId : m.localId;
+                          return (
+                            <div
+                              key={key}
+                              className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3"
+                            >
+                              <span className="flex-1 text-[14px] text-text-primary">
+                                {stripMissionNumber(m.content)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeMission(key)}
+                                className="shrink-0 text-text-tertiary hover:text-danger"
+                              >
+                                <Icon
+                                  name="x"
+                                  size="sm"
+                                  color="currentColor"
+                                  decorative
+                                />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {missionError && (
+                    <p className="text-[13px] text-danger">
+                      미션을 최소 1개 이상 선택해주세요
+                    </p>
+                  )}
+                </>
+              )}
+
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => setMissionSheetOpen(false)}
+              >
+                완료
+              </Button>
+            </div>
+          </BottomSheetContent>
+        </BottomSheet>
 
         {/* 배경색 편집 시트 */}
         <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen}>
@@ -1621,7 +1715,7 @@ export default function InvitationCreateContainer({
                 </button>
 
                 {packDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[200px] overflow-y-auto rounded-md border border-border bg-surface shadow-lg">
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[120px] overflow-y-auto rounded-md border border-border bg-surface shadow-lg">
                     {RSVP_PACKS.map((pack) => (
                       <button
                         key={pack.id}

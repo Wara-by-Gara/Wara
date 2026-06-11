@@ -1,43 +1,45 @@
-/** 홈 인기 초대장 — 이름·미리보기 이미지 1:1 매핑 (시드 TEMPLATE_DEFS와 동일) */
+/** 홈 인기 초대장 — 이름·미리보기 이미지 1:1 매핑.
+ * NOTE: 기존 카테고리별 이미지(파티/생일/꽃/…)는 public/luma_images에 누락되어 404가 났음.
+ * 현재 실제 존재하는 luma_images/AI 자산으로 매핑. 카테고리 이미지 복구 시 교체 가능. */
 export const POPULAR_TEMPLATE_CATALOG = [
   {
     name: "파티 나이트",
-    imageUrl: "/luma_images/파티/imgi_10_1f5b32e2-8467-4bfd-9048-8dfd0231b7c1.png",
+    imageUrl: "/luma_images/AI/imgi_100_3c3db379-bc3e-493e-8677-d2fb311882f8.png",
   },
   {
     name: "생일 축하",
-    imageUrl: "/luma_images/생일/imgi_10_8e9ed34a-cc86-4632-83ec-cb4097a80961.png",
+    imageUrl: "/luma_images/AI/imgi_17_249caab2-d8da-4750-9b81-e3a2c7147ae8.png",
   },
   {
     name: "플라워 가든",
-    imageUrl: "/luma_images/꽃/imgi_10_1074f31e-22b4-471b-b857-8afcb2698179.png",
+    imageUrl: "/luma_images/AI/imgi_26_1f415e7c-a575-45ac-a36b-246bcb9babe4.png",
   },
   {
     name: "여름 바캉스",
-    imageUrl: "/luma_images/여름/imgi_10_806d0940-d8e2-46e9-9704-f25ae0e49375.png",
+    imageUrl: "/luma_images/AI/imgi_35_4d94593d-bf72-42cc-9954-5d3b57ccb3e1.png",
   },
   {
     name: "클래식 초대",
-    imageUrl: "/luma_images/초대/imgi_10_468d0b37-6b49-491d-a0f5-bb2af2ef9719.png",
+    imageUrl: "/luma_images/AI/imgi_44_8eb0cdf7-51e5-467f-b4dc-c1cdc09d8ffa.png",
   },
   {
     name: "학교 축제",
-    imageUrl: "/luma_images/학교/imgi_10_51ffeb4e-b392-4fc4-b105-a408c1f96987.png",
+    imageUrl: "/luma_images/AI/imgi_52_8619a182-5b6f-4d47-ac2a-e44d7586b3f3.png",
   },
   {
     name: "디너 파티",
-    imageUrl: "/luma_images/음식/imgi_10_46a752da-c51b-4e24-b8d7-e3844aa37023.png",
+    imageUrl: "/luma_images/AI/imgi_60_17c72134-2b23-438d-8b6a-bf52de5f7a4d.png",
   },
   {
     name: "스포츠 데이",
-    imageUrl: "/luma_images/스포츠/imgi_12_7b6b9201-46c4-43e1-b394-a401b7db95d3.png",
+    imageUrl: "/luma_images/AI/imgi_69_20745b53-9819-4dc7-a541-ffdc562afd2d.png",
   },
   {
     name: "브런치 타임",
-    imageUrl: "/luma_images/음료/imgi_10_5d8e6e58-f50d-40d4-9ba8-feb9b5a1ef72.png",
+    imageUrl: "/luma_images/AI/imgi_78_6d7fbcf6-5e96-4977-8621-a133002df00e.png",
   },
   {
     name: "테크 밋업",
-    imageUrl: "/luma_images/AI/imgi_100_3c3db379-bc3e-493e-8677-d2fb311882f8.png",
+    imageUrl: "/luma_images/AI/imgi_86_2a39c59a-3aee-4cf8-bae3-f0b996451d1d.png",
   },
 ] as const;

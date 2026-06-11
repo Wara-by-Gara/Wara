@@ -25,6 +25,7 @@ import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 import { InvitationDetailHero } from "@/domain/InvitationDetail/InvitationDetailHero";
 import { InvitationDescriptionBox } from "@/domain/InvitationDetail/InvitationDescriptionBox";
+import { InvitationOptions } from "@/domain/InvitationDetail/InvitationOptions/InvitationOptions";
 import { ImmersiveTopBarButton } from "@/domain/InvitationDetail/ImmersiveTopBarButton";
 import { getInvitationDetailCover } from "@/domain/InvitationDetail/invitationDetailCover";
 import { formatInvitationDetailSchedule } from "@/utils/formatInvitationDetailSchedule";
@@ -165,6 +166,14 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
             showWeather={isLoggedIn}
             hideDateInHeader
             immersive
+            bgColor={invitation.bgColor}
+          />
+
+          <InvitationOptions
+            fee={invitation.fee}
+            dressCode={invitation.dressCode}
+            parkingInfo={invitation.parkingInfo}
+            fontClass={fontClass}
             bgColor={invitation.bgColor}
           />
 

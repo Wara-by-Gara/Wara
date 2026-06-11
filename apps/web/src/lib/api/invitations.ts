@@ -31,6 +31,11 @@ interface CreateInvitationPayload {
   templateId?: string;
   eventStartAt?: string;
   isMissionEnabled?: boolean;
+  isPublic?: boolean;
+  category?: string;
+  fee?: string;
+  dressCode?: string;
+  parkingInfo?: string;
   bgColor?: string;
   font?: string;
   animation?: string;
@@ -52,6 +57,11 @@ interface UpdateInvitationPayload {
   templateId?: string | null;
   eventStartAt?: string | null;
   isMissionEnabled?: boolean;
+  isPublic?: boolean;
+  category?: string;
+  fee?: string | null;
+  dressCode?: string | null;
+  parkingInfo?: string | null;
   status?: 'active' | 'closed';
   bgColor?: string;
   font?: string;
@@ -85,6 +95,11 @@ export interface Invitation {
   mainImageUrl: string | null;
   eventStartAt: string | null;
   isMissionEnabled: boolean;
+  isPublic?: boolean;
+  category?: string | null;
+  fee?: string | null;
+  dressCode?: string | null;
+  parkingInfo?: string | null;
   bgColor: string;
   font: string;
   animation?: string;

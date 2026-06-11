@@ -24,6 +24,9 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
   const photos = data?.pages.flatMap((p) => p.rows) ?? [];
 
   const { data: invitation } = useInvitation(invitationId);
+  const bg = invitation?.bgColor ?? '';
+  const isDarkBg =
+    bg.includes('aurora') || bg.includes('starry') || bg.includes('dreamy');
   const showMomentLog = isMomentLogVisible(invitation?.eventStartAt ?? null);
   const { data: best9 } = useBest9(showMomentLog ? invitationId : '');
 
@@ -55,8 +58,9 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
         hasNextPage={!!hasNextPage}
         fetchAllPages={fetchAllPages}
         isFetchingNextPage={isFetchingNextPage}
+        isDarkBg={isDarkBg}
       />
-      <InvitationFeedbacks invitationId={invitationId} />
+      <InvitationFeedbacks invitationId={invitationId} isDarkBg={isDarkBg} />
       {showMomentLogModal && (
         <BestNineModal
           invitationId={invitationId}

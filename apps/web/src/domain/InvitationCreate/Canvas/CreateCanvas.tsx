@@ -51,6 +51,9 @@ export interface CreateCanvasProps {
   locationError: boolean;
   onEditLocation: () => void;
   locationUnknown?: boolean;
+  /* 모임 옵션 (회비·드레스코드·주차) */
+  optionsText?: string;
+  onEditOptions: () => void;
   /* 소개 */
   description: string;
   onDescriptionChange: (v: string) => void;
@@ -134,6 +137,8 @@ export function CreateCanvas({
   locationError,
   onEditLocation,
   locationUnknown,
+  optionsText,
+  onEditOptions,
   description,
   onDescriptionChange,
   rsvp,
@@ -325,6 +330,15 @@ export function CreateCanvas({
           placeholder={locationUnknown ? "장소를 입력하세요" : "장소 미정"}
           error={locationError}
           onClick={onEditLocation}
+          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+        />
+
+        {/* 모임 옵션 — 회비·드레스코드·주차 (선택) */}
+        <EditableRow
+          icon="clipboard-list"
+          text={optionsText}
+          placeholder="모임 옵션 추가하기 (선택)"
+          onClick={onEditOptions}
           isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
         />
 

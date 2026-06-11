@@ -40,6 +40,10 @@ export const invitations = pgTable('invitations', {
   rsvpDeclinedEmoji: varchar('rsvp_declined_emoji', { length: 10 }).notNull().default('😭'),
   rsvpDeclinedLabel: varchar('rsvp_declined_label', { length: 20 }).notNull().default('불참'),
   animation: varchar('animation', { length: 50 }),
+  /** 모임 옵션 (선택) */
+  fee: varchar('fee', { length: 100 }),
+  dressCode: varchar('dress_code', { length: 100 }),
+  parkingInfo: text('parking_info'),
   /** true: 탐색·추천 이벤트 노출 / false: 비공개(링크 초대만) */
   isPublic: boolean('is_public').notNull().default(false),
   /** 탐색 필터용 — tech, fitness, food, art, culture, health */
