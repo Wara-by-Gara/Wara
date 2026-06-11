@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
@@ -50,6 +50,12 @@ export const MyPage = ({
   onPhotoMap,
 }: MyPageProps) => {
   const [memoryIndex, setMemoryIndex] = useState(0);
+
+  useEffect(() => {
+    if (recentInvitations.length > 0) {
+      setMemoryIndex(Math.floor(Math.random() * recentInvitations.length));
+    }
+  }, [recentInvitations.length]);
 
   if (state === "loggedOut") {
     return (

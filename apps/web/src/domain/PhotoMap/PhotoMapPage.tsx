@@ -1,22 +1,26 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
-import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
+import { KakaoMap, type PhotoMarker, type KakaoMapHandle } from "@/components/molecules/KakaoMap/KakaoMap";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { getMyPhotoLocations, getPhotos, type PhotoLocation } from "@/lib/api/photos";
 import { getInvitation } from "@/lib/api/invitations";
+import { ROUTES } from "@/constants/routes";
 import { PhotoModal } from "./PhotoModal";
 import { clusterPhotos, formatTakenAt, type Cluster } from "./photoMapUtils";
 
 // ── 컴포넌트 ──────────────────────────────────────────────────────────────────
 export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
   const mapSdkReady = useKakaoMapsSdk();
+  const router = useRouter();
+  const mapRef = useRef<KakaoMapHandle>(null);
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -109,7 +113,19 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-background">
-      <StickyHeader title="Place log" />
+      <StickyHeader
+        title="Place log"
+        rightSlot={
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={() => router.push(ROUTES.PROFILE.ME)}
+            className="inline-flex size-11 items-center justify-center text-text-secondary"
+          >
+            <Icon name="close" size="lg" color="currentColor" decorative />
+          </button>
+        }
+      />
 
       <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>
         {/* 헤더 카드 — 전체 사진 개수 */}
@@ -123,6 +139,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
         {/* 지도 — 50vh 고정 */}
         <div className="relative h-[40vh] w-full overflow-hidden">
           <KakaoMap
+            ref={mapRef}
             ready={mapSdkReady}
             photoMarkers={photoMarkers}
             onPhotoMarkerClick={handleMarkerClick}
@@ -152,7 +169,12 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
                   <div key={cluster.id}>
                     <button
                       type="button"
-                      onClick={() => toggleGroup(cluster.id)}
+                      onClick={() => {
+                        toggleGroup(cluster.id);
+                        if (!isOpen) {
+                          mapRef.current?.centerOn(cluster.lat, cluster.lng);
+                        }
+                      }}
                       className="flex w-full items-center justify-between border-b border-border bg-surface px-page py-3 active:bg-background-soft"
                     >
                       <div className="flex items-center gap-2">
