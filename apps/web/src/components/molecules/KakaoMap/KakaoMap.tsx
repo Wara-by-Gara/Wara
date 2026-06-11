@@ -493,7 +493,9 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       xAnchor: 0.5,
       zIndex: 20,
     });
-  }, [myLocation]);
+    // 새 myLocation이 들어오면 다른 마커와 함께 fit — eventLocation만 보이는 상태 회피.
+    fitBounds();
+  }, [myLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fitBounds() {
     if (autoFit === "never") return;
@@ -504,6 +506,11 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
 
     if (eventLocation) {
       bounds.extend(new maps.LatLng(eventLocation.lat, eventLocation.lng));
+    }
+    // myLocation도 fit 대상에 포함 — 빠지면 centerOn 직후 다른 effect의 fit으로
+    // 다시 eventLocation 중심이 되어 파란 점이 화면 밖으로 밀려남.
+    if (myLocation) {
+      bounds.extend(new maps.LatLng(myLocation.lat, myLocation.lng));
     }
     for (const pin of participants) {
       if (!pin.isArrived) {

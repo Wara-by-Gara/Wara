@@ -308,21 +308,35 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
   const handleLocate = () => {
-    // 이전엔 lastPositionRef가 있으면 centerOn만 호출 → setMyLocation이 안 돌아
-    // 모임 시작 전(inEventWindow=false, watchPosition 비활성) 상태에서는 파란 점이
-    // 영원히 안 떴음. 매 클릭마다 fresh fetch로 통일.
+    console.info("[handleLocate] click", {
+      permission: gpsPermission,
+      hasGeolocation: !!navigator.geolocation,
+      hasMapRef: !!kakaoMapRef.current,
+    });
+    if (!navigator.geolocation) {
+      console.error("[handleLocate] navigator.geolocation unavailable");
+      setGpsPermission("denied");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (p) => {
+        console.info("[handleLocate] success", {
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          accuracy: p.coords.accuracy,
+        });
         lastPositionRef.current = p;
         setGpsPermission("granted");
         setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
         kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
       },
       (err) => {
-        console.error("[geolocation]", err);
+        // PositionError.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+        console.error("[handleLocate] error", { code: err.code, message: err.message });
         setGpsPermission("denied");
       },
-      { enableHighAccuracy: true },
+      // 무한 대기 방지 + maximumAge=0으로 항상 최신 fetch (이전에는 기본값 무한)
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
     );
   };
 
