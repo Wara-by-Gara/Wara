@@ -37,6 +37,9 @@ export const ROUTES = {
     SETTINGS: "/profile/settings",
     ACCOUNT: "/profile/account",
   },
+  PHOTOS: {
+    MAP: "/photos/map",
+  },
   ADMIN: {
     DASHBOARD: '/admin',
     INQUIRIES: '/admin/inquiries',

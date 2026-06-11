@@ -32,6 +32,7 @@ export interface MyPageProps {
   onAccount?: () => void;
   onSupport?: () => void;
   onHiddenFriends?: () => void;
+  onPhotoMap?: () => void;
 }
 
 export const MyPage = ({
@@ -46,6 +47,7 @@ export const MyPage = ({
   onAccount,
   onSupport,
   onHiddenFriends,
+  onPhotoMap,
 }: MyPageProps) => {
   const [recentExpanded, setRecentExpanded] = useState(false);
   const shownInvitations = recentExpanded
@@ -179,6 +181,13 @@ export const MyPage = ({
       <section className="px-page pt-5">
         <div className="overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-border">
           <div className="divide-y divide-border">
+            <MenuItem
+              leftIcon="map-pin"
+              onClick={onPhotoMap}
+              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
+            >
+              사진 지도
+            </MenuItem>
             <MenuItem
               leftIcon="user-x"
               onClick={onHiddenFriends}
