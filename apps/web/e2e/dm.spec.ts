@@ -861,6 +861,49 @@ test.describe("dm-batch8-drawer", () => {
 
     await context.close();
   });
+
+  test("갤러리 사진은 좌우로 넘겨볼 수 있고 업로더·시간이 표시된다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    // 누적 없는 빈 그룹방을 만들어 사진을 올린다 (누적 DM은 느려 타임아웃)
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const inviteSheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await inviteSheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await inviteSheet.getByRole("button", { name: /초대/ }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+
+    // 빈 그룹에 사진 2장
+    for (const n of ["a", "b"]) {
+      await page.setInputFiles('input[type="file"]', {
+        name: `slide-${n}.png`,
+        mimeType: "image/png",
+        buffer: PNG_1x1,
+      });
+      await page.getByRole("button", { name: "보내기", exact: true }).click();
+      await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    }
+
+    // 서랍 갤러리 첫 사진 클릭 -> 뷰어 (vaul 드로어 애니메이션 회피로 force)
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    const drawer = page.getByRole("dialog");
+    const thumbs = drawer.locator('button:has(img[alt="사진"])');
+    await expect(thumbs.first()).toBeVisible({ timeout: 10_000 });
+    await thumbs.first().click({ force: true });
+
+    // 뷰어: 업로더 시간(년) 표시 + 1/N -> 다음 -> 2/N
+    await expect(page.getByRole("img", { name: "사진 크게 보기" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/\d{4}년/)).toBeVisible();
+    await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+    await page.getByRole("button", { name: "다음 사진" }).click();
+    await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
+
+    await context.close();
+  });
 });
 
 test.describe("dm-batch9-group", () => {

@@ -17,6 +17,7 @@ import {
   useInvite,
 } from "@/hooks/useChat";
 import { ROUTES } from "@/constants/routes";
+import type { ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 
 // 채팅방 우측 슬라이딩 서랍 — 사진 갤러리 + 대화상대 목록 + 초대
 export function ChatDrawer({
@@ -28,7 +29,7 @@ export function ChatDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conversationId: string;
-  onPhotoClick: (url: string) => void;
+  onPhotoClick: (photos: ViewerPhoto[], index: number) => void;
 }) {
   const { data: me } = useMe();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -58,11 +59,20 @@ export function ChatDrawer({
                 </p>
               ) : (
                 <div className="grid grid-cols-3 gap-1">
-                  {photos.map((p) => (
+                  {photos.map((p, i) => (
                     <button
                       key={p.messageId}
                       type="button"
-                      onClick={() => onPhotoClick(p.imageUrl)}
+                      onClick={() =>
+                        onPhotoClick(
+                          photos.map((ph) => ({
+                            imageUrl: ph.imageUrl,
+                            uploaderName: ph.uploaderName,
+                            createdAt: ph.createdAt,
+                          })),
+                          i,
+                        )
+                      }
                       className="aspect-square overflow-hidden rounded-md active:opacity-70"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -494,8 +494,11 @@ export class ConversationsRepository {
         messageId: messages.id,
         imageKey: messages.imageKey,
         createdAt: messages.createdAt,
+        uploaderId: messages.senderId,
+        uploaderName: users.name,
       })
       .from(messages)
+      .innerJoin(users, eq(users.id, messages.senderId))
       .where(
         and(
           eq(messages.conversationId, conversationId),

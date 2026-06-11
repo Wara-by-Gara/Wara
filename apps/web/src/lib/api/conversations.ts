@@ -160,6 +160,7 @@ export type ConversationPhoto = {
   messageId: string;
   imageUrl: string;
   createdAt: string;
+  uploaderName: string | null;
 };
 
 export function getConversationPhotos(conversationId: string) {

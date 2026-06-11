@@ -9,7 +9,7 @@ import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/mo
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { toast } from "@/components/molecules/Toast";
 import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
-import { PhotoViewer } from "@/screens/Chat/PhotoViewer";
+import { PhotoViewer, type ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 import { useMe } from "@/hooks/useUsers";
 import {
   useConversation,
@@ -63,7 +63,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
   const [text, setText] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<{
+    photos: ViewerPhoto[];
+    index: number;
+  } | null>(null);
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -385,7 +388,17 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         onContextMenu={(e) => e.preventDefault()}
                         onClick={() => {
                           if (pressFired.current) return; // 길게누르기였으면 메뉴만
-                          if (m.imageUrl) setViewerUrl(m.imageUrl);
+                          if (m.imageUrl)
+                            setViewer({
+                              photos: [
+                                {
+                                  imageUrl: m.imageUrl,
+                                  uploaderName: mine ? (me?.name ?? "나") : senderName,
+                                  createdAt: m.createdAt,
+                                },
+                              ],
+                              index: 0,
+                            });
                         }}
                         className="relative max-w-full cursor-pointer select-none overflow-hidden rounded-2xl"
                       >
@@ -801,11 +814,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         conversationId={id}
-        onPhotoClick={setViewerUrl}
+        onPhotoClick={(photos, index) => setViewer({ photos, index })}
       />
 
       {/* 사진 크게 보기 + 다운로드 */}
-      <PhotoViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      <PhotoViewer
+        photos={viewer?.photos ?? null}
+        startIndex={viewer?.index ?? 0}
+        onClose={() => setViewer(null)}
+      />
     </div>
   );
 };

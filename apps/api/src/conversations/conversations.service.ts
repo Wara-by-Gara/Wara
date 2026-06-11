@@ -490,6 +490,7 @@ export class ConversationsService {
         messageId: r.messageId,
         imageUrl: await this.s3Service.getViewPresignedUrl(r.imageKey!),
         createdAt: r.createdAt,
+        uploaderName: r.uploaderName,
       })),
     );
     return { photos };
