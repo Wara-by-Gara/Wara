@@ -19,6 +19,7 @@ import type { Place } from "@/lib/api/locations";
 import { nudgeParticipant } from "@/lib/api/locations";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { Button } from "@/components/primitives/Button";
+import { ROUTES } from "@/constants/routes";
 
 const ARRIVAL_THRESHOLD_METERS = 10;
 // GPS emit 간격 — 너무 잦으면 서버 부하/배터리 부담.
@@ -381,7 +382,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         onSuccess: () => {
           setPendingPlace(null);
           setSearchQuery("");
-          setPageState("fullscreen");
+          // 호스트가 장소 확정 후 별도 뒤로가기 없이 초대장 상세로 자동 복귀.
+          router.push(ROUTES.INVITATIONS.DETAIL(invitationId));
         },
       },
     );
