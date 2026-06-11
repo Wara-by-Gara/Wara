@@ -18,8 +18,9 @@ export default function ProfileContainer() {
     title: inv.title,
     date: formatInvitationEventDate(inv.eventStartAt),
     imageUrl: getInvitationCoverImageUrl(inv) || undefined,
-    variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
   }));
+
+  const hostedCount = (invitations ?? []).filter((inv) => inv.myRole === 'HOST').length;
 
   if (isLoading) return <MyPage state="loading" />;
 
@@ -44,6 +45,8 @@ export default function ProfileContainer() {
       }}
       recentInvitations={recentInvitations}
       participatedCount={invitations?.length ?? 0}
+      hostedCount={hostedCount}
+      likeCount={0}
       onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
