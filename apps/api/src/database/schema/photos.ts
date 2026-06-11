@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, uniqueIndex, check,index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, jsonb, uniqueIndex, check, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitations, participants } from './invitations';
@@ -18,12 +18,14 @@ export const photos = pgTable('photos', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  exifFingerprint: text('exif_fingerprint'),
 }, (t) => [
   check('check_photo_view_count', sql`${t.viewCount} >= 0`),
   check('check_photo_like_count', sql`${t.likeCount} >= 0`),
   check('check_photo_feedback_count', sql`${t.feedbackCount} >= 0`),
   index('idx_photos_invitation_taken_at').on(t.invitationId, t.takenAt),
   index('idx_photos_deleted_at').on(t.deletedAt),
+  uniqueIndex('uq_photos_invitation_fingerprint').on(t.invitationId, t.exifFingerprint),
 ]);
 
 export const photoLikes = pgTable('photo_likes', {

@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -14,10 +15,8 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { S3Service } from '../s3/s3.service';
 import { ImageProcessingService } from '../image-processing/image-processing.service';
 import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
-import {
-  IMAGE_PROCESSING_JOB,
-  IMAGE_PROCESSING_QUEUE,
-} from '../queues/queue.constants';
+import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
+import { KakaoLocalService } from '../locations/kakao-local.service';
 
 const MAX_DOWNLOAD_LIMIT = 9999;
 
@@ -29,6 +28,7 @@ export class PhotosService {
     private readonly imageProcessing: ImageProcessingService,
     private readonly imageJobs: ImageProcessingJobsRepository,
     @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
+    private readonly kakaoLocalService: KakaoLocalService,
   ) {}
 
   // 업로드용 presigned URL 발급 (15분)
@@ -77,37 +77,46 @@ export class PhotosService {
 
   // 사진 정보 DB 저장. presigned PUT 직후 호출되며 S3 객체를 매직넘버 sniff + 크기로 검증한 뒤 enqueue.
   async uploadPhoto(invitationId: string, participantId: string, dto: UploadPhotoDto) {
-    const { mime, contentLength } = await this.imageProcessing.verifyUpload(dto.imageKey);
+    let exifFingerprint: string | undefined;
+    if (dto.takenAt) {
+      const meta = dto.exifMetadata ?? {};
+      exifFingerprint = [
+        dto.takenAt,
+        meta.make ?? '',
+        meta.model ?? '',
+        dto.fileSize ?? '',
+        meta.gps_lat ?? '',
+        meta.gps_lng ?? '',
+      ].join('|');
 
-    const photo = await this.repository.create({
-      invitationId,
-      participantId,
-      imageKey: dto.imageKey,
-      takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
-      exifMetadata: dto.exifMetadata,
-    });
-    if (!photo) throw new Error('photo 생성 실패');
+      const existing = await this.repository.findByFingerprint(invitationId, exifFingerprint);
+      if (existing) throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
+    }
 
-    const job = await this.imageJobs.create({
-      targetType: 'photo',
-      targetId: photo.id,
-      sourceKey: dto.imageKey,
-      mimeType: mime,
-      sizeBytes: contentLength,
-    });
+    let exifMetadata = dto.exifMetadata;
+    if (exifMetadata?.gps_lat != null && exifMetadata?.gps_lng != null) {
+      const address = await this.kakaoLocalService.reverseGeocode(
+        exifMetadata.gps_lat,
+        exifMetadata.gps_lng,
+      );
+      if (address) exifMetadata = { ...exifMetadata, gps_address: address };
+    }
 
-    await this.imageQueue.add(
-      IMAGE_PROCESSING_JOB.GENERATE_THUMBNAIL,
-      { jobId: job.id },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-        removeOnComplete: true,
-        removeOnFail: false,
-      },
-    );
-
-    return photo;
+    try {
+      return await this.repository.create({
+        invitationId,
+        participantId,
+        imageKey: dto.imageKey,
+        takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
+        exifMetadata,
+        exifFingerprint,
+      });
+    } catch (e: unknown) {
+      if (typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === '23505') {
+        throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
+      }
+      throw e;
+    }
   }
 
   // 다운로드용 URL 발급 (낱개, 선택)

@@ -24,6 +24,6 @@ import { LocationPreEventScheduler } from './location-pre-event.scheduler';
     KakaoLocalService,
     LocationPreEventScheduler,
   ],
-  exports: [LocationsService],
+  exports: [LocationsService, KakaoLocalService],
 })
 export class LocationsModule {}
