@@ -8,9 +8,16 @@ import {
   BottomSheet,
   BottomSheetContent,
 } from "@/components/molecules/BottomSheet";
+import {
+  Modal,
+  ModalContent,
+  ModalClose,
+  ModalPrimitive,
+} from "@/components/molecules/Modal";
 import { toast } from "@/components/molecules/Toast";
 import { useMe } from "@/hooks/useUsers";
 import { useFriends } from "@/hooks/useFriends";
+import { useLeaveConversation } from "@/hooks/useConversations";
 import {
   useConversationParticipants,
   useConversationPhotos,
@@ -37,8 +44,11 @@ export function ChatDrawer({
   onPhotoClick: (photos: ViewerPhoto[], index: number) => void;
 }) {
   const { data: me } = useMe();
+  const router = useRouter();
+  const leave = useLeaveConversation();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [aliasOpen, setAliasOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   // 서랍 열릴 때만 조회 (enabled = open)
   const photos = useConversationPhotos(conversationId, open).data?.photos ?? [];
   const participants =
@@ -88,7 +98,7 @@ export function ChatDrawer({
                     <button
                       key={p.messageId}
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
                         onPhotoClick(
                           photos.map((ph) => ({
                             imageUrl: ph.imageUrl,
@@ -96,8 +106,10 @@ export function ChatDrawer({
                             createdAt: ph.createdAt,
                           })),
                           i,
-                        )
-                      }
+                        );
+                        // 드로어(모달)를 닫아 뷰어가 위에서 정상 동작하게 함
+                        onOpenChange(false);
+                      }}
                       className="aspect-square overflow-hidden rounded-md active:opacity-70"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -139,6 +151,15 @@ export function ChatDrawer({
               >
                 초대하기
               </button>
+              {!isDirect && (
+                <button
+                  type="button"
+                  onClick={() => setLeaveOpen(true)}
+                  className="mt-2 w-full rounded-lg py-2.5 text-[14px] font-bold text-red-500 active:opacity-70"
+                >
+                  채팅방 나가기
+                </button>
+              )}
             </section>
           </div>
         </Drawer.Content>
@@ -169,6 +190,42 @@ export function ChatDrawer({
           />
         </BottomSheetContent>
       </BottomSheet>
+
+      {/* 나가기 확인 */}
+      <Modal open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <ModalContent className="max-w-[300px]">
+          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+            채팅방 나가기
+          </ModalPrimitive.Title>
+          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
+            나가면 대화 목록에서 사라지고, 남은 멤버에게 나갔다고 표시됩니다.
+          </ModalPrimitive.Description>
+          <div className="mt-6 flex justify-end gap-6">
+            <ModalClose asChild>
+              <button type="button" className="text-[15px] font-bold text-blue-500">
+                취소
+              </button>
+            </ModalClose>
+            <button
+              type="button"
+              disabled={leave.isPending}
+              onClick={() =>
+                leave.mutate(conversationId, {
+                  onSuccess: () => {
+                    setLeaveOpen(false);
+                    onOpenChange(false);
+                    router.push(ROUTES.FRIENDS.LIST);
+                  },
+                  onError: () => toast.error("나가지 못했어요. 다시 시도해주세요"),
+                })
+              }
+              className="text-[15px] font-bold text-red-500 disabled:opacity-50"
+            >
+              나가기
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
     </Drawer.Root>
   );
 }

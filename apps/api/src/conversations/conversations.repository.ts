@@ -183,6 +183,7 @@ export class ConversationsRepository {
         userId: users.id,
         name: users.name,
         avatarUrl: users.profileImageUrl,
+        leftAt: conversationParticipants.leftAt,
       })
       .from(conversationParticipants)
       .innerJoin(users, eq(users.id, conversationParticipants.userId))
@@ -243,6 +244,7 @@ export class ConversationsRepository {
         id: messages.id,
         conversationId: messages.conversationId,
         senderId: messages.senderId,
+        type: messages.type,
         content: messages.content,
         imageKey: messages.imageKey,
         createdAt: messages.createdAt,
@@ -290,6 +292,19 @@ export class ConversationsRepository {
     const rows = await this.db
       .insert(messages)
       .values({ conversationId, senderId, content, replyToMessageId, imageKey })
+      .returning();
+    return rows[0]!;
+  }
+
+  // 시스템 메시지(입장/퇴장 안내) 삽입
+  async insertSystemMessage(
+    conversationId: string,
+    senderId: string,
+    content: string,
+  ) {
+    const rows = await this.db
+      .insert(messages)
+      .values({ conversationId, senderId, content, type: 'system' })
       .returning();
     return rows[0]!;
   }
@@ -544,7 +559,7 @@ export class ConversationsRepository {
 
   async findUserById(userId: string) {
     const rows = await this.db
-      .select({ id: users.id })
+      .select({ id: users.id, name: users.name })
       .from(users)
       .where(and(eq(users.id, userId), isNull(users.deletedAt)))
       .limit(1);

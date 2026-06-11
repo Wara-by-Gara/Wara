@@ -314,6 +314,16 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         ) : (
           <ul className="flex flex-col gap-2 py-3">
             {messages.map((m, i) => {
+              // 시스템 메시지(입장/퇴장 안내) — 말풍선 없이 가운데 표시
+              if (m.type === "system") {
+                return (
+                  <li key={m.id} className="my-1 flex justify-center">
+                    <span className="rounded-full bg-background-soft px-3 py-1 text-[12px] text-text-tertiary">
+                      {m.content}
+                    </span>
+                  </li>
+                );
+              }
               const mine = m.senderId === myId;
               const unread =
                 mine &&

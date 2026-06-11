@@ -893,7 +893,8 @@ test.describe("dm-batch8-drawer", () => {
     const drawer = page.getByRole("dialog");
     const thumbs = drawer.locator('button:has(img[alt="사진"])');
     await expect(thumbs.first()).toBeVisible({ timeout: 10_000 });
-    await thumbs.first().click({ force: true });
+    // vaul 우측 드로어 애니메이션/위치 무관하게 onClick만 발화
+    await thumbs.first().dispatchEvent("click");
 
     // 뷰어: 업로더 시간(년) 표시 + 1/N -> 다음 -> 2/N
     await expect(page.getByRole("img", { name: "사진 크게 보기" })).toBeVisible({ timeout: 10_000 });
@@ -1000,12 +1001,14 @@ test.describe("dm-batch10-group-realtime", () => {
     await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
     await expect(g1.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
     await expect(g2.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    // 게스트 소켓이 user 룸에 join할 여유 (join 전 emit은 socket.io가 놓침)
+    await g1.page.waitForTimeout(2500);
 
     // host 전송 -> g1, g2 실시간 수신
     const msgA = `E2E 그룹A ${Date.now()}`;
     await send(host.page, msgA);
-    await expect(g1.page.getByText(msgA)).toBeVisible({ timeout: 10_000 });
-    await expect(g2.page.getByText(msgA)).toBeVisible({ timeout: 10_000 });
+    await expect(g1.page.getByText(msgA)).toBeVisible({ timeout: 15_000 });
+    await expect(g2.page.getByText(msgA)).toBeVisible({ timeout: 15_000 });
 
     // g1 전송 -> host, g2 실시간 수신
     const msgB = `E2E 그룹B ${Date.now()}`;
@@ -1015,6 +1018,45 @@ test.describe("dm-batch10-group-realtime", () => {
 
     await host.context.close();
     await g1.context.close();
+    await g2.context.close();
+  });
+});
+
+test.describe("dm-batch11-leave", () => {
+  test("그룹에서 나가면 남은 멤버에게 시스템 메시지가 뜨고 인원이 줄어든다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost"); // host001
+    const g2 = await openAs(browser, "guest2"); // guest002(송지안)
+
+    // host: guest001과 1:1 -> guest002 초대 -> 그룹(3명)
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // g2가 그룹 진입 후 나가기
+    await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g2.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await g2.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(g2.page.getByText(/대화상대/)).toBeVisible({ timeout: 10_000 });
+    await g2.page.getByRole("button", { name: "채팅방 나가기" }).click();
+    const leaveModal = g2.page.getByRole("dialog").filter({ hasText: "나가면" });
+    await leaveModal.getByRole("button", { name: "나가기" }).click();
+
+    // host: 시스템 메시지(실시간) + 대화상대 2명으로 감소
+    await expect(
+      host.page.getByText(`${GUEST002_NAME}님이 나갔습니다.`),
+    ).toBeVisible({ timeout: 10_000 });
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(host.page.getByText("대화상대 2")).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
     await g2.context.close();
   });
 });

@@ -311,6 +311,11 @@ export function useChatRealtime(id: string) {
       // 다른 방/목록 갱신은 전역 소켓(useDmGlobalSocket)이 담당 -> 여기선 이 방만 처리.
       if (msg.conversationId !== id) return;
       appendMessage(qc, id, msg);
+      // 시스템 메시지(입장/퇴장) -> 멤버수/목록 갱신
+      if (msg.type === 'system') {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.detail(id) });
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+      }
       // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 -> rate limit 방지)
       scheduleMarkRead(qc, id);
     });

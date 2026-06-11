@@ -120,6 +120,13 @@
       "when": 1781000000010,
       "tag": "0017_conversation_alias",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781000000011,
+      "tag": "0018_message_type",
+      "breakpoints": true
     }
   ]
 }

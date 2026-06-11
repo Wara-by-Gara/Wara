@@ -68,6 +68,8 @@ export type Message = {
   id: string;
   conversationId: string;
   senderId: string;
+  // 'user' | 'system' (입장/퇴장 안내)
+  type: string;
   content: string;
   createdAt: string;
   deleted: boolean;

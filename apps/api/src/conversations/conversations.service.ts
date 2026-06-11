@@ -49,6 +49,8 @@ export interface MessageItem {
   id: string;
   conversationId: string;
   senderId: string;
+  // 'user' | 'system' (입장/퇴장 안내)
+  type: string;
   content: string;
   // 이미지 메시지의 조회용 presigned URL (텍스트 메시지는 null)
   imageUrl: string | null;
@@ -67,6 +69,7 @@ function toMessageItem(
     id: string;
     conversationId: string;
     senderId: string;
+    type?: string;
     content: string;
     createdAt: Date;
     deletedAt: Date | null;
@@ -82,6 +85,7 @@ function toMessageItem(
     id: row.id,
     conversationId: row.conversationId,
     senderId: row.senderId,
+    type: row.type ?? 'user',
     content: deleted ? '' : row.content,
     imageUrl: deleted ? null : imageUrl,
     createdAt: row.createdAt,
@@ -248,11 +252,21 @@ export class ConversationsService {
     const participants = await this.repository.listParticipantsForConversations(ids);
     const byConv = new Map<
       string,
-      { userId: string; name: string | null; avatarUrl: string | null }[]
+      {
+        userId: string;
+        name: string | null;
+        avatarUrl: string | null;
+        leftAt: Date | null;
+      }[]
     >();
     for (const p of participants) {
       const list = byConv.get(p.conversationId) ?? [];
-      list.push({ userId: p.userId, name: p.name, avatarUrl: p.avatarUrl });
+      list.push({
+        userId: p.userId,
+        name: p.name,
+        avatarUrl: p.avatarUrl,
+        leftAt: p.leftAt,
+      });
       byConv.set(p.conversationId, list);
     }
 
@@ -260,8 +274,10 @@ export class ConversationsService {
       const members = byConv.get(r.id) ?? [];
       const others = members.filter((m) => m.userId !== userId);
       const isGroup = r.type === 'group';
+      // 그룹 인원/자동이름은 나간 멤버 제외 (1:1 상대는 leftAt 무관 표시)
+      const activeOthers = others.filter((m) => !m.leftAt);
       const base = isGroup
-        ? (r.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')))
+        ? (r.title ?? autoGroupTitle(activeOthers.map((m) => m.name ?? '사용자')))
         : (others[0]?.name ?? '상대');
       return {
         id: r.id,
@@ -269,7 +285,9 @@ export class ConversationsService {
         // 우선순위: 내 별명 > (그룹) 공유 이름/자동 · (1:1) 상대 이름
         title: r.alias ?? base,
         avatarUrl: isGroup ? null : (others[0]?.avatarUrl ?? null),
-        memberCount: members.length,
+        memberCount: isGroup
+          ? members.filter((m) => !m.leftAt).length
+          : members.length,
         lastMessageText: r.lastMessageText,
         lastMessageAt: r.lastMessageAt,
         unreadCount: unreadMap.get(r.id) ?? 0,
@@ -528,7 +546,21 @@ export class ConversationsService {
   // 채팅방 나가기 (나만 — 상대 기록은 유지)
   async leaveConversation(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
+    const conversation = await this.repository.findConversationById(conversationId);
     await this.repository.leaveConversation(conversationId, userId);
+
+    // 그룹이면 남은 멤버에게 "OOO님이 나갔습니다" 시스템 메시지
+    if (conversation?.type === 'group') {
+      const user = await this.repository.findUserById(userId);
+      const text = `${user?.name ?? '사용자'}님이 나갔습니다.`;
+      const row = await this.repository.insertSystemMessage(conversationId, userId, text);
+      await this.repository.updateLastMessage(conversationId, text, row.createdAt);
+      const message = toMessageItem(row);
+      const others = await this.repository.otherParticipantIds(conversationId, userId);
+      for (const otherId of others) {
+        this.gateway.sendMessageToUser(otherId, message);
+      }
+    }
   }
 
   // 대화방 존재 + 내가 참가자인지 확인 → 내 참가자 행 반환

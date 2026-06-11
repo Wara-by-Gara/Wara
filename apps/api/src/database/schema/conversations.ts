@@ -65,6 +65,8 @@ export const messages = pgTable(
     senderId: text('sender_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    // 'user'(일반) | 'system'(입장/퇴장 등 안내). system은 말풍선 없이 가운데 표시.
+    type: text('type').notNull().default('user'),
     content: text('content').notNull(),
     // 이미지 메시지의 S3 key (텍스트 메시지는 null). 조회 시 view presigned URL로 변환.
     imageKey: text('image_key'),
