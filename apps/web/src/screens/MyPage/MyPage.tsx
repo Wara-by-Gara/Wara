@@ -221,6 +221,7 @@ export const MyPage = ({
               </button>
             </div>
             <PlaceLogPreview
+              key={memory?.id}
               invitationId={memory?.id}
               eventLat={memory?.eventLat}
               eventLng={memory?.eventLng}
