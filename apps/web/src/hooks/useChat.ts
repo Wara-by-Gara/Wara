@@ -363,16 +363,17 @@ export function useChatRealtime(id: string) {
       scheduleMessagesRefresh(qc, id);
     });
 
-    // 재연결: 끊긴 동안 놓친 메시지는 replay되지 않으므로 강제 재동기화한다.
-    // (staleTime 때문에 refetchOnReconnect만으론 복구 안 되는 케이스 보완)
-    const onReconnect = () => {
+    // 연결(최초+재연결)될 때마다 메시지 재동기화한다.
+    // 소켓이 user 룸에 join하기 직전(또는 끊긴 동안)에 도착한 메시지는 replay되지
+    // 않으므로, connect 시점에 한 번 더 당겨와 그 갭을 메운다.
+    const onConnect = () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
       scheduleMarkRead(qc, id);
     };
-    socket.io.on('reconnect', onReconnect);
+    socket.on('connect', onConnect);
 
     return () => {
-      socket.io.off('reconnect', onReconnect);
+      socket.off('connect', onConnect);
       // 예약된 읽음 처리 타이머 정리 - 방 전환/언마운트 후 엉뚱한 방의 markRead 발화 방지
       if (readTimer) {
         clearTimeout(readTimer);
