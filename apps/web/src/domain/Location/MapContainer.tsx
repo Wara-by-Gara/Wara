@@ -308,20 +308,22 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
   const handleLocate = () => {
-    const pos = lastPositionRef.current;
-    if (pos) {
-      kakaoMapRef.current?.centerOn(pos.coords.latitude, pos.coords.longitude);
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          setGpsPermission("granted");
-          setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
-          kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
-        },
-        () => setGpsPermission("denied"),
-        { enableHighAccuracy: true },
-      );
-    }
+    // 이전엔 lastPositionRef가 있으면 centerOn만 호출 → setMyLocation이 안 돌아
+    // 모임 시작 전(inEventWindow=false, watchPosition 비활성) 상태에서는 파란 점이
+    // 영원히 안 떴음. 매 클릭마다 fresh fetch로 통일.
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        lastPositionRef.current = p;
+        setGpsPermission("granted");
+        setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
+        kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
+      },
+      (err) => {
+        console.error("[geolocation]", err);
+        setGpsPermission("denied");
+      },
+      { enableHighAccuracy: true },
+    );
   };
 
   const handleGetDirections = () => setIsDirectionOpen(true);
