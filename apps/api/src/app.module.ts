@@ -36,6 +36,7 @@ import { HealthModule } from './health/health.module';
 import { RedisModule } from './redis/redis.module';
 import { QueueModule } from './queues/queue.module';
 import { ImageProcessingModule } from './image-processing/image-processing.module';
+import { IdempotencyModule } from './idempotency/idempotency.module';
 import { LoggerModule } from './logger/logger.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { LoggerModule } from './logger/logger.module';
     RedisModule,
     QueueModule,
     ImageProcessingModule,
+    IdempotencyModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
