@@ -228,6 +228,15 @@ export class ConversationsService {
   ) {
     await this.assertMember(conversationId, userId);
 
+    // 이미지 키 검증: 이 대화방 prefix + 실제 업로드 완료된 객체만 허용
+    // (클라가 다른 방 key나 업로드 안 된 key를 등록하는 것 방지)
+    if (imageKey) {
+      const validPrefix = imageKey.startsWith(`dm/${conversationId}/`);
+      if (!validPrefix || !(await this.s3Service.objectExists(imageKey))) {
+        throw new BadRequestException(ErrorCode.MESSAGE_IMAGE_INVALID);
+      }
+    }
+
     const row = await this.repository.insertMessage(
       conversationId,
       userId,
@@ -282,12 +291,15 @@ export class ConversationsService {
 
     await this.repository.softDeleteMessage(messageId);
 
-    // 목록 미리보기 재계산 — 마지막 메시지가 삭제됐으면 "삭제된 메시지입니다"로
+    // 목록 미리보기 재계산 — 삭제됐으면 "삭제된 메시지입니다", 이미지면 "사진"
     const latest = await this.repository.findLatestMessage(conversationId);
     if (latest) {
+      const preview = latest.deletedAt
+        ? '삭제된 메시지입니다'
+        : latest.content || (latest.imageKey ? '사진' : '');
       await this.repository.updateLastMessage(
         conversationId,
-        latest.deletedAt ? '삭제된 메시지입니다' : latest.content,
+        preview,
         latest.createdAt,
       );
     }

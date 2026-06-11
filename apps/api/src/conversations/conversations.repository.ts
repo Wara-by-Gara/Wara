@@ -285,6 +285,7 @@ export class ConversationsRepository {
     const rows = await this.db
       .select({
         content: messages.content,
+        imageKey: messages.imageKey,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
       })

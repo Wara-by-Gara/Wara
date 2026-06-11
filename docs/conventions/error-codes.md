@@ -155,6 +155,7 @@
 | `MESSAGE_NOT_FOUND` | 404 | 메시지 없음 또는 해당 대화방 소속 아님 |
 | `MESSAGE_FORBIDDEN` | 403 | 본인이 보낸 메시지가 아님 (삭제 시도) |
 | `CANNOT_MESSAGE_SELF` | 400 | 자기 자신과 대화 생성 시도 |
+| `MESSAGE_IMAGE_INVALID` | 400 | imageKey가 대화방 prefix 불일치 또는 미업로드(존재하지 않는 객체) |
 
 ## Terms
 

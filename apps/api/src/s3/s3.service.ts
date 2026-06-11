@@ -1,6 +1,11 @@
 // s3.service.ts
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { isDicebearProfileImage } from '../common/utils/profile-image';
@@ -51,6 +56,18 @@ export class S3Service {
     if (isDicebearProfileImage(key)) return key;
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.s3, command, { expiresIn: GET_URL_EXPIRES_IN });
+  }
+
+  // 객체 존재 확인 (업로드 완료 여부 검증용)
+  async objectExists(key: string): Promise<boolean> {
+    try {
+      await this.s3.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // 다운로드용 presigned URL (GET + Content-Disposition)
