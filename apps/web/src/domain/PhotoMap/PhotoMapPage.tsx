@@ -143,11 +143,12 @@ export function PhotoMapPage() {
   return (
     <>
       <div className="relative h-full w-full">
-        {/* 지도 */}
+        {/* 지도 — 첫 마커 셋 도착 시 1회만 fit, 이후 사용자 줌·팬 보존 */}
         <KakaoMap
           ready={mapSdkReady}
           photoMarkers={photoMarkers}
           onPhotoMarkerClick={handleMarkerClick}
+          autoFit="first"
           className="h-full w-full"
         />
 
