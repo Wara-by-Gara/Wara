@@ -2,9 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnprocessableEntityException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
+import { LocationsGateway } from './locations.gateway';
 import { KakaoLocalService } from './kakao-local.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -42,6 +46,9 @@ export class LocationsService {
     private readonly redisStore: LocationsRedisStore,
     private readonly kakaoLocal: KakaoLocalService,
     private readonly notifications: NotificationsService,
+    // Gateway ↔ Service 순환 의존 회피 — Gateway는 Service를 주입받음.
+    @Inject(forwardRef(() => LocationsGateway))
+    private readonly gateway: LocationsGateway,
   ) {}
 
   async getEventLocation(invitationId: string) {
@@ -58,11 +65,26 @@ export class LocationsService {
 
   async deleteEventLocation(invitationId: string) {
     await this.repository.deleteEventLocation(invitationId);
+    // 호스트가 event location을 해제하면 위치 공유 컨텍스트가 끝난 것이므로
+    // Redis의 모든 참여자 GPS hash + arrived lock을 즉시 정리.
+    // 24h TTL을 기다리지 않고 즉시 broadcast 차단.
+    await this.redisStore.deleteInvitation(invitationId);
   }
 
   async getParticipantLocations(
     invitationId: string,
+    viewerUserId: string,
   ): Promise<ParticipantLocationWithUser[]> {
+    // 불참(absent) 게스트가 다른 참여자의 GPS 좌표를 열람하면 개인정보 누출.
+    // HOST는 모니터링 목적으로 RSVP 무관 허용.
+    const viewer = await this.repository.findParticipant(viewerUserId, invitationId);
+    if (!viewer) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (viewer.memberRole !== 'HOST' && viewer.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
     const map = await this.redisStore.findAllByInvitation(invitationId);
     if (map.size === 0) return [];
 
@@ -94,11 +116,61 @@ export class LocationsService {
     return this.kakaoLocal.searchByKeyword(query, page, size);
   }
 
+  // 사용자 탈퇴 시 호출 — 참여하던 모든 초대장의 Redis GPS entry + arrived lock 정리.
+  // 다른 참여자가 24h TTL 동안 deleted 사용자의 stale 좌표를 보는 것을 차단.
+  async cleanupUserGpsData(userId: string): Promise<void> {
+    const pairs = await this.repository.findParticipantsByUserId(userId);
+    if (pairs.length === 0) return;
+    await Promise.all(
+      pairs.map(({ invitationId, participantId }) =>
+        this.redisStore.deleteParticipant(invitationId, participantId),
+      ),
+    );
+    // 다른 클라이언트에 즉시 marker 제거 알림. 정리는 Redis에서 끝났으므로 emit만.
+    for (const { invitationId, participantId } of pairs) {
+      this.gateway.emitLocationRemoved(invitationId, participantId);
+    }
+  }
+
+  // 게스트가 초대장에서 나가거나 호스트가 kick할 때 호출 — 해당 participant의 GPS 정리 + broadcast.
+  // ParticipantsService.leave에서 호출. 미정리 시 24h TTL까지 stale 좌표 노출.
+  async cleanupParticipantGpsData(
+    invitationId: string,
+    participantId: string,
+  ): Promise<void> {
+    await this.redisStore.deleteParticipant(invitationId, participantId);
+    this.gateway.emitLocationRemoved(invitationId, participantId);
+  }
+
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry + arrived lock만 삭제 (다른 참여자 무영향).
+  async stopMyLocationSharing(invitationId: string, userId: string): Promise<void> {
+    const participant = await this.repository.findParticipantWithUser(
+      userId,
+      invitationId,
+    );
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    await this.redisStore.deleteParticipant(invitationId, participant.id);
+    this.gateway.emitLocationRemoved(invitationId, participant.id);
+  }
+
   async updateMyLocation(
     invitationId: string,
     userId: string,
     dto: UpdateParticipantLocationDto,
   ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
+    // 마감/삭제된 초대장에 GPS 계속 upsert되면 flush scheduler 정시까지 stale broadcast.
+    // upsert 시점에 차단해 진입 자체를 막음.
+    const invitationStatus = await this.repository.findInvitationStatus(invitationId);
+    if (
+      !invitationStatus ||
+      invitationStatus.status === 'closed' ||
+      invitationStatus.deletedAt !== null
+    ) {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+
     const participant = await this.repository.findParticipantWithUser(
       userId,
       invitationId,

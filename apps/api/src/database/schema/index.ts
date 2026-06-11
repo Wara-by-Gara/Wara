@@ -3,6 +3,7 @@ export * from './users';
 export * from './auth';
 export * from './invitations';
 export * from './ai-image-jobs';
+export * from './image-processing-jobs';
 export * from './locations';
 export * from './missions';
 export * from './photos';

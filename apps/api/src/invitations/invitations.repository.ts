@@ -259,4 +259,23 @@ export class InvitationsRepository {
       .set({ deletedAt: new Date() })
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
+
+  findCoverById(id: string) {
+    return this.db.query.invitations.findFirst({
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.id, id), isNull(inv.deletedAt)),
+      columns: {
+        mainCoverType: true,
+        mainGifUrl: true,
+        mainImageKey: true,
+      },
+    });
+  }
+
+  async updateMainImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(invitations)
+      .set({ mainImageThumbnailKey: thumbnailKey, updatedAt: new Date() })
+      .where(eq(invitations.id, id));
+  }
 }

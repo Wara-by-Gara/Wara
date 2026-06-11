@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BottomNavigation, type BottomNavItem } from "@/components/molecules/BottomNavigation";
@@ -49,7 +49,7 @@ export interface MainBottomNavProps {
 
 export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) {
   const pathname = usePathname();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const { isCompliant } = useTermsCompliance();
@@ -60,7 +60,6 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
     window.location.href = `${API_BASE}/auth/${provider}/redirect`;
   }
 
-  useEffect(() => { hydrate(); }, [hydrate]);
   if (
     HIDDEN_PATHS.includes(pathname) ||
     pathname.endsWith("/location") ||

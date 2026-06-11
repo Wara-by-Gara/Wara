@@ -9,6 +9,7 @@ export const photos = pgTable('photos', {
   participantId: text('participant_id').notNull().references(() => participants.id, { onDelete: 'cascade' }),
   invitationId: text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
   imageKey: text('image_key').notNull(),
+  thumbnailKey: text('thumbnail_key'),
   takenAt: timestamp('taken_at', { withTimezone:true }),
   exifMetadata: jsonb('exif_metadata'),
   viewCount: integer('view_count').notNull().default(0),

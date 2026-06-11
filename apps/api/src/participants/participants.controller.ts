@@ -46,35 +46,6 @@ export class ParticipantsController {
     return { participant };
   }
 
-  @Get(':participantId/profile')
-  @UseGuards(ParticipantGuard)
-  getProfile(
-    @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @Param('participantId', ParseUlidPipe) participantId: string,
-  ) {
-    return this.participantsService.getProfile(invitationId, participantId);
-  }
-
-  @Get(':participantId/mutual')
-  @UseGuards(ParticipantGuard)
-  getMutual(
-    @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @Param('participantId', ParseUlidPipe) participantId: string,
-    @CurrentParticipant() viewer: Participant,
-  ) {
-    return this.participantsService.getMutual(invitationId, participantId, viewer);
-  }
-
-  @Get(':participantId/shared-invitations')
-  @UseGuards(ParticipantGuard)
-  getSharedInvitations(
-    @Param('invitationId', ParseUlidPipe) invitationId: string,
-    @Param('participantId', ParseUlidPipe) participantId: string,
-    @CurrentParticipant() viewer: Participant,
-  ) {
-    return this.participantsService.getSharedInvitations(invitationId, participantId, viewer);
-  }
-
   @Post()
   @UseGuards(BlocklistGuard)
   join(

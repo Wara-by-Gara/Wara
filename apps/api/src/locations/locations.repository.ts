@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq, gt, inArray, isNull, lte, notExists } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, notExists, sql } from 'drizzle-orm';
 import {
   eventLocations,
   invitations,
@@ -150,12 +150,41 @@ export class LocationsRepository {
     );
   }
 
-  async findClosedInvitationIds(): Promise<string[]> {
+  // GPS upsert 시 활성 상태 검증용. 마감/soft deleted면 broadcast 차단.
+  async findInvitationStatus(
+    invitationId: string,
+  ): Promise<{ status: 'active' | 'closed'; deletedAt: Date | null } | null> {
+    const row = await this.db.query.invitations.findFirst({
+      where: (t, { eq }) => eq(t.id, invitationId),
+      columns: { status: true, deletedAt: true },
+    });
+    return row ?? null;
+  }
+
+  // GPS flush 대상 — status='closed' 또는 soft deleted 초대장.
+  // 기존엔 closed만 처리 → soft delete된 active 초대장의 GPS hash가 24h TTL까지 남는 누락.
+  async findInvitationsForGpsFlush(): Promise<string[]> {
     const rows = await this.db
       .select({ id: invitations.id })
       .from(invitations)
-      .where(eq(invitations.status, 'closed'));
+      .where(
+        sql`${invitations.status} = 'closed' OR ${invitations.deletedAt} IS NOT NULL`,
+      );
     return rows.map((r) => r.id);
+  }
+
+  // 사용자 탈퇴 시 Redis GPS entry를 정리하기 위해 user의 모든 participants 매핑 조회.
+  // soft deleted 초대장도 포함 (24h TTL이 자연 만료 전까지 stale broadcast 방지).
+  async findParticipantsByUserId(
+    userId: string,
+  ): Promise<Array<{ invitationId: string; participantId: string }>> {
+    return this.db
+      .select({
+        invitationId: participants.invitationId,
+        participantId: participants.id,
+      })
+      .from(participants)
+      .where(eq(participants.userId, userId));
   }
 
   async findAllParticipantUserIds(invitationId: string): Promise<string[]> {

@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PhotosRepository } from './photos.repository';
 import { PresignedUrlDto } from './dto/presigned-url.dto';
 import { ulid } from 'ulid';
@@ -11,6 +13,9 @@ import { ListPhotosDto } from './dto/list-photos.dto';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { S3Service } from '../s3/s3.service';
+import { ImageProcessingService } from '../image-processing/image-processing.service';
+import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
+import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
 import { KakaoLocalService } from '../locations/kakao-local.service';
 
 const MAX_DOWNLOAD_LIMIT = 9999;
@@ -20,6 +25,9 @@ export class PhotosService {
   constructor(
     private readonly repository: PhotosRepository,
     private readonly s3Service: S3Service,
+    private readonly imageProcessing: ImageProcessingService,
+    private readonly imageJobs: ImageProcessingJobsRepository,
+    @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
     private readonly kakaoLocalService: KakaoLocalService,
   ) {}
 
@@ -37,6 +45,9 @@ export class PhotosService {
       rows.map(async (photo) => ({
         ...photo,
         url: await this.s3Service.getViewPresignedUrl(photo.imageKey),
+        thumbnailUrl: photo.thumbnailKey
+          ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+          : null,
         score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
       })),
     );
@@ -50,17 +61,21 @@ export class PhotosService {
 
     await this.repository.incrementViewCount(id);
     const url = await this.s3Service.getViewPresignedUrl(photo.imageKey);
+    const thumbnailUrl = photo.thumbnailKey
+      ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+      : null;
     const liked = !!(await this.repository.findLike(id, participantId));
 
     return {
       ...photo,
       url,
+      thumbnailUrl,
       liked,
       score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
     };
   }
 
-  // 사진 정보 DB 저장
+  // 사진 정보 DB 저장. presigned PUT 직후 호출되며 S3 객체를 매직넘버 sniff + 크기로 검증한 뒤 enqueue.
   async uploadPhoto(invitationId: string, participantId: string, dto: UploadPhotoDto) {
     let exifFingerprint: string | undefined;
     if (dto.takenAt) {
@@ -78,7 +93,6 @@ export class PhotosService {
       if (existing) throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
     }
 
-    // GPS 좌표 있으면 역지오코딩 (DB 캐시 우선 조회)
     let exifMetadata = dto.exifMetadata;
     if (exifMetadata?.gps_lat != null && exifMetadata?.gps_lng != null) {
       const address = await this.kakaoLocalService.reverseGeocode(
@@ -187,6 +201,9 @@ export class PhotosService {
       rows.map(async (photo) => ({
         ...photo,
         url: await this.s3Service.getViewPresignedUrl(photo.imageKey),
+        thumbnailUrl: photo.thumbnailKey
+          ? await this.s3Service.getViewPresignedUrl(photo.thumbnailKey)
+          : null,
         score: photo.viewCount * 0.5 + photo.likeCount * 1.0 + photo.feedbackCount * 1.5,
       })),
     );

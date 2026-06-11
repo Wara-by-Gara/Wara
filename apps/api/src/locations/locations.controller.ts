@@ -60,8 +60,11 @@ export class LocationsController {
 
   @Get('participant/locations')
   @UseGuards(BlocklistGuard, ParticipantGuard)
-  getParticipantLocations(@Param('invitationId') invitationId: string) {
-    return this.locationsService.getParticipantLocations(invitationId);
+  getParticipantLocations(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.getParticipantLocations(invitationId, user.id);
   }
 
   @Put('participant/me/location')
@@ -73,6 +76,17 @@ export class LocationsController {
     dto: UpdateParticipantLocationDto,
   ) {
     return this.locationsService.updateMyLocation(invitationId, user.id, dto);
+  }
+
+  // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry만 정리, 다른 참여자 무영향.
+  @Delete('participant/me/location')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BlocklistGuard, ParticipantGuard)
+  stopMyLocationSharing(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationsService.stopMyLocationSharing(invitationId, user.id);
   }
 
   @Post('participants/:participantId/nudge')

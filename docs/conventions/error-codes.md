@@ -103,6 +103,8 @@
 | `PHOTO_FORBIDDEN` | 403 | 본인 사진이 아님 |
 | `PHOTO_LIKE_ALREADY_EXISTS` | 409 | 이미 좋아요한 사진 |
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
+| `PHOTO_INVALID_MIME` | 400 | 매직넘버 sniff 결과 허용 MIME(jpeg/png/webp/heic/heif) 아님. S3 객체는 즉시 삭제됨 |
+| `PHOTO_TOO_LARGE` | 413 | 업로드 크기 10MB 초과. S3 객체는 즉시 삭제됨 |
 | `PHOTO_DUPLICATE` | 409 | 동일 초대장에 이미 업로드된 사진 (takenAt+기기+GPS+파일크기 조합 일치) |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 

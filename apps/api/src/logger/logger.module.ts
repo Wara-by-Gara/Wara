@@ -35,6 +35,11 @@ const SILENT_PATHS = new Set(['/api/health']);
                 'req.body.code',
                 'req.body.providerToken',
                 'req.body.idToken',
+                // 위치 좌표 — REST PUT /participant/me/location 등에서 body로 전달.
+                // 개인정보보호 정책상 로그에 좌표 잔존 금지.
+                'req.body.lat',
+                'req.body.lng',
+                'req.body.accuracy',
               ],
               censor: '[REDACTED]',
             },
