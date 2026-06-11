@@ -13,6 +13,17 @@ interface SdkKakaoMap {
     paddingLeft?: number,
   ) => void;
   getLevel: () => number;
+  getBounds: () => {
+    getSouthWest: () => { getLat: () => number; getLng: () => number };
+    getNorthEast: () => { getLat: () => number; getLng: () => number };
+  };
+}
+
+export interface MapBbox {
+  swLat: number;
+  swLng: number;
+  neLat: number;
+  neLng: number;
 }
 
 interface SdkKakaoCustomOverlay {
@@ -50,14 +61,32 @@ export interface KakaoMapProps {
   };
   participants?: ParticipantPin[];
   className?: string;
-  /** 내 현재 위치 — 파란 점으로 표시 */
-  myLocation?: { lat: number; lng: number };
+  /** 내 현재 위치 — 파란 테두리 프로필 마커 */
+  myLocation?: {
+    lat: number;
+    lng: number;
+    profileImageUrl?: string | null;
+    nickname?: string | null;
+  };
   /** 사진 위치 핀 목록 */
   photoMarkers?: PhotoMarker[];
   /** 사진 핀 클릭 콜백 — markerId는 클러스터 대표 사진 ID */
   onPhotoMarkerClick?: (markerId: string) => void;
   /** 호스트: 참가자 핀 탭 */
   onParticipantClick?: (pin: ParticipantPin) => void;
+  /**
+   * 마커 변경 시 자동 fitBounds 정책.
+   * - "always": 매 변경마다 fit (기존 동작, default)
+   * - "first": 첫 마커 셋이 도착했을 때 1회만 fit (사용자 줌·팬 보존)
+   * - "never": 자동 fit 안 함
+   */
+  autoFit?: "always" | "first" | "never";
+  /** map의 보이는 영역이 바뀔 때마다 호출 (idle 이벤트 기반) */
+  onBoundsChange?: (bbox: MapBbox) => void;
+  /** 초기 중심 좌표 — eventLocation이 없을 때 사용. default 서울 시청 */
+  initialCenter?: { lat: number; lng: number };
+  /** 초기 줌 레벨. default 4 */
+  initialLevel?: number;
 }
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 }; // 서울 시청
@@ -191,22 +220,107 @@ function createEventMarkerContent(placeName: string): HTMLElement {
   return wrapper;
 }
 
+// 본인 위치 마커 — 참여자 핀과 같은 구조, 테두리만 파랑(#3b82f6).
+function createMyLocationOverlayContent(
+  profileImageUrl: string | null,
+  nickname: string | null,
+): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  `;
+  wrapper.setAttribute("data-testid", "my-location-pin");
+
+  const bubble = document.createElement("div");
+  bubble.style.cssText = `
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #3b82f6;
+    overflow: hidden;
+    background: #f5f5f5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  `;
+
+  if (profileImageUrl) {
+    const img = document.createElement("img");
+    img.src = profileImageUrl;
+    img.alt = nickname ?? "";
+    img.style.cssText = "width: 100%; height: 100%; object-fit: cover;";
+    bubble.appendChild(img);
+  } else {
+    const initials = document.createElement("div");
+    initials.style.cssText = `
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #737373;
+    `;
+    initials.textContent = (nickname ?? "나").charAt(0).toUpperCase();
+    bubble.appendChild(initials);
+  }
+
+  const tail = document.createElement("div");
+  tail.style.cssText = `
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #3b82f6;
+    margin-top: -2px;
+  `;
+
+  const label = document.createElement("div");
+  label.style.cssText = `
+    background: #3b82f6;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 999px;
+    white-space: nowrap;
+  `;
+  label.textContent = "나";
+
+  wrapper.appendChild(bubble);
+  wrapper.appendChild(tail);
+  wrapper.appendChild(label);
+  return wrapper;
+}
+
 function createPhotoMarkerContent(url: string, count: number, onClick: () => void): HTMLElement {
   const wrapper = document.createElement("div");
+  // wrapper에 명시적 width — 카카오 SDK가 content를 narrow한 container 안에 넣어
+  // 자식 width가 잠식되는 케이스 회피.
   wrapper.style.cssText = `
     position: relative;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 52px;
   `;
 
   const img = document.createElement("img");
   img.src = url;
   img.alt = "";
+  // 보조로 HTML attribute에도 dimension 명시 — CSS가 잠식돼도 박스 유지.
+  img.width = 52;
+  img.height = 52;
   img.style.cssText = `
     width: 52px;
     height: 52px;
+    min-width: 52px;
+    min-height: 52px;
     object-fit: cover;
     border-radius: 10px;
     border: 2.5px solid white;
@@ -266,6 +380,10 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
     photoMarkers = [],
     onPhotoMarkerClick,
     onParticipantClick,
+    autoFit = "always",
+    onBoundsChange,
+    initialCenter,
+    initialLevel = 4,
   },
   ref,
 ) {
@@ -276,12 +394,18 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   const myLocationOverlayRef = useRef<SdkKakaoCustomOverlay | null>(null);
   const photoOverlaysRef = useRef<Map<string, SdkKakaoCustomOverlay>>(new Map());
   const initializedRef = useRef(false);
+  const firstFitDoneRef = useRef(false);
+  // 사용자가 한 번이라도 줌·드래그하면 true. 이후 자동 fit을 멈춰 사용자 시점 보존.
+  // centerOn(ref handle)로 명시적 이동 시엔 다시 false로 리셋해 새 fit 허용.
+  const userInteractedRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
     centerOn(lat: number, lng: number) {
       if (!mapRef.current || !window.kakao?.maps) return;
       const pos = new window.kakao.maps.LatLng(lat, lng);
       mapRef.current.setCenter(pos);
+      // 명시적 centerOn은 새 위치를 보고 싶다는 의도 — interact flag 리셋.
+      userInteractedRef.current = false;
     },
   }));
 
@@ -296,11 +420,35 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       if (!containerRef.current || !kakao.maps) return;
       const { maps } = kakao;
       const center = new maps.LatLng(
-        eventLocation?.lat ?? DEFAULT_CENTER.lat,
-        eventLocation?.lng ?? DEFAULT_CENTER.lng,
+        eventLocation?.lat ?? initialCenter?.lat ?? DEFAULT_CENTER.lat,
+        eventLocation?.lng ?? initialCenter?.lng ?? DEFAULT_CENTER.lng,
       );
-      mapRef.current = new maps.Map(containerRef.current, { center, level: 4 });
+      const map = new maps.Map(containerRef.current, { center, level: initialLevel });
+      mapRef.current = map;
       initializedRef.current = true;
+
+      // 사용자 제스처 감지 — 드래그·줌 시 자동 fit 비활성화.
+      const markInteracted = () => {
+        userInteractedRef.current = true;
+      };
+      maps.event.addListener(map, "dragstart", markInteracted);
+      maps.event.addListener(map, "zoom_changed", markInteracted);
+
+      if (onBoundsChange) {
+        const emitBounds = () => {
+          const b = map.getBounds();
+          const sw = b.getSouthWest();
+          const ne = b.getNorthEast();
+          onBoundsChange({
+            swLat: sw.getLat(),
+            swLng: sw.getLng(),
+            neLat: ne.getLat(),
+            neLng: ne.getLng(),
+          });
+        };
+        emitBounds();
+        maps.event.addListener(map, "idle", emitBounds);
+      }
     };
 
     kakao.maps.load(initMap);
@@ -347,15 +495,9 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       }
     }
 
-    // 추가/갱신
+    // 추가/갱신 — 도착한 핀도 초록 테두리 + "도착" 라벨로 화면에 유지
+    // (좌표 업데이트는 BE 정책상 멈추지만, 다른 참여자에게 도착 사실 시각화).
     for (const pin of participants) {
-      if (pin.isArrived) {
-        // 도착한 참가자는 오버레이 제거
-        participantOverlaysRef.current.get(pin.participantId)?.setMap(null);
-        participantOverlaysRef.current.delete(pin.participantId);
-        continue;
-      }
-
       const pos = new maps.LatLng(pin.lat, pin.lng);
       const existing = participantOverlaysRef.current.get(pin.participantId);
 
@@ -428,28 +570,26 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
 
     if (!myLocation) return;
 
-    const dot = document.createElement("div");
-    dot.style.cssText = `
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #3b82f6;
-      border: 3px solid white;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.3), 0 2px 6px rgba(0,0,0,0.2);
-    `;
-
     const pos = new maps.LatLng(myLocation.lat, myLocation.lng);
     myLocationOverlayRef.current = new maps.CustomOverlay({
       position: pos,
-      content: dot,
+      content: createMyLocationOverlayContent(
+        myLocation.profileImageUrl ?? null,
+        myLocation.nickname ?? null,
+      ),
       map: mapRef.current,
-      yAnchor: 0.5,
-      xAnchor: 0.5,
+      yAnchor: 1.5,
       zIndex: 20,
     });
-  }, [myLocation]);
+    // 새 myLocation이 들어오면 다른 마커와 함께 fit — eventLocation만 보이는 상태 회피.
+    fitBounds();
+  }, [myLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fitBounds() {
+    if (autoFit === "never") return;
+    if (autoFit === "first" && firstFitDoneRef.current) return;
+    // 사용자가 줌·드래그한 후엔 의도 보존을 위해 자동 fit 중단 (always 모드).
+    if (autoFit === "always" && userInteractedRef.current) return;
     if (!mapRef.current || !window.kakao?.maps) return;
     const { maps } = window.kakao;
     const bounds = new maps.LatLngBounds();
@@ -457,10 +597,14 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
     if (eventLocation) {
       bounds.extend(new maps.LatLng(eventLocation.lat, eventLocation.lng));
     }
+    // myLocation도 fit 대상에 포함 — 빠지면 centerOn 직후 다른 effect의 fit으로
+    // 다시 eventLocation 중심이 되어 파란 점이 화면 밖으로 밀려남.
+    if (myLocation) {
+      bounds.extend(new maps.LatLng(myLocation.lat, myLocation.lng));
+    }
     for (const pin of participants) {
-      if (!pin.isArrived) {
-        bounds.extend(new maps.LatLng(pin.lat, pin.lng));
-      }
+      // 도착한 핀도 fit 대상에 포함 — 화면에 계속 표시되므로.
+      bounds.extend(new maps.LatLng(pin.lat, pin.lng));
     }
     for (const marker of photoMarkers) {
       bounds.extend(new maps.LatLng(marker.lat, marker.lng));
@@ -468,6 +612,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
 
     if (!bounds.isEmpty()) {
       mapRef.current.setBounds(bounds, 80, 80, 80, 80);
+      firstFitDoneRef.current = true;
     }
   }
 

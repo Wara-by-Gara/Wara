@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, timestamp, doublePrecision, boolean, check, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp, doublePrecision, boolean, check, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitations, participants } from './invitations';
@@ -18,6 +18,8 @@ export const eventLocations = pgTable('event_locations', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   check('check_event_location_coords', sql`${t.lat} >= -90 AND ${t.lat} <= 90 AND ${t.lng} >= -180 AND ${t.lng} <= 180`),
+  // bbox 쿼리(public/explore/map)에서 lat·lng 범위 동시 필터. (lat, lng) 복합 B-tree.
+  index('idx_event_locations_coords').on(t.lat, t.lng),
 ]);
 
 export const participantLocations = pgTable('participant_locations', {
@@ -28,6 +30,8 @@ export const participantLocations = pgTable('participant_locations', {
   lat: doublePrecision('lat').notNull(),
   lng: doublePrecision('lng').notNull(),
   isArrived: boolean('is_arrived').notNull().default(false),
+  // 미도착 멤버가 broadcast하는 짧은 상태 텍스트 (예: "5분 늦어요"). 위치 공유 중에만 의미 있음.
+  statusMessage: varchar('status_message', { length: 100 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

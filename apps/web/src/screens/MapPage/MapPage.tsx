@@ -299,6 +299,7 @@ export const MapPage = ({
               placeName={placeName}
               address={state === "manualAddress" ? "직접 입력한 주소" : address}
               onGetDirections={onConfirmSelectedPlace ? undefined : onGetDirections}
+              menuPlacement="top"
             />
             {onConfirmSelectedPlace && (
               <Button
@@ -359,6 +360,7 @@ export const MapPage = ({
             placeName={placeName}
             address={address}
             onGetDirections={onGetDirections}
+            menuPlacement="top"
           />
         </div>
       </div>

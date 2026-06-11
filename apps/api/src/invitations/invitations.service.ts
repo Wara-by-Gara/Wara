@@ -26,6 +26,7 @@ import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { InvitationPresignedUrlDto } from './dto/invitation-presigned-url.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
+import { ListPublicMapInvitationsDto } from './dto/list-public-map-invitations.dto';
 import { ulid } from 'ulid';
 import { S3Service } from '../s3/s3.service';
 import { S3_CLIENT } from '../s3/s3.constants';
@@ -152,6 +153,24 @@ export class InvitationsService {
     );
   }
 
+  async findPublicForMap(dto: ListPublicMapInvitationsDto) {
+    const rows = await this.repository.findPublicForMap(dto);
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      eventStartAt: r.eventStartAt,
+      lat: r.lat,
+      lng: r.lng,
+      // 지도 마커는 작아서 thumbnail이 적합. 없으면 원본 fallback.
+      mainImageThumbnailUrl: r.mainImageThumbnailKey
+        ? this.s3Service.getPublicUrl(r.mainImageThumbnailKey)
+        : r.mainImageKey
+          ? this.s3Service.getPublicUrl(r.mainImageKey)
+          : null,
+    }));
+  }
+
   async findPublicExplore(dto: ListPublicInvitationsDto) {
     const { rows, nextCursor } = await this.repository.findPublicExplore(dto);
     const countMap = await this.repository.countPublicParticipantsByInvitationIds(
@@ -256,8 +275,9 @@ export class InvitationsService {
       coverPatch.mainImageKey = null;
       // image → gif 전환 시 기존 main 섬네일 키도 초기화 (orphan 표시값 방지)
       coverPatch.mainImageThumbnailKey = null;
-    } else if (dto.mainImageKey) {
-      // 새 이미지 검증. 통과 못하면 update 자체가 막힘.
+    } else if (dto.mainImageKey && dto.mainImageKey !== current.mainImageKey) {
+      // 키가 실제로 바뀐 경우에만 verify — FE가 변경 없는 update에도 기존 키를 그대로
+      // 보내므로 무조건 verify하면 S3 호출 실패 시 update 자체가 막힘.
       verifiedImage = await this.imageProcessing.verifyUpload(dto.mainImageKey);
       coverPatch.mainCoverType = 'image';
       coverPatch.mainImageKey = dto.mainImageKey;

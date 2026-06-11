@@ -7,6 +7,8 @@ export type GpsRedisValue = {
   lng: number;
   accuracy: number;
   isArrived: boolean;
+  // 미도착 상태에서 broadcast하는 짧은 상태 텍스트. null이면 미설정.
+  statusMessage: string | null;
   updatedAt: string; // ISO
 };
 
@@ -18,6 +20,19 @@ function hashKey(invitationId: string): string {
 
 function arrivedKey(invitationId: string, participantId: string): string {
   return `location:arrived:${invitationId}:${participantId}`;
+}
+
+// statusMessage 필드 도입 전의 Redis entry는 statusMessage가 없음. 정규화.
+function normalize(raw: unknown): GpsRedisValue {
+  const v = raw as Partial<GpsRedisValue>;
+  return {
+    lat: v.lat as number,
+    lng: v.lng as number,
+    accuracy: v.accuracy as number,
+    isArrived: v.isArrived as boolean,
+    statusMessage: v.statusMessage ?? null,
+    updatedAt: v.updatedAt as string,
+  };
 }
 
 // hash key 안의 모든 participantId를 읽어 hash + 각 arrived lock을 atomically 삭제.
@@ -55,7 +70,7 @@ export class LocationsRedisStore {
     const json = await this.redis.hget(hashKey(invitationId), participantId);
     if (!json) return null;
     try {
-      return JSON.parse(json) as GpsRedisValue;
+      return normalize(JSON.parse(json));
     } catch {
       return null;
     }
@@ -68,7 +83,7 @@ export class LocationsRedisStore {
     const map = new Map<string, GpsRedisValue>();
     for (const [participantId, json] of Object.entries(raw)) {
       try {
-        map.set(participantId, JSON.parse(json) as GpsRedisValue);
+        map.set(participantId, normalize(JSON.parse(json)));
       } catch {
         // 손상된 entry는 skip
       }

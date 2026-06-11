@@ -530,7 +530,10 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         const { places } = await searchPlaces(q);
         setLocationResults(places);
         setLocationSearchState(places.length === 0 ? "no-result" : "default");
-      } catch {
+      } catch (err) {
+        // 디버깅: 실패 원인(에러 코드, 메시지)을 콘솔에 노출.
+        // 카카오 API 키 만료/네트워크 오류/인증 실패 등을 구분하기 위함.
+        console.error("[location-search]", err);
         setLocationSearchState("error");
       }
     }, 400);
@@ -948,6 +951,17 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           state={locationSearchState}
           unknown={locationUnknown}
           onUnknownChange={(v) => { setLocationUnknown(v); if (locationError) setLocationError(false); }}
+          onModeChange={(m) => {
+            // 수정 모드에서 selected → search 전환 시 검색 input 노출.
+            // 선택된 placeName/address는 사용자가 새 장소를 고를 때까지 form에 유지
+            // (취소 시 기존 장소 복원 가능). 결과 리스트와 검색어만 초기화.
+            // InvitationCreate는 manual 모드 미사용 — search로 정규화.
+            if (m === "manual") return;
+            setLocationMode(m);
+            setLocationResults([]);
+            setLocationQuery("");
+            setLocationSearchState("default");
+          }}
           error={locationError ? "장소를 선택해주세요" : undefined}
         />
         {locationMode === "search" && locationResults.length > 0 && (
