@@ -8,7 +8,12 @@ export type ConversationPartner = {
 
 export type ConversationListItem = {
   id: string;
-  partner: ConversationPartner;
+  type: "direct" | "group";
+  /** 표시용 이름 (direct=상대, group=그룹명/자동) */
+  title: string;
+  /** 표시용 이미지 (group은 null=기본 아이콘) */
+  avatarUrl: string | null;
+  memberCount: number;
   lastMessageText: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -16,8 +21,13 @@ export type ConversationListItem = {
 
 export type ConversationDetail = {
   id: string;
+  type: "direct" | "group";
+  /** 표시용 이름 (direct=상대 이름, group=그룹명) */
+  title: string;
+  memberCount: number;
+  /** direct만 — 상대 정보 (group은 null) */
   partner: ConversationPartner | null;
-  /** 상대가 마지막으로 읽은 시각 (내 메시지 읽음 표시용) */
+  /** 상대가 마지막으로 읽은 시각 (내 메시지 읽음 표시용, group은 null) */
   partnerLastReadAt: string | null;
 };
 
@@ -155,6 +165,14 @@ export type ConversationPhoto = {
 export function getConversationPhotos(conversationId: string) {
   return apiGet<{ photos: ConversationPhoto[] }>(
     `/conversations/${conversationId}/photos`,
+  );
+}
+
+// 초대 (direct -> 새 그룹 / group -> 멤버 추가). 이동할 conversationId 반환.
+export function inviteToConversation(conversationId: string, userIds: string[]) {
+  return apiPost<{ conversationId: string }>(
+    `/conversations/${conversationId}/invite`,
+    { userIds },
   );
 }
 

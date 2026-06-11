@@ -106,6 +106,13 @@
       "when": 1781000000008,
       "tag": "0015_message_image_key",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1781000000009,
+      "tag": "0016_conversation_group",
+      "breakpoints": true
     }
   ]
 }

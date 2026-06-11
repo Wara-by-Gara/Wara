@@ -13,10 +13,24 @@ import { ConversationsGateway } from './conversations.gateway';
 
 export interface ConversationListItem {
   id: string;
-  partner: { id: string; name: string | null; avatarUrl: string | null };
+  type: 'direct' | 'group';
+  // 표시용 이름/이미지 (direct=상대, group=그룹명/기본). 멤버에서 계산해 내려준다.
+  title: string;
+  avatarUrl: string | null;
+  memberCount: number;
   lastMessageText: string | null;
   lastMessageAt: Date | null;
   unreadCount: number;
+}
+
+// 단톡방 최대 인원 (트레이드오프 고려한 실질 상한). 늘리려면 이 값만 변경.
+const MAX_GROUP_MEMBERS = 30;
+
+// 그룹명이 없을 때 멤버 이름으로 자동 생성 ("송지안, 임지아 외 1명")
+function autoGroupTitle(names: string[]): string {
+  if (names.length === 0) return '그룹 대화';
+  const head = names.slice(0, 3).join(', ');
+  return names.length > 3 ? `${head} 외 ${names.length - 3}명` : head;
 }
 
 export type ReplyPreview = {
@@ -125,15 +139,70 @@ export class ConversationsService {
     return { id: conversation.id };
   }
 
+  // 초대: direct에서 부르면 새 group 생성(1:1 유지), group에서 부르면 멤버 추가.
+  async invite(userId: string, conversationId: string, inviteeIds: string[]) {
+    await this.assertMember(conversationId, userId);
+    const conversation = await this.repository.findConversationById(conversationId);
+    if (!conversation) {
+      throw new NotFoundException(ErrorCode.CONVERSATION_NOT_FOUND);
+    }
+
+    // 현재 멤버 = 나 + 나머지 참가자(leftAt 무관 — 생성자가 빠지면 안 됨)
+    const others = await this.repository.otherParticipantIds(conversationId, userId);
+    const memberSet = new Set([userId, ...others]);
+
+    // 기존멤버/중복 제외 후 실제 존재하는 유저만
+    const candidates = [...new Set(inviteeIds)].filter((id) => !memberSet.has(id));
+    const invitees = await this.repository.filterActiveUserIds(candidates);
+    if (invitees.length === 0) {
+      throw new BadRequestException(ErrorCode.GROUP_NO_VALID_INVITEES);
+    }
+
+    if (conversation.type === 'group') {
+      if (memberSet.size + invitees.length > MAX_GROUP_MEMBERS) {
+        throw new BadRequestException(ErrorCode.GROUP_MEMBER_LIMIT_EXCEEDED);
+      }
+      await this.repository.addParticipants(conversationId, invitees);
+      return { conversationId };
+    }
+
+    // direct -> [나, 상대, ...초대]로 새 group 생성
+    const groupMembers = [...memberSet, ...invitees];
+    if (groupMembers.length > MAX_GROUP_MEMBERS) {
+      throw new BadRequestException(ErrorCode.GROUP_MEMBER_LIMIT_EXCEEDED);
+    }
+    const group = await this.repository.createGroupConversation(null, groupMembers);
+    return { conversationId: group.id };
+  }
+
   async getUnreadCount(userId: string): Promise<{ count: number }> {
     return { count: await this.repository.unreadTotal(userId) };
   }
 
   async getDetail(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
+    const conversation = await this.repository.findConversationById(conversationId);
+    const isGroup = conversation?.type === 'group';
     const partner = await this.repository.getPartner(conversationId, userId);
+
+    if (isGroup) {
+      const members = await this.repository.listParticipants(conversationId);
+      const others = members.filter((m) => m.userId !== userId);
+      return {
+        id: conversationId,
+        type: 'group' as const,
+        title: conversation?.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')),
+        memberCount: members.length,
+        partner: null,
+        partnerLastReadAt: null,
+      };
+    }
+
     return {
       id: conversationId,
+      type: 'direct' as const,
+      title: partner?.name ?? '상대',
+      memberCount: 2,
       partner: partner
         ? { id: partner.id, name: partner.name, avatarUrl: partner.avatarUrl }
         : null,
@@ -144,19 +213,39 @@ export class ConversationsService {
 
   async getConversations(userId: string): Promise<ConversationListItem[]> {
     const rows = await this.repository.listForUser(userId);
-    const unread = await this.repository.unreadCounts(
-      userId,
-      rows.map((r) => r.id),
-    );
+    const ids = rows.map((r) => r.id);
+    const unread = await this.repository.unreadCounts(userId, ids);
     const unreadMap = new Map(unread.map((u) => [u.conversationId, u.count]));
 
-    return rows.map((r) => ({
-      id: r.id,
-      partner: { id: r.partnerId, name: r.partnerName, avatarUrl: r.partnerAvatarUrl },
-      lastMessageText: r.lastMessageText,
-      lastMessageAt: r.lastMessageAt,
-      unreadCount: unreadMap.get(r.id) ?? 0,
-    }));
+    // 모든 방의 참가자를 한 번에 조회해 방별로 묶는다 (표시 이름/이미지/인원 계산용)
+    const participants = await this.repository.listParticipantsForConversations(ids);
+    const byConv = new Map<
+      string,
+      { userId: string; name: string | null; avatarUrl: string | null }[]
+    >();
+    for (const p of participants) {
+      const list = byConv.get(p.conversationId) ?? [];
+      list.push({ userId: p.userId, name: p.name, avatarUrl: p.avatarUrl });
+      byConv.set(p.conversationId, list);
+    }
+
+    return rows.map((r) => {
+      const members = byConv.get(r.id) ?? [];
+      const others = members.filter((m) => m.userId !== userId);
+      const isGroup = r.type === 'group';
+      return {
+        id: r.id,
+        type: isGroup ? ('group' as const) : ('direct' as const),
+        title: isGroup
+          ? (r.title ?? autoGroupTitle(others.map((m) => m.name ?? '사용자')))
+          : (others[0]?.name ?? '상대'),
+        avatarUrl: isGroup ? null : (others[0]?.avatarUrl ?? null),
+        memberCount: members.length,
+        lastMessageText: r.lastMessageText,
+        lastMessageAt: r.lastMessageAt,
+        unreadCount: unreadMap.get(r.id) ?? 0,
+      };
+    });
   }
 
   async getMessages(

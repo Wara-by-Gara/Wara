@@ -21,6 +21,7 @@ import {
   getMessageReactors,
   getConversationParticipants,
   getConversationPhotos,
+  inviteToConversation,
   getMessageImagePresignedUrl,
   uploadFileToPresignedUrl,
   sendImageMessage as apiSendImageMessage,
@@ -233,6 +234,18 @@ export function useConversationPhotos(id: string, enabled: boolean) {
     queryKey: QUERY_KEYS.conversations.photos(id),
     queryFn: () => getConversationPhotos(id),
     enabled: Boolean(id) && enabled,
+  });
+}
+
+// 초대 (direct -> 새 그룹 / group -> 멤버 추가). 목록/참여자 캐시 갱신.
+export function useInvite(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userIds: string[]) => inviteToConversation(id, userIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+    },
   });
 }
 

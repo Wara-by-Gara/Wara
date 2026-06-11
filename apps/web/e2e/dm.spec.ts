@@ -861,3 +861,35 @@ test.describe("dm-batch8-drawer", () => {
     await context.close();
   });
 });
+
+test.describe("dm-batch9-group", () => {
+  test("1:1에서 친구를 초대하면 새 단톡방이 만들어지고 메시지를 보낼 수 있다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    const dmPath = await hostEnterDmWithGuest(page); // guest001과 1:1
+    const dmId = dmPath.split("/").pop()!;
+
+    // 서랍 -> 초대하기
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+
+    // 초대 시트에서 친구 1명 선택 -> 초대
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.locator("ul li button").first().click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+
+    // 새 단톡방으로 이동 완료 대기 (1:1과 다른 방 id) 후 메시지 전송
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    const msg = `E2E 단톡 ${Date.now()}`;
+    await send(page, msg);
+    await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    // 서랍 열어 대화상대 3명 확인 (나 + 상대 + 초대 1명)
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(page.getByText("대화상대 3")).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+});

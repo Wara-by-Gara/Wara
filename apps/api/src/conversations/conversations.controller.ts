@@ -32,6 +32,7 @@ import {
   ListMessagesQueryDto,
 } from './dto/list-messages.query.dto';
 import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
+import { InviteSchema, InviteDto } from './dto/invite.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -135,6 +136,16 @@ export class ConversationsController {
     @Param('messageId', ParseUlidPipe) messageId: string,
   ) {
     return this.conversationsService.getMessageReactors(user.id, id, messageId);
+  }
+
+  // 초대 (direct -> 새 그룹 생성 / group -> 멤버 추가)
+  @Post(':id/invite')
+  invite(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(InviteSchema)) dto: InviteDto,
+  ) {
+    return this.conversationsService.invite(user.id, id, dto.userIds);
   }
 
   // 대화방 참여자 목록

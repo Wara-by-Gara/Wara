@@ -14,8 +14,12 @@ export const conversations = pgTable('conversations', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => ulid()),
+  // 'direct'(1:1) | 'group'(단톡방). 기존 행은 전부 direct.
+  type: text('type').notNull().default('direct'),
+  // 그룹 이름 (null이면 멤버 이름으로 자동 생성). direct는 항상 null.
+  title: text('title'),
   // 1:1 대화 중복 방지용 정규화 키: min(userId):max(userId).
-  // 그룹챗 도입 시 null 허용 (1:1만 유니크 보장).
+  // 그룹챗은 null (1:1만 유니크 보장).
   directKey: text('direct_key').unique(),
   // 비정규화 캐시 — 대화 목록 미리보기/정렬용. 메시지 전송 시 함께 갱신.
   lastMessageText: text('last_message_text'),

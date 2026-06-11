@@ -20,6 +20,7 @@ import {
   useChatRealtime,
   useToggleReaction,
   useMessageReactors,
+  useConversationParticipants,
   useSendImageMessage,
 } from "@/hooks/useChat";
 import {
@@ -179,6 +180,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const cancelReply = () => setReplyTarget(null);
 
   const partnerName = conversation?.partner?.name ?? "상대";
+  const isGroup = conversation?.type === "group";
+  const headerTitle = conversation?.title ?? partnerName;
+  // 그룹: 발신자별 아바타/이름 표시용 멤버 맵 (그룹일 때만 조회)
+  const groupMembers =
+    useConversationParticipants(id, !!isGroup).data?.participants ?? [];
+  const memberMap = new Map(groupMembers.map((p) => [p.userId, p]));
   const partnerReadAt = conversation?.partnerLastReadAt
     ? new Date(conversation.partnerLastReadAt).getTime()
     : null;
@@ -236,6 +243,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const goProfile = () => {
     if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
   };
+  const goUserProfile = (userId: string) =>
+    router.push(ROUTES.FRIENDS.DETAIL(userId));
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
@@ -244,15 +253,28 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         largeTitle
         className="min-h-0 pt-2"
         title={
-          <button
-            type="button"
-            onClick={goProfile}
-            disabled={!partnerId}
-            aria-label={`${partnerName} 프로필 보기`}
-            className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
-          >
-            {partnerName}
-          </button>
+          isGroup ? (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70"
+            >
+              {headerTitle}
+              <span className="ml-1 text-[14px] font-normal text-text-tertiary">
+                {conversation?.memberCount}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={goProfile}
+              disabled={!partnerId}
+              aria-label={`${partnerName} 프로필 보기`}
+              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+            >
+              {partnerName}
+            </button>
+          )
         }
         rightSlot={
           <button
@@ -298,6 +320,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               const firstOfGroup = messages[i - 1]?.senderId !== m.senderId;
               // 상대 메시지의 첫 번째에만 프로필 표시
               const showAvatar = !mine && firstOfGroup;
+              // 발신자 표시정보 — 그룹은 멤버맵, 1:1은 상대
+              const sender = memberMap.get(m.senderId);
+              const senderName = isGroup ? (sender?.name ?? "사용자") : partnerName;
+              const senderAvatar = isGroup
+                ? (sender?.avatarUrl ?? null)
+                : (conversation?.partner?.avatarUrl ?? null);
               // 각 그룹 첫 말풍선은 자기 쪽으로 꼬리(tail) 표시
               const bubbleClass = mine
                 ? firstOfGroup
@@ -315,15 +343,17 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     (showAvatar ? (
                       <button
                         type="button"
-                        onClick={goProfile}
-                        aria-label={`${partnerName} 프로필 보기`}
+                        onClick={() =>
+                          isGroup ? goUserProfile(m.senderId) : goProfile()
+                        }
+                        aria-label={`${senderName} 프로필 보기`}
                         className="self-start active:opacity-70"
                       >
                         <Avatar
                           size="sm"
-                          src={conversation?.partner?.avatarUrl ?? undefined}
-                          alt={partnerName}
-                          initial={partnerName[0]}
+                          src={senderAvatar ?? undefined}
+                          alt={senderName}
+                          initial={senderName[0]}
                         />
                       </button>
                     ) : (
@@ -335,6 +365,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       mine ? "items-end" : "items-start"
                     }`}
                   >
+                    {/* 그룹: 상대 메시지 묶음 첫 줄에 발신자 이름 */}
+                    {isGroup && !mine && firstOfGroup && (
+                      <span className="px-1 text-[12px] text-text-tertiary">
+                        {senderName}
+                      </span>
+                    )}
                     {m.deleted ? (
                       <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
                         삭제된 메시지입니다
