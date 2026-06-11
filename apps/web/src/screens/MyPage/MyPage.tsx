@@ -18,7 +18,7 @@ export type MyPageState = "default" | "loggedOut" | "noProfile" | "loading" | "e
 export interface MyPageProps {
   state?: MyPageState;
   user?: MockUser;
-  recentInvitations?: { id: string; title: string; date: string; imageUrl?: string }[];
+  recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; eventLat?: number; eventLng?: number }[];
   participatedCount?: number;
   hostedCount?: number;
   likeCount?: number;
@@ -220,7 +220,12 @@ export const MyPage = ({
                 <Icon name="external-link" size="xs" color="inactive" decorative />
               </button>
             </div>
-            <PlaceLogPreview invitationId={memory?.id} onViewAll={() => onPhotoMap?.(memory?.id)} />
+            <PlaceLogPreview
+              invitationId={memory?.id}
+              eventLat={memory?.eventLat}
+              eventLng={memory?.eventLng}
+              onViewAll={() => onPhotoMap?.(memory?.id)}
+            />
           </div>
 
         </div>

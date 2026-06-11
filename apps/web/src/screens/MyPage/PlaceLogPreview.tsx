@@ -10,10 +10,12 @@ import { clusterPhotos } from "@/domain/PhotoMap/photoMapUtils";
 
 interface Props {
   invitationId?: string;
+  eventLat?: number;
+  eventLng?: number;
   onViewAll?: () => void;
 }
 
-export function PlaceLogPreview({ invitationId, onViewAll }: Props) {
+export function PlaceLogPreview({ invitationId, eventLat, eventLng, onViewAll }: Props) {
   const mapSdkReady = useKakaoMapsSdk();
 
   const { data, isLoading } = useQuery({
@@ -24,16 +26,14 @@ export function PlaceLogPreview({ invitationId, onViewAll }: Props) {
 
   const photoLocations: PhotoLocation[] = useMemo(() => {
     return (data?.rows ?? [])
-      .filter(
-        (p) => p.exifMetadata?.gps_lat != null && p.exifMetadata?.gps_lng != null,
-      )
-      .map((p) => ({
-        ...p,
-        takenAt: p.takenAt,
-        gpsLat: p.exifMetadata!.gps_lat!,
-        gpsLng: p.exifMetadata!.gps_lng!,
-      }));
-  }, [data]);
+      .map((p) => {
+        const lat = (p.exifMetadata?.gps_lat as number | undefined) ?? eventLat;
+        const lng = (p.exifMetadata?.gps_lng as number | undefined) ?? eventLng;
+        if (lat == null || lng == null) return null;
+        return { ...p, takenAt: p.takenAt, gpsLat: lat, gpsLng: lng };
+      })
+      .filter((p): p is PhotoLocation => p !== null);
+  }, [data, eventLat, eventLng]);
 
   const clusters = useMemo(() => clusterPhotos(photoLocations), [photoLocations]);
 

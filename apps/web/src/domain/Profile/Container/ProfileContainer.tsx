@@ -18,6 +18,8 @@ export default function ProfileContainer() {
     title: inv.title,
     date: formatInvitationEventDate(inv.eventStartAt),
     imageUrl: getInvitationCoverImageUrl(inv) || undefined,
+    eventLat: inv.eventLocation?.lat ?? undefined,
+    eventLng: inv.eventLocation?.lng ?? undefined,
   }));
 
   const hostedCount = (invitations ?? []).filter((inv) => inv.myRole === 'HOST').length;

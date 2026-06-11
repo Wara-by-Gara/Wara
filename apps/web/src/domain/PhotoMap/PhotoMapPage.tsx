@@ -10,6 +10,7 @@ import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { getMyPhotoLocations, getPhotos, type PhotoLocation } from "@/lib/api/photos";
+import { getInvitation } from "@/lib/api/invitations";
 import { PhotoModal } from "./PhotoModal";
 import { clusterPhotos, formatTakenAt } from "./photoMapUtils";
 
@@ -31,21 +32,30 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
     enabled: !invitationId,
   });
 
+  const { data: invDetail } = useQuery({
+    queryKey: ["invitations", invitationId],
+    queryFn: () => getInvitation(invitationId!),
+    enabled: !!invitationId,
+  });
+
   const isLoading = invitationId ? isLoadingInv : isLoadingAll;
+
+  const eventLat = invDetail?.eventLocation?.lat;
+  const eventLng = invDetail?.eventLocation?.lng;
 
   const photoLocations: PhotoLocation[] = useMemo(() => {
     if (invitationId) {
       return (invPhotos?.rows ?? [])
-        .filter((p) => p.exifMetadata?.gps_lat != null && p.exifMetadata?.gps_lng != null)
-        .map((p) => ({
-          ...p,
-          takenAt: p.takenAt,
-          gpsLat: p.exifMetadata!.gps_lat!,
-          gpsLng: p.exifMetadata!.gps_lng!,
-        }));
+        .map((p) => {
+          const lat = (p.exifMetadata?.gps_lat as number | undefined) ?? eventLat;
+          const lng = (p.exifMetadata?.gps_lng as number | undefined) ?? eventLng;
+          if (lat == null || lng == null) return null;
+          return { ...p, takenAt: p.takenAt, gpsLat: lat, gpsLng: lng };
+        })
+        .filter((p): p is PhotoLocation => p !== null);
     }
     return allLocations;
-  }, [invitationId, invPhotos, allLocations]);
+  }, [invitationId, invPhotos, allLocations, eventLat, eventLng]);
 
   const clusters = useMemo(() => clusterPhotos(photoLocations), [photoLocations]);
 
