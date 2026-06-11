@@ -189,6 +189,50 @@ export async function getNotifications(
   );
 }
 
+/** 본인 participant 정보 조회 — RSVP 변경에 participantId 필요 */
+export async function getMyParticipant(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+) {
+  return apiCall<{ participant: { id: string; rsvpStatus: string; memberRole: string } }>(
+    request,
+    token,
+    "GET",
+    `/invitations/${invitationId}/participants/me`,
+  );
+}
+
+export async function updateRsvp(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+  participantId: string,
+  rsvpStatus: "attending" | "undecided" | "absent",
+) {
+  return apiCall<{ id: string; rsvpStatus: string }>(
+    request,
+    token,
+    "PATCH",
+    `/invitations/${invitationId}/participants/${participantId}/rsvp`,
+    { rsvpStatus },
+  );
+}
+
+export async function closeInvitation(
+  request: APIRequestContext,
+  token: string,
+  invitationId: string,
+) {
+  return apiCall<{ id: string; status: string }>(
+    request,
+    token,
+    "PATCH",
+    `/invitations/${invitationId}`,
+    { status: "closed" },
+  );
+}
+
 export async function processPreEventNotifications(request: APIRequestContext) {
   const API = `${process.env.E2E_API_URL ?? "http://localhost:3001"}/api`;
   const res = await request.post(`${API}/dev/location/process-pre-event`, {
