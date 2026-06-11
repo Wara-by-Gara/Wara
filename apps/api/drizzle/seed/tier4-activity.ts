@@ -26,6 +26,8 @@ export async function seedTier4(db: DrizzleDB) {
           target: photos.id,
           set: {
             imageKey: sql`excluded.image_key`,
+            // 시드 정의가 바뀌면 기존 row도 sync — 예: GPS 좌표 추가 시 재시드만으로 반영.
+            exifMetadata: sql`excluded.exif_metadata`,
             updatedAt: new Date(),
           },
         }),

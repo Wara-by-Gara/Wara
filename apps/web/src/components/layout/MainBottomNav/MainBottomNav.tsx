@@ -17,7 +17,7 @@ import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  explore: ROUTES.EXPLORE,
+  explore: ROUTES.EXPLORE.LIST,
   create: ROUTES.INVITATIONS.CREATE,
   friends: ROUTES.FRIENDS.LIST,
   profile: ROUTES.PROFILE.ME,

@@ -131,8 +131,8 @@
     {
       "idx": 19,
       "version": "7",
-      "when": 1781132851049,
-      "tag": "0019_status_message",
+      "when": 1781138536536,
+      "tag": "0019_event_locations_coords_idx",
       "breakpoints": true
     }
   ]

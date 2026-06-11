@@ -110,7 +110,14 @@ export class AuthController {
       }
       return res.redirect(`${frontendUrl}/?auth_success=1`);
     } catch (err) {
-      this.logger.error(`OAuth callback failed for ${provider}`, err);
+      // pino는 두 번째 인자를 trace string으로 해석해 객체 정보(stack/code/cause)가 누락됨.
+      // err를 객체로 wrapping해 전체 정보를 로그로 보존.
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      this.logger.error(
+        { err, errMessage: message, errStack: stack, provider },
+        `OAuth callback failed for ${provider}: ${message}`,
+      );
       return res.redirect(`${frontendUrl}/login?auth_error=failed`);
     }
   }

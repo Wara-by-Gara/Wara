@@ -1,5 +1,5 @@
 {
-  "id": "c60b0380-8001-47ca-b243-34e0896bcbb9",
+  "id": "f10d4d2f-3873-4662-bb91-4ba18b7ae776",
   "prevId": "b586e384-89cc-43ff-8301-d5a4d6f00d04",
   "version": "7",
   "dialect": "postgresql",
@@ -1503,7 +1503,29 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_event_locations_coords": {
+          "name": "idx_event_locations_coords",
+          "columns": [
+            {
+              "expression": "lat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lng",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "event_locations_invitation_id_invitations_id_fk": {
           "name": "event_locations_invitation_id_invitations_id_fk",
