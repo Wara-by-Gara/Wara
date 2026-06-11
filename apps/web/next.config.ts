@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "static.klipy.com" },
       // Placehold — Storybook / dev placeholder
       { protocol: "https", hostname: "placehold.co" },
+      // localhost — 개발 환경 로컬 이미지
+      ...(process.env.NODE_ENV === "development"
+        ? [{ protocol: "http" as const, hostname: "localhost" }]
+        : []),
     ],
   },
 };

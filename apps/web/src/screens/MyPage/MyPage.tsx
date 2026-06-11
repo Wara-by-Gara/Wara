@@ -158,7 +158,12 @@ export const MyPage = ({
               {recentInvitations.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => setMemoryIndex((i) => i + 1)}
+                  onClick={() => {
+                    const cur = memoryIndex % recentInvitations.length;
+                    let next = Math.floor(Math.random() * (recentInvitations.length - 1));
+                    if (next >= cur) next += 1;
+                    setMemoryIndex(next);
+                  }}
                   className="flex items-center gap-1 text-[12px] font-medium text-text-tertiary active:opacity-60"
                 >
                   <Icon name="rotate-cw" size="xs" color="inactive" decorative />
