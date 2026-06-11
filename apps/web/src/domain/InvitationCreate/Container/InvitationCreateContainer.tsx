@@ -530,7 +530,10 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         const { places } = await searchPlaces(q);
         setLocationResults(places);
         setLocationSearchState(places.length === 0 ? "no-result" : "default");
-      } catch {
+      } catch (err) {
+        // 디버깅: 실패 원인(에러 코드, 메시지)을 콘솔에 노출.
+        // 카카오 API 키 만료/네트워크 오류/인증 실패 등을 구분하기 위함.
+        console.error("[location-search]", err);
         setLocationSearchState("error");
       }
     }, 400);
