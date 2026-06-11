@@ -1,0 +1,1 @@
+CREATE INDEX "idx_event_locations_coords" ON "event_locations" USING btree ("lat","lng");
