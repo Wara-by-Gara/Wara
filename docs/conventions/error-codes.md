@@ -82,6 +82,7 @@
 | `INVALID_ULID` | 400 | path param이 유효한 ULID 형식 아님 (details.value) |
 | `INVITATION_ID_REQUIRED` | 400 | HOST 가드 라우트에 invitationId path param 누락 |
 | `INSUFFICIENT_ROLE` | 403 | 라우트에 필요한 멤버 role 미충족 (예: HOST 전용에 GUEST 접근) |
+| `IDEMPOTENCY_IN_PROGRESS` | 409 | 같은 `Idempotency-Key`로 보낸 직전 요청이 아직 처리 중. 클라이언트는 잠시 후 재시도 |
 
 ## Missions
 

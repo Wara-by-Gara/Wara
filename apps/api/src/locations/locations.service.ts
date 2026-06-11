@@ -3,8 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
-  forwardRef,
   Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { LocationsRepository, type ParticipantLocationWithUser } from './locations.repository';
 import { LocationsRedisStore, type GpsRedisValue } from './locations.redis-store';
@@ -104,6 +104,7 @@ export class LocationsService {
         lng: value.lng,
         accuracy: value.accuracy,
         isArrived: value.isArrived,
+        statusMessage: value.statusMessage,
         updatedAt: new Date(value.updatedAt),
         nickname: user.nickname,
         profileImageUrl: user.profileImageUrl,
@@ -114,6 +115,69 @@ export class LocationsService {
 
   async searchPlaces(query: string, page: number, size: number) {
     return this.kakaoLocal.searchByKeyword(query, page, size);
+  }
+
+  // 미도착 상태메시지 설정 — 위치 공유 중인(Redis entry 존재) 참여자만 가능.
+  // absent 게스트는 차단(HOST는 RSVP 무관 허용 — 호스트 본인 상태도 공유 대상).
+  async updateMyStatusMessage(
+    invitationId: string,
+    userId: string,
+    message: string,
+  ): Promise<{
+    participantId: string;
+    statusMessage: string;
+    updatedAt: Date;
+  }> {
+    const participant = await this.repository.findParticipant(userId, invitationId);
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    if (participant.memberRole !== 'HOST' && participant.rsvpStatus === 'absent') {
+      throw new ForbiddenException(ErrorCode.RSVP_PERMISSION_DENIED);
+    }
+
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    if (!previous) {
+      // 위치 공유 OFF — 상태메시지는 GPS와 같은 lifecycle이므로 entry 필수.
+      throw new NotFoundException(ErrorCode.LOCATION_NOT_FOUND);
+    }
+
+    const now = new Date();
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...previous,
+      statusMessage: message,
+      updatedAt: now.toISOString(),
+    });
+
+    this.gateway.emitStatusMessageUpdated(invitationId, participant.id, message, now);
+
+    return { participantId: participant.id, statusMessage: message, updatedAt: now };
+  }
+
+  async deleteMyStatusMessage(
+    invitationId: string,
+    userId: string,
+  ): Promise<{ participantId: string }> {
+    const participant = await this.repository.findParticipant(userId, invitationId);
+    if (!participant) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    const previous = await this.redisStore.findOne(invitationId, participant.id);
+    // 위치 공유 OFF거나 이미 null이면 idempotent — broadcast 없이 종료.
+    if (!previous || previous.statusMessage === null) {
+      return { participantId: participant.id };
+    }
+
+    await this.redisStore.upsert(invitationId, participant.id, {
+      ...previous,
+      statusMessage: null,
+      updatedAt: new Date().toISOString(),
+    });
+
+    this.gateway.emitStatusMessageRemoved(invitationId, participant.id);
+
+    return { participantId: participant.id };
   }
 
   // 사용자 탈퇴 시 호출 — 참여하던 모든 초대장의 Redis GPS entry + arrived lock 정리.
@@ -188,6 +252,8 @@ export class LocationsService {
       lng: dto.lng,
       accuracy: dto.accuracy,
       isArrived: wasArrived,
+      // 위치 업데이트 시 기존 상태메시지 유지 — 둘은 독립적으로 갱신.
+      statusMessage: previous?.statusMessage ?? null,
       updatedAt: now.toISOString(),
     };
     await this.redisStore.upsert(invitationId, participant.id, value);
@@ -200,6 +266,7 @@ export class LocationsService {
       lng: dto.lng,
       accuracy: dto.accuracy,
       isArrived: wasArrived,
+      statusMessage: previous?.statusMessage ?? null,
       updatedAt: now,
       nickname: participant.user.nickname,
       profileImageUrl: participant.user.profileImageUrl,
