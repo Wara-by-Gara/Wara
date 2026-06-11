@@ -1,4 +1,4 @@
-ALTER TABLE "photos" ADD COLUMN "exif_fingerprint" text;
+DROP INDEX IF EXISTS "idx_photos_invitation_fingerprint";
 --> statement-breakpoint
 CREATE UNIQUE INDEX "uq_photos_invitation_fingerprint" ON "photos" ("invitation_id","exif_fingerprint");
 --> statement-breakpoint
