@@ -5,7 +5,7 @@ import {
   OnGatewayConnection,
   WsException,
 } from '@nestjs/websockets';
-import { forwardRef, HttpException, Inject } from '@nestjs/common';
+import { HttpException, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ export class LocationsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 
   constructor(
-    // LocationsService도 Gateway를 forwardRef로 주입해 순환 의존 — 양쪽 모두 forwardRef 필요.
+    // Service ↔ Gateway 순환 의존 회피 — Service도 forwardRef(() => LocationsGateway)를 사용함.
     @Inject(forwardRef(() => LocationsService))
     private readonly locationsService: LocationsService,
     private readonly jwtService: JwtService,
