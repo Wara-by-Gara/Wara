@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, uniqueIndex, check,index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, jsonb, uniqueIndex, check, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitations, participants } from './invitations';
@@ -24,7 +24,7 @@ export const photos = pgTable('photos', {
   check('check_photo_feedback_count', sql`${t.feedbackCount} >= 0`),
   index('idx_photos_invitation_taken_at').on(t.invitationId, t.takenAt),
   index('idx_photos_deleted_at').on(t.deletedAt),
-  index('idx_photos_invitation_fingerprint').on(t.invitationId, t.exifFingerprint),
+  uniqueIndex('uq_photos_invitation_fingerprint').on(t.invitationId, t.exifFingerprint),
 ]);
 
 export const photoLikes = pgTable('photo_likes', {

@@ -1,4 +1,4 @@
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -52,6 +52,7 @@ export interface PlaceSearchResponse {
 
 @Injectable()
 export class KakaoLocalService {
+  private readonly logger = new Logger(KakaoLocalService.name);
   private readonly apiKey: string;
   private readonly baseUrl = 'https://dapi.kakao.com';
 
@@ -122,7 +123,12 @@ export class KakaoLocalService {
           params: { x: lng, y: lat },
         },
       ),
-    ).catch(() => null);
+    ).catch((err: unknown) => {
+      this.logger.warn(
+        `Kakao reverseGeocode failed lat=${lat} lng=${lng}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    });
 
     const addr = res?.data?.documents?.[0]?.address;
     const address = addr

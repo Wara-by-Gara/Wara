@@ -80,7 +80,7 @@ export class PhotosService {
 
     // GPS 좌표 있으면 역지오코딩 (DB 캐시 우선 조회)
     let exifMetadata = dto.exifMetadata;
-    if (exifMetadata?.gps_lat && exifMetadata?.gps_lng) {
+    if (exifMetadata?.gps_lat != null && exifMetadata?.gps_lng != null) {
       const address = await this.kakaoLocalService.reverseGeocode(
         exifMetadata.gps_lat,
         exifMetadata.gps_lng,
@@ -88,14 +88,21 @@ export class PhotosService {
       if (address) exifMetadata = { ...exifMetadata, gps_address: address };
     }
 
-    return this.repository.create({
-      invitationId,
-      participantId,
-      imageKey: dto.imageKey,
-      takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
-      exifMetadata,
-      exifFingerprint,
-    });
+    try {
+      return await this.repository.create({
+        invitationId,
+        participantId,
+        imageKey: dto.imageKey,
+        takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
+        exifMetadata,
+        exifFingerprint,
+      });
+    } catch (e: unknown) {
+      if (typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === '23505') {
+        throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
+      }
+      throw e;
+    }
   }
 
   // 다운로드용 URL 발급 (낱개, 선택)

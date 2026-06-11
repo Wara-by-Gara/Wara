@@ -106,6 +106,13 @@
       "when": 1780994100185,
       "tag": "0015_milky_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1749600000000,
+      "tag": "0016_album_photo_timeline",
+      "breakpoints": true
     }
   ]
 }
