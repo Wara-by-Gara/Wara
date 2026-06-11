@@ -275,8 +275,9 @@ export class InvitationsService {
       coverPatch.mainImageKey = null;
       // image → gif 전환 시 기존 main 섬네일 키도 초기화 (orphan 표시값 방지)
       coverPatch.mainImageThumbnailKey = null;
-    } else if (dto.mainImageKey) {
-      // 새 이미지 검증. 통과 못하면 update 자체가 막힘.
+    } else if (dto.mainImageKey && dto.mainImageKey !== current.mainImageKey) {
+      // 키가 실제로 바뀐 경우에만 verify — FE가 변경 없는 update에도 기존 키를 그대로
+      // 보내므로 무조건 verify하면 S3 호출 실패 시 update 자체가 막힘.
       verifiedImage = await this.imageProcessing.verifyUpload(dto.mainImageKey);
       coverPatch.mainCoverType = 'image';
       coverPatch.mainImageKey = dto.mainImageKey;
