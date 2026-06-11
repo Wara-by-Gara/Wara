@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import Image from "next/image";
 import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
@@ -17,7 +18,8 @@ const MOCK_USER = {
 
 const MOCK_MEMORY = {
   id: "inv_hanok_2024",
-  imageUrl: "https://placehold.co/120x120/D6E8D4/3D6B35?text=🌸",
+  // picsum seed → 항상 동일한 이미지
+  imageUrl: "https://picsum.photos/seed/hanok-cover/120/120",
   title: "한옥마을 봄나들이",
   date: "2024. 04. 13 (토)",
   excerpt: "따뜻한 봄날, 함께 걸었던 한옥마을의 추억 🌸",
@@ -26,71 +28,284 @@ const MOCK_MEMORY = {
 /**
  * Place log — 한옥마을 봄나들이 모임 사진 GPS 메타데이터 mock.
  *
- * 실제 구현에서는 사진 EXIF/서버 메타데이터의 lat/lng 값을
+ * 실제 구현에서는 사진 EXIF / 서버 메타데이터의 lat/lng 를
  * 지도 뷰포트 bounding box 대비 상대 좌표(top%, left%)로 변환.
  *
- * 전주 한옥마을 뷰포트 예시:
+ * 전주 한옥마을 뷰포트:
  *   minLat: 35.808 / maxLat: 35.822
  *   minLng: 127.144 / maxLng: 127.158
  *
- * top%  = (maxLat - lat) / (maxLat - minLat) * 100
- * left% = (lng - minLng) / (maxLng - minLng) * 100
+ *   top%  = (maxLat - lat) / (maxLat - minLat) × 100
+ *   left% = (lng - minLng) / (maxLng - minLng) × 100
  */
-const MEETING_PHOTOS: {
+interface MeetingPhoto {
   id: string;
-  src: string;
+  /** 썸네일 (지도 핀 + 리스트) */
+  thumb: string;
+  /** 모달 확대 이미지 */
+  full: string;
   caption: string;
-  /** GPS 기반 지도 상 위치 (뷰포트 상대값) */
+  address: string;
+  takenAt: string;
+  gps: string;
   top: string;
   left: string;
   likeCount: number;
-}[] = [
+}
+
+const MEETING_PHOTOS: MeetingPhoto[] = [
   {
     id: "ph1",
-    src: "https://placehold.co/80x80/C8E6C9/2E7D32?text=🌺",
+    thumb: "https://picsum.photos/seed/hanok-gate/160/160",
+    full: "https://picsum.photos/seed/hanok-gate/800/800",
     caption: "경기전 입구",
-    // lat: 35.820, lng: 127.147 → top≈14%, left≈21%
+    address: "전북 전주시 완산구 태조로 44",
+    takenAt: "2024. 04. 13 · 오전 10:12",
+    gps: "35.8197° N, 127.1472° E",
     top: "14%",
     left: "21%",
     likeCount: 42,
   },
   {
     id: "ph2",
-    src: "https://placehold.co/80x80/FFF9C4/F9A825?text=🏯",
+    thumb: "https://picsum.photos/seed/hanok-gate2/160/160",
+    full: "https://picsum.photos/seed/hanok-gate2/800/800",
     caption: "풍남문 광장",
-    // lat: 35.812, lng: 127.145 → top≈71%, left≈7%
+    address: "전북 전주시 완산구 풍남문3길 1",
+    takenAt: "2024. 04. 13 · 오전 11:38",
+    gps: "35.8116° N, 127.1455° E",
     top: "71%",
     left: "7%",
     likeCount: 31,
   },
   {
     id: "ph3",
-    src: "https://placehold.co/80x80/FCE4EC/C2185B?text=🌸",
+    thumb: "https://picsum.photos/seed/hanok-alley/160/160",
+    full: "https://picsum.photos/seed/hanok-alley/800/800",
     caption: "한옥마을 골목",
-    // lat: 35.815, lng: 127.152 → top≈50%, left≈57%
+    address: "전북 전주시 완산구 은행로 55",
+    takenAt: "2024. 04. 13 · 오후 12:55",
+    gps: "35.8154° N, 127.1522° E",
     top: "50%",
     left: "57%",
     likeCount: 38,
   },
   {
     id: "ph4",
-    src: "https://placehold.co/80x80/E3F2FD/1565C0?text=☕",
+    thumb: "https://picsum.photos/seed/hanok-cafe/160/160",
+    full: "https://picsum.photos/seed/hanok-cafe/800/800",
     caption: "전동성당 앞 카페",
-    // lat: 35.819, lng: 127.155 → top≈21%, left≈79%
+    address: "전북 전주시 완산구 태조로 51",
+    takenAt: "2024. 04. 13 · 오후 02:10",
+    gps: "35.8192° N, 127.1551° E",
     top: "21%",
     left: "79%",
     likeCount: 25,
   },
   {
     id: "ph5",
-    src: "https://placehold.co/80x80/F3E5F5/6A1B9A?text=🍃",
+    thumb: "https://picsum.photos/seed/hanok-view/160/160",
+    full: "https://picsum.photos/seed/hanok-view/800/800",
     caption: "오목대 전망",
-    // lat: 35.809, lng: 127.157 → top≈93%, left≈93%
+    address: "전북 전주시 완산구 기린대로 55",
+    takenAt: "2024. 04. 13 · 오후 03:47",
+    gps: "35.8094° N, 127.1574° E",
     top: "82%",
     left: "88%",
     likeCount: 19,
   },
 ];
+
+/* ─────────────────────────────────────────────────────────
+   Photo Modal
+───────────────────────────────────────────────────────── */
+function PhotoModal({
+  photo,
+  onClose,
+}: {
+  photo: MeetingPhoto;
+  onClose: () => void;
+}) {
+  return (
+    /* backdrop */
+    <div
+      className="absolute inset-0 z-50 flex flex-col bg-black/80"
+      onClick={onClose}
+    >
+      {/* header */}
+      <div
+        className="flex shrink-0 items-center justify-between px-4 py-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col">
+          <span className="text-[15px] font-bold text-white">{photo.caption}</span>
+          <span className="text-[11px] text-white/60">{photo.takenAt}</span>
+        </div>
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={onClose}
+          className="flex size-8 items-center justify-center rounded-full bg-white/10"
+        >
+          <Icon name="close" size="sm" color="white" decorative />
+        </button>
+      </div>
+
+      {/* 확대 사진 */}
+      <div
+        className="relative min-h-0 flex-1"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Image
+          src={photo.full}
+          alt={photo.caption}
+          fill
+          className="object-contain"
+          sizes="(max-width: 480px) 100vw, 480px"
+        />
+      </div>
+
+      {/* footer — 위치 & 좋아요 */}
+      <div
+        className="shrink-0 px-4 py-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
+          <div className="flex items-start gap-2">
+            <Icon name="map-pin" size="sm" color="white" decorative />
+            <div className="flex-1">
+              <p className="text-[13px] font-medium text-white">{photo.address}</p>
+              <p className="mt-0.5 text-[11px] text-white/50">{photo.gps}</p>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-1 border-t border-white/10 pt-2">
+            <Icon name="heart" size="xs" color="white" decorative />
+            <span className="text-[12px] font-medium text-white">{photo.likeCount}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   Place log — 지도 + 상세 목록
+───────────────────────────────────────────────────────── */
+function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) => void }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* ── 지도 + GPS 핀 ── */}
+      <div className="overflow-hidden rounded-2xl ring-1 ring-border">
+        {/* 선택된 모임 레이블 */}
+        <div className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2">
+          <div className="relative size-5 shrink-0 overflow-hidden rounded-md">
+            <Image
+              src={MOCK_MEMORY.imageUrl}
+              alt={MOCK_MEMORY.title}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text-primary">
+            {MOCK_MEMORY.title}
+          </span>
+          <span className="shrink-0 text-[11px] text-text-tertiary">
+            사진 {MEETING_PHOTOS.length}장
+          </span>
+        </div>
+
+        {/* 지도 영역 */}
+        <div className="relative h-[210px] bg-[#E8F0E4]">
+          {/* 도로망 SVG mock */}
+          <svg className="absolute inset-0 h-full w-full opacity-25" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="58%" x2="100%" y2="54%" stroke="#8FA88A" strokeWidth="7" />
+            <line x1="0" y1="72%" x2="100%" y2="68%" stroke="#A5BFA0" strokeWidth="4" />
+            <line x1="32%" y1="0" x2="35%" y2="100%" stroke="#8FA88A" strokeWidth="5" />
+            <line x1="65%" y1="0" x2="67%" y2="100%" stroke="#A5BFA0" strokeWidth="3" />
+            <line x1="10%" y1="30%" x2="60%" y2="25%" stroke="#B8CEB4" strokeWidth="2" />
+            <line x1="40%" y1="0" x2="42%" y2="55%" stroke="#B8CEB4" strokeWidth="2" />
+            <line x1="70%" y1="40%" x2="100%" y2="38%" stroke="#B8CEB4" strokeWidth="2" />
+            <ellipse cx="50%" cy="87%" rx="45%" ry="7%" fill="#C5DDF5" opacity="0.5" />
+          </svg>
+
+          {/* GPS 기반 사진 핀 — 클릭 가능 */}
+          {MEETING_PHOTOS.map((photo) => (
+            <button
+              key={photo.id}
+              type="button"
+              aria-label={`${photo.caption} 사진 보기`}
+              onClick={() => onSelectPhoto(photo)}
+              className="absolute flex flex-col items-center active:scale-95"
+              style={{
+                top: photo.top,
+                left: photo.left,
+                transform: "translate(-50%, -50%)",
+                zIndex: 10,
+              }}
+            >
+              <div className="relative size-[52px] overflow-hidden rounded-xl border-[2.5px] border-white shadow-lg">
+                <Image
+                  src={photo.thumb}
+                  alt={photo.caption}
+                  fill
+                  className="object-cover"
+                  sizes="52px"
+                />
+              </div>
+              {/* 핀 꼬리 */}
+              <div className="h-1.5 w-0.5 bg-white/80" />
+              <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-secondary shadow-sm">
+                {photo.caption}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 상세 사진 목록 ── */}
+      <div className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+        {MEETING_PHOTOS.map((photo) => (
+          <button
+            key={photo.id}
+            type="button"
+            onClick={() => onSelectPhoto(photo)}
+            className="flex items-center gap-3 px-3 py-3 text-left active:bg-background-soft"
+          >
+            {/* 썸네일 */}
+            <div className="relative size-[56px] shrink-0 overflow-hidden rounded-xl">
+              <Image
+                src={photo.thumb}
+                alt={photo.caption}
+                fill
+                className="object-cover"
+                sizes="56px"
+              />
+            </div>
+
+            {/* 정보 */}
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-text-primary">{photo.caption}</p>
+              <div className="mt-0.5 flex items-center gap-1">
+                <Icon name="map-pin" size="xs" color="inactive" decorative />
+                <p className="truncate text-[11px] text-text-tertiary">{photo.address}</p>
+              </div>
+              <div className="mt-0.5 flex items-center gap-1">
+                <Icon name="clock" size="xs" color="inactive" decorative />
+                <p className="text-[11px] text-text-tertiary">{photo.takenAt}</p>
+              </div>
+            </div>
+
+            {/* 좋아요 */}
+            <div className="flex shrink-0 flex-col items-center gap-0.5">
+              <Icon name="heart" size="sm" color="inactive" decorative />
+              <span className="text-[11px] text-text-tertiary">{photo.likeCount}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────────────────────
    Sub-components
@@ -100,80 +315,6 @@ function StatItem({ label, value }: { label: string; value: number }) {
     <div className="flex flex-1 flex-col items-center gap-0.5">
       <span className="text-[15px] font-bold text-text-primary">{value}</span>
       <span className="text-[11px] text-text-tertiary">{label}</span>
-    </div>
-  );
-}
-
-/**
- * Place log 지도 mock.
- * 실제 구현에서는 Kakao/Google Map 위에 각 사진의 GPS 좌표를 마커로 렌더링.
- * 여기서는 뷰포트 내 상대 좌표(top/left %)로 사진 핀을 배치해 동일 UX를 시뮬레이션.
- */
-function PlaceLogMap() {
-  return (
-    <div className="overflow-hidden rounded-2xl ring-1 ring-border">
-      {/* 선택된 모임 레이블 */}
-      <div className="flex items-center gap-1.5 border-b border-border bg-surface px-3 py-2">
-        <div className="relative size-5 overflow-hidden rounded-md">
-          <Image
-            src={MOCK_MEMORY.imageUrl}
-            alt={MOCK_MEMORY.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <span className="text-[12px] font-medium text-text-primary">{MOCK_MEMORY.title}</span>
-        <span className="ml-auto text-[11px] text-text-tertiary">
-          사진 {MEETING_PHOTOS.length}장
-        </span>
-      </div>
-
-      {/* 지도 영역 */}
-      <div className="relative h-[200px] bg-[#E8F0E4]">
-        {/* 도로망 SVG mock */}
-        <svg
-          className="absolute inset-0 h-full w-full opacity-25"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* 주요 도로 */}
-          <line x1="0" y1="58%" x2="100%" y2="54%" stroke="#8FA88A" strokeWidth="7" />
-          <line x1="0" y1="72%" x2="100%" y2="68%" stroke="#A5BFA0" strokeWidth="4" />
-          {/* 세로 도로 */}
-          <line x1="32%" y1="0" x2="35%" y2="100%" stroke="#8FA88A" strokeWidth="5" />
-          <line x1="65%" y1="0" x2="67%" y2="100%" stroke="#A5BFA0" strokeWidth="3" />
-          {/* 골목길 */}
-          <line x1="10%" y1="30%" x2="60%" y2="25%" stroke="#B8CEB4" strokeWidth="2" />
-          <line x1="40%" y1="0" x2="42%" y2="55%" stroke="#B8CEB4" strokeWidth="2" />
-          <line x1="70%" y1="40%" x2="100%" y2="38%" stroke="#B8CEB4" strokeWidth="2" />
-          {/* 강/공원 */}
-          <ellipse cx="50%" cy="85%" rx="45%" ry="8%" fill="#C5DDF5" opacity="0.5" />
-        </svg>
-
-        {/* GPS 기반 사진 핀 */}
-        {MEETING_PHOTOS.map((photo) => (
-          <div
-            key={photo.id}
-            className="absolute flex flex-col items-center"
-            style={{
-              top: photo.top,
-              left: photo.left,
-              transform: "translate(-50%, -50%)",
-              zIndex: 10,
-            }}
-          >
-            {/* 사진 썸네일 핀 */}
-            <div className="relative size-[52px] overflow-hidden rounded-xl border-[2.5px] border-white shadow-lg">
-              <Image src={photo.src} alt={photo.caption} fill className="object-cover" />
-            </div>
-            {/* 핀 꼬리 */}
-            <div className="h-1.5 w-0.5 bg-white/80" />
-            {/* 위치 라벨 */}
-            <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-secondary shadow-sm">
-              {photo.caption}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -211,9 +352,7 @@ function BottomNav({ active = "profile" }: { active?: string }) {
               color={isActive ? "primary" : "inactive"}
               decorative
             />
-            <span
-              className={`text-[10px] font-medium ${isActive ? "text-brand" : "text-text-tertiary"}`}
-            >
+            <span className={`text-[10px] font-medium ${isActive ? "text-brand" : "text-text-tertiary"}`}>
               {item.label}
             </span>
           </div>
@@ -233,6 +372,8 @@ interface MyPageScreenProps {
 }
 
 function MyPageScreen({ state = "default" }: MyPageScreenProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<MeetingPhoto | null>(null);
+
   const wrap = (children: React.ReactNode) => (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background-soft">
       {/* Header */}
@@ -242,8 +383,14 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
           <Icon name="settings" size="md" color="secondary" decorative />
         </button>
       </div>
+
       <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       <BottomNav active="profile" />
+
+      {/* 사진 확대 모달 */}
+      {selectedPhoto && (
+        <PhotoModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+      )}
     </div>
   );
 
@@ -381,6 +528,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
               alt={MOCK_MEMORY.title}
               fill
               className="object-cover"
+              sizes="80px"
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -413,8 +561,8 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
           </button>
         </div>
 
-        {/* 선택 모임의 GPS 메타데이터 기반 사진 지도 */}
-        <PlaceLogMap />
+        {/* 지도 + 상세 목록 */}
+        <PlaceLogSection onSelectPhoto={setSelectedPhoto} />
       </div>
     </div>
   );
