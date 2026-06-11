@@ -395,12 +395,17 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   const photoOverlaysRef = useRef<Map<string, SdkKakaoCustomOverlay>>(new Map());
   const initializedRef = useRef(false);
   const firstFitDoneRef = useRef(false);
+  // 사용자가 한 번이라도 줌·드래그하면 true. 이후 자동 fit을 멈춰 사용자 시점 보존.
+  // centerOn(ref handle)로 명시적 이동 시엔 다시 false로 리셋해 새 fit 허용.
+  const userInteractedRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
     centerOn(lat: number, lng: number) {
       if (!mapRef.current || !window.kakao?.maps) return;
       const pos = new window.kakao.maps.LatLng(lat, lng);
       mapRef.current.setCenter(pos);
+      // 명시적 centerOn은 새 위치를 보고 싶다는 의도 — interact flag 리셋.
+      userInteractedRef.current = false;
     },
   }));
 
@@ -421,6 +426,13 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       const map = new maps.Map(containerRef.current, { center, level: initialLevel });
       mapRef.current = map;
       initializedRef.current = true;
+
+      // 사용자 제스처 감지 — 드래그·줌 시 자동 fit 비활성화.
+      const markInteracted = () => {
+        userInteractedRef.current = true;
+      };
+      maps.event.addListener(map, "dragstart", markInteracted);
+      maps.event.addListener(map, "zoom_changed", markInteracted);
 
       if (onBoundsChange) {
         const emitBounds = () => {
@@ -576,6 +588,8 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
   function fitBounds() {
     if (autoFit === "never") return;
     if (autoFit === "first" && firstFitDoneRef.current) return;
+    // 사용자가 줌·드래그한 후엔 의도 보존을 위해 자동 fit 중단 (always 모드).
+    if (autoFit === "always" && userInteractedRef.current) return;
     if (!mapRef.current || !window.kakao?.maps) return;
     const { maps } = window.kakao;
     const bounds = new maps.LatLngBounds();
