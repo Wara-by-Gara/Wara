@@ -12,13 +12,31 @@ import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { getMyPhotoLocations, getPhotos, type PhotoLocation } from "@/lib/api/photos";
 import { getInvitation } from "@/lib/api/invitations";
 import { PhotoModal } from "./PhotoModal";
-import { clusterPhotos, formatTakenAt } from "./photoMapUtils";
+import { clusterPhotos, formatTakenAt, type Cluster } from "./photoMapUtils";
 
 // ── 컴포넌트 ──────────────────────────────────────────────────────────────────
 export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
   const mapSdkReady = useKakaoMapsSdk();
 
-  const [selectedPhoto, setSelectedPhoto] = useState<PhotoLocation | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  function toggleGroup(id: string) {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function getClusterLabel(cluster: Cluster, index: number): string {
+    const address = (cluster.photos[0]?.exifMetadata as Record<string, unknown> | null)
+      ?.gps_address as string | undefined;
+    if (address) return address;
+    const eventAddress = invDetail?.eventLocation?.address ?? invDetail?.eventLocation?.placeName;
+    return eventAddress ?? `위치 ${index + 1}`;
+  }
 
   const { data: invPhotos, isLoading: isLoadingInv } = useQuery({
     queryKey: ["invitations", invitationId, "photos", "locations"],
@@ -78,11 +96,15 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
     [photoLocations],
   );
 
+  const selectedPhoto = selectedIndex != null ? (sortedPhotos[selectedIndex] ?? null) : null;
+
   function handleMarkerClick(markerId: string) {
     const cluster = clusters.find((c) => c.id === markerId);
     if (!cluster) return;
-    // 클러스터 대표 사진을 모달로 표시.
-    setSelectedPhoto(cluster.photos[0] ?? null);
+    const photo = cluster.photos[0];
+    if (!photo) return;
+    const idx = sortedPhotos.findIndex((p) => p.id === photo.id);
+    setSelectedIndex(idx >= 0 ? idx : 0);
   }
 
   return (
@@ -110,9 +132,9 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
           {(isLoading || !mapSdkReady) && <MapLoadingSkeleton />}
         </div>
 
-        {/* 하단 그리드 — 모든 사진 (지도 핀과 별개로 최신순) */}
+        {/* 하단 — 위치별 그룹 아코디언 */}
         {!isLoading && mapSdkReady && (
-          sortedPhotos.length === 0 ? (
+          clusters.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-page py-12 text-center">
               <p className="text-[15px] font-bold text-text-primary">
                 위치 정보가 있는 사진이 없어요
@@ -122,37 +144,74 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-0.5 p-0.5">
-              {sortedPhotos.map((photo) => (
-                <button
-                  key={photo.id}
-                  type="button"
-                  onClick={() => setSelectedPhoto(photo)}
-                  className="relative aspect-square overflow-hidden bg-gray-100 active:opacity-80"
-                  aria-label={`사진 ${formatTakenAt(photo.takenAt, photo.createdAt)}`}
-                >
-                  <Image
-                    src={photo.url}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 480px) 33vw, 160px"
-                  />
-                  {photo.likeCount > 0 && (
-                    <div className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5">
-                      <Icon name="heart" size="xs" color="inverse" decorative />
-                      <span className="text-[10px] font-medium text-white">{photo.likeCount}</span>
-                    </div>
-                  )}
-                </button>
-              ))}
+            <div className="flex flex-col">
+              {clusters.map((cluster, i) => {
+                const isOpen = expandedGroups.has(cluster.id);
+                const label = getClusterLabel(cluster, i);
+                return (
+                  <div key={cluster.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(cluster.id)}
+                      className="flex w-full items-center justify-between border-b border-border bg-surface px-page py-3 active:bg-background-soft"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon name="map-pin" size="sm" color="inactive" decorative />
+                        <span className="text-[13px] font-semibold text-text-primary">{label}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-text-tertiary">{cluster.count}장</span>
+                        <span className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                          <Icon name="chevron-down" size="xs" color="inactive" decorative />
+                        </span>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="grid grid-cols-3 gap-0.5 p-0.5">
+                        {cluster.photos.map((photo) => (
+                          <button
+                            key={photo.id}
+                            type="button"
+                            onClick={() => setSelectedIndex(sortedPhotos.indexOf(photo))}
+                            className="relative aspect-square overflow-hidden bg-gray-100 active:opacity-80"
+                            aria-label={`사진 ${formatTakenAt(photo.takenAt, photo.createdAt)}`}
+                          >
+                            <Image
+                              src={photo.url}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 480px) 33vw, 160px"
+                            />
+                            {photo.likeCount > 0 && (
+                              <div className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5">
+                                <Icon name="heart" size="xs" color="inverse" decorative />
+                                <span className="text-[10px] font-medium text-white">{photo.likeCount}</span>
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )
         )}
       </main>
 
       {selectedPhoto && (
-        <PhotoModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+        <PhotoModal
+          photo={selectedPhoto}
+          onClose={() => setSelectedIndex(null)}
+          onPrev={selectedIndex != null && selectedIndex > 0
+            ? () => setSelectedIndex(selectedIndex - 1)
+            : undefined}
+          onNext={selectedIndex != null && selectedIndex < sortedPhotos.length - 1
+            ? () => setSelectedIndex(selectedIndex + 1)
+            : undefined}
+        />
       )}
     </div>
   );
