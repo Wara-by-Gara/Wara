@@ -238,13 +238,18 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
               onClick={onViewMap}
               className={cn("w-full overflow-hidden transition-opacity hover:opacity-90", mapRadius)}
             >
-              <KakaoStaticMapPreview
-                lat={mapLat}
-                lng={mapLng}
-                heightOffset={20}
-                className={mapRadius}
-                alt={placeName ?? "지도 미리보기"}
-              />
+              {/* StaticMap 마커는 SDK 기본 핸들러로 카카오 지도 외부 탭을 여는데,
+                  button onClick(우리 페이지로 이동)과 중복 동작이 됨.
+                  pointer-events-none으로 내부 클릭을 차단해 button 흐름만 살림. */}
+              <div className="pointer-events-none">
+                <KakaoStaticMapPreview
+                  lat={mapLat}
+                  lng={mapLng}
+                  heightOffset={20}
+                  className={mapRadius}
+                  alt={placeName ?? "지도 미리보기"}
+                />
+              </div>
             </button>
           ) : (
             <KakaoStaticMapPreview
