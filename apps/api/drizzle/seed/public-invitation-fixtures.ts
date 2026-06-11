@@ -325,7 +325,14 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
           participantId: uploaderId,
           invitationId: invId,
           imageKey: deps.templatePhotoUrl(cat.folder, `${invKey}-${pi}`),
-          exifMetadata: { width: 1280, height: 853, camera: 'iPhone 15' },
+          // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산 — 사진 지도 표시용.
+          exifMetadata: {
+            width: 1280,
+            height: 853,
+            camera: 'iPhone 15',
+            gps_lat: 37.5665 + ((pi % 11) - 5) * 0.005,
+            gps_lng: 126.978 + ((invKey.length % 11) - 5) * 0.005,
+          },
           viewCount: pi * 3,
           likeCount: likers.length,
           deletedAt: null,

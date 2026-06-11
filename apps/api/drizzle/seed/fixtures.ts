@@ -794,11 +794,15 @@ function buildSeeds() {
         participantId: uploaderId,
         invitationId: invIdByKey[invKey]!,
         imageKey: photoUrl(`${invKey}-${i}`),
+        // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산.
+        // 사진 지도에서 마커 클러스터링 동작을 보기 위해 사진별 deterministic 변동.
         exifMetadata: {
           width: 1280,
           height: 853,
           takenAt: `2026-04-${String((i % 28) + 1).padStart(2, '0')}T${String(10 + (i % 10)).padStart(2, '0')}:00:00Z`,
           camera: 'iPhone 15',
+          gps_lat: 37.5665 + ((i % 11) - 5) * 0.005,
+          gps_lng: 126.978 + ((invIdx % 11) - 5) * 0.005,
         },
         viewCount: 0,
         likeCount: likers.length,
