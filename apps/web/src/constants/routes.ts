@@ -1,7 +1,10 @@
 export const ROUTES = {
   HOME: "/",
   MEETINGS: "/meetings",
-  EXPLORE: "/explore",
+  EXPLORE: {
+    LIST: "/explore",
+    MAP: "/explore/map",
+  },
   /** @deprecated MEETINGS 사용 */
   CALENDAR: "/meetings",
   FRIENDS: {
