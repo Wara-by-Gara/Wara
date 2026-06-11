@@ -8,6 +8,7 @@ import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
 import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
+import { stickyMainTop } from "@/lib/mobilePageLayout";
 import { getMyPhotoLocations, type PhotoLocation } from "@/lib/api/photos";
 import { PhotoModal } from "./PhotoModal";
 
@@ -134,7 +135,7 @@ export function PhotoMapPage() {
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-background">
       <StickyHeader title="Place log" />
 
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+      <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>
         {/* 헤더 카드 — 전체 사진 개수 */}
         <div className="flex items-center justify-between border-b border-border bg-surface px-page py-3">
           <span className="text-[14px] font-medium text-text-primary">내 사진</span>
