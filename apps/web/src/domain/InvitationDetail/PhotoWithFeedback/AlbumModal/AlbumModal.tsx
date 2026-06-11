@@ -132,6 +132,17 @@ export default function AlbumModal({
       buckets.set(key, bucket);
     }
 
+    const timeBucketKeys = Array.from(buckets.keys()).filter(
+      (k) => k !== '__no_time__' && !k.startsWith('loc:'),
+    );
+    const uniqueDates = new Set(
+      timeBucketKeys.map((k) => {
+        const d = new Date(k);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      }),
+    );
+    const isMultiDay = uniqueDates.size > 1;
+
     return Array.from(buckets.entries()).map(([key, groupPhotos]) => {
       let label: string;
       if (key === '__no_time__') {
@@ -139,13 +150,15 @@ export default function AlbumModal({
       } else if (key.startsWith('loc:')) {
         label = key.slice(4);
       } else {
-        const timeStr = new Date(key).toLocaleTimeString('ko-KR', {
+        const date = new Date(key);
+        const timeStr = date.toLocaleTimeString('ko-KR', {
           hour: '2-digit',
           minute: '2-digit',
           hour12: true,
         });
+        const datePart = isMultiDay ? `${date.getMonth() + 1}/${date.getDate()} ` : '';
         const location = groupPhotos.find((p) => p.exifMetadata?.gps_address)?.exifMetadata?.gps_address;
-        label = location ? `${timeStr} · ${location}` : timeStr;
+        label = location ? `${datePart}${timeStr} · ${location}` : `${datePart}${timeStr}`;
       }
 
       return {
