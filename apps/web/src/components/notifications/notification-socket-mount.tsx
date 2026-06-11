@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useNotificationSocket } from "@/hooks/useNotifications";
 
@@ -11,11 +10,6 @@ import { useNotificationSocket } from "@/hooks/useNotifications";
 export function NotificationSocketMount() {
   const hydrated = useAuthStore((s) => s.hydrated);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const hydrate = useAuthStore((s) => s.hydrate);
-
-  useEffect(() => {
-    if (!hydrated) hydrate();
-  }, [hydrated, hydrate]);
 
   if (!hydrated || !isLoggedIn) return null;
   return <SocketLifecycle />;

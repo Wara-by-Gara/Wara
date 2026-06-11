@@ -260,7 +260,18 @@ export class InvitationsRepository {
       .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
 
-  // 워커가 main image 섬네일 업로드 후 호출
+  findCoverById(id: string) {
+    return this.db.query.invitations.findFirst({
+      where: (inv, { eq, isNull, and }) =>
+        and(eq(inv.id, id), isNull(inv.deletedAt)),
+      columns: {
+        mainCoverType: true,
+        mainGifUrl: true,
+        mainImageKey: true,
+      },
+    });
+  }
+
   async updateMainImageThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
     await this.db
       .update(invitations)

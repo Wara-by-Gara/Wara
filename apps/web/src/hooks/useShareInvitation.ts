@@ -20,7 +20,7 @@ function loadKakaoSdk(): Promise<void> {
   });
 }
 
-export function useShareInvitation(invitationId: string, title?: string, description?: string, mainImageUrl?: string) {
+export function useShareInvitation(invitationId: string, title?: string, description?: string, imageUrl?: string) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = async () => {
@@ -33,7 +33,7 @@ export function useShareInvitation(invitationId: string, title?: string, descrip
   const shareViaKakao = async () => {
     const resolvedTitle = title ?? KAKAO_DEFAULT_TITLE;
     const resolvedDescription = description ?? KAKAO_DEFAULT_DESCRIPTION;
-    const resolvedImageUrl = mainImageUrl ?? `${window.location.origin}${KAKAO_LOGO_PATH}`;
+    const resolvedImageUrl = imageUrl ?? `${window.location.origin}${KAKAO_LOGO_PATH}`;
 
     const { inviteUrl } = await createSendLog(invitationId, { channel: "kakao" });
 
