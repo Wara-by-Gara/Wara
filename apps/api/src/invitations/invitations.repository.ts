@@ -5,6 +5,7 @@ import { dateVotePolls, eventLocations, invitations, participants, users } from 
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
+import { ListPublicMapInvitationsDto } from './dto/list-public-map-invitations.dto';
 import { MemberRole } from '../common/enums/member-role.enum';
 import { RsvpStatus } from '../common/enums/rsvp-status.enum';
 
@@ -93,6 +94,39 @@ export class InvitationsRepository {
       )
       .groupBy(participants.invitationId);
     return new Map(rows.map((r) => [r.invitationId, r.count]));
+  }
+
+  async findPublicForMap(dto: ListPublicMapInvitationsDto) {
+    const conditions = [
+      eq(invitations.isPublic, true),
+      isNull(invitations.deletedAt),
+      eq(invitations.status, 'active'),
+      isNull(eventLocations.deletedAt),
+      sql`${eventLocations.lat} BETWEEN ${dto.swLat} AND ${dto.neLat}`,
+      sql`${eventLocations.lng} BETWEEN ${dto.swLng} AND ${dto.neLng}`,
+    ];
+    if (dto.category) {
+      conditions.push(eq(invitations.category, dto.category));
+    }
+
+    return this.db
+      .select({
+        id: invitations.id,
+        title: invitations.title,
+        category: invitations.category,
+        eventStartAt: invitations.eventStartAt,
+        mainImageKey: invitations.mainImageKey,
+        mainImageThumbnailKey: invitations.mainImageThumbnailKey,
+        lat: eventLocations.lat,
+        lng: eventLocations.lng,
+      })
+      .from(invitations)
+      .innerJoin(
+        eventLocations,
+        eq(eventLocations.invitationId, invitations.id),
+      )
+      .where(and(...conditions))
+      .limit(dto.limit);
   }
 
   async findAllByUserId(userId: string) {

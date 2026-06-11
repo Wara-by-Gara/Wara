@@ -26,6 +26,7 @@ import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 import { InvitationPresignedUrlDto } from './dto/invitation-presigned-url.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
+import { ListPublicMapInvitationsDto } from './dto/list-public-map-invitations.dto';
 import { ulid } from 'ulid';
 import { S3Service } from '../s3/s3.service';
 import { S3_CLIENT } from '../s3/s3.constants';
@@ -150,6 +151,24 @@ export class InvitationsService {
         };
       }),
     );
+  }
+
+  async findPublicForMap(dto: ListPublicMapInvitationsDto) {
+    const rows = await this.repository.findPublicForMap(dto);
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      eventStartAt: r.eventStartAt,
+      lat: r.lat,
+      lng: r.lng,
+      // 지도 마커는 작아서 thumbnail이 적합. 없으면 원본 fallback.
+      mainImageThumbnailUrl: r.mainImageThumbnailKey
+        ? this.s3Service.getPublicUrl(r.mainImageThumbnailKey)
+        : r.mainImageKey
+          ? this.s3Service.getPublicUrl(r.mainImageKey)
+          : null,
+    }));
   }
 
   async findPublicExplore(dto: ListPublicInvitationsDto) {
