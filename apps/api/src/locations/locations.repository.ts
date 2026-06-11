@@ -150,6 +150,17 @@ export class LocationsRepository {
     );
   }
 
+  // GPS upsert 시 활성 상태 검증용. 마감/soft deleted면 broadcast 차단.
+  async findInvitationStatus(
+    invitationId: string,
+  ): Promise<{ status: 'active' | 'closed'; deletedAt: Date | null } | null> {
+    const row = await this.db.query.invitations.findFirst({
+      where: (t, { eq }) => eq(t.id, invitationId),
+      columns: { status: true, deletedAt: true },
+    });
+    return row ?? null;
+  }
+
   // GPS flush 대상 — status='closed' 또는 soft deleted 초대장.
   // 기존엔 closed만 처리 → soft delete된 active 초대장의 GPS hash가 24h TTL까지 남는 누락.
   async findInvitationsForGpsFlush(): Promise<string[]> {

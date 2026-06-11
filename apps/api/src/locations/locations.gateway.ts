@@ -57,6 +57,11 @@ export class LocationsGateway implements OnGatewayConnection {
     );
     if (!participant) throw new WsException('PARTICIPANT_NOT_FOUND');
 
+    // 불참(absent) 게스트는 다른 참여자의 GPS 열람 차단. HOST는 모니터링 위해 RSVP 무관.
+    if (participant.memberRole !== 'HOST' && participant.rsvpStatus === 'absent') {
+      throw new WsException('RSVP_PERMISSION_DENIED');
+    }
+
     client.join(`invitation:${invitationId}`);
     return { invitationId };
   }
@@ -67,6 +72,16 @@ export class LocationsGateway implements OnGatewayConnection {
     if (!result.success) throw new WsException('INVALID_PAYLOAD');
 
     client.leave(`invitation:${result.data.invitationId}`);
+  }
+
+  /**
+   * 특정 participant의 GPS marker를 다른 클라이언트에서 즉시 제거.
+   * stopMyLocationSharing / leave / 회원탈퇴 등에서 호출.
+   */
+  emitLocationRemoved(invitationId: string, participantId: string): void {
+    this.server
+      .to(`invitation:${invitationId}`)
+      .emit('location:removed', { invitationId, participantId });
   }
 
   @SubscribeMessage('location:update')
