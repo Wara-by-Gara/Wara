@@ -8,6 +8,7 @@ import type { Browser, Page, Locator } from "@playwright/test";
 const GUEST001_ID = "P6NG7VXYRZ2R4D7VHV55B8MT80"; // guest001@wara.dev
 const GUEST002_ID = "C6K2N2V2V63RGX3Z1RTMSC0EFN"; // guest002@wara.dev (host001과 친구)
 const HOST001_ID = "CHH1HEK72R2RH21YWJTXXM99TC"; // host001@wara.dev (self)
+const GUEST002_NAME = "송지안"; // guest002@wara.dev 시드 표시 이름 (초대 피커 선택용)
 const MSG_INPUT = "메시지를 입력하세요";
 
 // host(newHost)가 임의의 친구(targetId)와 1:1 채팅에 진입해 경로를 반환
@@ -18,7 +19,7 @@ async function hostEnterDmWith(page: Page, targetId: string): Promise<string> {
   return new URL(page.url()).pathname;
 }
 
-async function openAs(browser: Browser, persona: "newHost" | "guest") {
+async function openAs(browser: Browser, persona: "newHost" | "guest" | "guest2") {
   const context = await browser.newContext({ storageState: authFile(persona) });
   const page = await context.newPage();
   return { context, page };
@@ -891,5 +892,50 @@ test.describe("dm-batch9-group", () => {
     await expect(page.getByText("대화상대 3")).toBeVisible({ timeout: 10_000 });
 
     await context.close();
+  });
+});
+
+test.describe("dm-batch10-group-realtime", () => {
+  test("3계정 단톡방: 실시간 메시지가 세 명 모두에게 전달된다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost"); // host001
+    const g1 = await openAs(browser, "guest"); // guest001
+    const g2 = await openAs(browser, "guest2"); // guest002
+
+    // host: guest001과 1:1 -> guest002 초대 -> 새 단톡방(3명)
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), {
+      timeout: 10_000,
+    });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // 나머지 두 명이 같은 방에 진입
+    await g1.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g1.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await expect(g2.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+
+    // host 전송 -> g1, g2 실시간 수신
+    const msgA = `E2E 그룹A ${Date.now()}`;
+    await send(host.page, msgA);
+    await expect(g1.page.getByText(msgA)).toBeVisible({ timeout: 10_000 });
+    await expect(g2.page.getByText(msgA)).toBeVisible({ timeout: 10_000 });
+
+    // g1 전송 -> host, g2 실시간 수신
+    const msgB = `E2E 그룹B ${Date.now()}`;
+    await send(g1.page, msgB);
+    await expect(host.page.getByText(msgB)).toBeVisible({ timeout: 10_000 });
+    await expect(g2.page.getByText(msgB)).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await g1.context.close();
+    await g2.context.close();
   });
 });
