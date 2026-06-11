@@ -186,7 +186,7 @@ export const MyPage = ({
               onClick={onPhotoMap}
               rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
             >
-              사진 지도
+              내 추억 지도
             </MenuItem>
             <MenuItem
               leftIcon="user-x"
