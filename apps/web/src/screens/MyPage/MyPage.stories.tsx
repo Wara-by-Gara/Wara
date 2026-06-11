@@ -141,13 +141,14 @@ function PhotoModal({
           <span className="text-[15px] font-bold text-white">{photo.caption}</span>
           <span className="text-[11px] text-white/60">{photo.takenAt}</span>
         </div>
+        {/* 흰 배경 + 어두운 아이콘 → 어두운 모달 배경 대비 최대화 */}
         <button
           type="button"
-          aria-label="닫기"
+          aria-label="사진 닫기"
           onClick={onClose}
-          className="flex size-8 items-center justify-center rounded-full bg-white/10"
+          className="flex size-10 items-center justify-center rounded-full bg-white shadow-lg transition-opacity active:opacity-70"
         >
-          <Icon name="close" size="sm" color="white" decorative />
+          <Icon name="close" size="md" color="secondary" decorative />
         </button>
       </div>
 
