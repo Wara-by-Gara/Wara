@@ -488,7 +488,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       mine ? "items-end" : "items-start"
                     }`}
                   >
-                    {mine && !m.deleted && m.unreadCount > 0 && (
+                    {(isGroup || mine) && !m.deleted && m.unreadCount > 0 && (
                       <span className="text-[11px] font-bold text-primary">
                         {m.unreadCount}
                       </span>

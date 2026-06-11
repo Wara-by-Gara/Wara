@@ -1102,4 +1102,37 @@ test.describe("dm-batch12-unread-count", () => {
     await g1.context.close();
     await g2.context.close();
   });
+
+  test("그룹에서는 상대 메시지에도 안읽음 수가 표시된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const g1 = await openAs(browser, "guest");
+    const g2 = await openAs(browser, "guest2");
+
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /초대/ }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // g1은 방 입장, g2는 방 밖(안 읽음 유지)
+    await g1.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g1.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await g2.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+    await g1.page.waitForTimeout(2500); // 소켓 연결
+
+    // g1이 전송 -> host(상대)가 g1 메시지에 안읽음 수를 본다 (g2 미독)
+    const msg = `E2E 상대안읽음 ${Date.now()}`;
+    await send(g1.page, msg);
+    const row = host.page.locator("li").filter({ hasText: msg });
+    await expect(row).toBeVisible({ timeout: 12_000 });
+    await expect(row.locator("span.text-primary")).toBeVisible({ timeout: 12_000 });
+
+    await host.context.close();
+    await g1.context.close();
+    await g2.context.close();
+  });
 });
