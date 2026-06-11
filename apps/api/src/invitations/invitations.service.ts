@@ -126,6 +126,7 @@ export class InvitationsService {
             : (inv.mainGifUrl ?? null),
           location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? null,
           participantCount,
+          viewCount: inv.viewCount,
           host: inv.host,
         };
       }),
@@ -145,6 +146,8 @@ export class InvitationsService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
+    // 조회수 증가 (탐색 조회순 정렬용). 응답을 막지 않도록 fire-and-forget.
+    void this.repository.incrementViewCount(id);
     // eventLocation 관계 join은 deletedAt을 필터하지 못함(Drizzle one 관계 제약).
     // soft-delete된 장소가 응답에 남지 않도록 여기서 제거.
     const eventLocation = invitation.eventLocation?.deletedAt

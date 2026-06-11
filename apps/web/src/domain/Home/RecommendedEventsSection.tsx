@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
-import { Chip } from "@/components/primitives/Chip";
+import { TextInput } from "@/components/primitives/TextInput";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { ROUTES } from "@/constants/routes";
 import { usePublicInvitations } from "@/hooks/usePublicInvitations";
-import type { PublicInvitationExplore } from "@/lib/api/invitations";
+import type { ExploreSort, PublicInvitationExplore } from "@/lib/api/invitations";
 import { EventListSkeleton } from "@/components/organisms/Skeleton";
 import {
   EVENT_CATEGORIES,
@@ -62,12 +62,28 @@ function EventListItem({ event }: { event: PublicInvitationExplore }) {
   );
 }
 
+const SORT_OPTIONS: { key: ExploreSort; label: string }[] = [
+  { key: "latest", label: "최신순" },
+  { key: "deadline", label: "마감순" },
+  { key: "views", label: "조회순" },
+];
+
 export function RecommendedEventsSection({
   limit,
   showHeading = true,
 }: RecommendedEventsSectionProps) {
   const [category, setCategory] = useState<EventCategory>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<ExploreSort>("latest");
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // 검색어 디바운스 (300ms) — 입력마다 쿼리 날리지 않도록
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   const {
     data,
     isLoading,
@@ -75,7 +91,7 @@ export function RecommendedEventsSection({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePublicInvitations(category);
+  } = usePublicInvitations(category, query, sort);
 
   const events = useMemo(
     () => data?.pages.flatMap((page) => page.items) ?? [],
@@ -106,24 +122,45 @@ export function RecommendedEventsSection({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [enableInfiniteScroll, hasNextPage, isFetchingNextPage, fetchNextPage, category]);
+  }, [enableInfiniteScroll, hasNextPage, isFetchingNextPage, fetchNextPage, category, query, sort]);
 
   return (
     <section className="home-section">
       {showHeading ? <SectionHeader heading="추천 이벤트" /> : null}
       <div className="home-section-content">
-      <div className="-mx-page flex gap-2 overflow-x-auto px-page pb-1 scrollbar-hide">
-        {EVENT_CATEGORIES.map((key) => (
-          <Chip
-            key={key}
-            variant="filter"
-            selected={category === key}
-            onClick={() => setCategory(key)}
-            className="shrink-0"
+      <div className="mb-3 flex flex-col gap-2">
+        <TextInput
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="초대장 제목 검색"
+          maxLength={100}
+        />
+        <div className="flex gap-2">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as EventCategory)}
+            aria-label="카테고리"
+            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
           >
-            {EVENT_CATEGORY_LABELS[key]}
-          </Chip>
-        ))}
+            {EVENT_CATEGORIES.map((key) => (
+              <option key={key} value={key}>
+                {EVENT_CATEGORY_LABELS[key]}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as ExploreSort)}
+            aria-label="정렬"
+            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
+          >
+            {SORT_OPTIONS.map(({ key, label }) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="home-section-list flex flex-col divide-y divide-border">
         {isLoading ? (
@@ -134,7 +171,7 @@ export function RecommendedEventsSection({
           </p>
         ) : visible.length === 0 ? (
           <p className="type-empty py-8 text-center">
-            해당 카테고리의 공개 이벤트가 없어요.
+            조건에 맞는 공개 이벤트가 없어요.
           </p>
         ) : (
           <>

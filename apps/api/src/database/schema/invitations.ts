@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, integer, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
@@ -48,6 +48,8 @@ export const invitations = pgTable('invitations', {
   isPublic: boolean('is_public').notNull().default(false),
   /** 탐색 필터용 — tech, fitness, food, art, culture, health */
   category: varchar('category', { length: 20 }),
+  /** 상세 조회수 (탐색 조회순 정렬용) */
+  viewCount: integer('view_count').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

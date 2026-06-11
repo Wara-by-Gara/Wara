@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  explore: ROUTES.EXPLORE,
+  meetings: ROUTES.MEETINGS,
   create: ROUTES.INVITATIONS.CREATE,
   friends: ROUTES.FRIENDS.LIST,
   profile: ROUTES.PROFILE.ME,
@@ -34,7 +34,7 @@ const HIDDEN_PATHS = [
 function resolveActiveKey(pathname: string): MainBottomNavKey {
   if (pathname === "/") return "home";
   if (pathname.startsWith("/invitations/create")) return "create";
-  if (pathname.startsWith("/explore")) return "explore";
+  if (pathname.startsWith("/meetings")) return "meetings";
   if (pathname.startsWith("/friends")) return "friends";
   if (pathname.startsWith("/profile")) return "profile";
   return "home";

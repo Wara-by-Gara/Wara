@@ -160,6 +160,7 @@ export interface PublicInvitationExplore {
   mainImageUrl: string | null;
   location: string | null;
   participantCount: number;
+  viewCount: number;
   host: {
     name: string | null;
     nickname: string | null;
@@ -173,13 +174,19 @@ export interface PublicInvitationsPage {
   hasNext: boolean;
 }
 
+export type ExploreSort = "latest" | "deadline" | "views";
+
 export function getPublicInvitations(params?: {
   category?: string;
+  q?: string;
+  sort?: ExploreSort;
   limit?: number;
   cursor?: string;
 }): Promise<PublicInvitationsPage> {
   const search = new URLSearchParams();
   if (params?.category) search.set("category", params.category);
+  if (params?.q) search.set("q", params.q);
+  if (params?.sort) search.set("sort", params.sort);
   if (params?.limit != null) search.set("limit", String(params.limit));
   if (params?.cursor) search.set("cursor", params.cursor);
   const qs = search.toString();
