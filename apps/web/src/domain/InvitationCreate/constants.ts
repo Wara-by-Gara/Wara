@@ -14,6 +14,7 @@ export const DESIGN_BG_THEMES = [
   { id: "aurora", label: "오로라", cls: "bg-invite-aurora" },
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
+  { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy" },
 ] as const;
 
 export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];

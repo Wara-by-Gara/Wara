@@ -148,7 +148,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
           )}
           {...props}
         >
-          <Icon name="map-pin" size="lg" color="inactive" decorative className="mx-auto" />
+          <Icon name="map-pin" size="lg" color="currentColor" decorative className={cn("mx-auto", isDarkBg ? "text-white/80" : "text-text-tertiary")} />
           <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>
             장소가 아직 정해지지 않았어요
           </p>

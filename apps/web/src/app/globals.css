@@ -543,6 +543,51 @@ html.theme-dark body {
       ),
       linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   }
+
+  /* 몽환 — 라벤더/퍼플/바이올렛 우주 (이미지 없이 그라데이션으로 구현) */
+  .bg-invite-dreamy {
+    background-color: #9f86d4;
+    background-image:
+      /* 초승달: 밝은 원반 위에 배경색 원반을 살짝 겹쳐 깎아냄 */
+      radial-gradient(circle at 16.5% 27.5%, #8064c9 0 7px, transparent 8px),
+      radial-gradient(circle at 19% 30%, rgba(255, 255, 255, 0.95) 0 7px, transparent 8px),
+      /* 큰 반짝임 (accent sparkles, 고정 위치) */
+      radial-gradient(2px 2px at 70% 22%, rgba(255, 255, 255, 0.95), transparent 55%),
+      radial-gradient(2.5px 2.5px at 33% 60%, rgba(255, 255, 255, 0.9), transparent 55%),
+      radial-gradient(2px 2px at 86% 72%, rgba(255, 240, 255, 0.9), transparent 55%),
+      /* 글리터 입자: 타일로 반복해 수백 개를 저비용 렌더 */
+      radial-gradient(1px 1px at 22% 34%, rgba(255, 255, 255, 0.85), transparent 60%),
+      radial-gradient(1px 1px at 64% 72%, rgba(255, 255, 255, 0.7), transparent 60%),
+      /* 흐릿한 구름 레이어 */
+      radial-gradient(60% 38% at 28% 80%, rgba(255, 255, 255, 0.5), transparent 72%),
+      radial-gradient(68% 42% at 78% 32%, rgba(244, 210, 255, 0.45), transparent 72%),
+      radial-gradient(55% 34% at 62% 96%, rgba(255, 228, 250, 0.55), transparent 70%),
+      /* soft glow (하단에서 올라오는 부드러운 빛) */
+      radial-gradient(130% 80% at 50% 112%, rgba(255, 221, 247, 0.6), transparent 62%),
+      /* 베이스 그라데이션: 위는 깊은 바이올렛, 아래로 밝은 라벤더 */
+      linear-gradient(180deg, #5f4cb0 0%, #8064c9 32%, #ad88dd 62%, #d8b6ef 100%);
+    background-size:
+      auto, auto,
+      auto, auto, auto,
+      48px 48px, 64px 64px,
+      auto, auto, auto,
+      auto,
+      auto;
+    background-repeat:
+      no-repeat, no-repeat,
+      no-repeat, no-repeat, no-repeat,
+      repeat, repeat,
+      no-repeat, no-repeat, no-repeat,
+      no-repeat,
+      no-repeat;
+    animation: bg-invite-dreamy-twinkle 4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-invite-dreamy {
+      animation: none;
+    }
+  }
 }
 
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해
@@ -691,4 +736,9 @@ a {
   50% {
     opacity: var(--opacity, 1);
   }
+}
+
+/* 몽환 배경 반짝임 — .bg-invite-dreamy 전체에 적용됨 */
+@keyframes bg-invite-dreamy-twinkle {
+  /* TODO(human): 글리터가 은은하게 반짝이도록 keyframe 작성 */
 }
