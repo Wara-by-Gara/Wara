@@ -28,6 +28,12 @@ export interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> 
   weatherSlot?: ReactNode;
   /** 초대장 상세 글래스 배경용 */
   immersive?: boolean;
+  /**
+   * 주소 옆 지도 아이콘 메뉴(길찾기·복사) 펼침 방향.
+   * - "bottom"(default): 아이콘 아래로 펼침
+   * - "top": 위로 펼침. 카드가 화면 하단에 고정된 레이아웃에서 사용.
+   */
+  menuPlacement?: "bottom" | "top";
 }
 
 async function copyToClipboard(text: string, successMessage: string) {
@@ -99,6 +105,7 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
       onGetDirections,
       weatherSlot,
       immersive = false,
+      menuPlacement = "bottom",
       ...props
     },
     ref,
@@ -223,7 +230,12 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                     open={addressMenuOpen}
                     onClose={closeAddressMenu}
                     items={addressMenuItems}
-                    className="left-0 top-full mt-1"
+                    className={cn(
+                      "left-0",
+                      menuPlacement === "top"
+                        ? "bottom-full mb-1"
+                        : "top-full mt-1",
+                    )}
                   />
                 </span>
               </div>
