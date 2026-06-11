@@ -529,6 +529,18 @@ export class ConversationsRepository {
       );
   }
 
+  // 참여자별 읽음시각/나감 (메시지별 안읽음 수 계산용)
+  async listParticipantsRead(conversationId: string) {
+    return this.db
+      .select({
+        userId: conversationParticipants.userId,
+        lastReadAt: conversationParticipants.lastReadAt,
+        leftAt: conversationParticipants.leftAt,
+      })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.conversationId, conversationId));
+  }
+
   // 대화방에 올라온 사진(이미지 메시지)만 최신순 — 갤러리용
   async listPhotos(conversationId: string, leftAt: Date | null) {
     return this.db

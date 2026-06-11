@@ -40,6 +40,15 @@ import {
   scheduleUnreadRefresh,
 } from '@/hooks/useConversations';
 
+// 상대 읽음 이벤트가 몰릴 때 메시지 안읽음 카운트 재조회를 디바운스로 묶는다.
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleMessagesRefresh(qc: QueryClient, id: string) {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+  }, 400);
+}
+
 // 보고 있는 방의 읽음 처리를 메시지마다 호출하지 않고 디바운스로 묶는다 (rate limit 방지).
 let readTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleMarkRead(qc: QueryClient, id: string) {
@@ -350,6 +359,8 @@ export function useChatRealtime(id: string) {
         QUERY_KEYS.conversations.detail(id),
         (old) => (old ? { ...old, partnerLastReadAt: new Date().toISOString() } : old),
       );
+      // 메시지별 안읽음 수 갱신 (그룹: 한 명 읽으면 숫자 감소)
+      scheduleMessagesRefresh(qc, id);
     });
 
     // 재연결: 끊긴 동안 놓친 메시지는 replay되지 않으므로 강제 재동기화한다.
@@ -366,6 +377,10 @@ export function useChatRealtime(id: string) {
       if (readTimer) {
         clearTimeout(readTimer);
         readTimer = null;
+      }
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
       }
       setActiveConversation(null);
       socket.disconnect();

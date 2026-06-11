@@ -79,6 +79,8 @@ export type Message = {
   myReaction: string | null;
   // 이미지 메시지의 조회용 URL (텍스트 메시지는 null)
   imageUrl: string | null;
+  // 아직 안 읽은 다른 참여자 수 (보낸 사람 제외). 카톡식 숫자.
+  unreadCount: number;
 };
 
 // 메시지 이미지 업로드 허용 타입 (백엔드 enum과 일치)

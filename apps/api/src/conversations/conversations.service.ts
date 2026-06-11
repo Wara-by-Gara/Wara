@@ -61,6 +61,8 @@ export interface MessageItem {
   // 이모지별 집계 + 내가 누른 이모지(없으면 null)
   reactions: ReactionSummary[];
   myReaction: string | null;
+  // 이 메시지를 아직 안 읽은 다른 참여자 수 (보낸 사람 제외). 카톡식 숫자.
+  unreadCount: number;
 }
 
 // 메시지 행을 클라이언트 응답 형태로 변환 (삭제된 메시지는 내용 숨김)
@@ -79,6 +81,7 @@ function toMessageItem(
   reactions: ReactionSummary[] = [],
   myReaction: string | null = null,
   imageUrl: string | null = null,
+  unreadCount = 0,
 ): MessageItem {
   const deleted = row.deletedAt != null;
   return {
@@ -94,6 +97,7 @@ function toMessageItem(
     replyTo,
     reactions,
     myReaction,
+    unreadCount,
   };
 }
 
@@ -368,6 +372,16 @@ export class ConversationsService {
         }),
     );
 
+    // 메시지별 안읽음 수: (보낸 사람 제외) 활성 참여자 중 lastReadAt이 메시지 이전인 수
+    const reads = (await this.repository.listParticipantsRead(conversationId)).filter(
+      (p) => !p.leftAt,
+    );
+    const unreadCountFor = (senderId: string, createdAt: Date) =>
+      reads.filter(
+        (p) =>
+          p.userId !== senderId && (!p.lastReadAt || p.lastReadAt < createdAt),
+      ).length;
+
     // 최신순으로 가져온 뒤 화면 표시용으로 오래된→최신 정렬
     const messages = rows.reverse().map((row) =>
       toMessageItem(
@@ -383,6 +397,7 @@ export class ConversationsService {
         aggregateReactions(byMessage.get(row.id) ?? []),
         myReactionMap.get(row.id) ?? null,
         imageUrlMap.get(row.id) ?? null,
+        row.type === 'system' ? 0 : unreadCountFor(row.senderId, row.createdAt),
       ),
     );
     return { messages, nextCursor };
@@ -413,12 +428,17 @@ export class ConversationsService {
     const imageUrl = imageKey
       ? await this.s3Service.getViewPresignedUrl(imageKey)
       : null;
+    // 방금 보낸 메시지의 안읽음 수 = 나 제외 활성 참여자 (아직 아무도 안 읽음)
+    const unreadCount = (
+      await this.repository.listParticipantsRead(conversationId)
+    ).filter((p) => !p.leftAt && p.userId !== userId).length;
     const message = toMessageItem(
       row,
       await this.resolveReply(replyToMessageId),
       [],
       null,
       imageUrl,
+      unreadCount,
     );
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     for (const otherId of others) {

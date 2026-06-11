@@ -189,9 +189,6 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const groupMembers =
     useConversationParticipants(id, !!isGroup).data?.participants ?? [];
   const memberMap = new Map(groupMembers.map((p) => [p.userId, p]));
-  const partnerReadAt = conversation?.partnerLastReadAt
-    ? new Date(conversation.partnerLastReadAt).getTime()
-    : null;
 
   // 새 메시지/입장 시 맨 아래로 스크롤
   const lastMessageId = messages[messages.length - 1]?.id;
@@ -325,10 +322,6 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 );
               }
               const mine = m.senderId === myId;
-              const unread =
-                mine &&
-                !m.deleted &&
-                (partnerReadAt === null || new Date(m.createdAt).getTime() > partnerReadAt);
               // 연속 그룹의 첫 메시지 (보낸 사람이 바뀌는 지점)
               const firstOfGroup = messages[i - 1]?.senderId !== m.senderId;
               // 상대 메시지의 첫 번째에만 프로필 표시
@@ -495,8 +488,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       mine ? "items-end" : "items-start"
                     }`}
                   >
-                    {unread && (
-                      <span className="text-[11px] font-bold text-primary">1</span>
+                    {mine && !m.deleted && m.unreadCount > 0 && (
+                      <span className="text-[11px] font-bold text-primary">
+                        {m.unreadCount}
+                      </span>
                     )}
                     {m.edited && !m.deleted && (
                       <span className="text-[10px] text-text-tertiary">수정됨</span>
