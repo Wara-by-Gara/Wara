@@ -475,15 +475,9 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       }
     }
 
-    // 추가/갱신
+    // 추가/갱신 — 도착한 핀도 초록 테두리 + "도착" 라벨로 화면에 유지
+    // (좌표 업데이트는 BE 정책상 멈추지만, 다른 참여자에게 도착 사실 시각화).
     for (const pin of participants) {
-      if (pin.isArrived) {
-        // 도착한 참가자는 오버레이 제거
-        participantOverlaysRef.current.get(pin.participantId)?.setMap(null);
-        participantOverlaysRef.current.delete(pin.participantId);
-        continue;
-      }
-
       const pos = new maps.LatLng(pin.lat, pin.lng);
       const existing = participantOverlaysRef.current.get(pin.participantId);
 
@@ -587,9 +581,8 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
       bounds.extend(new maps.LatLng(myLocation.lat, myLocation.lng));
     }
     for (const pin of participants) {
-      if (!pin.isArrived) {
-        bounds.extend(new maps.LatLng(pin.lat, pin.lng));
-      }
+      // 도착한 핀도 fit 대상에 포함 — 화면에 계속 표시되므로.
+      bounds.extend(new maps.LatLng(pin.lat, pin.lng));
     }
     for (const marker of photoMarkers) {
       bounds.extend(new maps.LatLng(marker.lat, marker.lng));
