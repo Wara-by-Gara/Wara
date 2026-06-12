@@ -40,24 +40,27 @@ import {
   scheduleUnreadRefresh,
 } from '@/hooks/useConversations';
 
-// 상대 읽음 이벤트가 몰릴 때 메시지 안읽음 카운트 재조회를 디바운스로 묶는다.
+// 상대 읽음 이벤트로 안읽음 카운트를 재조회 — 쓰로틀(리셋 안 함)로 지연 상한 고정.
+// (그룹에서 여러 명의 read 이벤트가 몰려도 디바운스처럼 계속 밀리지 않게)
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleMessagesRefresh(qc: QueryClient, id: string) {
-  if (refreshTimer) clearTimeout(refreshTimer);
+  if (refreshTimer) return;
   refreshTimer = setTimeout(() => {
+    refreshTimer = null;
     qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
-  }, 400);
+  }, 250);
 }
 
-// 보고 있는 방의 읽음 처리를 메시지마다 호출하지 않고 디바운스로 묶는다 (rate limit 방지).
+// 보고 있는 방의 읽음 처리 — 쓰로틀로 묶는다 (rate limit 방지 + 읽음 등록 지연 상한 고정).
 let readTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleMarkRead(qc: QueryClient, id: string) {
-  if (readTimer) clearTimeout(readTimer);
+  if (readTimer) return;
   readTimer = setTimeout(() => {
+    readTimer = null;
     markConversationRead(id)
       .then(() => scheduleUnreadRefresh(qc))
       .catch(() => {});
-  }, 700);
+  }, 500);
 }
 
 // 새 메시지를 캐시의 최신 페이지(page 0) 끝에 추가 (id 중복 방지)
