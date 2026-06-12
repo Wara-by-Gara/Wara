@@ -276,3 +276,154 @@ describe('AiGenerationsService.getGeneration', () => {
     expect(result.errorCode).toBe(ErrorCode.AI_TIMEOUT);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 한도 race condition 시뮬레이션
+// 현재 구현은 countTodayByUser → create가 원자적이지 않아 동시 요청에 race 존재.
+// 본 테스트는 (1) 순차 호출은 한도가 잘 강제되는지 (2) 동시 호출 시 race로 한도가
+// 일시적으로 뚫릴 수 있음을 명시 — 후속 PR에서 DB 락/유니크 제약으로 보강 예정.
+// ──────────────────────────────────────────────────────────────────────────────
+describe('AiGenerationsService.createGeneration — 한도 race', () => {
+  it('순차 — 1·2·3번째는 통과, 4번째는 429', async () => {
+    let storedCount = 0;
+    const { service } = createService({
+      aiJobsRepository: { countTodayByUser: jest.fn().mockResolvedValue(0) },
+      repository: {
+        create: jest.fn().mockImplementation(async () => {
+          storedCount += 1;
+          return { id: `gen${storedCount}`, status: 'pending' };
+        }),
+        findById: jest.fn(),
+        countTodayByUser: jest.fn().mockImplementation(async () => storedCount),
+        updateStatus: jest.fn(),
+      },
+    });
+
+    await expect(service.createGeneration(VALID_DTO, 'user1')).resolves.toEqual({
+      id: 'gen1',
+      status: 'pending',
+    });
+    await expect(service.createGeneration(VALID_DTO, 'user1')).resolves.toEqual({
+      id: 'gen2',
+      status: 'pending',
+    });
+    await expect(service.createGeneration(VALID_DTO, 'user1')).resolves.toEqual({
+      id: 'gen3',
+      status: 'pending',
+    });
+    await expect(service.createGeneration(VALID_DTO, 'user1')).rejects.toThrow(
+      HttpException,
+    );
+  });
+
+  it('동시 — count 확정 전 N개 동시 통과 가능 (race 노출, 후속 보강 대상)', async () => {
+    // count는 항상 0을 반환하는 동안 5개를 동시에 던지면 5개 모두 통과.
+    // 실 환경에선 트랜잭션 락/유니크 제약이 필요. 이 테스트는 현 동작을 명시화.
+    const { service, m } = createService({
+      aiJobsRepository: { countTodayByUser: jest.fn().mockResolvedValue(0) },
+      repository: {
+        create: jest.fn().mockResolvedValue({ id: 'gen', status: 'pending' }),
+        findById: jest.fn(),
+        countTodayByUser: jest.fn().mockResolvedValue(0),
+        updateStatus: jest.fn(),
+      },
+    });
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () => service.createGeneration(VALID_DTO, 'user1')),
+    );
+    expect(results).toHaveLength(5);
+    expect(m.repository.create).toHaveBeenCalledTimes(5);
+    // 후속 PR(DB 락 추가) 이후엔 5개 중 3개만 통과해야 함 — 그때 본 테스트 수정.
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// processAsync 상태 전이 + 에러 분류
+// private이지만 setImmediate 경로 대신 직접 호출하여 동기 흐름으로 검증.
+// ──────────────────────────────────────────────────────────────────────────────
+describe('AiGenerationsService.processAsync', () => {
+  it('성공 흐름 — pending → processing → completed + emit', async () => {
+    const { service, m } = createService();
+    await (service as unknown as {
+      processAsync: (
+        id: string,
+        userId: string,
+        templateId: string,
+        sourceImageKey: string,
+      ) => Promise<void>;
+    }).processAsync('gen1', 'user1', 'tpl1', 'public/invitations/x.webp');
+
+    const calls = m.repository.updateStatus!.mock.calls.map((c) => c[1]);
+    expect(calls).toEqual(['processing', 'completed']);
+    expect(m.aiService.compositeImages).toHaveBeenCalled();
+    expect(m.s3Service.putObjectBuffer).toHaveBeenCalled();
+    expect(m.gateway.emitGenerationCompleted).toHaveBeenCalledWith(
+      'user1',
+      'gen1',
+    );
+    expect(m.gateway.emitGenerationFailed).not.toHaveBeenCalled();
+  });
+
+  it('AI_TIMEOUT 분류 — message가 AI_TIMEOUT인 throw → failed/AI_TIMEOUT', async () => {
+    const { service, m } = createService({
+      aiService: {
+        compositeImages: jest
+          .fn()
+          .mockRejectedValue(new Error(ErrorCode.AI_TIMEOUT)),
+      },
+    });
+    await (service as unknown as {
+      processAsync: (...args: string[]) => Promise<void>;
+    }).processAsync('gen1', 'user1', 'tpl1', 'public/invitations/x.webp');
+
+    const lastCall = m.repository.updateStatus!.mock.calls.at(-1);
+    expect(lastCall?.[1]).toBe('failed');
+    expect(lastCall?.[2]).toEqual({ errorCode: ErrorCode.AI_TIMEOUT });
+    expect(m.gateway.emitGenerationFailed).toHaveBeenCalledWith(
+      'user1',
+      'gen1',
+      ErrorCode.AI_TIMEOUT,
+    );
+  });
+
+  it('AI_PROCESSING_FAILED 분류 — 그 외 모든 에러는 PROCESSING_FAILED', async () => {
+    const { service, m } = createService({
+      aiService: {
+        compositeImages: jest.fn().mockRejectedValue(new Error('network down')),
+      },
+    });
+    await (service as unknown as {
+      processAsync: (...args: string[]) => Promise<void>;
+    }).processAsync('gen1', 'user1', 'tpl1', 'public/invitations/x.webp');
+
+    const lastCall = m.repository.updateStatus!.mock.calls.at(-1);
+    expect(lastCall?.[2]).toEqual({
+      errorCode: ErrorCode.AI_PROCESSING_FAILED,
+    });
+    expect(m.gateway.emitGenerationFailed).toHaveBeenCalledWith(
+      'user1',
+      'gen1',
+      ErrorCode.AI_PROCESSING_FAILED,
+    );
+  });
+
+  it('템플릿 사라진 사이 호출 → failed/AI_TEMPLATE_NOT_FOUND', async () => {
+    const { service, m } = createService({
+      templatesRepository: { findById: jest.fn().mockResolvedValue(undefined) },
+    });
+    await (service as unknown as {
+      processAsync: (...args: string[]) => Promise<void>;
+    }).processAsync('gen1', 'user1', 'tpl1', 'public/invitations/x.webp');
+
+    const lastCall = m.repository.updateStatus!.mock.calls.at(-1);
+    expect(lastCall?.[2]).toEqual({
+      errorCode: ErrorCode.AI_TEMPLATE_NOT_FOUND,
+    });
+    expect(m.gateway.emitGenerationFailed).toHaveBeenCalledWith(
+      'user1',
+      'gen1',
+      ErrorCode.AI_TEMPLATE_NOT_FOUND,
+    );
+    expect(m.aiService.compositeImages).not.toHaveBeenCalled();
+  });
+});
