@@ -30,6 +30,41 @@ services:
       timeout: 3s
       retries: 5
 
+  # 로컬 S3 (사진 업로드/조회용). 실제 AWS 대신 dev 환경에서 사용.
+  minio:
+    image: minio/minio
+    container_name: wara_minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: ['server', '/data', '--console-address', ':9001']
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # 버킷 생성 + 브라우저 업로드용 CORS 허용 (1회 실행 후 종료)
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set local http://minio:9000 minioadmin minioadmin
+        mc mb -p local/wara-dev
+        mc anonymous set download local/wara-dev
+        exit 0
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

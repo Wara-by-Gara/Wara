@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { invitationSendLogs } from '../database/schema';
+import { and, eq, isNull } from 'drizzle-orm';
+import { invitationSendLogs, invitations, participants } from '../database/schema';
 import type { InvitationSendLog } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
@@ -28,6 +28,27 @@ export class SendLogsRepository {
       .where(eq(invitationSendLogs.id, logId))
       .limit(1);
     return row ?? null;
+  }
+
+  async canShare(invitationId: string, userId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({
+        isPublic: invitations.isPublic,
+        participantId: participants.id,
+      })
+      .from(invitations)
+      .leftJoin(
+        participants,
+        and(
+          eq(participants.invitationId, invitations.id),
+          eq(participants.userId, userId),
+        ),
+      )
+      .where(and(eq(invitations.id, invitationId), isNull(invitations.deletedAt)))
+      .limit(1);
+
+    if (!row) return false;
+    return row.isPublic || !!row.participantId;
   }
 
 }

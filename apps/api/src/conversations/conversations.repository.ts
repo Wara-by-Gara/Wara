@@ -5,6 +5,7 @@ import {
   conversations,
   conversationParticipants,
   messages,
+  messageReactions,
   users,
 } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
@@ -166,6 +167,7 @@ export class ConversationsRepository {
         conversationId: messages.conversationId,
         senderId: messages.senderId,
         content: messages.content,
+        imageKey: messages.imageKey,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
         editedAt: messages.editedAt,
@@ -206,10 +208,11 @@ export class ConversationsRepository {
     senderId: string,
     content: string,
     replyToMessageId?: string,
+    imageKey?: string,
   ) {
     const rows = await this.db
       .insert(messages)
-      .values({ conversationId, senderId, content, replyToMessageId })
+      .values({ conversationId, senderId, content, replyToMessageId, imageKey })
       .returning();
     return rows[0]!;
   }
@@ -283,6 +286,7 @@ export class ConversationsRepository {
     const rows = await this.db
       .select({
         content: messages.content,
+        imageKey: messages.imageKey,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
       })
@@ -309,6 +313,73 @@ export class ConversationsRepository {
       .where(eq(messages.id, messageId))
       .returning();
     return rows[0]!;
+  }
+
+  // ---- 메시지 이모지 리액션 ----
+
+  // 여러 메시지의 리액션을 한 번에 (리스트 응답 조립용)
+  async getReactionsForMessages(messageIds: string[]) {
+    if (messageIds.length === 0) return [];
+    return this.db
+      .select({
+        messageId: messageReactions.messageId,
+        emoji: messageReactions.emoji,
+        userId: messageReactions.userId,
+      })
+      .from(messageReactions)
+      .where(inArray(messageReactions.messageId, messageIds));
+  }
+
+  async getMessageReactions(messageId: string) {
+    return this.db
+      .select({ emoji: messageReactions.emoji, userId: messageReactions.userId })
+      .from(messageReactions)
+      .where(eq(messageReactions.messageId, messageId));
+  }
+
+  // 리액션 상세(누가 어떤 이모지) — 유저 표시정보 조인, 먼저 누른 순
+  async getMessageReactionsWithUsers(messageId: string) {
+    return this.db
+      .select({
+        userId: messageReactions.userId,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+        emoji: messageReactions.emoji,
+      })
+      .from(messageReactions)
+      .innerJoin(users, eq(users.id, messageReactions.userId))
+      .where(eq(messageReactions.messageId, messageId))
+      .orderBy(messageReactions.createdAt);
+  }
+
+  async findUserReaction(messageId: string, userId: string) {
+    const rows = await this.db
+      .select({ emoji: messageReactions.emoji })
+      .from(messageReactions)
+      .where(
+        and(eq(messageReactions.messageId, messageId), eq(messageReactions.userId, userId)),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  // 유저당 메시지 1개 — 있으면 이모지 교체, 없으면 추가 (unique(message_id,user_id))
+  async setUserReaction(messageId: string, userId: string, emoji: string) {
+    await this.db
+      .insert(messageReactions)
+      .values({ messageId, userId, emoji })
+      .onConflictDoUpdate({
+        target: [messageReactions.messageId, messageReactions.userId],
+        set: { emoji },
+      });
+  }
+
+  async deleteUserReaction(messageId: string, userId: string) {
+    await this.db
+      .delete(messageReactions)
+      .where(
+        and(eq(messageReactions.messageId, messageId), eq(messageReactions.userId, userId)),
+      );
   }
 
   async softDeleteMessage(messageId: string) {

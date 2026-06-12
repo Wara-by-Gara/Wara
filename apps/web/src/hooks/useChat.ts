@@ -17,9 +17,16 @@ import {
   editMessage as apiEditMessage,
   markConversationRead,
   deleteMessage as apiDeleteMessage,
+  toggleReaction as apiToggleReaction,
+  getMessageReactors,
+  getMessageImagePresignedUrl,
+  uploadFileToPresignedUrl,
+  sendImageMessage as apiSendImageMessage,
   type ConversationDetail,
   type Message,
   type MessagesPage,
+  type ReactionEmoji,
+  type ReactionSummary,
 } from '@/lib/api/conversations';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { SOCKET_BASE } from '@/lib/env';
@@ -73,6 +80,40 @@ function markDeleted(qc: QueryClient, id: string, messageId: string) {
           }
         : old,
   );
+}
+
+// 메시지의 리액션 집계(+ 선택적으로 내 리액션)를 캐시에 반영
+function applyReaction(
+  qc: QueryClient,
+  id: string,
+  messageId: string,
+  reactions: ReactionSummary[],
+  myReaction?: string | null,
+) {
+  qc.setQueryData<InfiniteData<MessagesPage>>(
+    QUERY_KEYS.conversations.messages(id),
+    (old) =>
+      old
+        ? {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              messages: p.messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      reactions,
+                      // myReaction 인자가 주어진 경우(내 토글)만 갱신, 상대 이벤트면 유지
+                      myReaction: myReaction === undefined ? m.myReaction : myReaction,
+                    }
+                  : m,
+              ),
+            })),
+          }
+        : old,
+  );
+  // 리액션 상세 시트(누가 눌렀는지) 캐시 무효화 -> 열려있으면 즉시 갱신, 닫혀있으면 재오픈 시 최신
+  qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.reactors(id, messageId) });
 }
 
 // 캐시에서 특정 메시지를 교체 (수정 반영)
@@ -133,6 +174,26 @@ export function useSendMessage(id: string) {
   });
 }
 
+// 이미지 메시지 전송: presigned URL 발급 -> S3 업로드 -> 메시지 전송
+export function useSendImageMessage(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const subtype = file.type.split('/')[1] ?? 'jpg';
+      const fileName = `${Date.now()}.${subtype === 'jpeg' ? 'jpg' : subtype}`;
+      const { presignedUrl, key } = await getMessageImagePresignedUrl(id, fileName, file.type);
+      await uploadFileToPresignedUrl(presignedUrl, file);
+      return apiSendImageMessage(id, key);
+    },
+    onSuccess: (msg) => {
+      appendMessage(qc, id, msg);
+      if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      }
+    },
+  });
+}
+
 export function useEditMessage(id: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -152,6 +213,27 @@ export function useDeleteMessage(id: string) {
     onSuccess: (_data, messageId) => {
       markDeleted(qc, id, messageId);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    },
+  });
+}
+
+// 리액션 상세(누가 어떤 이모지) - 바텀시트 열릴 때만 조회
+export function useMessageReactors(id: string, messageId: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.reactors(id, messageId ?? ""),
+    queryFn: () => getMessageReactors(id, messageId!),
+    enabled: Boolean(id && messageId),
+  });
+}
+
+export function useToggleReaction(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, emoji }: { messageId: string; emoji: ReactionEmoji }) =>
+      apiToggleReaction(id, messageId, emoji),
+    onSuccess: (res) => {
+      // 서버가 집계 + 내 리액션을 권위있게 반환 -> 그대로 반영
+      applyReaction(qc, id, res.messageId, res.reactions, res.myReaction);
     },
   });
 }
@@ -199,6 +281,15 @@ export function useChatRealtime(id: string) {
       replaceMessage(qc, id, msg);
     });
 
+    // 상대가 리액션 변경 -> 집계만 갱신 (내 myReaction은 유지)
+    socket.on(
+      'message:reaction',
+      (payload: { conversationId: string; messageId: string; reactions: ReactionSummary[] }) => {
+        if (payload.conversationId !== id) return;
+        applyReaction(qc, id, payload.messageId, payload.reactions);
+      },
+    );
+
     // 상대가 읽음 -> 내 메시지 읽음 표시 갱신
     socket.on('message:read', (payload: { conversationId: string; readerId: string }) => {
       if (payload.conversationId !== id) return;
@@ -208,7 +299,16 @@ export function useChatRealtime(id: string) {
       );
     });
 
+    // 재연결: 끊긴 동안 놓친 메시지는 replay되지 않으므로 강제 재동기화한다.
+    // (staleTime 때문에 refetchOnReconnect만으론 복구 안 되는 케이스 보완)
+    const onReconnect = () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+      scheduleMarkRead(qc, id);
+    };
+    socket.io.on('reconnect', onReconnect);
+
     return () => {
+      socket.io.off('reconnect', onReconnect);
       // 예약된 읽음 처리 타이머 정리 - 방 전환/언마운트 후 엉뚱한 방의 markRead 발화 방지
       if (readTimer) {
         clearTimeout(readTimer);
