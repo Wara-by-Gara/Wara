@@ -29,7 +29,7 @@
 - 평문 비밀번호 저장 (bcrypt 사용)
 - raw SQL 직접 작성 (Drizzle query builder 사용)
 - migration 파일 자동 실행 (SQL 검토 후 수동 실행)
-- `apps/api/drizzle/migrations/meta/` git 추적 (로컬 drizzle-kit generate용)
+- `meta/_journal.json`만 git 추적 (EC2 migrate용). snapshot은 gitignore
 
 ## Refs
 - @docs/db/WARA_ERD_v0.6.1.md

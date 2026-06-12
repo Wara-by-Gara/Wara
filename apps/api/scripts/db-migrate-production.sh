@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# RDS 프로덕션 migration (EC2에서 실행)
+# 사용: bash scripts/db-migrate-production.sh
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ENV_FILE="${WARA_ENV_FILE:-/home/ubuntu/.env.production}"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "env 파일 없음: $ENV_FILE" >&2
+  exit 1
+fi
+
+if [[ ! -f "$ROOT/drizzle/migrations/meta/_journal.json" ]]; then
+  echo "journal 없음: drizzle/migrations/meta/_journal.json — git pull 후 재시도" >&2
+  exit 1
+fi
+
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  echo "DATABASE_URL이 설정되지 않았습니다." >&2
+  exit 1
+fi
+
+echo "DATABASE_URL: $(echo "$DATABASE_URL" | sed 's/:\/\/[^:]*:[^@]*@/:\/\/***:***@/')"
+
+BEFORE=$(docker run --rm postgres:17 psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM drizzle.__drizzle_migrations;" 2>/dev/null || echo "?")
+echo "적용 전 migration 수: $BEFORE"
+
+# DDL lock 방지: API 중지 (실행 중이면)
+if docker ps --format '{{.Names}}' | grep -qx wara-api; then
+  echo "wara-api 중지 중..."
+  docker stop wara-api
+  RESTART_API=1
+fi
+
+cd "$ROOT"
+export NODE_ENV=production
+pnpm exec drizzle-kit migrate
+
+AFTER=$(docker run --rm postgres:17 psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM drizzle.__drizzle_migrations;")
+echo "적용 후 migration 수: $AFTER"
+
+if [[ "${RESTART_API:-}" == "1" ]]; then
+  echo "wara-api 재시작 중..."
+  docker start wara-api
+fi
+
+echo "완료"

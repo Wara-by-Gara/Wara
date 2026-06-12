@@ -8,7 +8,9 @@
  */
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import type { Column } from 'drizzle-orm';
 import { inArray, like } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
 import * as schema from '../../src/database/schema';
 import {
   aiImageJobs,
@@ -43,22 +45,21 @@ import { SEEDS } from './fixtures';
 
 const CHUNK = 500;
 
+type TableWithId = PgTable & { id: Column };
+
 async function deleteByIds(
   db: DrizzleDB,
-  table: { id: { name: string } },
+  table: TableWithId,
   ids: string[],
   label: string,
   log: (msg: string) => void,
-): Promise<number> {
-  if (ids.length === 0) return 0;
-  let total = 0;
+): Promise<void> {
+  if (ids.length === 0) return;
   for (let i = 0; i < ids.length; i += CHUNK) {
     const chunk = ids.slice(i, i + CHUNK);
-    const result = await db.delete(table).where(inArray(table.id, chunk));
-    total += result.rowCount ?? chunk.length;
+    await db.delete(table).where(inArray(table.id, chunk));
   }
   log(`✓ ${label}: ${ids.length}건 대상 삭제`);
-  return total;
 }
 
 export async function purgeFixtureSeed(db: DrizzleDB, log: (msg: string) => void): Promise<void> {
