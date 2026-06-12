@@ -157,6 +157,13 @@
       "breakpoints": true
     },
     {
+      "idx": 23,
+      "version": "7",
+      "when": 1781200000002,
+      "tag": "0023_status_message",
+      "breakpoints": true
+    },
+    {
       "idx": 24,
       "version": "7",
       "when": 1781200000003,

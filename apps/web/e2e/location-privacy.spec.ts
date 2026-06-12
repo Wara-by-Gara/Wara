@@ -19,6 +19,7 @@ import {
   devToken,
   getMyParticipant,
   getParticipantLocations,
+  leaveOrKickParticipant,
   setupLocationInvitation,
   softDeleteInvitation,
   uniqueTitle,
@@ -100,7 +101,7 @@ test.describe("위치 공유 · 개인정보 정책 (그룹 1)", () => {
     expect(upd.errorCode).toBe("INVITATION_CLOSED");
   });
 
-  test("LOC-PRIV-08 · soft-deleted 초대장에 GPS upsert → 422 INVITATION_CLOSED", async ({
+  test("LOC-PRIV-08 · soft-deleted 초대장에 GPS upsert → 차단", async ({
     request,
   }) => {
     const fx = await setupLocationInvitation(request, {
@@ -108,16 +109,27 @@ test.describe("위치 공유 · 개인정보 정책 (그룹 1)", () => {
     });
     const guestToken = fx.guestTokens[0]!;
 
-    // host가 invitation을 soft delete
+    // BE 정책: 게스트가 남아있는 초대장은 호스트도 삭제 불가(INVITATION_HAS_PARTICIPANTS).
+    // 따라서 soft delete 전에 게스트가 먼저 leave해야 한다.
+    const me = await getMyParticipant(request, guestToken, fx.invitationId);
+    const leave = await leaveOrKickParticipant(
+      request,
+      guestToken,
+      fx.invitationId,
+      me.data!.participant.id,
+    );
+    expect([200, 204]).toContain(leave.status);
+
+    // 호스트가 invitation soft delete
     const del = await softDeleteInvitation(request, fx.hostToken, fx.invitationId);
     expect([200, 204]).toContain(del.status);
 
-    // GPS upsert → INVITATION_CLOSED (deleted 초대장 가드)
+    // leave + soft delete 이후 GPS upsert 시도 — PARTICIPANT_NOT_FOUND 또는 INVITATION_CLOSED.
+    // 어느 코드가 나오든 정책 위반(200 통과) 없음을 보장.
     const upd = await updateMyLocation(request, guestToken, fx.invitationId, {
       lat: DEFAULT_VENUE.lat,
       lng: DEFAULT_VENUE.lng,
     });
-    // soft delete된 invitation은 PARTICIPANT_NOT_FOUND 또는 INVITATION_CLOSED 가능 — 둘 다 정책 위반 없음 확인.
     expect([403, 404, 422]).toContain(upd.status);
   });
 });

@@ -8,6 +8,28 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 // /api/health 같은 health check 로그는 매 분 들어와서 noise.
 const SILENT_PATHS = new Set(['/api/health']);
 
+// 단일 source of truth — Sentry beforeSend(instrument.ts)도 동일 목록 사용.
+// 회귀 방지 단위 테스트가 직접 import해 적용 여부 검증.
+export const LOG_REDACT_PATHS = [
+  'req.headers.authorization',
+  'req.headers.cookie',
+  'req.headers["set-cookie"]',
+  'res.headers["set-cookie"]',
+  'req.body.password',
+  'req.body.refreshToken',
+  'req.body.accessToken',
+  'req.body.code',
+  'req.body.providerToken',
+  'req.body.idToken',
+  // 위치 좌표 — REST PUT /participant/me/location 등에서 body로 전달.
+  // 개인정보보호 정책상 로그에 좌표 잔존 금지.
+  'req.body.lat',
+  'req.body.lng',
+  'req.body.accuracy',
+];
+
+export const LOG_REDACT_CENSOR = '[REDACTED]';
+
 @Module({
   imports: [
     PinoLoggerModule.forRootAsync({
@@ -24,24 +46,8 @@ const SILENT_PATHS = new Set(['/api/health']);
                 : randomUUID();
             },
             redact: {
-              paths: [
-                'req.headers.authorization',
-                'req.headers.cookie',
-                'req.headers["set-cookie"]',
-                'res.headers["set-cookie"]',
-                'req.body.password',
-                'req.body.refreshToken',
-                'req.body.accessToken',
-                'req.body.code',
-                'req.body.providerToken',
-                'req.body.idToken',
-                // 위치 좌표 — REST PUT /participant/me/location 등에서 body로 전달.
-                // 개인정보보호 정책상 로그에 좌표 잔존 금지.
-                'req.body.lat',
-                'req.body.lng',
-                'req.body.accuracy',
-              ],
-              censor: '[REDACTED]',
+              paths: LOG_REDACT_PATHS,
+              censor: LOG_REDACT_CENSOR,
             },
             customLogLevel: (
               req: IncomingMessage,

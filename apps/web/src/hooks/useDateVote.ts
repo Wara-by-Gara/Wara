@@ -33,6 +33,7 @@ export function usePoll(invitationId: string, options?: { enabled?: boolean }) {
     },
     enabled,
     retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -43,6 +44,7 @@ export function useVoteResults(invitationId: string, options?: { enabled?: boole
     queryFn: () => getVoteResults(invitationId),
     enabled: (options?.enabled ?? true) && !!invitationId,
     retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

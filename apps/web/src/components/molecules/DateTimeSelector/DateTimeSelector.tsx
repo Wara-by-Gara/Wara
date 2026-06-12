@@ -1,11 +1,18 @@
-"use client";
+'use client';
 
-import { forwardRef, useState, useId, useRef, useEffect, useCallback } from "react";
-import { Switch } from "@/components/primitives/Switch";
-import { cn } from "@/lib/cn";
+import {
+  forwardRef,
+  useState,
+  useId,
+  useRef,
+  useEffect,
+  useCallback,
+} from 'react';
+import { Switch } from '@/components/primitives/Switch';
+import { cn } from '@/lib/cn';
 
 export interface DateTimeSelectorProps {
-  mode: "date" | "time" | "date-range" | "time-range";
+  mode: 'date' | 'time' | 'date-range' | 'time-range';
   label?: string;
   value?: string;
   endValue?: string;
@@ -20,28 +27,32 @@ export interface DateTimeSelectorProps {
 }
 
 const inputClass =
-  "h-12 w-full rounded-xs border border-border-strong bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-primary";
+  'h-12 w-full rounded-xs border border-border-strong bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-primary';
 
 // ── 24h HH:MM ↔ 오전/오후 + 1-12h 변환 ───────────────────────────────────────
-const HOURS = [1,2,3,4,5,6,7,8,9,10,11,12];
-const MINUTES = [0,15,30,45];
+const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const MINUTES = [0, 15, 30, 45];
 
-function parseHHMM(hhmm: string): { ampm: "오전" | "오후"; hour: number; minute: number } {
-  const [hStr, mStr] = hhmm.split(":");
-  const h = parseInt(hStr ?? "0", 10);
-  const m = parseInt(mStr ?? "0", 10);
-  const ampm: "오전" | "오후" = h < 12 ? "오전" : "오후";
+function parseHHMM(hhmm: string): {
+  ampm: '오전' | '오후';
+  hour: number;
+  minute: number;
+} {
+  const [hStr, mStr] = hhmm.split(':');
+  const h = parseInt(hStr ?? '0', 10);
+  const m = parseInt(mStr ?? '0', 10);
+  const ampm: '오전' | '오후' = h < 12 ? '오전' : '오후';
   let hour = h % 12;
   if (hour === 0) hour = 12;
   const minute = MINUTES.includes(m) ? m : 0;
   return { ampm, hour, minute };
 }
 
-function toHHMM(ampm: "오전" | "오후", hour: number, minute: number): string {
+function toHHMM(ampm: '오전' | '오후', hour: number, minute: number): string {
   let h = hour;
-  if (ampm === "오후" && hour !== 12) h = hour + 12;
-  if (ampm === "오전" && hour === 12) h = 0;
-  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  if (ampm === '오후' && hour !== 12) h = hour + 12;
+  if (ampm === '오전' && hour === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
 // ── WheelColumn ───────────────────────────────────────────────────────────────
@@ -68,7 +79,10 @@ function WheelColumn<T extends number>({
 
   const scrollToIndex = useCallback((idx: number, smooth = true) => {
     if (!ref.current) return;
-    ref.current.scrollTo({ top: idx * ITEM_H, behavior: smooth ? "smooth" : "instant" });
+    ref.current.scrollTo({
+      top: idx * ITEM_H,
+      behavior: smooth ? 'smooth' : 'instant',
+    });
   }, []);
 
   useEffect(() => {
@@ -84,24 +98,39 @@ function WheelColumn<T extends number>({
       const idx = Math.round(ref.current.scrollTop / ITEM_H);
       const clamped = Math.max(0, Math.min(idx, items.length - 1));
       isScrolling.current = false;
-      if (items[clamped] !== undefined && items[clamped] !== value) onChange(items[clamped]!);
-      ref.current.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+      if (items[clamped] !== undefined && items[clamped] !== value)
+        onChange(items[clamped]!);
+      ref.current.scrollTo({ top: clamped * ITEM_H, behavior: 'smooth' });
     }, 120);
   };
 
   return (
-    <div className="relative flex flex-1 flex-col items-center" style={{ height: ITEM_H * VISIBLE }}>
+    <div
+      className="relative flex flex-1 flex-col items-center"
+      style={{ height: ITEM_H * VISIBLE }}
+    >
       <div
         className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary/10"
         style={{ top: ITEM_H * 2, height: ITEM_H }}
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/90 to-transparent" style={{ height: ITEM_H * 2 }} />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-white/90 to-transparent" style={{ height: ITEM_H * 2 }} />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/90 to-transparent"
+        style={{ height: ITEM_H * 2 }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-white/90 to-transparent"
+        style={{ height: ITEM_H * 2 }}
+      />
       <div
         ref={ref}
         onScroll={handleScroll}
         className="w-full overflow-y-scroll overscroll-contain"
-        style={{ height: ITEM_H * VISIBLE, scrollSnapType: "y mandatory", scrollbarWidth: "none", msOverflowStyle: "none" }}
+        style={{
+          height: ITEM_H * VISIBLE,
+          scrollSnapType: 'y mandatory',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
       >
         <div style={{ height: ITEM_H * 2 }} />
         {items.map((item, i) => {
@@ -109,17 +138,26 @@ function WheelColumn<T extends number>({
           return (
             <div
               key={item}
-              style={{ height: ITEM_H, scrollSnapAlign: "center" }}
+              style={{ height: ITEM_H, scrollSnapAlign: 'center' }}
               className="flex cursor-pointer items-center justify-center"
-              onClick={() => { if (!disabled) { onChange(item); scrollToIndex(i); } }}
+              onClick={() => {
+                if (!disabled) {
+                  onChange(item);
+                  scrollToIndex(i);
+                }
+              }}
             >
-              <span className={cn(
-                "tabular-nums transition-all duration-150",
-                dist === 0 ? "text-[20px] font-extrabold text-primary" :
-                dist === 1 ? "text-[16px] font-semibold text-text-secondary opacity-60" :
-                             "text-[14px] font-medium text-text-tertiary opacity-30",
-              )}>
-                {format ? format(item) : String(item).padStart(2, "0")}
+              <span
+                className={cn(
+                  'tabular-nums transition-all duration-150',
+                  dist === 0
+                    ? 'text-[20px] font-extrabold text-primary'
+                    : dist === 1
+                      ? 'text-[16px] font-semibold text-text-secondary opacity-60'
+                      : 'text-[14px] font-medium text-text-tertiary opacity-30',
+                )}
+              >
+                {format ? format(item) : String(item).padStart(2, '0')}
               </span>
             </div>
           );
@@ -140,29 +178,47 @@ function TimeWheelPicker({
   onChange?: (v: string) => void;
   disabled?: boolean;
 }) {
-  const parsed = value ? parseHHMM(value) : { ampm: "오후" as const, hour: 2, minute: 0 };
-  const [ampm, setAmpm] = useState<"오전" | "오후">(parsed.ampm);
+  const parsed = value
+    ? parseHHMM(value)
+    : { ampm: '오후' as const, hour: 2, minute: 0 };
+  const [ampm, setAmpm] = useState<'오전' | '오후'>(parsed.ampm);
   const [hour, setHour] = useState(parsed.hour);
   const [minute, setMinute] = useState(parsed.minute);
 
-  const emit = useCallback((a: "오전" | "오후", h: number, m: number) => {
-    onChange?.(toHHMM(a, h, m));
-  }, [onChange]);
+  const emit = useCallback(
+    (a: '오전' | '오후', h: number, m: number) => {
+      onChange?.(toHHMM(a, h, m));
+    },
+    [onChange],
+  );
 
   return (
-    <div className={cn("flex w-full flex-col gap-2 rounded-md border border-border bg-surface p-3", disabled && "opacity-40 pointer-events-none")}>
+    <div
+      className={cn(
+        'flex w-full flex-col gap-2 rounded-md border border-border bg-surface p-3',
+        disabled && 'opacity-40 pointer-events-none',
+      )}
+    >
       {/* 오전/오후 토글 */}
       <div className="flex overflow-hidden rounded-sm border border-border bg-background-soft">
-        {(["오전", "오후"] as const).map((v) => (
+        {(['오전', '오후'] as const).map((v) => (
           <button
             key={v}
             type="button"
-            onClick={() => { setAmpm(v); emit(v, hour, minute); }}
+            onClick={() => {
+              setAmpm(v);
+              emit(v, hour, minute);
+            }}
             className={cn(
-              "flex flex-1 items-center justify-center py-1.5 text-[13px] font-extrabold transition-all duration-150",
-              ampm === v ? "bg-primary text-white" : "text-text-tertiary",
+              'flex flex-1 items-center justify-center py-1.5 text-[13px] font-extrabold transition-all duration-150',
+              ampm === v ? 'bg-primary text-white' : 'text-text-tertiary',
             )}
-          >{v}<span className="ml-1 text-[11px] font-normal opacity-60">{v === "오전" ? "am" : "pm"}</span></button>
+          >
+            {v}
+            <span className="ml-1 text-[11px] font-normal opacity-60">
+              {v === '오전' ? 'am' : 'pm'}
+            </span>
+          </button>
         ))}
       </div>
 
@@ -171,7 +227,10 @@ function TimeWheelPicker({
         <WheelColumn
           items={HOURS}
           value={hour}
-          onChange={(h) => { setHour(h); emit(ampm, h, minute); }}
+          onChange={(h) => {
+            setHour(h);
+            emit(ampm, h, minute);
+          }}
           format={(v) => String(v)}
           disabled={disabled}
         />
@@ -179,8 +238,11 @@ function TimeWheelPicker({
         <WheelColumn
           items={MINUTES}
           value={minute}
-          onChange={(m) => { setMinute(m); emit(ampm, hour, m); }}
-          format={(v) => String(v).padStart(2, "0")}
+          onChange={(m) => {
+            setMinute(m);
+            emit(ampm, hour, m);
+          }}
+          format={(v) => String(v).padStart(2, '0')}
           disabled={disabled}
         />
       </div>
@@ -189,66 +251,46 @@ function TimeWheelPicker({
 }
 
 // ── DateTimeSelector ──────────────────────────────────────────────────────────
-export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps>(
-  function DateTimeSelector(
-    { mode, label, value, endValue, onChange, onEndChange, unknownToggle, unknown, onUnknownChange, error, disabled, className },
-    ref,
-  ) {
-    const id = useId();
-    const [internalUnknown, setInternalUnknown] = useState(unknown ?? false);
-    const isUnknown = unknownToggle ? (unknown ?? internalUnknown) : false;
+export const DateTimeSelector = forwardRef<
+  HTMLDivElement,
+  DateTimeSelectorProps
+>(function DateTimeSelector(
+  {
+    mode,
+    label,
+    value,
+    onChange,
+    unknownToggle,
+    unknown,
+    onUnknownChange,
+    error,
+    disabled,
+    className,
+  },
+  ref,
+) {
+  const id = useId();
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [internalUnknown, setInternalUnknown] = useState(unknown ?? false);
+  const isUnknown = unknownToggle ? (unknown ?? internalUnknown) : false;
 
-    const inputType = mode.startsWith("date") ? "date" : "time";
-    const isRange = mode.endsWith("range");
+  useEffect(() => {
+    setInternalUnknown(unknown ?? false);
+  }, [unknown]);
 
-    return (
-      <div ref={ref} className={cn("flex flex-col gap-1.5", className)}>
-        {label ? (
-          <label htmlFor={id} className="text-[14px] font-medium text-text-primary">
+  const inputType = mode.startsWith('date') ? 'date' : 'time';
+
+  return (
+    <div ref={ref} className={cn('flex flex-col gap-1.5', className)}>
+      {label ? (
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor={id}
+            className="text-[14px] font-medium text-text-primary"
+          >
             {label}
           </label>
-        ) : null}
-
-        <div className={cn(isUnknown && "opacity-40 pointer-events-none")}>
-          {inputType === "time" ? (
-            <div className={cn("flex items-start gap-2", isRange && "flex-col")}>
-              <TimeWheelPicker value={value} onChange={onChange} disabled={disabled || isUnknown} />
-              {isRange ? (
-                <>
-                  <span className="text-center text-text-tertiary">~</span>
-                  <TimeWheelPicker value={endValue} onChange={onEndChange} disabled={disabled || isUnknown} />
-                </>
-              ) : null}
-            </div>
-          ) : (
-            <div className={cn("flex items-center gap-2")}>
-              <input
-                id={id}
-                type="date"
-                value={value ?? ""}
-                onChange={(e) => onChange?.(e.target.value)}
-                disabled={disabled || isUnknown}
-                className={inputClass}
-              />
-              {isRange ? (
-                <>
-                  <span className="text-text-tertiary">~</span>
-                  <input
-                    type="date"
-                    value={endValue ?? ""}
-                    onChange={(e) => onEndChange?.(e.target.value)}
-                    disabled={disabled || isUnknown}
-                    className={inputClass}
-                  />
-                </>
-              ) : null}
-            </div>
-          )}
-        </div>
-
-        {unknownToggle ? (
-          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
-            <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
+          {unknownToggle ? (
             <Switch
               checked={isUnknown}
               onCheckedChange={(checked) => {
@@ -257,11 +299,36 @@ export const DateTimeSelector = forwardRef<HTMLDivElement, DateTimeSelectorProps
               }}
               disabled={disabled}
             />
-          </label>
-        ) : null}
+          ) : null}
+        </div>
+      ) : null}
 
-        {error ? <span className="text-[13px] text-danger">{error}</span> : null}
+      <div className={cn(!isUnknown && 'opacity-40 pointer-events-none')}>
+        {inputType === 'time' ? (
+          <div className={cn('flex items-start gap-2')}>
+            <TimeWheelPicker
+              value={value}
+              onChange={onChange}
+              disabled={disabled || !isUnknown}
+            />
+          </div>
+        ) : (
+          <div className={cn('flex items-center gap-2')}>
+            <input
+              ref={dateInputRef}
+              id={id}
+              type="date"
+              value={value ?? ''}
+              onChange={(e) => onChange?.(e.target.value)}
+              onClick={() => dateInputRef.current?.showPicker?.()}
+              disabled={disabled || !isUnknown}
+              className={inputClass}
+            />
+          </div>
+        )}
       </div>
-    );
-  },
-);
+
+      {error ? <span className="text-[13px] text-danger">{error}</span> : null}
+    </div>
+  );
+});

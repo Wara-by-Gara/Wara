@@ -9,8 +9,12 @@ export const PUBLIC_INVITATION_CATEGORIES = [
   'health',
 ] as const;
 
+export const PUBLIC_INVITATION_SORTS = ['latest', 'deadline', 'views'] as const;
+
 export const ListPublicInvitationsSchema = z.object({
   category: z.enum(PUBLIC_INVITATION_CATEGORIES).optional(),
+  q: z.string().trim().min(1).max(100).optional(),
+  sort: z.enum(PUBLIC_INVITATION_SORTS).default('latest'),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
