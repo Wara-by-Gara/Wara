@@ -78,16 +78,26 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const filteredParticipants =
     mentionQuery !== null
       ? allParticipants.filter((p) =>
-          (p.user.nickname ?? '')
+          getCommentAuthorName(p.user)
             .toLowerCase()
             .includes(mentionQuery!.toLowerCase()),
         )
       : [];
 
+  const showAllOption = mentionQuery !== null && 'all'.includes(mentionQuery.toLowerCase());
+
   const handleSelectMention = (userId: string, nickname: string) => {
-    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
-    setInputValue(newValue);
-    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    if (userId === '__all__') {
+      const allUserIds = allParticipants
+        .map((p) => p.user.id)
+        .filter((id) => id !== currentUserId);
+      setMentionedUserIds([...new Set(allUserIds)]);
+      setInputValue(inputValue.replace(/@\S*$/, '@all '));
+    } else {
+      const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+      setInputValue(newValue);
+      setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,15 +170,30 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           </div>
         )}
         {mentionQuery !== null && (
-          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-hidden">
+          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-y-auto max-h-[220px]">
             {isParticipantsLoading ? (
               <MentionListSkeleton count={3} />
-            ) : filteredParticipants.length === 0 ? (
+            ) : filteredParticipants.length === 0 && !showAllOption ? (
               <p className="px-4 py-3 text-[13px] text-text-tertiary">
                 일치하는 참가자 없음
               </p>
             ) : (
               <ul>
+                {showAllOption && (
+                  <li>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectMention('__all__', 'all');
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <span className="text-[14px] font-medium text-text-primary">@all</span>
+                      <span className="text-[12px] text-text-tertiary">전체 참여자</span>
+                    </button>
+                  </li>
+                )}
                 {filteredParticipants.map((p) => (
                   <li key={p.user.id}>
                     <button
@@ -177,19 +202,19 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                         e.preventDefault(); // input blur 방지
                         handleSelectMention(
                           p.user.id,
-                          p.user.nickname ?? p.user.id,
+                          getCommentAuthorName(p.user),
                         );
                       }}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
                     >
                       <Avatar
                         src={p.user.profileImageUrl ?? undefined}
-                        alt={p.user.nickname ?? ''}
+                        alt={getCommentAuthorName(p.user)}
                         size="xs"
-                        initial={p.user.nickname?.[0]}
+                        initial={getCommentAuthorName(p.user)[0]}
                       />
                       <span className="text-[14px] text-text-primary">
-                        @{p.user.nickname}
+                        @{getCommentAuthorName(p.user)}
                       </span>
                     </button>
                   </li>

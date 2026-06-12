@@ -66,14 +66,24 @@ export default function PhotoDetailModal({
 
   const filteredParticipants = mentionQuery !== null
     ? allParticipants.filter((p) =>
-        (p.user.nickname ?? '').toLowerCase().includes(mentionQuery!.toLowerCase())
+        getCommentAuthorName(p.user).toLowerCase().includes(mentionQuery!.toLowerCase())
       )
     : [];
 
+  const showAllOption = mentionQuery !== null && 'all'.includes(mentionQuery.toLowerCase());
+
   const handleSelectMention = (userId: string, nickname: string) => {
-    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
-    setInputValue(newValue);
-    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    if (userId === '__all__') {
+      const allUserIds = allParticipants
+        .map((p) => p.user.id)
+        .filter((id) => id !== me?.id);
+      setMentionedUserIds([...new Set(allUserIds)]);
+      setInputValue(inputValue.replace(/@\S*$/, '@all '));
+    } else {
+      const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+      setInputValue(newValue);
+      setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    }
   };
 
   const { data: feedbackData, submitComment, updateComment, deleteComment, toggleLike, getLiked, getLikeCount } = usePhotoFeedback(
@@ -252,25 +262,40 @@ export default function PhotoDetailModal({
         </div>
       ) : undefined}
       mentionDropdown={mentionQuery !== null ? (
-        <div className="mx-3 mb-1 rounded-md border border-white/10 bg-black/80 overflow-hidden">
+        <div className="mx-3 mb-1 rounded-md border border-white/10 bg-black/80 overflow-y-auto max-h-[220px]">
           {isParticipantsLoading ? (
             <MentionListSkeleton count={3} />
-          ) : filteredParticipants.length === 0 ? (
+          ) : filteredParticipants.length === 0 && !showAllOption ? (
             <p className="px-4 py-3 text-[13px] text-white/50">일치하는 참가자 없음</p>
           ) : (
             <ul>
+              {showAllOption && (
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectMention('__all__', 'all');
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10 transition-colors duration-150"
+                  >
+                    <span className="text-[14px] font-medium text-white">@all</span>
+                    <span className="text-[12px] text-white/50">전체 참여자</span>
+                  </button>
+                </li>
+              )}
               {filteredParticipants.map((p) => (
                 <li key={p.user.id}>
                   <button
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      handleSelectMention(p.user.id, p.user.nickname ?? p.user.id);
+                      handleSelectMention(p.user.id, getCommentAuthorName(p.user));
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-white/10 transition-colors duration-150"
                   >
-                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={p.user.nickname ?? ''} size="xs" name={p.user.nickname ?? undefined} />
-                    <span className="text-[14px] text-white">@{p.user.nickname}</span>
+                    <Avatar src={p.user.profileImageUrl ?? undefined} alt={getCommentAuthorName(p.user)} size="xs" name={getCommentAuthorName(p.user)} />
+                    <span className="text-[14px] text-white">@{getCommentAuthorName(p.user)}</span>
                   </button>
                 </li>
               ))}
