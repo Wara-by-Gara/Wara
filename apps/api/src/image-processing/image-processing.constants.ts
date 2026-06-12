@@ -9,6 +9,6 @@ export const ALLOWED_IMAGE_MIMES = [
 ] as const;
 export type AllowedImageMime = (typeof ALLOWED_IMAGE_MIMES)[number];
 
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_IMAGE_BYTES = 30 * 1024 * 1024; // 30MB
 export const SNIFF_RANGE_BYTES = 4_100; // file-type minimumBytes 권장값
 export const THUMBNAIL_MAX_DIMENSION = 400; // 장변 px

@@ -62,7 +62,7 @@ EXIF 메타데이터 추출은 프런트에서 exifreader 또는 exifr 라이브
 - imageKey는 S3 경로(키)만 저장한다. 전체 URL을 저장하면 나중에 도메인이 바뀔 때 대응이 어렵다.
 - 다운로드 시 원본 파일을 그대로 제공한다. 압축하거나 변환하지 않는다.
 - 업로드 시 원본은 그대로 보존한다. 단, 목록/상세 조회 표시용 섬네일은 별도 키로 추가 생성한다(`thumbnail_key`, JPEG 400px). 변환은 BullMQ 워커가 비동기로 수행하며, 완료 전에는 `thumbnailUrl`이 null로 응답된다.
-- 업로드된 객체는 매직넘버 sniff + 크기(≤10MB) 검증을 통과해야 DB에 등록된다. 검증 실패 시 S3 객체를 즉시 삭제하고 `PHOTO_INVALID_MIME` / `PHOTO_TOO_LARGE` 에러로 응답한다.
+- 업로드된 객체는 매직넘버 sniff + 크기(≤30MB) 검증을 통과해야 DB에 등록된다. 검증 실패 시 S3 객체를 즉시 삭제하고 `PHOTO_INVALID_MIME` / `PHOTO_TOO_LARGE` 에러로 응답한다.
 - 목록 조회 시 항상 deletedAt IS NULL 조건을 포함한다.
 - 전체 다운로드는 비동기로 처리하고 완료 시 알림을 보낸다.
 - 삭제는 soft delete로 처리한다. S3 파일 실제 삭제는 배치 작업으로 별도 처리한다.
