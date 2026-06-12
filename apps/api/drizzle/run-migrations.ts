@@ -7,10 +7,15 @@
  *
  * 이 스크립트는 hash 기준으로 migration 파일마다 개별 트랜잭션을 적용한다.
  */
-import { readFileSync } from 'node:fs';
+import { config as loadDotenv } from 'dotenv';
+import { existsSync, readFileSync } from 'node:fs';
 import { readMigrationFiles } from 'drizzle-orm/migrator';
 import postgres from 'postgres';
 import path from 'path';
+import {
+  bootstrapLegacySchema,
+  isLegacyBootstrappedDb,
+} from './bootstrap-legacy-schema';
 
 const MIGRATIONS_FOLDER = path.join(__dirname, 'migrations');
 const MIGRATIONS_SCHEMA = 'drizzle';
@@ -44,11 +49,33 @@ async function execStatement(client: postgres.Sql, stmt: string): Promise<void> 
   }
 }
 
-async function main(): Promise<void> {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error('DATABASE_URL 환경변수가 설정되지 않았습니다.');
+function resolveDatabaseUrl(): string {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
   }
+
+  const apiRoot = path.join(__dirname, '..');
+  const candidates = [
+    process.env.WARA_ENV_FILE,
+    path.join(apiRoot, '.env.production'),
+    '/home/ubuntu/.env.production',
+    path.join(apiRoot, '.env.development'),
+  ].filter((p): p is string => typeof p === 'string' && existsSync(p));
+
+  for (const envFile of candidates) {
+    loadDotenv({ path: envFile });
+    if (process.env.DATABASE_URL) {
+      return process.env.DATABASE_URL;
+    }
+  }
+
+  throw new Error(
+    'DATABASE_URL 환경변수가 설정되지 않았습니다. WARA_ENV_FILE 또는 apps/api/.env.development를 확인하세요.',
+  );
+}
+
+async function main(): Promise<void> {
+  const url = resolveDatabaseUrl();
 
   const client = postgres(url, { max: 1, connect_timeout: 10 });
 
@@ -89,6 +116,16 @@ async function main(): Promise<void> {
     throw new Error(
       `journal(${journal.entries.length})와 migration 파일(${migrations.length}) 개수가 다릅니다.`,
     );
+  }
+
+  const legacyDb = await isLegacyBootstrappedDb(client);
+  const firstMigration = migrations[0];
+  if (
+    legacyDb &&
+    firstMigration &&
+    !appliedHashes.has(firstMigration.hash)
+  ) {
+    await bootstrapLegacySchema(client);
   }
 
   for (let i = 0; i < migrations.length; i++) {
