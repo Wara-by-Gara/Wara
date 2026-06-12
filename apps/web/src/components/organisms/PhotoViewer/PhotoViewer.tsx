@@ -79,6 +79,8 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   gifPicker?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
+  /** 입력창 @멘션 하이라이트 */
+  highlightMentions?: boolean;
 }
 
 function formatCount(n: number): string {
@@ -198,6 +200,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       onGifButtonClick,
       gifPicker,
       rightActions,
+      highlightMentions,
       currentUserAvatarUrl,
       currentUserInitialName,
       currentUserNickname,
@@ -313,6 +316,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                           likeCount={c.likeCount}
                           liked={c.liked}
                           onLike={c.onLike}
+                          isDarkBg
                           className="bg-transparent py-2.5 [&_p]:text-text-inverse [&_span:not(.mention-highlight)]:text-white/70"
                         />
                       </li>
@@ -334,7 +338,8 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
                 pendingGif={pendingGif}
                 onGifClear={onGifClear}
                 onGifButtonClick={onGifButtonClick}
-                className="border-white/15 bg-black/50 [&_input]:text-white [&_input]:placeholder:text-white/50"
+                highlightMentions={highlightMentions}
+                className="border-white/15 bg-black/50"
               />
               {gifPicker}
             </>

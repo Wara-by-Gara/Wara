@@ -309,6 +309,7 @@ export default function PhotoDetailModal({
           <button type="button" onClick={() => setReplyingTo(null)} className="text-[12px] text-white/40 hover:text-white/70">취소</button>
         </div>
       ) : undefined}
+      highlightMentions
       liked={currentLiked}
       onLike={handleLike}
       isLiking={isLiking}

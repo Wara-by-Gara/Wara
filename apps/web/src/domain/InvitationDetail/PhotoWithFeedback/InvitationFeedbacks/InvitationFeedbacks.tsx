@@ -243,6 +243,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           onGifButtonClick={() => setGifPickerOpen((v) => !v)}
           onPhotoButtonClick={() => fileInputRef.current?.click()}
           hasPendingPhoto={!!pendingFile}
+          highlightMentions
           onSubmit={async (text) => {
             await submitComment(
               text,

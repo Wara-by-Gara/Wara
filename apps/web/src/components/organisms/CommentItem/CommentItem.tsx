@@ -135,7 +135,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                   <>
                     {content ? (
                       <p className={cn('mt-0.5 whitespace-pre-wrap break-words text-[14px]', isDarkBg ? 'text-white' : 'text-text-primary')}>
-                        {renderMentions(content)}
+                        {renderMentions(content, isDarkBg)}
                       </p>
                     ) : null}
                     {gifUrl ? (
