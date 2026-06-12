@@ -41,8 +41,8 @@ if docker ps --format '{{.Names}}' | grep -qx wara-api; then
   RESTART_API=1
 fi
 
-echo "migration 적용 중... (0002 등 대용량 SQL은 1~3분 걸릴 수 있음)"
-pnpm exec dotenv -e "$ENV_FILE" -- drizzle-kit migrate
+echo "migration 적용 중... (파일별 진행 로그 출력)"
+pnpm exec dotenv -e "$ENV_FILE" -- ts-node -r tsconfig-paths/register drizzle/run-migrations.ts
 
 DATABASE_URL="$(load_database_url)"
 AFTER=$(docker run --rm postgres:17 psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM drizzle.__drizzle_migrations;")

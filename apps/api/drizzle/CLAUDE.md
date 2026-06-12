@@ -21,7 +21,7 @@
 - ID = ULID
 - 모든 테이블에 created_at, updated_at
 - snake_case (Drizzle casing 자동 적용)
-- migration 순서: 스키마 수정 → db:generate → SQL 검토 → db:migrate
+- migration 순서: 스키마 수정 → db:generate → SQL 검토 → db:migrate (`drizzle/run-migrations.ts`, drizzle-kit migrate 사용 금지)
 
 ## Never
 - migration 없이 스키마 직접 수정
