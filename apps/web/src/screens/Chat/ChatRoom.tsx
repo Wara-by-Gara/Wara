@@ -97,7 +97,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
   // 리액션 배지 꾸욱 누르기 -> 누가 어떤 이모지를 눌렀는지 상세 시트
   const [reactionDetail, setReactionDetail] = useState<Message | null>(null);
+  // 상세 시트 이모지 필터 (null = 전체). 다른 메시지 열면 초기화.
+  const [reactionFilter, setReactionFilter] = useState<string | null>(null);
   const reactorsQuery = useMessageReactors(id, reactionDetail?.id ?? null);
+  useEffect(() => {
+    setReactionFilter(null);
+  }, [reactionDetail?.id]);
   const reactionPressTimer = useRef<number | null>(null);
   const reactionLongPressed = useRef(false);
   const startReactionPress = (m: Message) => {
@@ -804,31 +809,50 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         onOpenChange={(open) => !open && setReactionDetail(null)}
       >
         <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
-          {/* 상단 이모지+카운트 요약 칩 */}
+          {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터 */}
           <div className="flex flex-wrap gap-2 pb-2">
+            <button
+              type="button"
+              onClick={() => setReactionFilter(null)}
+              className={`rounded-full px-3 py-1 text-[14px] font-bold ring-1 active:opacity-70 ${
+                reactionFilter === null
+                  ? "bg-primary text-text-inverse ring-primary"
+                  : "text-text-secondary ring-border"
+              }`}
+            >
+              전체 {reactorsQuery.data?.reactors.length ?? 0}
+            </button>
             {reactionDetail?.reactions.map((r) => (
-              <span
+              <button
                 key={r.emoji}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] ring-1 ring-border"
+                type="button"
+                onClick={() => setReactionFilter(r.emoji)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] ring-1 active:opacity-70 ${
+                  reactionFilter === r.emoji
+                    ? "bg-primary text-text-inverse ring-primary"
+                    : "ring-border"
+                }`}
               >
                 <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
-                <span className="font-bold text-text-secondary">{r.count}</span>
-              </span>
+                <span className="font-bold">{r.count}</span>
+              </button>
             ))}
           </div>
-          {/* 리액션한 사람 목록 */}
+          {/* 리액션한 사람 목록 (필터 적용) */}
           <ul className="flex flex-col">
-            {reactorsQuery.data?.reactors.map((rc) => (
-              <li key={rc.userId} className="flex items-center gap-3 py-2">
-                <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
-                <span className="flex-1 text-[15px] text-text-primary">
-                  {rc.name ?? "사용자"}
-                </span>
-                <span className="text-[20px]">
-                  {REACTION_EMOJI_CHAR[rc.emoji as ReactionEmoji] ?? rc.emoji}
-                </span>
-              </li>
-            ))}
+            {(reactorsQuery.data?.reactors ?? [])
+              .filter((rc) => !reactionFilter || rc.emoji === reactionFilter)
+              .map((rc) => (
+                <li key={rc.userId} className="flex items-center gap-3 py-2">
+                  <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
+                  <span className="flex-1 text-[15px] text-text-primary">
+                    {rc.name ?? "사용자"}
+                  </span>
+                  <span className="text-[20px]">
+                    {REACTION_EMOJI_CHAR[rc.emoji as ReactionEmoji] ?? rc.emoji}
+                  </span>
+                </li>
+              ))}
           </ul>
         </BottomSheetContent>
       </BottomSheet>

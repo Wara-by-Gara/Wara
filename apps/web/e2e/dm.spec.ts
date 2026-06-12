@@ -757,6 +757,43 @@ test.describe("dm-batch6-reactions", () => {
     await host.context.close();
     await guest.context.close();
   });
+
+  test("상세 시트에서 이모지 칩을 누르면 종류별로 목록이 필터된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    const msg = `E2E 리액션필터 ${Date.now()}`;
+    await send(host.page, msg);
+    await expect(guest.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    // host=❤️, guest=👍 (같은 메시지에 서로 다른 이모지)
+    await longPress(host.page, host.page.getByText(msg));
+    await host.page.getByRole("button", { name: "heart 리액션" }).click();
+    await longPress(guest.page, guest.page.getByText(msg));
+    await guest.page.getByRole("button", { name: "thumbsup 리액션" }).click();
+
+    // host 화면에 두 배지 모두 표시될 때까지 대기
+    const hostRow = host.page.locator("li").filter({ hasText: msg });
+    await expect(hostRow.locator("button", { hasText: "👍" })).toBeVisible({ timeout: 10_000 });
+
+    // 배지 길게눌러 상세 시트 -> 전체 2명
+    await longPress(host.page, hostRow.locator("button", { hasText: "❤️" }));
+    const sheet = host.page.getByRole("dialog");
+    await expect(sheet.getByText("리액션", { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(sheet.locator("ul li")).toHaveCount(2, { timeout: 10_000 });
+
+    // ❤️ 칩 -> 1명, 👍 칩 -> 1명, 전체 -> 다시 2명
+    await sheet.getByRole("button", { name: /❤️/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(1);
+    await sheet.getByRole("button", { name: /👍/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(1);
+    await sheet.getByRole("button", { name: /전체/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(2);
+
+    await host.context.close();
+    await guest.context.close();
+  });
 });
 
 // 1x1 PNG (S3 mock 응답 + 업로드 파일용)

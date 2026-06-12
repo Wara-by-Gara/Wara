@@ -61,6 +61,34 @@ export class DevAuthService {
     return { accessToken };
   }
 
+  // 브라우저 dev 로그인용 — access + refresh 둘 다 발급 (refresh로 세션 유지)
+  async issueDevSession(
+    email: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    if (!DEV_USER_WHITELIST.has(email)) {
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_USER_NOT_FOUND,
+        message: '허용되지 않은 dev 계정입니다.',
+      });
+    }
+    const user = await this.authRepository.findUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException({
+        code: ErrorCode.AUTH_USER_NOT_FOUND,
+        message: 'dev 시드 유저를 찾을 수 없습니다.',
+      });
+    }
+    await this.ensureRequiredAgreements(user.id);
+    const payload: JwtPayload = {
+      id: user.id,
+      role: user.role as UserRole,
+      scope: user.role === UserRole.ADMIN ? ['admin'] : [],
+    };
+    const accessToken = await this.authService.issueAccessToken(payload);
+    const refreshToken = await this.authService.issueRefreshToken(user.id);
+    return { accessToken, refreshToken };
+  }
+
   private async ensureRequiredAgreements(userId: string): Promise<void> {
     const activeTerms = await this.termsRepository.findAllActive();
     const requiredTerms = activeTerms.filter((t) => t.isRequired);
