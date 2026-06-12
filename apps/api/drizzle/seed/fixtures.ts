@@ -101,7 +101,7 @@ const templateImageUrlFromRel = (rel: string) => {
   return `${base}/${urlPath}`;
 };
 
-/** template_images AI 풀에서 folder 기반 결정적 미리보기 URL */
+/** template_images 풀에서 folder 기반 결정적 미리보기 URL */
 const templatePreviewFromFolder = (folder: string) =>
   templatePreviewUrl(`template-${folder.normalize('NFC')}`);
 
@@ -158,25 +158,25 @@ const MISSION_CONTENT_BASE = [
 ];
 
 const TEMPLATE_DEFS = [
-  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티',
+  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: 'party-night',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 파티 배경에 자연스럽게 합성해 주세요. 화려한 조명·콘페티·축제 분위기를 살리면서 인물을 배경에 어울리게 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일',
+  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: 'birthday',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 생일 축하 배경에 자연스럽게 합성해 주세요. 케이크·풍선·반짝이는 장식과 따뜻한 축하 분위기를 유지하면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃',
+  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: 'flower-garden',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 꽃과 정원이 어우러진 배경에 자연스럽게 합성해 주세요. 부드러운 꽃 장식과 로맨틱한 분위기를 인물 주변에 살려 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름',
+  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: 'summer-vacation',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 여름 바캉스 배경에 자연스럽게 합성해 주세요. 밝은 햇살과 해변·열대 요소, 시원한 여름 분위기를 유지해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대',
+  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: 'classic-invite',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 클래식하고 우아한 초대장 배경에 자연스럽게 합성해 주세요. 격조 있는 타이포그래피와 정제된 장식의 분위기를 유지해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교',
+  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: 'school-festival',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 학교 축제 배경에 자연스럽게 합성해 주세요. 활기찬 축제 장식과 청춘의 에너지를 살리면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식',
+  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: 'dinner-party',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 디너 파티 배경에 자연스럽게 합성해 주세요. 따뜻한 식사 분위기와 풍성한 음식 연출, 부드러운 조명을 유지해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠',
+  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: 'sports-day',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 스포츠 이벤트 배경에 자연스럽게 합성해 주세요. 다이내믹한 에너지와 운동 요소를 살리면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료',
+  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: 'brunch',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 아늑한 브런치 배경에 자연스럽게 합성해 주세요. 부드러운 아침 햇살과 카페 분위기, 정성스러운 테이블 세팅을 유지해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
-  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI',
+  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'tech-meetup',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 모던한 테크 밋업 배경에 자연스럽게 합성해 주세요. 깔끔한 기하학적 요소와 미래적인 분위기를 유지하면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
 ] as const;
 
