@@ -424,7 +424,9 @@ router.push('/path')
 - `isPending` 중 버튼·폼 필드 `disabled` 누락 (submit 중복 호출 방지)
 - 정적 링크가 아닌 곳에 `<Link>` 사용 (뮤테이션 후 이동은 `router.push()` 사용)
 
-**V1.1+ 미구현 기능 (기획 확정 전 UI 구현 금지):** DM / AI 추천 / 날짜 투표 / 이모지 피커
+**현재 구현 범위 (Scope):** DM, AI 커버 생성, 날짜 투표, 사진·앨범, 이모지 리액션 — 루트 CLAUDE.md Scope 참고.
+
+**템플릿 이미지 경로:** `/template_images/{slug}/{filename}` (public/template_images 기준)
 
 ---
 
