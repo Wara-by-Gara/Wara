@@ -1,38 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Button } from "@/components/primitives/Button";
-import { InvitationCard, type InvitationCardVariant } from "@/components/organisms/InvitationCard";
 import { ProfileSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { MenuItem } from "@/components/molecules/MenuItem";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mockMe, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
+import { PlaceLogPreview } from "./PlaceLogPreview";
 
 export type MyPageState = "default" | "loggedOut" | "noProfile" | "loading" | "error";
-
-// 최근 초대장 기본 노출 개수 (나머지는 '더보기'로 펼침)
-const RECENT_PREVIEW = 4;
 
 export interface MyPageProps {
   state?: MyPageState;
   user?: MockUser;
-  /** 최근/내가 만든/참여한 - props로 주입 */
-  recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; variant?: InvitationCardVariant }[];
-  /** 총 참여한 모임 수 */
+  recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; eventLat?: number; eventLng?: number }[];
   participatedCount?: number;
+  hostedCount?: number;
+  likeCount?: number;
   onInvitationClick?: (id: string) => void;
   onSettings?: () => void;
   onProfileEdit?: () => void;
-  onInquiries?: () => void;
-  onAccount?: () => void;
-  onSupport?: () => void;
-  onHiddenFriends?: () => void;
-  onPhotoMap?: () => void;
+  onPhotoMap?: (invitationId?: string) => void;
+}
+
+function StatItem({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-1 flex-col items-center gap-0.5">
+      <span className="text-[15px] font-bold text-text-primary">{value}</span>
+      <span className="text-[11px] text-text-tertiary">{label}</span>
+    </div>
+  );
 }
 
 export const MyPage = ({
@@ -40,19 +42,20 @@ export const MyPage = ({
   user = mockMe,
   recentInvitations = [],
   participatedCount = 0,
+  hostedCount = 0,
+  likeCount = 0,
   onInvitationClick,
   onSettings,
   onProfileEdit,
-  onInquiries,
-  onAccount,
-  onSupport,
-  onHiddenFriends,
   onPhotoMap,
 }: MyPageProps) => {
-  const [recentExpanded, setRecentExpanded] = useState(false);
-  const shownInvitations = recentExpanded
-    ? recentInvitations
-    : recentInvitations.slice(0, RECENT_PREVIEW);
+  const [memoryIndex, setMemoryIndex] = useState(0);
+
+  useEffect(() => {
+    if (recentInvitations.length > 0) {
+      setMemoryIndex(Math.floor(Math.random() * recentInvitations.length));
+    }
+  }, [recentInvitations.length]);
 
   if (state === "loggedOut") {
     return (
@@ -92,6 +95,10 @@ export const MyPage = ({
     );
   }
 
+  const memory = recentInvitations.length > 0
+    ? recentInvitations[memoryIndex % recentInvitations.length]
+    : null;
+
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
       <StickyHeader
@@ -107,106 +114,128 @@ export const MyPage = ({
           </button>
         }
       />
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto pb-10">
-      {/* 프로필 히어로 - 배경 투명, 상단 aura 그라데이션이 비치게 */}
-      <section className="flex flex-col items-center gap-4 pb-7 pt-[108px]">
-        <div className="relative">
-          <Avatar
-            size="xl"
-            src={state === "noProfile" ? undefined : user.avatarUrl}
-            alt={user.name ?? user.nickname}
-            name={user.name ?? user.nickname}
-            className="size-28 shadow-md ring-4 ring-surface"
-          />
-          <button
-            type="button"
-            aria-label="프로필 사진 변경"
-            onClick={onProfileEdit}
-            className="absolute bottom-1 right-1 inline-flex size-9 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-surface"
-          >
-            <Icon name="camera" size="sm" color="primary" decorative />
-          </button>
-        </div>
-        <div className="flex flex-col items-center gap-0.5 text-center">
-          <p className="text-[22px] font-bold text-text-primary">{user.name ?? user.nickname}</p>
-          {user.name && user.nickname ? (
-            <p className="text-[14px] text-text-tertiary">@{user.nickname}</p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-surface/80 px-3.5 py-1.5 shadow-sm ring-1 ring-border backdrop-blur-sm">
-          <Icon name="users-round" size="sm" color="primary" decorative />
-          <span className="text-[13px] text-text-secondary">
-            참여한 모임 <span className="font-bold text-text-primary">{participatedCount}</span>
-          </span>
-        </div>
-      </section>
+      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-3 pb-6">
 
-      <section className="px-page pt-1">
-        <h2 className="mb-2 px-1 text-[15px] font-bold text-text-primary">최근 초대장</h2>
-        {recentInvitations.length === 0 ? (
-          <div className="rounded-2xl bg-surface py-8 text-center text-[13px] text-text-tertiary shadow-sm ring-1 ring-border">
-            최근 초대장이 없어요
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              {shownInvitations.map((inv) => (
-                <InvitationCard
-                  key={inv.id}
-                  variant={inv.variant ?? "default"}
-                  title={inv.title}
-                  date={inv.date}
-                  dateClassName="text-[11px]"
-                  imageUrl={inv.imageUrl}
-                  onClick={onInvitationClick ? () => onInvitationClick(inv.id) : undefined}
+          {/* ── 프로필 — 투명 배경, 상단 aura 그라데이션이 비치게 ── */}
+          <section className="px-page pb-5 pt-[85px]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative shrink-0">
+                <Avatar
+                  size="xl"
+                  src={state === "noProfile" ? undefined : user.avatarUrl}
+                  alt={user.name ?? user.nickname}
+                  name={user.name ?? user.nickname}
+                  className="size-25 ring-4 ring-surface shadow-md"
                 />
-              ))}
+                <button
+                  type="button"
+                  aria-label="프로필 사진 변경"
+                  onClick={onProfileEdit}
+                  className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-border"
+                >
+                  <Icon name="camera" size="xs" color="default" decorative />
+                </button>
+              </div>
+              <div className="flex flex-col items-center gap-0.5 text-center">
+                <span className="text-[18px] font-bold text-text-primary">
+                  {user.name ?? user.nickname}
+                </span>
+                {user.nickname && (
+                  <p className="text-[13px] text-text-tertiary">@{user.nickname}</p>
+                )}
+              </div>
             </div>
-            {recentInvitations.length > RECENT_PREVIEW && (
+
+            {/* 통계 바 — 반투명 */}
+            <div className="mt-4 flex divide-x divide-border rounded-2xl bg-surface/80 px-2 py-3 ring-1 ring-border/50 backdrop-blur-sm">
+              <StatItem label="모임 참여" value={participatedCount} />
+              <StatItem label="모임 개최" value={hostedCount} />
+              <StatItem label="좋아요" value={likeCount} />
+            </div>
+          </section>
+
+          {/* ── 랜덤 추억 모임 ── */}
+          <div className="bg-surface px-4 py-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[15px]">✨</span>
+                <span className="text-[14px] font-bold text-text-primary">랜덤 추억 모임</span>
+              </div>
+              {recentInvitations.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = memoryIndex % recentInvitations.length;
+                    let next = Math.floor(Math.random() * (recentInvitations.length - 1));
+                    if (next >= cur) next += 1;
+                    setMemoryIndex(next);
+                  }}
+                  className="flex items-center gap-1 text-[12px] font-medium text-text-tertiary active:opacity-60"
+                >
+                  <Icon name="rotate-cw" size="xs" color="inactive" decorative />
+                  다른 추억 보기
+                </button>
+              )}
+            </div>
+
+            {memory ? (
               <button
                 type="button"
-                onClick={() => setRecentExpanded((v) => !v)}
-                className="mt-3 flex w-full items-center justify-center gap-1 rounded-2xl bg-surface py-2.5 text-[13px] font-bold text-text-secondary shadow-sm ring-1 ring-border active:opacity-70"
+                onClick={() => onInvitationClick?.(memory.id)}
+                className="flex w-full items-center gap-3 rounded-2xl bg-background-soft p-3 text-left ring-1 ring-border active:opacity-80"
               >
-                {recentExpanded ? "접기" : `더보기 (${recentInvitations.length - RECENT_PREVIEW})`}
-                <span className={`inline-flex transition-transform ${recentExpanded ? "rotate-180" : ""}`}>
-                  <Icon name="chevron-down" size="sm" color="inactive" decorative />
-                </span>
+                {memory.imageUrl && (
+                  <div className="relative size-20 shrink-0 overflow-hidden rounded-xl">
+                    <Image
+                      src={memory.imageUrl}
+                      alt={memory.title}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-bold text-text-primary">{memory.title}</p>
+                  <div className="mt-1 flex items-center gap-1">
+                    <Icon name="calendar" size="xs" color="inactive" decorative />
+                    <span className="text-[11px] text-text-tertiary">{memory.date}</span>
+                  </div>
+                </div>
+                <Icon name="chevron-right" size="sm" color="inactive" decorative />
               </button>
+            ) : (
+              <p className="py-4 text-center text-[13px] text-text-tertiary">추억 모임이 없어요</p>
             )}
-          </>
-        )}
-      </section>
-
-      <section className="px-page pt-5">
-        <div className="overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-border">
-          <div className="divide-y divide-border">
-            <MenuItem
-              leftIcon="map-pin"
-              onClick={onPhotoMap}
-              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
-            >
-              Place log
-            </MenuItem>
-            <MenuItem
-              leftIcon="user-x"
-              onClick={onHiddenFriends}
-              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
-            >
-              삭제한 친구
-            </MenuItem>
-            <MenuItem
-              leftIcon="message-circle"
-              onClick={onInquiries}
-              rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}
-            >
-              문의하기
-            </MenuItem>
-            <MenuItem leftIcon="user-round-cog" onClick={onAccount} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>계정 관리</MenuItem>
-            <MenuItem leftIcon="help-circle" onClick={onSupport} rightSlot={<Icon name="chevron-right" size="sm" color="inactive" decorative />}>고객센터</MenuItem>
           </div>
+
+          {/* ── Place log ── */}
+          <div className="bg-surface px-4 py-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[15px]">📍</span>
+                <span className="text-[14px] font-bold text-text-primary">Place log</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onPhotoMap?.(memory?.id)}
+                className="flex items-center gap-0.5 text-[12px] font-medium text-text-tertiary active:opacity-60"
+              >
+                자세히 보기
+                <Icon name="external-link" size="xs" color="inactive" decorative />
+              </button>
+            </div>
+            <PlaceLogPreview
+              key={memory?.id}
+              invitationId={memory?.id}
+              eventLat={memory?.eventLat}
+              eventLng={memory?.eventLng}
+              onViewAll={() => onPhotoMap?.(memory?.id)}
+            />
+          </div>
+
         </div>
-      </section>
       </main>
     </div>
   );
