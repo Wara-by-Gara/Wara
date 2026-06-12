@@ -162,6 +162,13 @@
       "when": 1781200000002,
       "tag": "0023_status_message",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1781249303357,
+      "tag": "0024_soft_tomas",
+      "breakpoints": true
     }
   ]
 }
