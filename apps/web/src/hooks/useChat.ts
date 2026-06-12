@@ -58,7 +58,12 @@ function scheduleMarkRead(qc: QueryClient, id: string) {
   readTimer = setTimeout(() => {
     readTimer = null;
     markConversationRead(id)
-      .then(() => scheduleUnreadRefresh(qc))
+      .then(() => {
+        scheduleUnreadRefresh(qc);
+        // 내가 읽으면 내 화면의 (남이 보낸) 메시지 안읽음 수에서 나를 빼야 하므로
+        // 메시지도 재조회 (message:read는 남에게만 가서 내 화면은 갱신 안 됨)
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+      })
       .catch(() => {});
   }, 500);
 }

@@ -1181,4 +1181,35 @@ test.describe("dm-batch12-unread-count", () => {
     await g1.context.close();
     await g2.context.close();
   });
+
+  test("내가 상대 메시지를 읽으면 그 메시지 안읽음 수가 내 화면에서 줄어든다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost");
+    const a = await openAs(browser, "guest"); // 보내는 사람
+    const b = await openAs(browser, "guest2"); // 안 읽고 남아있는 사람
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await host.page.getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+    // A는 방 안(보냄), host도 방 안(받고 읽음), B는 방 밖(안 읽음 유지)
+    await a.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(a.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await b.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+    await a.page.waitForTimeout(2500);
+    // A 전송 -> host가 방 안에서 받고 읽음 -> host 화면의 A 메시지 카운트가 2->1 (B만 남음)
+    const msg = `E2E 내가읽음 ${Date.now()}`;
+    await send(a.page, msg);
+    const row = host.page.locator("li").filter({ hasText: msg });
+    await expect(row.locator("span.text-primary")).toHaveText("1", { timeout: 12_000 });
+    await host.context.close();
+    await a.context.close();
+    await b.context.close();
+  });
 });
