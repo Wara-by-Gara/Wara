@@ -149,7 +149,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     <span className="font-semibold text-primary">@{replyToName}</span>{" "}
                   </>
                 ) : null}
-                {renderMentions(content)}
+                {renderMentions(content, isDarkBg)}
               </p>
             ) : null}
             {(onLike || likeCount !== undefined) ? (

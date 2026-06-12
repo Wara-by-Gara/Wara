@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useState, useRef, useLayoutEffect, type ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import type { IconName } from "@/components/icons";
 import { KakaoStaticMapPreview } from "@/components/molecules/KakaoStaticMapPreview";
@@ -61,15 +61,30 @@ function LocationActionMenu({
   items: { label: string; icon: IconName; onClick: () => void }[];
   className?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return;
+    const el = ref.current;
+    el.style.right = '0';
+    el.style.left = 'auto';
+    const rect = el.getBoundingClientRect();
+    if (rect.left < 8) {
+      el.style.right = 'auto';
+      el.style.left = '0';
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden />
       <div
+        ref={ref}
         role="menu"
         className={cn(
-          "absolute z-50 min-w-[168px] overflow-hidden rounded-xs bg-surface shadow-md",
+          "absolute z-50 min-w-[152px] overflow-hidden rounded-xs bg-surface shadow-md",
           className,
         )}
       >
@@ -232,12 +247,11 @@ export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
                     open={addressMenuOpen}
                     onClose={closeAddressMenu}
                     items={addressMenuItems}
-                    className={cn(
-                      "left-0",
+                    className={
                       menuPlacement === "top"
                         ? "bottom-full mb-1"
-                        : "top-full mt-1",
-                    )}
+                        : "top-full mt-1"
+                    }
                   />
                 </span>
               </div>
