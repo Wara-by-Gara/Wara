@@ -16,13 +16,16 @@ if [[ ! -f "$ROOT/drizzle/migrations/meta/_journal.json" ]]; then
   exit 1
 fi
 
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+cd "$ROOT"
 
-if [[ -z "${DATABASE_URL:-}" ]]; then
-  echo "DATABASE_URL이 설정되지 않았습니다." >&2
+# .env.production은 source 하지 않음 (멀티라인·특수문자 값이 bash syntax error 유발)
+load_database_url() {
+  pnpm exec dotenv -e "$ENV_FILE" -- node -pe "process.env.DATABASE_URL ?? ''"
+}
+
+DATABASE_URL="$(load_database_url)"
+if [[ -z "$DATABASE_URL" ]]; then
+  echo "DATABASE_URL이 설정되지 않았습니다. ($ENV_FILE)" >&2
   exit 1
 fi
 
@@ -38,10 +41,10 @@ if docker ps --format '{{.Names}}' | grep -qx wara-api; then
   RESTART_API=1
 fi
 
-cd "$ROOT"
-export NODE_ENV=production
-pnpm exec drizzle-kit migrate
+echo "migration 적용 중... (0002 등 대용량 SQL은 1~3분 걸릴 수 있음)"
+pnpm exec dotenv -e "$ENV_FILE" -- drizzle-kit migrate
 
+DATABASE_URL="$(load_database_url)"
 AFTER=$(docker run --rm postgres:17 psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM drizzle.__drizzle_migrations;")
 echo "적용 후 migration 수: $AFTER"
 
