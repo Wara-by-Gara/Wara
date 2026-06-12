@@ -82,6 +82,7 @@
 | `INVALID_ULID` | 400 | path param이 유효한 ULID 형식 아님 (details.value) |
 | `INVITATION_ID_REQUIRED` | 400 | HOST 가드 라우트에 invitationId path param 누락 |
 | `INSUFFICIENT_ROLE` | 403 | 라우트에 필요한 멤버 role 미충족 (예: HOST 전용에 GUEST 접근) |
+| `IDEMPOTENCY_IN_PROGRESS` | 409 | 같은 `Idempotency-Key`로 보낸 직전 요청이 아직 처리 중. 클라이언트는 잠시 후 재시도 |
 
 ## Missions
 
@@ -103,6 +104,9 @@
 | `PHOTO_FORBIDDEN` | 403 | 본인 사진이 아님 |
 | `PHOTO_LIKE_ALREADY_EXISTS` | 409 | 이미 좋아요한 사진 |
 | `PHOTO_LIKE_NOT_FOUND` | 404 | 좋아요 없는데 취소 시도 |
+| `PHOTO_INVALID_MIME` | 400 | 매직넘버 sniff 결과 허용 MIME(jpeg/png/webp/heic/heif) 아님. S3 객체는 즉시 삭제됨 |
+| `PHOTO_TOO_LARGE` | 413 | 업로드 크기 10MB 초과. S3 객체는 즉시 삭제됨 |
+| `PHOTO_DUPLICATE` | 409 | 동일 초대장에 이미 업로드된 사진 (takenAt+기기+GPS+파일크기 조합 일치) |
 | `PARTICIPANT_NOT_FOUND` | 404 | 참여자 조회 실패 |
 
 ## Friends
@@ -134,6 +138,7 @@
 | `VOTE_POLL_CLOSED` | 422 | 마감된 투표에 응답/수정 시도, 또는 closed가 아닌 상태에서 날짜 확정 시도 |
 | `VOTE_SLOT_NOT_FOUND` | 404 | 슬롯 없음 또는 해당 폴에 속하지 않음 |
 | `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
+| `VOTE_SLOT_DUPLICATE` | 422 | 동일 날짜·시간 슬롯 중복 등록 |
 | `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
 
 ## AI
@@ -157,6 +162,7 @@
 | `CANNOT_MESSAGE_SELF` | 400 | 자기 자신과 대화 생성 시도 |
 | `GROUP_MEMBER_LIMIT_EXCEEDED` | 400 | 단톡방 최대 인원(30명) 초과 초대 |
 | `GROUP_NO_VALID_INVITEES` | 400 | 초대 대상이 모두 기존 멤버이거나 존재하지 않음 |
+| `MESSAGE_IMAGE_INVALID` | 400 | imageKey가 대화방 prefix 불일치 또는 미업로드(존재하지 않는 객체) |
 
 ## Terms
 

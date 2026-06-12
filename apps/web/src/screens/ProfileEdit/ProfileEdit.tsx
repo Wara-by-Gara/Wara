@@ -1,6 +1,5 @@
 "use client";
 
-import Cropper from "react-easy-crop";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Button } from "@/components/primitives/Button";
@@ -9,15 +8,13 @@ import { FormField } from "@/components/molecules/FormField";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { StickyCTA } from "@/components/layout/StickyCTA";
-import { useState, useRef, useCallback } from "react";
-import type { Area } from "react-easy-crop";
+import { useState, useRef } from "react";
 
 export type ProfileEditState =
   | "default"
   | "nicknameFocus"
   | "nicknameDuplicateError"
   | "imageChange"
-  | "imageCrop"
   | "imageDeleteModal"
   | "saveLoading"
   | "saveComplete"
@@ -28,12 +25,9 @@ export interface ProfileEditProps {
   defaultName?: string;
   defaultNickname?: string;
   avatarUrl?: string;
-  cropImageSrc?: string;
-  isUploading?: boolean;
   onBack?: () => void;
   onSave?: (nickname: string) => void;
   onImageSelect?: (file: File) => void;
-  onCropComplete?: (croppedAreaPixels: Area) => void;
   onImageDelete?: () => void;
   onRetry?: () => void;
 }
@@ -43,70 +37,15 @@ export const ProfileEdit = ({
   defaultName,
   defaultNickname = "김와라",
   avatarUrl,
-  cropImageSrc,
-  isUploading = false,
   onBack,
   onSave,
   onImageSelect,
-  onCropComplete,
   onImageDelete,
   onRetry,
 }: ProfileEditProps) => {
   const [modalOpen, setModalOpen] = useState(state === "imageDeleteModal");
   const [nickname, setNickname] = useState(defaultNickname);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const croppedAreaPixelsRef = useRef<Area | null>(null);
-
-  const handleCropAreaChange = useCallback((_: Area, croppedAreaPixels: Area) => {
-    croppedAreaPixelsRef.current = croppedAreaPixels;
-  }, []);
-
-  if (state === "imageCrop" && cropImageSrc) {
-    return (
-      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-black text-white">
-        <TopAppBar className="shrink-0" title="이미지 자르기" onBack={onBack} variant="transparent" />
-        <main className="relative flex-1">
-          <Cropper
-            image={cropImageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            cropShape="round"
-            showGrid={false}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={handleCropAreaChange}
-          />
-        </main>
-        <footer className="shrink-0 px-page py-5">
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.01}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="mb-4 w-full accent-white"
-          />
-          <Button
-            variant="primary"
-            fullWidth
-            loading={isUploading}
-            onClick={() => {
-              if (croppedAreaPixelsRef.current) {
-                onCropComplete?.(croppedAreaPixelsRef.current);
-              }
-            }}
-          >
-            맞췄어요
-          </Button>
-        </footer>
-      </div>
-    );
-  }
 
   if (state === "saveComplete") {
     return (

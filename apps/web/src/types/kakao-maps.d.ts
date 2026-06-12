@@ -20,6 +20,15 @@ interface KakaoMap {
     paddingLeft?: number,
   ) => void;
   getLevel: () => number;
+  getBounds: () => {
+    getSouthWest: () => KakaoLatLng;
+    getNorthEast: () => KakaoLatLng;
+  };
+}
+
+interface KakaoMapsEventApi {
+  addListener: (target: KakaoMap, type: string, handler: () => void) => void;
+  removeListener: (target: KakaoMap, type: string, handler: () => void) => void;
 }
 
 interface KakaoMarker {
@@ -60,6 +69,7 @@ declare global {
             marker?: { position: KakaoLatLng };
           },
         ) => object;
+        event: KakaoMapsEventApi;
       };
     };
   }

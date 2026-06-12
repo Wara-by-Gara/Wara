@@ -359,6 +359,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               return (
                 <li
                   key={m.id}
+                  data-testid="chat-message"
+                  data-message-id={m.id}
                   className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : "flex-row"}`}
                 >
                   {!mine &&
@@ -498,7 +500,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     }`}
                   >
                     {(isGroup || mine) && !m.deleted && m.unreadCount > 0 && (
-                      <span className="text-[11px] font-bold text-primary">
+                      <span
+                        data-testid="read-receipt"
+                        className="text-[11px] font-bold text-primary"
+                      >
                         {m.unreadCount}
                       </span>
                     )}
@@ -617,6 +622,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         </button>
         <input
           ref={inputRef}
+          data-testid="chat-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={MAX_MESSAGE}

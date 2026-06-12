@@ -1,4 +1,4 @@
-import { type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import path from "node:path";
 import { expectNotCrashed, expectNoPageErrors } from "./fixtures";
 import { API_BASE_URL } from "./personas";
@@ -135,7 +135,7 @@ export async function clickHostMoreButton(page: Page): Promise<void> {
   await btn.click();
 }
 
-/** /vote 화면 데이터 로드 대기 */
+/** /vote 화면 데이터 로드 대기 (직접 /vote URL 진입 시 사용) */
 export async function waitForVotePageData(
   page: Page,
   invitationId: string,
@@ -145,6 +145,73 @@ export async function waitForVotePageData(
       r.url().includes(`/invitations/${invitationId}/vote`) &&
       r.request().method() === "GET" &&
       r.ok(),
+    { timeout: 20_000 },
+  );
+}
+
+/**
+ * 호스트/게스트 상세의 VotePreviewCard 클릭 → /vote 이동 대기.
+ * 상세 페이지 usePoll이 선행 GET /vote를 발생시키므로 waitForVotePageData만 쓰면 레이스가 난다.
+ */
+export async function openVoteFromPreviewCard(
+  page: Page,
+  invitationId: string,
+): Promise<void> {
+  const card = page.locator("button").filter({ hasText: "일정 투표" });
+  await expect(card).toBeVisible({ timeout: 20_000 });
+  await expect(card).toContainText(/후보 \d+개|진행 중|확정/, { timeout: 20_000 });
+
+  await Promise.all([
+    page.waitForURL(new RegExp(`/invitations/${invitationId}/vote(?:\\?|$)`), {
+      timeout: 20_000,
+    }),
+    card.click(),
+  ]);
+
+  await page.waitForLoadState("domcontentloaded").catch(() => {});
+  await expect(page.getByRole("heading", { name: "일정 투표" }).or(
+    page.locator("header").getByText("일정 투표", { exact: true }),
+  )).toBeVisible({ timeout: 15_000 });
+}
+
+/** 브라우저 Date를 고정 (위치 공유 윈도우 E2E) */
+export async function mockBrowserTime(page: Page, isoTime: string): Promise<void> {
+  const fixed = new Date(isoTime).getTime();
+  await page.addInitScript(`(() => {
+    const fixed = ${fixed};
+    const OriginalDate = Date;
+    function FakeDate(...args) {
+      if (args.length === 0) return new OriginalDate(fixed);
+      return new OriginalDate(...args);
+    }
+    FakeDate.now = () => fixed;
+    FakeDate.parse = OriginalDate.parse;
+    FakeDate.UTC = OriginalDate.UTC;
+    FakeDate.prototype = OriginalDate.prototype;
+    window.Date = FakeDate;
+  })()`);
+}
+
+export function kstEndOfDayIso(eventStartIso: string): string {
+  const kstDate = new Date(eventStartIso).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Seoul",
+  });
+  return `${kstDate}T23:59:59+09:00`;
+}
+
+/** 지도 페이지 로드 + 행사 장소 API 완료 대기 */
+export async function gotoLocationMap(
+  page: Page,
+  invitationId: string,
+): Promise<void> {
+  await page.goto(`/invitations/${invitationId}/location`, {
+    waitUntil: "domcontentloaded",
+  });
+  await page.waitForResponse(
+    (r) =>
+      r.url().includes(`/invitations/${invitationId}/location`) &&
+      r.request().method() === "GET" &&
+      (r.ok() || r.status() === 404),
     { timeout: 20_000 },
   );
 }
@@ -255,6 +322,39 @@ export async function waitForPublicLinkRedirect(
     return;
   }
   await page.waitForURL(new RegExp(`/invitations/${invitationId}(?!/vote)`), { timeout });
+}
+
+/** 친구 화면 채팅 탭 */
+export async function openChatTab(page: Page): Promise<void> {
+  await page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("button", { name: "채팅" })).toBeVisible();
+}
+
+/** DM 채팅방 진입 + 메시지 목록 API 완료 대기 */
+export async function gotoChatRoom(page: Page, conversationId: string): Promise<void> {
+  const messagesPromise = page.waitForResponse(
+    (res) =>
+      res.url().includes(`/api/conversations/${conversationId}/messages`) &&
+      res.request().method() === "GET" &&
+      res.ok(),
+    { timeout: 20_000 },
+  );
+  await page.goto(`/chats/${conversationId}`, { waitUntil: "domcontentloaded" });
+  await messagesPromise.catch(() => {});
+  await expect(page.getByTestId("chat-input")).toBeVisible({ timeout: 15_000 });
+}
+
+/** ChatRoom 길게 누르기 (pointer 500ms) */
+export async function longPress(locator: Locator, ms = 550): Promise<void> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("longPress: element has no bounding box");
+  const page = locator.page();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.waitForTimeout(ms);
+  await page.mouse.up();
 }
 
 /** API 요청을 mock 실패로 고정한다 (2차 엣지·에러 UI 검증용). */

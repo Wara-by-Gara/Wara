@@ -340,10 +340,43 @@ PostgreSQL 옵티마이저는 dataset이 작으면 **인덱스를 쓰지 않고 
 
 1. **측정 변동성 제거**: 1분 1회가 아니라 동일 시나리오 3~5회 반복 후 분포 보기. `min` 외에 `p50`, `stddev`까지 추적.
 2. **부하 강도 단계화**: ramping arrival rate로 50 → 100 → 200 VU 시뮬레이션 (실제 트래픽 곡선과 더 유사).
-3. **DB 시간만 별도 측정**: NestJS 응답에 `X-DB-Time` 헤더 추가 → k6 Trend 메트릭으로 분리.
+3. ~~**DB 시간만 별도 측정**: NestJS 응답에 `X-DB-Time` 헤더 추가 → k6 Trend 메트릭으로 분리.~~ ✅ **완료** — `DbTimeInterceptor` + `db-time-store.ts` 구현. `01`~`03` 스크립트 모두 `db_time_ms` / `db_query_count` Trend 추적.
 4. **무거운 쿼리 부하 테스트**: JOIN이 많거나 ORDER BY가 비싼 쿼리 (예: 사진 목록 with 좋아요 카운트). 인덱스 효과가 응답 시간에 더 명확히 드러난다.
 5. **인덱스 마이그레이션을 prod에 안전하게 배포**: PostgreSQL은 `CREATE INDEX CONCURRENTLY`로 락 없이 인덱스 추가 가능. drizzle 마이그레이션에 추가 검토.
 6. **Redis 캐시 도입 검토**: docker-compose에 Redis 없음. 인덱스만으로 안 줄어드는 응답 시간을 캐시로 줄일 수 있는 영역 식별.
+
+---
+
+## 12. Phase G 재측정 — X-DB-Time 분해
+
+> Phase B `DbTimeInterceptor` 도입으로 응답 시간 중 DB 시간을 분리 측정 가능해짐.
+> `01`~`03` 스크립트 모두 `db_time_ms` / `db_query_count` Trend 추적.
+
+### Phase F 인덱스 추가 내역
+
+| 인덱스 | 테이블 | 대상 쿼리 |
+|---|---|---|
+| `idx_notifications_user_id` | `notifications(user_id)` | `findAllByUser`, `countUnreadByUser`, `markAllAsRead` |
+
+### 측정 방법
+
+k6 실행 후 출력에서 `db_time_ms` Trend 항목 확인:
+
+```
+db_time_ms   p50=?.?ms  p95=?.?ms
+db_query_count avg=?
+```
+
+- `db_time_ms p95` vs `http_req_duration p95` → DB 시간 비중 확인
+- `db_query_count avg` → 요청당 평균 쿼리 수 (N+1 감지 지표)
+
+### 결과 (k6 실행 후 채울 것)
+
+| 시나리오 | http p95 | db_time p95 | DB 비중 | query count avg |
+|---|---|---|---|---|
+| 01 GET /invitations | - | - | - | - |
+| 02 GET participants | - | - | - | - |
+| 03 GET invitation detail | - | - | - | - |
 
 ---
 

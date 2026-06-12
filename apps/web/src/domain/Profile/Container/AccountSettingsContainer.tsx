@@ -35,8 +35,13 @@ export default function AccountSettingsContainer() {
   const [withdrawReason, setWithdrawReason] = useState<WithdrawalReasonKey>('rarely');
   const [withdrawDetail, setWithdrawDetail] = useState<string>('');
 
-  const { logout } = useAuthStore();
+  const { hydrated, isLoggedIn, logout } = useAuthStore();
   const queryClient = useQueryClient();
+
+  // 비로그인 사용자 직접 URL 진입 차단 — 로그인 페이지로 보냄.
+  useEffect(() => {
+    if (hydrated && !isLoggedIn) router.replace(ROUTES.LOGIN);
+  }, [hydrated, isLoggedIn, router]);
   const { mutate: deleteMe, isPending: isWithdrawing } = useDeleteMe();
   const { data: socials } = useGetMySocials();
   const { mutate: deleteSocial, isPending: isDisconnecting } = useDeleteMySocial();
@@ -93,7 +98,7 @@ export default function AccountSettingsContainer() {
   const handleLogout = async () => {
     await logout();
     queryClient.clear();
-    setScreen('logoutComplete');
+    router.replace(ROUTES.HOME);
   };
 
   const handleWithdrawContinue = () => {
@@ -110,6 +115,7 @@ export default function AccountSettingsContainer() {
           await logout();
           queryClient.clear();
           setScreen('withdrawComplete');
+          window.history.replaceState(null, '', ROUTES.HOME);
         },
         onError: (err) => {
           const code = err instanceof Error ? err.message : '';

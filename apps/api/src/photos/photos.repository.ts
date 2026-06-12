@@ -137,6 +137,14 @@ export class PhotosRepository {
     return row;
   }
 
+  //워커가 섬네일 업로드 후 호출
+  async updateThumbnailKey(id: string, thumbnailKey: string): Promise<void> {
+    await this.db
+      .update(photos)
+      .set({ thumbnailKey, updatedAt: new Date() })
+      .where(eq(photos.id, id));
+  }
+
   //사진 조회수 올리기
   async incrementViewCount(id: string) {
     await this.db
@@ -230,6 +238,22 @@ export class PhotosRepository {
         ),
       )
       .orderBy(desc(photos.createdAt));
+  }
+
+  // exif fingerprint로 중복 사진 조회
+  async findByFingerprint(invitationId: string, fingerprint: string) {
+    const [row] = await this.db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(
+        and(
+          eq(photos.invitationId, invitationId),
+          eq(photos.exifFingerprint, fingerprint),
+          isNull(photos.deletedAt),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
   }
 
   //리마인드 앨범

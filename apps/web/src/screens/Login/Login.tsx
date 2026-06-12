@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/primitives/Button';
 import { ROUTES } from '@/constants/routes';
 import { SocialLoginButton } from '@/components/primitives/SocialLoginButton';
+import type { SocialProvider } from '@/components/primitives/SocialLoginButton/providers';
 import { ConfirmModal } from '@/components/molecules/Modal';
 import {
   BottomSheet,
@@ -15,10 +16,7 @@ import { useState, useEffect } from 'react';
 export type LoginState =
   | 'default'
   | 'withInvitationContext'
-  | 'kakaoLoading'
-  | 'naverLoading'
-  | 'googleLoading'
-  | 'appleLoading'
+  | 'loading'
   | 'socialFailed'
   | 'socialCancelled'
   | 'accountBlocked'
@@ -29,21 +27,19 @@ export type LoginState =
 
 export interface LoginProps {
   state?: LoginState;
+  loadingProvider?: SocialProvider | null;
   invitationTitle?: string;
-  onKakao?: () => void;
-  onNaver?: () => void;
-  onGoogle?: () => void;
-  onApple?: () => void;
+  onLogin?: (provider: SocialProvider) => void;
   onContinueWithoutLogin?: () => void;
 }
 
+const PROVIDERS: SocialProvider[] = ['kakao', 'naver', 'google', 'apple'];
+
 export const Login = ({
   state = 'default',
+  loadingProvider = null,
   invitationTitle,
-  onKakao,
-  onNaver,
-  onGoogle,
-  onApple,
+  onLogin,
   onContinueWithoutLogin,
 }: LoginProps) => {
   const [mounted, setMounted] = useState(false);
@@ -77,26 +73,16 @@ export const Login = ({
             </span>
           </p>
         ) : null}
-        <SocialLoginButton
-          provider="kakao"
-          loading={state === 'kakaoLoading'}
-          onClick={onKakao}
-        />
-        <SocialLoginButton
-          provider="naver"
-          loading={state === 'naverLoading'}
-          onClick={onNaver}
-        />
-        <SocialLoginButton
-          provider="google"
-          loading={state === 'googleLoading'}
-          onClick={onGoogle}
-        />
-        <SocialLoginButton
-          provider="apple"
-          loading={state === 'appleLoading'}
-          onClick={onApple}
-        />
+
+        {PROVIDERS.map((provider) => (
+          <SocialLoginButton
+            key={provider}
+            provider={provider}
+            loading={loadingProvider === provider}
+            disabled={loadingProvider !== null}
+            onClick={() => onLogin?.(provider)}
+          />
+        ))}
 
         {state === 'withInvitationContext' ||
         state === 'continueWithoutLogin' ? (
@@ -141,10 +127,15 @@ export const Login = ({
             description="이 기능을 쓰려면 먼저 로그인해주세요"
           >
             <div className="flex flex-col gap-2 pt-2">
-              <SocialLoginButton provider="kakao" onClick={onKakao} />
-              <SocialLoginButton provider="naver" onClick={onNaver} />
-              <SocialLoginButton provider="google" onClick={onGoogle} />
-              <SocialLoginButton provider="apple" onClick={onApple} />
+              {PROVIDERS.map((provider) => (
+                <SocialLoginButton
+                  key={provider}
+                  provider={provider}
+                  loading={loadingProvider === provider}
+                  disabled={loadingProvider !== null}
+                  onClick={() => onLogin?.(provider)}
+                />
+              ))}
             </div>
           </BottomSheetContent>
         </BottomSheet>

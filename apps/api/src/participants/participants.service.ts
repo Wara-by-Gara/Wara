@@ -11,6 +11,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
 import { S3Service } from '../s3/s3.service';
+import { LocationsService } from '../locations/locations.service';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
 
@@ -20,6 +21,7 @@ export class ParticipantsService {
     private readonly repository: ParticipantsRepository,
     private readonly blocklistRepository: BlocklistRepository,
     private readonly s3Service: S3Service,
+    private readonly locationsService: LocationsService,
   ) {}
 
   private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
@@ -53,30 +55,6 @@ export class ParticipantsService {
       : resolved.map((r) => ({ ...r, participant: { ...r.participant, note: null } }));
 
     return { summary, participants };
-  }
-
-  async getProfile(invitationId: string, participantId: string) {
-    const result = await this.repository.findByIdWithUser(participantId);
-    if (!result || result.participant.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return result;
-  }
-
-  async getMutual(invitationId: string, participantId: string, viewer: Participant) {
-    const target = await this.repository.findById(participantId);
-    if (!target || target.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return this.repository.getMutualParticipants(viewer.userId, target.userId);
-  }
-
-  async getSharedInvitations(invitationId: string, participantId: string, viewer: Participant) {
-    const target = await this.repository.findById(participantId);
-    if (!target || target.invitationId !== invitationId) {
-      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
-    }
-    return this.repository.getSharedInvitations(viewer.userId, target.userId, invitationId);
   }
 
   async join(userId: string, invitationId: string, dto: JoinInvitationDto) {
@@ -151,6 +129,13 @@ export class ParticipantsService {
     const isHostKick = viewer.memberRole === 'HOST' && viewer.id !== participantId;
 
     await this.repository.hardDelete(participantId);
+
+    // 떠난 participant의 Redis GPS hash + arrived lock 정리 + 다른 클라이언트 marker 제거.
+    // 미정리 시 24h TTL까지 stale 좌표 노출.
+    await this.locationsService.cleanupParticipantGpsData(
+      viewer.invitationId,
+      participantId,
+    );
 
     if (isHostKick) {
       await this.blocklistRepository.add(viewer.invitationId, target.userId, viewer.userId);

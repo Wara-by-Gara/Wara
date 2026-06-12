@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BottomNavigation, type BottomNavItem } from "@/components/molecules/BottomNavigation";
@@ -10,12 +10,14 @@ import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNa
 import { ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/authStore";
 import { useDmUnreadCount } from "@/hooks/useConversations";
+import { useTermsCompliance } from "@/hooks/useTermsCompliance";
 import { API_BASE } from "@/lib/env";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
 import type { ReactNode } from "react";
 
 const NAV_ROUTES: Record<MainBottomNavKey, string> = {
   home: ROUTES.HOME,
-  explore: ROUTES.EXPLORE,
+  explore: ROUTES.EXPLORE.LIST,
   create: ROUTES.INVITATIONS.CREATE,
   friends: ROUTES.FRIENDS.LIST,
   profile: ROUTES.PROFILE.ME,
@@ -47,11 +49,17 @@ export interface MainBottomNavProps {
 
 export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) {
   const pathname = usePathname();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated } = useAuthStore();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
-  const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
+  const { isCompliant } = useTermsCompliance();
+  const { data: dmUnread } = useDmUnreadCount(hydrated && isLoggedIn && isCompliant === true);
 
-  useEffect(() => { hydrate(); }, [hydrate]);
+  function handleSocialLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+  }
+
   if (
     HIDDEN_PATHS.includes(pathname) ||
     pathname.endsWith("/location") ||
@@ -117,7 +125,9 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
               <SocialLoginButton
                 key={provider}
                 provider={provider}
-                onClick={() => { window.location.href = `${API_BASE}/auth/${provider}/redirect`; }}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
               />
             ))}
           </div>

@@ -8,6 +8,7 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { ulid } from 'ulid';
 import { S3Service } from '../s3/s3.service';
 import type { MessageImagePresignedDto } from './dto/send-message.dto';
+import { FriendsRepository } from '../friends/friends.repository';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsGateway } from './conversations.gateway';
 
@@ -112,6 +113,7 @@ function aggregateReactions(rows: { emoji: string }[]): ReactionSummary[] {
 export class ConversationsService {
   constructor(
     private readonly repository: ConversationsRepository,
+    private readonly friendsRepository: FriendsRepository,
     private readonly gateway: ConversationsGateway,
     private readonly s3Service: S3Service,
   ) {}
@@ -140,10 +142,19 @@ export class ConversationsService {
 
     const directKey = this.buildDirectKey(userId, targetUserId);
     const existing = await this.repository.findByDirectKey(directKey);
-    const conversation =
-      existing ??
-      (await this.repository.createDirectConversation(directKey, [userId, targetUserId]));
+    if (existing) {
+      return { id: existing.id };
+    }
 
+    const shared = await this.friendsRepository.findSharedInvitations(userId, targetUserId);
+    if (shared.length === 0) {
+      throw new NotFoundException(ErrorCode.FRIEND_NOT_FOUND);
+    }
+
+    const conversation = await this.repository.createDirectConversation(directKey, [
+      userId,
+      targetUserId,
+    ]);
     return { id: conversation.id };
   }
 
@@ -412,6 +423,31 @@ export class ConversationsService {
   ) {
     await this.assertMember(conversationId, userId);
 
+    // 이미지 키 검증: 이 대화방 prefix + 실제 업로드 완료된 객체만 허용
+    // (클라가 다른 방 key나 업로드 안 된 key를 등록하는 것 방지)
+    if (imageKey) {
+      let exists = false;
+      if (imageKey.startsWith(`dm/${conversationId}/`)) {
+        try {
+          await this.s3Service.headObject(imageKey);
+          exists = true;
+        } catch {
+          exists = false;
+        }
+      }
+      if (!exists) {
+        throw new BadRequestException(ErrorCode.MESSAGE_IMAGE_INVALID);
+      }
+    }
+
+    // 답장 대상이 이 대화방 메시지인지 검증
+    if (replyToMessageId) {
+      const replyTarget = await this.repository.findMessageRaw(replyToMessageId);
+      if (!replyTarget || replyTarget.conversationId !== conversationId) {
+        throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+      }
+    }
+
     const row = await this.repository.insertMessage(
       conversationId,
       userId,
@@ -471,12 +507,15 @@ export class ConversationsService {
 
     await this.repository.softDeleteMessage(messageId);
 
-    // 목록 미리보기 재계산 — 마지막 메시지가 삭제됐으면 "삭제된 메시지입니다"로
+    // 목록 미리보기 재계산 — 삭제됐으면 "삭제된 메시지입니다", 이미지면 "사진"
     const latest = await this.repository.findLatestMessage(conversationId);
     if (latest) {
+      const preview = latest.deletedAt
+        ? '삭제된 메시지입니다'
+        : latest.content || (latest.imageKey ? '사진' : '');
       await this.repository.updateLastMessage(
         conversationId,
-        latest.deletedAt ? '삭제된 메시지입니다' : latest.content,
+        preview,
         latest.createdAt,
       );
     }

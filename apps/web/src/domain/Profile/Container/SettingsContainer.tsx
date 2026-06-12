@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 import { TopAppBar } from '@/components/molecules/TopAppBar';
 import { Settings, type SettingsScreen } from '@/screens/Settings';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
@@ -69,6 +70,8 @@ export default function SettingsContainer() {
       screen={screen}
       onBack={handleBack}
       onNavigate={setScreen}
+      onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
+      onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
     />
   );
 }

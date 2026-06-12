@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { Area } from "react-easy-crop";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { FormField } from "@/components/molecules/FormField";
@@ -12,7 +13,9 @@ import { TextInput } from "@/components/primitives/TextInput";
 import { Button } from "@/components/primitives/Button";
 import { useMe, useUpdateMe } from "@/hooks/useUsers";
 import { getProfileImagePresignedUrl } from "@/lib/api/users";
+import { getCroppedImageBlob } from "@/utils/cropImage";
 import { SignupFormSkeleton } from "@/components/organisms/Skeleton";
+import { ProfileImageCropScreen } from "@/components/organisms/ProfileImageCropScreen";
 import { ROUTES } from "@/constants/routes";
 
 const currentYear = new Date().getFullYear();
@@ -46,8 +49,9 @@ export function SignupContainer() {
   const { data: me, isLoading } = useMe();
   const { mutate: updateMe, isPending, error } = useUpdateMe();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const randomAvatarSeed = useMemo(
     () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     [],
@@ -74,16 +78,29 @@ export function SignupContainer() {
     });
     if (me.profileImageUrl) {
       setProfileImageUrl(me.profileImageUrl);
+      setProfileImagePreview(me.profileImageUrl);
     }
   }, [me, router, reset]);
 
-  async function handleImageSelect(file: File) {
+  function handleImageSelect(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCropConfirm(croppedAreaPixels: Area) {
+    if (!cropImageSrc) return;
     setIsUploadingImage(true);
     try {
-      const contentType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif";
-      const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, contentType);
-      await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": contentType }, body: file });
+      const blob = await getCroppedImageBlob(cropImageSrc, croppedAreaPixels);
+      const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+      const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, "image/jpeg");
+      await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: file });
       setProfileImageUrl(key);
+      setProfileImagePreview(URL.createObjectURL(blob));
+      setCropImageSrc(null);
     } finally {
       setIsUploadingImage(false);
     }
@@ -118,6 +135,17 @@ export function SignupContainer() {
 
   const isSaving = isPending || isUploadingImage;
 
+  if (cropImageSrc) {
+    return (
+      <ProfileImageCropScreen
+        imageSrc={cropImageSrc}
+        isConfirming={isUploadingImage}
+        onBack={() => setCropImageSrc(null)}
+        onConfirm={handleCropConfirm}
+      />
+    );
+  }
+
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background">
       <main className="relative z-10 flex flex-1 flex-col px-page py-8">
@@ -130,7 +158,7 @@ export function SignupContainer() {
           >
             <Avatar
               size="xl"
-              src={profileImageUrl ?? undefined}
+              src={profileImagePreview ?? undefined}
               name={randomAvatarSeed}
               className="size-28"
             />

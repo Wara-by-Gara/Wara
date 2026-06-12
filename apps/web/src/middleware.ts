@@ -22,5 +22,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/notifications/:path*"],
+  matcher: [
+    "/profile/:path*",
+    "/notifications/:path*",
+    "/meetings/:path*",
+    "/calendar/:path*",
+    "/edit/:path*",
+  ],
 };

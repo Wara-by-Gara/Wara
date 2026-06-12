@@ -4,7 +4,11 @@ import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { MapPage, type MapPageState, type SearchResult } from "@/screens/MapPage/MapPage";
-import { KakaoMap, type KakaoMapHandle, type ParticipantPin } from "@/components/molecules/KakaoMap/KakaoMap";
+import {
+  KakaoMap,
+  type KakaoMapHandle,
+  type ParticipantPin,
+} from "@/components/molecules/KakaoMap/KakaoMap";
 import { useEventLocation, useSetEventLocation, useParticipantLocations, useLocationSearch } from "@/hooks/useLocation";
 import { useInvitation } from "@/hooks/useInvitations";
 import { useParticipants } from "@/hooks/useParticipants";
@@ -12,12 +16,24 @@ import { useLocationSocket, type LocationUpdate } from "@/hooks/useLocationSocke
 import { useMe } from "@/hooks/useUsers";
 import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
+import { nudgeParticipant } from "@/lib/api/locations";
+import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { Button } from "@/components/primitives/Button";
+import { toast } from "@/components/molecules/Toast";
+import { ROUTES } from "@/constants/routes";
 
 const ARRIVAL_THRESHOLD_METERS = 10;
 // GPS emit 간격 — 너무 잦으면 서버 부하/배터리 부담.
 const GPS_EMIT_THROTTLE_MS = 5000;
-// 이벤트 시작 N분 전부터 위치 공유 활성. 이전엔 가드 없이 페이지 진입 시 즉시 시작했음.
-const PRE_EVENT_TRACK_WINDOW_MS = 30 * 60 * 1000;
+// 모임 시작 15분 전부터 위치 공유 활성 (PRD)
+const PRE_EVENT_TRACK_WINDOW_MS = 15 * 60 * 1000;
+
+function getEventEndMs(eventStartAt: string): number {
+  const kstDate = new Date(eventStartAt).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Seoul",
+  });
+  return new Date(`${kstDate}T23:59:59+09:00`).getTime();
+}
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -43,6 +59,9 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const [pageState, setPageState] = useState<MapPageState>("loading");
   const [isDirectionOpen, setIsDirectionOpen] = useState(false);
   const [isArrived, setIsArrived] = useState(false);
+  const [selectedPin, setSelectedPin] = useState<ParticipantPin | null>(null);
+  const [nudgePending, setNudgePending] = useState(false);
+  const [nudgeError, setNudgeError] = useState(false);
 
   // ── 장소 검색 ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,14 +92,15 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   const myParticipantId = myParticipant?.participant.id;
   const isHost = myParticipant?.participant.memberRole === "HOST";
 
-  // 이벤트 시작 30분 전부터 위치 공유 활성. eventStartAt이 없거나(아직 미정)
-  // 매우 먼 미래거나, 이미 지난 행사면 트래킹/소켓 모두 비활성.
+  // 모임 시작 15분 전 ~ 당일 23:59(KST)까지 위치 공유 활성.
   const eventStartAt = invitation?.eventStartAt ?? null;
   const inEventWindow = (() => {
     if (!eventStartAt) return false;
     const startMs = new Date(eventStartAt).getTime();
     if (Number.isNaN(startMs)) return false;
-    return Date.now() >= startMs - PRE_EVENT_TRACK_WINDOW_MS;
+    const now = Date.now();
+    const endMs = getEventEndMs(eventStartAt);
+    return now >= startMs - PRE_EVENT_TRACK_WINDOW_MS && now <= endMs;
   })();
 
   // ── 참가자 실시간 위치 ─────────────────────────────────────────────────
@@ -289,20 +309,32 @@ export function MapContainer({ invitationId }: MapContainerProps) {
 
   // ── 핸들러 ───────────────────────────────────────────────────────────
   const handleLocate = () => {
-    const pos = lastPositionRef.current;
-    if (pos) {
-      kakaoMapRef.current?.centerOn(pos.coords.latitude, pos.coords.longitude);
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          setGpsPermission("granted");
-          setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
-          kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
-        },
-        () => setGpsPermission("denied"),
-        { enableHighAccuracy: true },
-      );
+    if (!navigator.geolocation) {
+      toast.error("이 브라우저는 위치 기능을 지원하지 않아요");
+      setGpsPermission("denied");
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        lastPositionRef.current = p;
+        setGpsPermission("granted");
+        setMyLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
+        kakaoMapRef.current?.centerOn(p.coords.latitude, p.coords.longitude);
+      },
+      (err) => {
+        // PositionError.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+        if (err.code === 1) {
+          toast.error("위치 권한이 꺼져있어요. 브라우저 주소창 옆 아이콘을 눌러 허용해주세요.");
+          setGpsPermission("denied");
+        } else if (err.code === 3) {
+          toast.error("위치를 가져오는 데 시간이 오래 걸려요. 잠시 후 다시 시도해주세요.");
+        } else {
+          toast.error("현재 위치를 가져올 수 없어요.");
+        }
+      },
+      // 무한 대기 방지 + maximumAge=0으로 항상 최신 fetch
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+    );
   };
 
   const handleGetDirections = () => setIsDirectionOpen(true);
@@ -363,7 +395,8 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         onSuccess: () => {
           setPendingPlace(null);
           setSearchQuery("");
-          setPageState("fullscreen");
+          // 호스트가 장소 확정 후 별도 뒤로가기 없이 초대장 상세로 자동 복귀.
+          router.push(ROUTES.INVITATIONS.DETAIL(invitationId));
         },
       },
     );
@@ -413,6 +446,41 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         }
       : null;
 
+  const handleParticipantPinClick = useCallback(
+    (pin: ParticipantPin) => {
+      if (!isHost || pin.isArrived) return;
+      setSelectedPin(pin);
+      setNudgeError(false);
+    },
+    [isHost],
+  );
+
+  const handleSendNudge = async () => {
+    if (!selectedPin) return;
+    setNudgePending(true);
+    setNudgeError(false);
+    try {
+      await nudgeParticipant(invitationId, selectedPin.participantId);
+      setSelectedPin(null);
+    } catch {
+      setNudgeError(true);
+    } finally {
+      setNudgePending(false);
+    }
+  };
+
+  const selectedDistanceM =
+    selectedPin && effectiveLocation?.lat != null && effectiveLocation?.lng != null
+      ? Math.round(
+          haversineDistance(
+            selectedPin.lat,
+            selectedPin.lng,
+            effectiveLocation.lat,
+            effectiveLocation.lng,
+          ),
+        )
+      : null;
+
   const mapSlot = (
     <KakaoMap
       ref={kakaoMapRef}
@@ -423,7 +491,16 @@ export function MapContainer({ invitationId }: MapContainerProps) {
           : undefined
       }
       participants={participantPins}
-      myLocation={myLocation}
+      myLocation={
+        myLocation
+          ? {
+              ...myLocation,
+              profileImageUrl: me?.profileImageUrl ?? null,
+              nickname: me?.nickname ?? null,
+            }
+          : undefined
+      }
+      onParticipantClick={isHost ? handleParticipantPinClick : undefined}
       className="absolute inset-0"
     />
   );
@@ -458,7 +535,35 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         onLocate={handleLocate}
         onConfirmSelectedPlace={isHost ? handleConfirmSelectedPlace : undefined}
         isSavingPlace={isSavingPlace}
+        trackingActive={inEventWindow}
       />
+      <BottomSheet open={!!selectedPin} onOpenChange={(open) => !open && setSelectedPin(null)}>
+        <BottomSheetContent
+          title={selectedPin?.nickname ?? "참석자"}
+          description={
+            selectedDistanceM != null
+              ? `모임 장소까지 약 ${selectedDistanceM}m`
+              : undefined
+          }
+        >
+          <div className="flex flex-col gap-2 pt-2">
+            {nudgeError ? (
+              <p className="text-[13px] text-(--color-warning)">
+                알림 전송에 실패했어요. 다시 시도해주세요.
+              </p>
+            ) : null}
+            <Button
+              size="lg"
+              variant="primary"
+              fullWidth
+              loading={nudgePending}
+              onClick={() => void handleSendNudge()}
+            >
+              출발 알림 보내기
+            </Button>
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
     </>
   );
 }

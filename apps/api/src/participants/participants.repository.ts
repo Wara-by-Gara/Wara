@@ -1,14 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, eq, isNull } from 'drizzle-orm';
 import {
   invitations,
   participants,
   users,
   rsvpStatusEnum,
-  type Invitation,
   type Participant,
-  type User,
 } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
@@ -40,18 +37,6 @@ export class ParticipantsRepository {
     return rows[0] ?? null;
   }
 
-  async findByIdWithUser(
-    id: string,
-  ): Promise<{ participant: Participant; user: User } | null> {
-    const rows = await this.db
-      .select({ participant: participants, user: users })
-      .from(participants)
-      .innerJoin(users, eq(participants.userId, users.id))
-      .where(and(eq(participants.id, id), isNull(users.deletedAt)))
-      .limit(1);
-    return rows[0] ?? null;
-  }
-
   async findByUserAndInvitation(
     userId: string,
     invitationId: string,
@@ -78,55 +63,6 @@ export class ParticipantsRepository {
       .where(eq(invitations.id, invitationId))
       .limit(1);
     return rows[0] ?? null;
-  }
-
-  async getMutualParticipants(myUserId: string, targetUserId: string) {
-    const p1 = alias(participants, 'p1');
-    const p2 = alias(participants, 'p2');
-
-    const sharedRows = await this.db
-      .selectDistinct({ invitationId: p1.invitationId })
-      .from(p1)
-      .innerJoin(p2, eq(p1.invitationId, p2.invitationId))
-      .where(and(eq(p1.userId, myUserId), eq(p2.userId, targetUserId)));
-
-    if (sharedRows.length === 0) return [];
-
-    const sharedIds = sharedRows.map((r) => r.invitationId);
-    return this.db
-      .select({ participant: participants, user: users })
-      .from(participants)
-      .innerJoin(users, eq(participants.userId, users.id))
-      .where(
-        and(
-          inArray(participants.invitationId, sharedIds),
-          notInArray(participants.userId, [myUserId, targetUserId]),
-          isNull(users.deletedAt),
-        ),
-      );
-  }
-
-  async getSharedInvitations(
-    myUserId: string,
-    targetUserId: string,
-    excludeInvitationId: string,
-  ): Promise<Invitation[]> {
-    const p1 = alias(participants, 'p1');
-    const p2 = alias(participants, 'p2');
-
-    const rows = await this.db
-      .select({ invitation: invitations })
-      .from(invitations)
-      .innerJoin(
-        p1,
-        and(eq(p1.invitationId, invitations.id), eq(p1.userId, myUserId)),
-      )
-      .innerJoin(
-        p2,
-        and(eq(p2.invitationId, invitations.id), eq(p2.userId, targetUserId)),
-      )
-      .where(ne(invitations.id, excludeInvitationId));
-    return rows.map((r) => r.invitation);
   }
 
   async create(data: {

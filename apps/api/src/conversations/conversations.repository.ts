@@ -323,6 +323,7 @@ export class ConversationsRepository {
     const rows = await this.db
       .select({
         id: messages.id,
+        conversationId: messages.conversationId,
         senderId: messages.senderId,
         content: messages.content,
         deletedAt: messages.deletedAt,
@@ -386,6 +387,7 @@ export class ConversationsRepository {
     const rows = await this.db
       .select({
         content: messages.content,
+        imageKey: messages.imageKey,
         createdAt: messages.createdAt,
         deletedAt: messages.deletedAt,
       })

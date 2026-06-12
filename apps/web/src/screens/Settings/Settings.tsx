@@ -39,6 +39,8 @@ export interface SettingsProps {
   screen?: SettingsScreen;
   onBack?: () => void;
   onNavigate?: (screen: SettingsScreen) => void;
+  onHiddenFriends?: () => void;
+  onAccount?: () => void;
 }
 
 const Section = ({
@@ -73,7 +75,7 @@ const ToggleItem = ({
   </MenuItem>
 );
 
-export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps) => {
+export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends, onAccount }: SettingsProps) => {
   const [inquiryDone, setInquiryDone] = useState(screen === 'inquiryComplete');
 
   if (screen === 'main') {
@@ -227,6 +229,37 @@ export const Settings = ({ screen = 'main', onBack, onNavigate }: SettingsProps)
               }
             >
               앱 버전
+            </MenuItem>
+          </Section>
+          <Section title="계정">
+            <MenuItem
+              leftIcon="user-x"
+              onClick={onHiddenFriends}
+              rightSlot={
+                <Icon name="chevron-right" size="sm" color="inactive" decorative />
+              }
+            >
+              삭제한 친구
+            </MenuItem>
+            <MenuItem
+              leftIcon="user-round-cog"
+              onClick={onAccount}
+              rightSlot={
+                <Icon name="chevron-right" size="sm" color="inactive" decorative />
+              }
+            >
+              계정 관리
+            </MenuItem>
+          </Section>
+          <Section title="지원">
+            <MenuItem
+              leftIcon="help-circle"
+              onClick={() => onNavigate?.('customerSupport')}
+              rightSlot={
+                <Icon name="chevron-right" size="sm" color="inactive" decorative />
+              }
+            >
+              고객센터
             </MenuItem>
           </Section>
           <div className="h-6" />
