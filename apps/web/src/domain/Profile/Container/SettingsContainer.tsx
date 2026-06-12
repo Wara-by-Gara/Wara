@@ -71,6 +71,7 @@ export default function SettingsContainer() {
       onBack={handleBack}
       onNavigate={setScreen}
       onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
+      onHiddenInvitations={() => router.push(ROUTES.INVITATIONS.HIDDEN)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
     />
   );

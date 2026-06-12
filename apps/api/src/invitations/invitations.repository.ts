@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import { dateVotePolls, eventLocations, invitations, participants, users } from '../database/schema';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -32,6 +32,8 @@ export class InvitationsRepository {
     const pageLimit = dto.limit ?? 20;
     const fetchLimit = pageLimit + 1;
 
+    const sort = dto.sort ?? 'latest';
+
     const conditions = [
       eq(invitations.isPublic, true),
       isNull(invitations.deletedAt),
@@ -40,10 +42,31 @@ export class InvitationsRepository {
     if (dto.category) {
       conditions.push(eq(invitations.category, dto.category));
     }
+    if (dto.q) {
+      // 제목 부분 검색 (대소문자 무시)
+      conditions.push(sql`${invitations.title} ILIKE ${'%' + dto.q + '%'}`);
+    }
+    // 마감순은 일정이 정해진 초대장만 대상
+    if (sort === 'deadline') {
+      conditions.push(sql`${invitations.eventStartAt} IS NOT NULL`);
+    }
+
+    // 정렬별 keyset 튜플: (정렬키, id). cursor row의 동일 튜플과 비교.
+    const sortColumn = {
+      latest: invitations.createdAt,
+      deadline: invitations.eventStartAt,
+      views: invitations.viewCount,
+    }[sort];
+    const orderBy =
+      sort === 'deadline'
+        ? [asc(invitations.eventStartAt), asc(invitations.id)]
+        : [desc(sortColumn), desc(invitations.id)];
+
     if (dto.cursor) {
+      const op = sort === 'deadline' ? sql`>` : sql`<`;
       conditions.push(
-        sql`(${invitations.eventStartAt}, ${invitations.createdAt}, ${invitations.id}) < (
-          SELECT ${invitations.eventStartAt}, ${invitations.createdAt}, ${invitations.id}
+        sql`(${sortColumn}, ${invitations.id}) ${op} (
+          SELECT ${sortColumn}, ${invitations.id}
           FROM ${invitations}
           WHERE ${invitations.id} = ${dto.cursor}
           LIMIT 1
@@ -59,11 +82,7 @@ export class InvitationsRepository {
           columns: { name: true, nickname: true, profileImageUrl: true },
         },
       },
-      orderBy: [
-        desc(invitations.eventStartAt),
-        desc(invitations.createdAt),
-        desc(invitations.id),
-      ],
+      orderBy,
       limit: fetchLimit,
     });
 
@@ -74,6 +93,13 @@ export class InvitationsRepository {
       rows: paged,
       nextCursor: hasNext && paged.length > 0 ? paged.at(-1)!.id : null,
     };
+  }
+
+  async incrementViewCount(id: string): Promise<void> {
+    await this.db
+      .update(invitations)
+      .set({ viewCount: sql`${invitations.viewCount} + 1` })
+      .where(and(eq(invitations.id, id), isNull(invitations.deletedAt)));
   }
 
   async countPublicParticipantsByInvitationIds(
@@ -129,7 +155,7 @@ export class InvitationsRepository {
       .limit(dto.limit);
   }
 
-  async findAllByUserId(userId: string) {
+  private async findByUserId(userId: string, isHidden: boolean) {
     const rows = await this.db
       .select({
         invitation: invitations,
@@ -141,6 +167,7 @@ export class InvitationsRepository {
         and(
           eq(participants.userId, userId),
           isNull(invitations.deletedAt),
+          eq(participants.isHidden, isHidden),
         ),
       )
       .orderBy(desc(invitations.createdAt));
@@ -166,6 +193,14 @@ export class InvitationsRepository {
       myRole: r.myRole,
       eventLocation: locationByInvitationId.get(r.invitation.id) ?? null,
     }));
+  }
+
+  findAllByUserId(userId: string) {
+    return this.findByUserId(userId, false);
+  }
+
+  findHiddenByUserId(userId: string) {
+    return this.findByUserId(userId, true);
   }
 
   async findParticipantPreviewsByInvitationIds(

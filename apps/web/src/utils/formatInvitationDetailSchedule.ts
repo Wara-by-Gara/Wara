@@ -13,6 +13,8 @@ export function formatInvitationDetailSchedule(
 
   const h = d.getHours();
   const m = d.getMinutes();
+  // 로컬 자정 = 시간 미설정 → 날짜만 표시
+  if (h === 0 && m === 0) return datePart;
   const ampm = h < 12 ? "오전" : "오후";
   const h12 = h % 12 || 12;
   const timePart =

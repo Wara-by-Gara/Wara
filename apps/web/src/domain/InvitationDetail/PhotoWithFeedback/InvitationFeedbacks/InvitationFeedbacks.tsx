@@ -9,6 +9,7 @@ import { CommentInputBar, GifPicker } from '@/components/organisms';
 import { CommentListSkeleton, MentionListSkeleton } from '@/components/organisms/Skeleton';
 import { Avatar } from '@/components/primitives/Avatar';
 import { timeAgo } from '@/utils/timeAge';
+import { cn } from '@/lib/cn';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 import { ParticipantProfileModal } from '@/components/organisms/ParticipantProfileModal/ParticipantProfileModal';
@@ -16,9 +17,10 @@ import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
   invitationId: string;
+  isDarkBg?: boolean;
 }
 
-export default function InvitationFeedbacks({ invitationId }: Props) {
+export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const { data: me } = useMe();
   const currentUserId = me?.id ?? null;
   const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
@@ -120,7 +122,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
   return (
     <div className="mt-4">
       <div>
-        <h3 className="mb-3 text-[15px] font-bold text-text-primary">
+        <h3 className={cn('mb-3 text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>
           댓글 {commentCount}
         </h3>
 
@@ -244,6 +246,7 @@ export default function InvitationFeedbacks({ invitationId }: Props) {
           {allRows.map((f) => (
             <div key={f.id}>
               <CommentItem
+                isDarkBg={isDarkBg}
                 authorName={
                   f.participant.userId === currentUserId
                     ? (currentUserDisplayName ??

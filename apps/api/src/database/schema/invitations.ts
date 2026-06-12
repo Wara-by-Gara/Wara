@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, boolean, timestamp, integer, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
@@ -40,10 +40,17 @@ export const invitations = pgTable('invitations', {
   rsvpMaybeLabel: varchar('rsvp_maybe_label', { length: 20 }).notNull().default('미정'),
   rsvpDeclinedEmoji: varchar('rsvp_declined_emoji', { length: 10 }).notNull().default('😭'),
   rsvpDeclinedLabel: varchar('rsvp_declined_label', { length: 20 }).notNull().default('불참'),
+  animation: varchar('animation', { length: 50 }),
+  /** 모임 옵션 (선택) */
+  fee: varchar('fee', { length: 100 }),
+  dressCode: varchar('dress_code', { length: 100 }),
+  parkingInfo: text('parking_info'),
   /** true: 탐색·추천 이벤트 노출 / false: 비공개(링크 초대만) */
   isPublic: boolean('is_public').notNull().default(false),
   /** 탐색 필터용 — tech, fitness, food, art, culture, health */
   category: varchar('category', { length: 20 }),
+  /** 상세 조회수 (탐색 조회순 정렬용) */
+  viewCount: integer('view_count').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

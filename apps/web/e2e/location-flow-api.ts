@@ -105,7 +105,10 @@ export async function deleteEventLocation(
       },
     },
   );
-  return { status: res.status() };
+  const body = (await res.json().catch(() => null)) as
+    | { error?: { code?: string } }
+    | null;
+  return { status: res.status(), errorCode: body?.error?.code };
 }
 
 export type ParticipantLocationRow = {
@@ -171,7 +174,10 @@ export async function nudgeParticipant(
       },
     },
   );
-  return { status: res.status() };
+  const body = (await res.json().catch(() => null)) as
+    | { error?: { code?: string } }
+    | null;
+  return { status: res.status(), errorCode: body?.error?.code };
 }
 
 export type NotificationRow = { type: string; invitationId: string | null; content: string };

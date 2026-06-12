@@ -1,13 +1,17 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { AuthRepository } from '../auth/auth.repository';
 import { AuthService } from '../auth/auth.service';
 import { TermsRepository } from '../terms/terms.repository';
 import { UserRole } from '../common/enums/role.enum';
 import { ErrorCode } from '../common/constants/error-codes';
+import { DRIZZLE, DrizzleDB } from '../database/database.module';
+import { users } from '../database/schema';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 // 시드 유저 화이트리스트 — mobile `apps/mobile/api/dev-auth.ts`의 DEV_USER_EMAILS와 동기화 필요.
@@ -29,6 +33,7 @@ export class DevAuthService {
     private readonly authRepository: AuthRepository,
     private readonly authService: AuthService,
     private readonly termsRepository: TermsRepository,
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
   ) {}
 
   async issueDevToken(email: string): Promise<{ accessToken: string }> {
@@ -38,6 +43,13 @@ export class DevAuthService {
         message: '허용되지 않은 dev 계정입니다.',
       });
     }
+
+    // soft-delete된 시드 유저는 자동 복구. 회원 탈퇴 E2E(LOC-RT-02 등)가 시드 유저를
+    // 영구 삭제해 후속 spec에서 토큰 발급이 404로 실패하던 isolation 문제 해소.
+    await this.db
+      .update(users)
+      .set({ deletedAt: null })
+      .where(and(eq(users.email, email), isNotNull(users.deletedAt)));
 
     const user = await this.authRepository.findUserByEmail(email);
     if (!user) {

@@ -98,3 +98,49 @@ export function disconnect(socket: Socket | undefined): void {
   if (socket.connected) socket.disconnect();
   socket.removeAllListeners();
 }
+
+/**
+ * 서버가 인증 실패로 client.disconnect()를 호출하는 경우를 검증.
+ * connect 직후 즉시 disconnect, 또는 connect_error 중 어느 쪽이든 통과.
+ */
+export async function waitForServerDisconnect(
+  socket: Socket,
+  timeoutMs = 3000,
+): Promise<{ reason: "connect_error" | "disconnect" }> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error("expected server disconnect, but socket stayed connected")),
+      timeoutMs,
+    );
+    socket.once("connect_error", () => {
+      clearTimeout(timer);
+      resolve({ reason: "connect_error" });
+    });
+    socket.once("disconnect", () => {
+      clearTimeout(timer);
+      resolve({ reason: "disconnect" });
+    });
+  });
+}
+
+/**
+ * 일정 시간 동안 특정 event가 발생하지 않음을 확인.
+ * cross-room broadcast 격리 검증에 사용.
+ */
+export async function expectNoEvent(
+  socket: Socket,
+  event: string,
+  durationMs = 2000,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const onEvent = (payload: unknown) => {
+      socket.off(event, onEvent);
+      reject(new Error(`unexpected event '${event}': ${JSON.stringify(payload)}`));
+    };
+    socket.on(event, onEvent);
+    setTimeout(() => {
+      socket.off(event, onEvent);
+      resolve();
+    }, durationMs);
+  });
+}

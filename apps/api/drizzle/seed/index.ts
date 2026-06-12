@@ -98,7 +98,31 @@ async function main() {
   await client.end();
 }
 
-main().catch((err: Error) => {
-  process.stderr.write(`[seed] 오류: ${err.message}\n`);
+type PgErrorLike = {
+  message?: string;
+  code?: string;
+  detail?: string;
+  constraint?: string;
+  column?: string;
+  table?: string;
+  cause?: PgErrorLike;
+};
+
+function writePgErrorFields(prefix: string, e: PgErrorLike): void {
+  if (e.code) process.stderr.write(`  ${prefix}code: ${e.code}\n`);
+  if (e.detail) process.stderr.write(`  ${prefix}detail: ${e.detail}\n`);
+  if (e.constraint) process.stderr.write(`  ${prefix}constraint: ${e.constraint}\n`);
+  if (e.column) process.stderr.write(`  ${prefix}column: ${e.column}\n`);
+  if (e.table) process.stderr.write(`  ${prefix}table: ${e.table}\n`);
+}
+
+main().catch((err: unknown) => {
+  // err.message는 drizzle이 SQL+params 전체를 dump하므로 한 줄이 매우 길다.
+  // 진단에 필요한 PostgreSQL 코드/제약 등은 cause에 들어있으므로 따로 출력.
+  const e = err as PgErrorLike;
+  process.stderr.write('[seed] 오류 발생\n');
+  writePgErrorFields('', e);
+  if (e.cause) writePgErrorFields('cause.', e.cause);
+  process.stderr.write(`[seed] message: ${(e.message ?? String(err)).slice(0, 500)}\n`);
   process.exit(1);
 });

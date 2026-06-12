@@ -50,8 +50,8 @@ export const BottomSheetContent = forwardRef<
     "z-50 flex flex-col rounded-t-lg bg-surface focus:outline-none",
     "pb-[env(safe-area-inset-bottom)]",
     contained
-      ? "absolute inset-x-0 bottom-0 max-h-[min(72%,480px)] w-full"
-      : "fixed inset-x-0 bottom-0 mt-24 max-h-[85vh]",
+      ? "absolute inset-x-0 bottom-0 max-h-[min(50vh)] w-full"
+      : "fixed inset-x-0 bottom-0 mt-24 max-h-[85vh] mx-auto max-w-md pb-[50px]",
     className,
   );
 

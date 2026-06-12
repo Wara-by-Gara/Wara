@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/cn";
 import {
   RSVPButtonGroup,
   type RSVPButtonGroupProps,
@@ -15,7 +16,8 @@ export type RsvpSectionProps = Pick<
   | "closed"
   | "loading"
   | "helperText"
->;
+  | "disabled"
+> & { isDarkBg?: boolean };
 
 export function RsvpSection({
   value,
@@ -25,11 +27,13 @@ export function RsvpSection({
   closed,
   loading,
   helperText,
+  disabled,
+  isDarkBg,
 }: RsvpSectionProps) {
   return (
     <section>
-      <h3 className="text-[15px] font-bold text-text-primary">참석 여부</h3>
-      <p className="mt-0.5 text-[12px] text-text-secondary">원하는 응답을 선택해주세요</p>
+      <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text-primary")}>참석 여부</h3>
+      <p className={cn("mt-0.5 text-[12px]", isDarkBg ? "text-white/70" : "text-text-secondary")}>원하는 응답을 선택해주세요</p>
       <div className="mt-3">
         <RSVPButtonGroup
           layout="horizontal-3"
@@ -41,6 +45,7 @@ export function RsvpSection({
           closed={closed}
           loading={loading}
           helperText={helperText}
+          disabled={disabled}
         />
       </div>
     </section>

@@ -14,8 +14,8 @@ export const QUERY_KEYS = {
     vote: (id: string) => ["invitations", id, "vote"] as const,
     voteResults: (id: string) => ["invitations", id, "vote", "results"] as const,
     weather: (id: string) => ["invitations", id, "weather"] as const,
-    explore: (category?: string) =>
-      category ? (["invitations", "explore", category] as const) : (["invitations", "explore"] as const),
+    explore: (category?: string, q?: string, sort?: string) =>
+      ["invitations", "explore", category ?? "all", q ?? "", sort ?? "latest"] as const,
   },
   notifications: {
     all: () => ["notifications"] as const,

@@ -17,6 +17,11 @@ export const CreateInvitationSchema = z
     templateId: z.string().optional(),
   eventStartAt: z.coerce.date().optional(),
   isMissionEnabled: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+  category: z.string().max(20).optional(),
+  fee: z.string().max(100).optional(),
+  dressCode: z.string().max(100).optional(),
+  parkingInfo: z.string().optional(),
   bgColor: z.string().max(50).optional(),
   font: z.string().max(50).optional(),
   rsvpAttendingEmoji: z.string().max(10).optional(),
@@ -25,6 +30,7 @@ export const CreateInvitationSchema = z
   rsvpMaybeLabel: z.string().max(20).optional(),
   rsvpDeclinedEmoji: z.string().max(10).optional(),
   rsvpDeclinedLabel: z.string().max(20).optional(),
+  animation: z.string().max(50).optional(),
 })
 .refine((d) => !!d.mainImageKey || !!d.mainGifUrl, {
   message: 'mainImageKey or mainGifUrl is required',

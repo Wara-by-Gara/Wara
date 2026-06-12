@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { type Photo, getPresignedUrl, registerPhoto, togglePhotoLike } from '@/lib/api/photos';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { Icon } from '@/components/icons';
+import { cn } from '@/lib/cn';
 import AlbumModal from '../AlbumModal/AlbumModal';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 import { PhotoGrid } from '@/components/organisms/PhotoGrid';
@@ -45,6 +46,7 @@ interface Props {
   hasNextPage: boolean;
   fetchAllPages: () => Promise<void>;
   isFetchingNextPage: boolean;
+  isDarkBg?: boolean;
 }
 
 export default function Album({
@@ -54,6 +56,7 @@ export default function Album({
   hasNextPage,
   fetchAllPages,
   isFetchingNextPage,
+  isDarkBg,
 }: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -191,8 +194,8 @@ export default function Album({
       <div>
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-[15px] font-bold text-text-primary">사진 앨범</span>
-            <p className="text-[12px] text-text-secondary">{totalForOverflow}개의 사진</p>
+            <span className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>사진 앨범</span>
+            <p className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-secondary')}>{totalForOverflow}개의 사진</p>
           </div>
           <button
             type="button"
@@ -219,8 +222,8 @@ export default function Album({
             onClick={() => fileInputRef.current?.click()}
             className="mt-2 w-full py-8 text-center"
           >
-            <Icon name="camera" size="md" color="currentColor" decorative className="mx-auto mb-2 text-text-tertiary" />
-            <p className="text-[14px] font-medium text-text-secondary">우리 추억을 업로드 해보세요</p>
+            <Icon name="camera" size="md" color="currentColor" decorative className={cn('mx-auto mb-2', isDarkBg ? 'text-white/80' : 'text-text-tertiary')} />
+            <p className={cn('text-[14px] font-medium', isDarkBg ? 'text-white/80' : 'text-text-secondary')}>우리 추억을 업로드 해보세요</p>
           </button>
         ) : (
           <PhotoGrid>
