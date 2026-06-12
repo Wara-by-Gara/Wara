@@ -2,12 +2,10 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
   ServiceUnavailableException,
-  forwardRef,
 } from '@nestjs/common';
 import { AiService } from '../ai/ai.service';
 import { AiMonitoringService } from '../ai/ai-monitoring.service';
@@ -25,6 +23,9 @@ const AI_DAILY_LIMIT = 3;
 const RESULT_KEY_PREFIX = 'ai-generations/results/';
 // 원본 업로드 허용 prefix. invitation 만들기에서 presigned URL로 올린 임시 이미지.
 const ALLOWED_SOURCE_PREFIXES = ['public/invitations/', 'temp/ai-source/'];
+// 외부 URL로 저장된 템플릿 이미지 fetch 타임아웃/크기 제한.
+const TEMPLATE_FETCH_TIMEOUT_MS = 10_000;
+const TEMPLATE_MAX_BYTES = 10 * 1024 * 1024; // 10MB
 
 // invitations.service.ts의 default prompt와 동일 — 동일한 합성 의도를 유지.
 const DEFAULT_COMPOSITE_PROMPT =
@@ -42,7 +43,6 @@ export class AiGenerationsService {
     private readonly aiService: AiService,
     private readonly aiMonitoringService: AiMonitoringService,
     private readonly s3Service: S3Service,
-    @Inject(forwardRef(() => AiGenerationsGateway))
     private readonly gateway: AiGenerationsGateway,
   ) {}
 
@@ -86,7 +86,7 @@ export class AiGenerationsService {
   async getGeneration(id: string, userId: string) {
     const row = await this.repository.findById(id);
     if (!row || row.userId !== userId) {
-      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+      throw new NotFoundException(ErrorCode.AI_GENERATION_NOT_FOUND);
     }
 
     const downloadUrl =
@@ -160,13 +160,37 @@ export class AiGenerationsService {
 
   // 템플릿의 previewImageKey가 dev 환경에선 web의 정적 파일 URL이고
   // prod에선 S3 키일 수 있어 두 경로 모두 지원.
+  // 외부 URL fetch는 SSRF 영향 최소화를 위해 timeout + 응답 크기 상한 적용.
   private async fetchTemplateImage(key: string): Promise<Buffer> {
     if (key.startsWith('http://') || key.startsWith('https://')) {
-      const res = await fetch(key);
-      if (!res.ok) {
-        throw new Error(`template fetch failed: ${res.status} ${res.statusText}`);
+      const controller = new AbortController();
+      const timer = setTimeout(
+        () => controller.abort(),
+        TEMPLATE_FETCH_TIMEOUT_MS,
+      );
+      try {
+        const res = await fetch(key, { signal: controller.signal });
+        if (!res.ok) {
+          throw new Error(
+            `template fetch failed: ${res.status} ${res.statusText}`,
+          );
+        }
+        const contentLength = Number(res.headers.get('content-length') ?? '0');
+        if (contentLength > TEMPLATE_MAX_BYTES) {
+          throw new Error(
+            `template too large: ${contentLength} > ${TEMPLATE_MAX_BYTES}`,
+          );
+        }
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.byteLength > TEMPLATE_MAX_BYTES) {
+          throw new Error(
+            `template too large: ${buf.byteLength} > ${TEMPLATE_MAX_BYTES}`,
+          );
+        }
+        return buf;
+      } finally {
+        clearTimeout(timer);
       }
-      return Buffer.from(await res.arrayBuffer());
     }
     return this.s3Service.getObjectBuffer(key);
   }

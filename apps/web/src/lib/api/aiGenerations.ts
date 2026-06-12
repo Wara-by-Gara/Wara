@@ -19,8 +19,9 @@ export interface CreateAiGenerationInput {
 
 export function createAiGeneration(
   input: CreateAiGenerationInput,
+  idempotencyKey: string,
 ): Promise<{ id: string; status: AiGenerationStatus }> {
-  return apiPost("/ai/generations", input);
+  return apiPost("/ai/generations", input, { idempotencyKey });
 }
 
 export function getAiGeneration(id: string): Promise<AiGenerationDetail> {

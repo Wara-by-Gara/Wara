@@ -13,8 +13,9 @@ import { SOCKET_BASE } from "@/lib/env";
 
 // 폴링 간격(ms). WS가 도달 안 하는 모바일 백그라운드 상황의 fallback.
 const POLL_INTERVAL_MS = 5_000;
-// 최대 대기 시간(ms). BE 60초 + 네트워크/큐 여유.
-const MAX_WAIT_MS = 120_000;
+// 최대 대기 시간(ms). BE는 60초 timeout × 최대 3회(재시도 2회) + 백오프(1·2초) ≈ 183s가
+// 최악 시나리오. FE는 그 위에 네트워크/큐 여유까지 더해 200s로 설정.
+const MAX_WAIT_MS = 200_000;
 
 interface State {
   status: "idle" | AiGenerationStatus;
@@ -30,24 +31,42 @@ const INITIAL: State = {
   errorCode: null,
 };
 
+// 백엔드 IDEMPOTENCY_KEY_PATTERN: alnum + 하이픈, 16~128자.
+// crypto.randomUUID()는 보안 컨텍스트(https/localhost)에서만 제공되므로 fallback도 둠.
+function generateIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 12);
+  return `ai-${ts}-${rand}`;
+}
+
 export function useAiGeneration() {
   const [state, setState] = useState<State>(INITIAL);
   const socketRef = useRef<Socket | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startedAtRef = useRef<number>(0);
 
-  // 정리. 컴포넌트 unmount나 새 요청 시작 전 호출.
-  const cleanup = useCallback(() => {
+  // 폴링만 정리 — WS 수신 후 즉시 폴링을 끄는 용도로도 재사용.
+  const stopPolling = useCallback(() => {
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
+  }, []);
+
+  // 정리. 컴포넌트 unmount나 새 요청 시작 전 호출.
+  const cleanup = useCallback(() => {
+    stopPolling();
     if (socketRef.current) {
-      socketRef.current.disconnect();
+      // listener 제거 후 disconnect — 끊는 도중 마지막 이벤트 콜백이 실행되며
+      // setState를 다시 트리거하는 것 방지.
       socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
       socketRef.current = null;
     }
-  }, []);
+  }, [stopPolling]);
 
   // 완료/실패 상태가 확정되면 정리. 결과는 state로 유지.
   const settleFromDetail = useCallback(
@@ -82,8 +101,12 @@ export function useAiGeneration() {
       cleanup();
       setState({ ...INITIAL, status: "pending" });
 
+      // 더블클릭/네트워크 재전송 시 같은 요청이 두 번 생성돼 daily quota를
+      // 한 번에 소진하는 것을 방지하기 위한 멱등성 키.
+      const idempotencyKey = generateIdempotencyKey();
+
       try {
-        const created = await createAiGeneration(input);
+        const created = await createAiGeneration(input, idempotencyKey);
         startedAtRef.current = Date.now();
         setState((prev) => ({ ...prev, id: created.id, status: created.status }));
 
@@ -97,6 +120,8 @@ export function useAiGeneration() {
 
         socket.on("generation:completed", (payload: { generationId: string }) => {
           if (payload.generationId === created.id) {
+            // WS가 도착했으니 폴링은 즉시 끔 — 중복 fetch 방지.
+            stopPolling();
             void fetchAndSettle(created.id);
           }
         });
@@ -129,7 +154,7 @@ export function useAiGeneration() {
         throw e;
       }
     },
-    [cleanup, fetchAndSettle],
+    [cleanup, fetchAndSettle, stopPolling],
   );
 
   const reset = useCallback(() => {

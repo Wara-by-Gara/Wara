@@ -24,6 +24,9 @@ export class AiGenerationsController {
 
   // 초대장 만들기 단계의 대표 이미지에 프리셋 보정을 적용. 응답 즉시 반환,
   // 실제 처리는 백그라운드. 완료 알림은 WS `/ai-generations` namespace로 push.
+  //
+  // Throttle (3req/60s): 더블클릭/스크립트 burst 방어용. 일일 한도(3/일)는
+  // Service에서 ai_image_jobs와 합산하여 별도 적용 — 두 계층이 역할이 다름.
   @Post()
   @HttpCode(HttpStatus.ACCEPTED)
   @Throttle({ default: { limit: 3, ttl: 60_000 } })

@@ -11,6 +11,9 @@ import type { JwtPayload } from '../common/types/jwt-payload.type';
 // 사용자별 room: 같은 user의 멀티 디바이스에 동시 push.
 const userRoom = (userId: string) => `user:${userId}`;
 
+// 참고: Origin 검증은 WaraIoAdapter의 cors 설정에서 전역 처리됨 (FRONTEND_URL 외 차단).
+// 본 Gateway는 JWT 인증과 room join만 담당.
+
 @Injectable()
 @WebSocketGateway({ namespace: '/ai-generations' })
 export class AiGenerationsGateway implements OnGatewayConnection {

@@ -151,6 +151,7 @@
 | `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
 | `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
 | `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+| `AI_GENERATION_NOT_FOUND` | 404 | AI generation 없음 또는 본인 소유 아님 |
 
 ## DM (1:1 채팅)
 
