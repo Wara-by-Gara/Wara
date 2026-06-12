@@ -40,6 +40,7 @@ export interface SettingsProps {
   onBack?: () => void;
   onNavigate?: (screen: SettingsScreen) => void;
   onHiddenFriends?: () => void;
+  onHiddenInvitations?: () => void;
   onAccount?: () => void;
 }
 
@@ -75,7 +76,7 @@ const ToggleItem = ({
   </MenuItem>
 );
 
-export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends, onAccount }: SettingsProps) => {
+export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends, onHiddenInvitations, onAccount }: SettingsProps) => {
   const [inquiryDone, setInquiryDone] = useState(screen === 'inquiryComplete');
 
   if (screen === 'main') {
@@ -240,6 +241,15 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
               }
             >
               삭제한 친구
+            </MenuItem>
+            <MenuItem
+              leftIcon="eye-off"
+              onClick={onHiddenInvitations}
+              rightSlot={
+                <Icon name="chevron-right" size="sm" color="inactive" decorative />
+              }
+            >
+              숨긴 초대장
             </MenuItem>
             <MenuItem
               leftIcon="user-round-cog"

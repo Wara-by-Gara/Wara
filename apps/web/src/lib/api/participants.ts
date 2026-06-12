@@ -66,3 +66,7 @@ export function leaveInvitation(invitationId: string, participantId: string): Pr
 export function updateHostMemo(invitationId: string, participantId: string, memo: string | null): Promise<Participant> {
   return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/host-memo`, { memo });
 }
+
+export function updateHidden(invitationId: string, isHidden: boolean): Promise<Participant> {
+  return apiPatch<Participant>(`/invitations/${invitationId}/participants/me/hidden`, { isHidden });
+}

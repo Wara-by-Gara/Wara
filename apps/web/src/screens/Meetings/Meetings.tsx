@@ -7,6 +7,10 @@ import { StickyHeader } from "@/components/layout/StickyHeader";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { InvitationCard } from "@/components/organisms/InvitationCard";
 import { MonthCalendar } from "@/components/organisms/MonthCalendar";
+import { IconButton } from "@/components/primitives/IconButton";
+import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { Icon } from "@/components/icons";
+import { useHideInvitation } from "@/hooks/useParticipants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import { sortInvitationsByEventDate } from "@/domain/Home/homeUtils";
@@ -59,6 +63,8 @@ export function Meetings() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [listMode, setListMode] = useState<ListMode>("all");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [moreMenuInvId, setMoreMenuInvId] = useState<string | null>(null);
+  const hideInvitation = useHideInvitation();
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, Invitation[]>();
@@ -160,27 +166,56 @@ export function Meetings() {
             ) : (
               <div className="flex flex-col divide-y divide-border">
                 {listEvents.map((ev) => (
-                  <InvitationCard
-                    key={ev.id}
-                    layout="horizontal"
-                    imageUrl={getInvitationCoverImageUrl(ev) || undefined}
-                    subject={resolveInvitationCardSubject(
-                      ev.templateId
-                        ? themeByTemplateId.get(ev.templateId)
-                        : undefined,
+                  <div key={ev.id} className="flex items-center">
+                    <InvitationCard
+                      layout="horizontal"
+                      imageUrl={getInvitationCoverImageUrl(ev) || undefined}
+                      subject={resolveInvitationCardSubject(
+                        ev.templateId
+                          ? themeByTemplateId.get(ev.templateId)
+                          : undefined,
+                      )}
+                      title={ev.title}
+                      date={formatInvitationEventDate(ev.eventStartAt)}
+                      location={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
+                      onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
+                      className="flex-1 min-w-0"
+                    />
+                    {ev.myRole === 'GUEST' && (
+                      <IconButton
+                        icon="more-horizontal"
+                        variant="ghost"
+                        size="sm"
+                        aria-label="더보기"
+                        disabled={hideInvitation.isPending}
+                        onClick={() => setMoreMenuInvId(ev.id)}
+                      />
                     )}
-                    title={ev.title}
-                    date={formatInvitationEventDate(ev.eventStartAt)}
-                    location={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
-                    onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
-                    className="w-full text-left"
-                  />
+                  </div>
                 ))}
               </div>
             )}
           </section>
         </main>
       )}
+      <BottomSheet open={!!moreMenuInvId} onOpenChange={(open) => { if (!open) setMoreMenuInvId(null); }}>
+        <BottomSheetContent>
+          <div className="flex flex-col py-2">
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 px-page py-4 text-left text-[15px] text-text-primary active:bg-gray-50"
+              disabled={hideInvitation.isPending}
+              onClick={() => {
+                if (moreMenuInvId) hideInvitation.mutate({ invitationId: moreMenuInvId, isHidden: true });
+                setMoreMenuInvId(null);
+              }}
+            >
+              <Icon name="eye-off" size="sm" color="currentColor" decorative />
+              초대장 숨기기
+            </button>
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
     </div>
   );
 }
