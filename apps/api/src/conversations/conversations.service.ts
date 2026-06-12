@@ -334,6 +334,13 @@ export class ConversationsService {
       const base = isGroup
         ? (r.title ?? autoGroupTitle(activeOthers.map((m) => m.name ?? '사용자')))
         : (others[0]?.name ?? '상대');
+      // 방의 마지막 메시지가 내 (재)입장 시점 이전이면 내겐 아직 볼 메시지가 없음
+      // → 미리보기를 비운다 (재입장 직후 입장 전 대화가 미리보기로 새던 문제 방지).
+      const anchor = this.visibilityAnchor({
+        joinedAt: r.myJoinedAt,
+        leftAt: r.myLeftAt,
+      });
+      const hasVisible = !!r.lastMessageAt && r.lastMessageAt > anchor;
       return {
         id: r.id,
         type: isGroup ? ('group' as const) : ('direct' as const),
@@ -343,8 +350,8 @@ export class ConversationsService {
         memberCount: isGroup
           ? members.filter((m) => !m.leftAt).length
           : members.length,
-        lastMessageText: r.lastMessageText,
-        lastMessageAt: r.lastMessageAt,
+        lastMessageText: hasVisible ? r.lastMessageText : null,
+        lastMessageAt: hasVisible ? r.lastMessageAt : null,
         unreadCount: unreadMap.get(r.id) ?? 0,
       };
     });

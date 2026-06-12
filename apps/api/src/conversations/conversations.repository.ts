@@ -161,6 +161,8 @@ export class ConversationsRepository {
         lastMessageText: conversations.lastMessageText,
         lastMessageAt: conversations.lastMessageAt,
         myLastReadAt: myP.lastReadAt,
+        myJoinedAt: myP.joinedAt,
+        myLeftAt: myP.leftAt,
       })
       .from(conversations)
       .innerJoin(
