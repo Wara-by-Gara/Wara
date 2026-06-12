@@ -818,8 +818,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       >
         <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
           {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터
-              data-vaul-no-drag: 칩 탭 시 시트가 드래그로 닫히는 것 방지 */}
-          <div data-vaul-no-drag className="flex flex-wrap gap-2 pb-2">
+              data-vaul-no-drag + pointerdown 전파 차단: vaul Drawer가 칩의 포인터를
+              가로채(드래그/포인터캡처) 클릭이 간헐적으로 안 먹는 것 방지 */}
+          <div
+            data-vaul-no-drag
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex flex-wrap gap-2 pb-2"
+          >
             <button
               type="button"
               onClick={() => setReactionFilter(null)}
