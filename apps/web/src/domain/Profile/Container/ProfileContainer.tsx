@@ -18,8 +18,11 @@ export default function ProfileContainer() {
     title: inv.title,
     date: formatInvitationEventDate(inv.eventStartAt),
     imageUrl: getInvitationCoverImageUrl(inv) || undefined,
-    variant: inv.myRole === 'HOST' ? ('createdByMe' as const) : undefined,
+    eventLat: inv.eventLocation?.lat ?? undefined,
+    eventLng: inv.eventLocation?.lng ?? undefined,
   }));
+
+  const hostedCount = (invitations ?? []).filter((inv) => inv.myRole === 'HOST').length;
 
   if (isLoading) return <MyPage state="loading" />;
 
@@ -44,15 +47,18 @@ export default function ProfileContainer() {
       }}
       recentInvitations={recentInvitations}
       participatedCount={invitations?.length ?? 0}
+      hostedCount={hostedCount}
+      likeCount={0}
       onInvitationClick={(id) => router.push(ROUTES.INVITATIONS.DETAIL(id))}
       onProfileEdit={() => router.push(ROUTES.PROFILE.EDIT)}
       onSettings={() => router.push(ROUTES.PROFILE.SETTINGS)}
-      onInquiries={() => router.push(ROUTES.INQUIRIES.HOME)}
-      onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
-      onSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
-      onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
-      onHiddenInvitations={() => router.push(ROUTES.INVITATIONS.HIDDEN)}
-      onPhotoMap={() => router.push(ROUTES.PHOTOS.MAP)}
+      onPhotoMap={(invitationId) =>
+        router.push(
+          invitationId
+            ? `${ROUTES.PHOTOS.MAP}?invitationId=${invitationId}`
+            : ROUTES.PHOTOS.MAP,
+        )
+      }
     />
   );
 }

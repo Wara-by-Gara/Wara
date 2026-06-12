@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMe, useUpdateMe } from '@/hooks/useUsers';
 import { getProfileImagePresignedUrl } from '@/lib/api/users';
@@ -8,6 +8,7 @@ import { getCroppedImageBlob } from '@/utils/cropImage';
 import { ProfileEdit } from '@/screens/ProfileEdit';
 import { ProfileImageCropScreen } from '@/components/organisms/ProfileImageCropScreen';
 import { ROUTES } from '@/constants/routes';
+import { useAuthStore } from '@/stores/authStore';
 import type { Area } from 'react-easy-crop';
 
 type ImageChange =
@@ -16,6 +17,7 @@ type ImageChange =
 
 export default function ProfileEditContainer() {
   const router = useRouter();
+  const { hydrated, isLoggedIn } = useAuthStore();
   const { data: me, isLoading } = useMe();
   const { mutate: updateMe, isPending, isError, reset } = useUpdateMe();
 
@@ -23,7 +25,12 @@ export default function ProfileEditContainer() {
   const [imageChange, setImageChange] = useState<ImageChange | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  if (isLoading || !me) return null;
+  // 비로그인 사용자 직접 URL 진입 차단 — 로그인 페이지로 보냄.
+  useEffect(() => {
+    if (hydrated && !isLoggedIn) router.replace(ROUTES.LOGIN);
+  }, [hydrated, isLoggedIn, router]);
+
+  if (!hydrated || isLoading || !me) return null;
 
   const handleImageSelect = (file: File) => {
     const reader = new FileReader();
