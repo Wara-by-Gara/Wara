@@ -28,8 +28,8 @@
 - hard delete (soft delete 사용)
 - 평문 비밀번호 저장 (bcrypt 사용)
 - raw SQL 직접 작성 (Drizzle query builder 사용)
-- V1.1+ 테이블 V1.0에 생성 (dm / ai / albums / photo_views / photo_emojis)
 - migration 파일 자동 실행 (SQL 검토 후 수동 실행)
+- `apps/api/drizzle/migrations/meta/` git 추적 (로컬 drizzle-kit generate용)
 
 ## Refs
 - @docs/db/WARA_ERD_v0.6.1.md
