@@ -89,11 +89,12 @@ type Particle = {
 function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string): Particle[] {
   const c = CONFIG[effect];
 
-  // TODO(human): bgClass (constants.ts의 DESIGN_BG_THEMES.cls, 예: "bg-invite-starry",
-  // "bg-invite-aurora")에 따라 petal/confetti 파티클 색상 팔레트를 조정해줘.
-  // 어둡거나 채도 높은 배경 테마에서는 기본 pastel 팔레트(c.colors) 대신
-  // 더 대비되는 색상 배열을 particleColors에 할당.
-  const particleColors = c.colors;
+  // 어두운 테마에서는 pastel 파티클이 묻혀서 더 밝은 팔레트로 교체
+  const DARK_THEMES = ["bg-invite-starry", "bg-invite-aurora", "bg-invite-dreamy"];
+  const particleColors =
+    c.colors && bgClass && DARK_THEMES.includes(bgClass)
+      ? ["#ffffff", "#fff3b0", "#a5d8ff", "#ffd6ef", "#c3fae8"]
+      : c.colors;
 
   return Array.from({ length: c.count }, (_, i) => {
     const size = rand(i, 1, c.size[0], c.size[1]) * 2;
