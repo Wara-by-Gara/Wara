@@ -80,11 +80,11 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
       ? allParticipants.filter((p) =>
           getCommentAuthorName(p.user)
             .toLowerCase()
-            .includes(mentionQuery!.toLowerCase()),
+            .includes((mentionQuery ?? '').toLowerCase()),
         )
       : [];
 
-  const showAllOption = mentionQuery !== null && 'all'.includes(mentionQuery.toLowerCase());
+  const showAllOption = mentionQuery != null && 'all'.includes(mentionQuery.toLowerCase());
 
   const handleSelectMention = (userId: string, nickname: string) => {
     if (userId === '__all__') {

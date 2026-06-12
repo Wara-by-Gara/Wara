@@ -66,11 +66,11 @@ export default function PhotoDetailModal({
 
   const filteredParticipants = mentionQuery !== null
     ? allParticipants.filter((p) =>
-        getCommentAuthorName(p.user).toLowerCase().includes(mentionQuery!.toLowerCase())
+        getCommentAuthorName(p.user).toLowerCase().includes((mentionQuery ?? '').toLowerCase())
       )
     : [];
 
-  const showAllOption = mentionQuery !== null && 'all'.includes(mentionQuery.toLowerCase());
+  const showAllOption = mentionQuery != null && 'all'.includes(mentionQuery.toLowerCase());
 
   const handleSelectMention = (userId: string, nickname: string) => {
     if (userId === '__all__') {
