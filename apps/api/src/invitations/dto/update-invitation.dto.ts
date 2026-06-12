@@ -32,6 +32,9 @@ export const UpdateInvitationSchema = z
     rsvpDeclinedEmoji: z.string().max(10).optional(),
     rsvpDeclinedLabel: z.string().max(20).optional(),
     animation: z.string().max(50).optional(),
+    // 낙관적 락. 클라이언트가 최근 조회 시점의 invitations.updated_at을 그대로 echo.
+    // 미전송 시 검사 스킵(점진적 도입 — 옛 클라이언트 호환). 보내면 mismatch 시 409.
+    expectedUpdatedAt: z.coerce.date().optional(),
   })
   .refine((d) => !d.mainGifUrl || !d.mainImageKey, {
     message: 'mainImageKey and mainGifUrl are mutually exclusive',

@@ -42,6 +42,7 @@
 |------|:--------:|------|
 | `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
 | `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
+| `INVITATION_VERSION_CONFLICT` | 409 | 다른 세션이 먼저 수정. 클라이언트가 `expectedUpdatedAt`을 보냈는데 서버의 `updatedAt`과 불일치. 최신 상태 재조회 후 재시도 |
 
 ## Social Link
 
