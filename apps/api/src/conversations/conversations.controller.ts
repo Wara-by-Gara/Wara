@@ -32,6 +32,7 @@ import {
   ListMessagesQueryDto,
 } from './dto/list-messages.query.dto';
 import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
+import { InviteSchema, InviteDto, SetAliasSchema, SetAliasDto } from './dto/invite.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -135,6 +136,44 @@ export class ConversationsController {
     @Param('messageId', ParseUlidPipe) messageId: string,
   ) {
     return this.conversationsService.getMessageReactors(user.id, id, messageId);
+  }
+
+  // 초대 (direct -> 새 그룹 생성 / group -> 멤버 추가)
+  @Post(':id/invite')
+  invite(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(InviteSchema)) dto: InviteDto,
+  ) {
+    return this.conversationsService.invite(user.id, id, dto.userIds, dto.title);
+  }
+
+  // 내 개인 방 별명 설정/해제
+  @Patch(':id/alias')
+  setAlias(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(SetAliasSchema)) dto: SetAliasDto,
+  ) {
+    return this.conversationsService.setAlias(user.id, id, dto.alias);
+  }
+
+  // 대화방 참여자 목록
+  @Get(':id/participants')
+  getParticipants(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.getParticipants(user.id, id);
+  }
+
+  // 대화방 사진 갤러리
+  @Get(':id/photos')
+  getPhotos(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.getPhotos(user.id, id);
   }
 
   @Post(':id/read')

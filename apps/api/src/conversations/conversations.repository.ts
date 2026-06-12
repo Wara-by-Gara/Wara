@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, ne, lt, gt, desc, isNull, inArray, or, sql } from 'drizzle-orm';
+import { and, eq, ne, lt, gt, desc, isNull, isNotNull, inArray, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
   conversations,
@@ -56,6 +56,74 @@ export class ConversationsRepository {
     });
   }
 
+  // 단톡방 생성 (type=group, directKey=null) + 참가자 일괄 등록.
+  async createGroupConversation(title: string | null, userIds: string[]) {
+    return this.db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(conversations)
+        .values({ type: 'group', title })
+        .returning();
+      const conversation = inserted[0]!;
+      await tx.insert(conversationParticipants).values(
+        userIds.map((userId) => ({ conversationId: conversation.id, userId })),
+      );
+      return conversation;
+    });
+  }
+
+  // 기존 그룹에 멤버 추가 (이미 있으면 무시).
+  async addParticipants(conversationId: string, userIds: string[]) {
+    if (userIds.length === 0) return;
+    // 재초대: 나갔던(leftAt 있는) 멤버는 row가 남아 있으므로 leftAt을 비워 재활성화하고
+    // joinedAt을 now로 갱신 → 재입장 시점 이후 메시지만 보이게(이전 대화는 숨김).
+    await this.db
+      .insert(conversationParticipants)
+      .values(userIds.map((userId) => ({ conversationId, userId })))
+      .onConflictDoUpdate({
+        target: [
+          conversationParticipants.conversationId,
+          conversationParticipants.userId,
+        ],
+        set: { leftAt: null, joinedAt: new Date() },
+      });
+  }
+
+  // 주어진 id들의 이름 (시스템 메시지 문구용)
+  async getUserNames(userIds: string[]) {
+    if (userIds.length === 0) return [];
+    return this.db
+      .select({ id: users.id, name: users.name })
+      .from(users)
+      .where(inArray(users.id, userIds));
+  }
+
+  // 주어진 id 중 실제 존재하는(미탈퇴) 유저만 반환 — 초대 대상 검증용
+  async filterActiveUserIds(userIds: string[]) {
+    if (userIds.length === 0) return [];
+    const rows = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(inArray(users.id, userIds), isNull(users.deletedAt)));
+    return rows.map((r) => r.id);
+  }
+
+  // 내 개인 방 별명 설정/해제 (빈 값이면 null)
+  async setParticipantAlias(
+    conversationId: string,
+    userId: string,
+    alias: string | null,
+  ) {
+    await this.db
+      .update(conversationParticipants)
+      .set({ alias })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId),
+        ),
+      );
+  }
+
   async findConversationById(id: string) {
     const rows = await this.db
       .select()
@@ -79,34 +147,28 @@ export class ConversationsRepository {
     return rows[0] ?? null;
   }
 
-  // 내 대화 목록 — 상대 참가자 정보 + 내 lastReadAt 포함, 최근 메시지 순.
+  // 내 대화 목록 — 방 기본정보 + 내 lastReadAt (표시용 상대/그룹명은 서비스에서 조립).
+  // direct/group 공통: 상대 참가자 join을 떼서 그룹에서 행이 중복되지 않게 한다.
   async listForUser(userId: string) {
     const myP = alias(conversationParticipants, 'my_p');
-    const otherP = alias(conversationParticipants, 'other_p');
 
     return this.db
       .select({
         id: conversations.id,
+        type: conversations.type,
+        title: conversations.title,
+        alias: myP.alias,
         lastMessageText: conversations.lastMessageText,
         lastMessageAt: conversations.lastMessageAt,
         myLastReadAt: myP.lastReadAt,
-        partnerId: users.id,
-        partnerName: users.name,
-        partnerAvatarUrl: users.profileImageUrl,
+        myJoinedAt: myP.joinedAt,
+        myLeftAt: myP.leftAt,
       })
       .from(conversations)
       .innerJoin(
         myP,
         and(eq(myP.conversationId, conversations.id), eq(myP.userId, userId)),
       )
-      .innerJoin(
-        otherP,
-        and(
-          eq(otherP.conversationId, conversations.id),
-          ne(otherP.userId, userId),
-        ),
-      )
-      .innerJoin(users, eq(users.id, otherP.userId))
       .where(
         and(
           isNull(conversations.deletedAt),
@@ -115,6 +177,28 @@ export class ConversationsRepository {
         ),
       )
       .orderBy(desc(conversations.lastMessageAt));
+  }
+
+  // 여러 대화방의 참가자(표시정보) 한 번에 — 목록의 상대/그룹명/인원 조립용.
+  // leftAt 필터 안 함: 1:1 상대가 자기쪽을 나가도 목록엔 계속 보이던 기존 동작 유지.
+  async listParticipantsForConversations(conversationIds: string[]) {
+    if (conversationIds.length === 0) return [];
+    return this.db
+      .select({
+        conversationId: conversationParticipants.conversationId,
+        userId: users.id,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+        leftAt: conversationParticipants.leftAt,
+      })
+      .from(conversationParticipants)
+      .innerJoin(users, eq(users.id, conversationParticipants.userId))
+      .where(
+        and(
+          inArray(conversationParticipants.conversationId, conversationIds),
+          isNull(users.deletedAt),
+        ),
+      );
   }
 
   // 주어진 대화방들에서 내가 안 읽은 메시지 수 (내 lastReadAt 이후 + 내가 보낸 게 아닌 것).
@@ -142,6 +226,8 @@ export class ConversationsRepository {
             isNull(conversationParticipants.lastReadAt),
             sql`${messages.createdAt} > ${conversationParticipants.lastReadAt}`,
           ),
+          // (재)입장 이후 메시지만 카운트 (입장 전 대화는 안 보임)
+          gt(messages.createdAt, conversationParticipants.joinedAt),
           // 나간 이후 메시지만 카운트
           or(
             isNull(conversationParticipants.leftAt),
@@ -153,12 +239,12 @@ export class ConversationsRepository {
   }
 
   // 대화방 메시지 — cursor(ULID)보다 오래된 것부터 최신순으로 limit개.
-  // leftAt 이후 메시지만 (나간 뒤 재진입 시 이전 기록 숨김).
+  // anchor 이후 메시지만 (= (재)입장 시점. 입장 전 기록 숨김).
   async listMessages(
     conversationId: string,
     cursor: string | undefined,
     limit: number,
-    leftAt: Date | null,
+    anchor: Date,
   ) {
     const reply = alias(messages, 'reply');
     return this.db
@@ -166,6 +252,7 @@ export class ConversationsRepository {
         id: messages.id,
         conversationId: messages.conversationId,
         senderId: messages.senderId,
+        type: messages.type,
         content: messages.content,
         imageKey: messages.imageKey,
         createdAt: messages.createdAt,
@@ -183,7 +270,7 @@ export class ConversationsRepository {
           eq(messages.conversationId, conversationId),
           // 삭제된 메시지도 포함 ("삭제된 메시지입니다" 표시용)
           cursor ? lt(messages.id, cursor) : undefined,
-          leftAt ? gt(messages.createdAt, leftAt) : undefined,
+          gt(messages.createdAt, anchor),
         ),
       )
       .orderBy(desc(messages.id))
@@ -213,6 +300,19 @@ export class ConversationsRepository {
     const rows = await this.db
       .insert(messages)
       .values({ conversationId, senderId, content, replyToMessageId, imageKey })
+      .returning();
+    return rows[0]!;
+  }
+
+  // 시스템 메시지(입장/퇴장 안내) 삽입
+  async insertSystemMessage(
+    conversationId: string,
+    senderId: string,
+    content: string,
+  ) {
+    const rows = await this.db
+      .insert(messages)
+      .values({ conversationId, senderId, content, type: 'system' })
       .returning();
     return rows[0]!;
   }
@@ -272,6 +372,8 @@ export class ConversationsRepository {
             isNull(conversationParticipants.lastReadAt),
             gt(messages.createdAt, conversationParticipants.lastReadAt),
           ),
+          // (재)입장 이후 메시지만 카운트
+          gt(messages.createdAt, conversationParticipants.joinedAt),
           or(
             isNull(conversationParticipants.leftAt),
             gt(messages.createdAt, conversationParticipants.leftAt),
@@ -411,6 +513,61 @@ export class ConversationsRepository {
     return rows[0] ?? null;
   }
 
+  // 대화방 참여자 전체 (표시정보 포함) — 멤버 목록/초대 패널용
+  async listParticipants(conversationId: string) {
+    return this.db
+      .select({
+        userId: users.id,
+        name: users.name,
+        avatarUrl: users.profileImageUrl,
+      })
+      .from(conversationParticipants)
+      .innerJoin(users, eq(users.id, conversationParticipants.userId))
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          isNull(conversationParticipants.leftAt),
+          isNull(users.deletedAt),
+        ),
+      );
+  }
+
+  // 참여자별 읽음시각/나감/입장 (메시지별 안읽음 수 계산용)
+  async listParticipantsRead(conversationId: string) {
+    return this.db
+      .select({
+        userId: conversationParticipants.userId,
+        lastReadAt: conversationParticipants.lastReadAt,
+        leftAt: conversationParticipants.leftAt,
+        joinedAt: conversationParticipants.joinedAt,
+      })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.conversationId, conversationId));
+  }
+
+  // 대화방에 올라온 사진(이미지 메시지)만 최신순 — 갤러리용. anchor 이후만.
+  async listPhotos(conversationId: string, anchor: Date) {
+    return this.db
+      .select({
+        messageId: messages.id,
+        imageKey: messages.imageKey,
+        createdAt: messages.createdAt,
+        uploaderId: messages.senderId,
+        uploaderName: users.name,
+      })
+      .from(messages)
+      .innerJoin(users, eq(users.id, messages.senderId))
+      .where(
+        and(
+          eq(messages.conversationId, conversationId),
+          isNotNull(messages.imageKey),
+          isNull(messages.deletedAt),
+          gt(messages.createdAt, anchor),
+        ),
+      )
+      .orderBy(desc(messages.id));
+  }
+
   // 대화방의 나를 제외한 참가자 id들 (1:1이면 1명, 그룹 대비 배열).
   async otherParticipantIds(conversationId: string, exceptUserId: string) {
     const rows = await this.db
@@ -427,7 +584,7 @@ export class ConversationsRepository {
 
   async findUserById(userId: string) {
     const rows = await this.db
-      .select({ id: users.id })
+      .select({ id: users.id, name: users.name })
       .from(users)
       .where(and(eq(users.id, userId), isNull(users.deletedAt)))
       .limit(1);

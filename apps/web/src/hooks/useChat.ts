@@ -19,6 +19,10 @@ import {
   deleteMessage as apiDeleteMessage,
   toggleReaction as apiToggleReaction,
   getMessageReactors,
+  getConversationParticipants,
+  getConversationPhotos,
+  inviteToConversation,
+  setConversationAlias,
   getMessageImagePresignedUrl,
   uploadFileToPresignedUrl,
   sendImageMessage as apiSendImageMessage,
@@ -36,15 +40,32 @@ import {
   scheduleUnreadRefresh,
 } from '@/hooks/useConversations';
 
-// 보고 있는 방의 읽음 처리를 메시지마다 호출하지 않고 디바운스로 묶는다 (rate limit 방지).
+// 상대 읽음 이벤트로 안읽음 카운트를 재조회 — 쓰로틀(리셋 안 함)로 지연 상한 고정.
+// (그룹에서 여러 명의 read 이벤트가 몰려도 디바운스처럼 계속 밀리지 않게)
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleMessagesRefresh(qc: QueryClient, id: string) {
+  if (refreshTimer) return;
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+  }, 250);
+}
+
+// 보고 있는 방의 읽음 처리 — 쓰로틀로 묶는다 (rate limit 방지 + 읽음 등록 지연 상한 고정).
 let readTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleMarkRead(qc: QueryClient, id: string) {
-  if (readTimer) clearTimeout(readTimer);
+  if (readTimer) return;
   readTimer = setTimeout(() => {
+    readTimer = null;
     markConversationRead(id)
-      .then(() => scheduleUnreadRefresh(qc))
+      .then(() => {
+        scheduleUnreadRefresh(qc);
+        // 내가 읽으면 내 화면의 (남이 보낸) 메시지 안읽음 수에서 나를 빼야 하므로
+        // 메시지도 재조회 (message:read는 남에게만 가서 내 화면은 갱신 안 됨)
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+      })
       .catch(() => {});
-  }, 700);
+  }, 500);
 }
 
 // 새 메시지를 캐시의 최신 페이지(page 0) 끝에 추가 (id 중복 방지)
@@ -187,6 +208,8 @@ export function useSendImageMessage(id: string) {
     },
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
+      // 서랍 사진 갤러리 즉시 갱신
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.photos(id) });
       if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       }
@@ -213,6 +236,50 @@ export function useDeleteMessage(id: string) {
     onSuccess: (_data, messageId) => {
       markDeleted(qc, id, messageId);
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list(), refetchType: 'all' });
+    },
+  });
+}
+
+// 대화방 서랍(참여자/사진) - 서랍 열릴 때만 조회
+export function useConversationParticipants(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.participants(id),
+    queryFn: () => getConversationParticipants(id),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+export function useConversationPhotos(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.conversations.photos(id),
+    queryFn: () => getConversationPhotos(id),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+// 초대 (direct -> 새 그룹 / group -> 멤버 추가). 목록/참여자 캐시 갱신.
+export function useInvite(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userIds, title }: { userIds: string[]; title?: string }) =>
+      inviteToConversation(id, userIds, title),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+      // group에 멤버 추가 시 초대자 화면에도 입장 안내가 보이도록
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
+    },
+  });
+}
+
+// 내 개인 방 별명 설정 -> 상세/목록 갱신
+export function useSetAlias(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alias: string) => setConversationAlias(id, alias),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.detail(id) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
     },
   });
 }
@@ -265,6 +332,15 @@ export function useChatRealtime(id: string) {
       // 다른 방/목록 갱신은 전역 소켓(useDmGlobalSocket)이 담당 -> 여기선 이 방만 처리.
       if (msg.conversationId !== id) return;
       appendMessage(qc, id, msg);
+      // 시스템 메시지(입장/퇴장) -> 멤버수/목록 갱신
+      if (msg.type === 'system') {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.detail(id) });
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+      }
+      // 사진 수신 -> 서랍 갤러리 갱신
+      if (msg.imageUrl) {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.photos(id) });
+      }
       // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 -> rate limit 방지)
       scheduleMarkRead(qc, id);
     });
@@ -297,22 +373,29 @@ export function useChatRealtime(id: string) {
         QUERY_KEYS.conversations.detail(id),
         (old) => (old ? { ...old, partnerLastReadAt: new Date().toISOString() } : old),
       );
+      // 메시지별 안읽음 수 갱신 (그룹: 한 명 읽으면 숫자 감소)
+      scheduleMessagesRefresh(qc, id);
     });
 
-    // 재연결: 끊긴 동안 놓친 메시지는 replay되지 않으므로 강제 재동기화한다.
-    // (staleTime 때문에 refetchOnReconnect만으론 복구 안 되는 케이스 보완)
-    const onReconnect = () => {
+    // 연결(최초+재연결)될 때마다 메시지 재동기화한다.
+    // 소켓이 user 룸에 join하기 직전(또는 끊긴 동안)에 도착한 메시지는 replay되지
+    // 않으므로, connect 시점에 한 번 더 당겨와 그 갭을 메운다.
+    const onConnect = () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.messages(id) });
       scheduleMarkRead(qc, id);
     };
-    socket.io.on('reconnect', onReconnect);
+    socket.on('connect', onConnect);
 
     return () => {
-      socket.io.off('reconnect', onReconnect);
+      socket.off('connect', onConnect);
       // 예약된 읽음 처리 타이머 정리 - 방 전환/언마운트 후 엉뚱한 방의 markRead 발화 방지
       if (readTimer) {
         clearTimeout(readTimer);
         readTimer = null;
+      }
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
       }
       setActiveConversation(null);
       socket.disconnect();

@@ -8,7 +8,12 @@ export type ConversationPartner = {
 
 export type ConversationListItem = {
   id: string;
-  partner: ConversationPartner;
+  type: "direct" | "group";
+  /** 표시용 이름 (direct=상대, group=그룹명/자동) */
+  title: string;
+  /** 표시용 이미지 (group은 null=기본 아이콘) */
+  avatarUrl: string | null;
+  memberCount: number;
   lastMessageText: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -16,8 +21,13 @@ export type ConversationListItem = {
 
 export type ConversationDetail = {
   id: string;
+  type: "direct" | "group";
+  /** 표시용 이름 (direct=상대 이름, group=그룹명) */
+  title: string;
+  memberCount: number;
+  /** direct만 — 상대 정보 (group은 null) */
   partner: ConversationPartner | null;
-  /** 상대가 마지막으로 읽은 시각 (내 메시지 읽음 표시용) */
+  /** 상대가 마지막으로 읽은 시각 (내 메시지 읽음 표시용, group은 null) */
   partnerLastReadAt: string | null;
 };
 
@@ -58,6 +68,8 @@ export type Message = {
   id: string;
   conversationId: string;
   senderId: string;
+  // 'user' | 'system' (입장/퇴장 안내)
+  type: string;
   content: string;
   createdAt: string;
   deleted: boolean;
@@ -67,6 +79,8 @@ export type Message = {
   myReaction: string | null;
   // 이미지 메시지의 조회용 URL (텍스트 메시지는 null)
   imageUrl: string | null;
+  // 아직 안 읽은 다른 참여자 수 (보낸 사람 제외). 카톡식 숫자.
+  unreadCount: number;
 };
 
 // 메시지 이미지 업로드 허용 타입 (백엔드 enum과 일치)
@@ -130,6 +144,53 @@ export type MessageReactor = {
 export function getMessageReactors(conversationId: string, messageId: string) {
   return apiGet<{ reactors: MessageReactor[] }>(
     `/conversations/${conversationId}/messages/${messageId}/reactions`,
+  );
+}
+
+// 대화방 서랍: 참여자 목록 + 사진 갤러리
+export type ConversationParticipant = {
+  userId: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
+export function getConversationParticipants(conversationId: string) {
+  return apiGet<{ participants: ConversationParticipant[] }>(
+    `/conversations/${conversationId}/participants`,
+  );
+}
+
+export type ConversationPhoto = {
+  messageId: string;
+  imageUrl: string;
+  createdAt: string;
+  uploaderName: string | null;
+};
+
+export function getConversationPhotos(conversationId: string) {
+  return apiGet<{ photos: ConversationPhoto[] }>(
+    `/conversations/${conversationId}/photos`,
+  );
+}
+
+// 초대 (direct -> 새 그룹 / group -> 멤버 추가). 이동할 conversationId 반환.
+// title은 새 그룹 최초 생성 시 공유 방 이름(선택).
+export function inviteToConversation(
+  conversationId: string,
+  userIds: string[],
+  title?: string,
+) {
+  return apiPost<{ conversationId: string }>(
+    `/conversations/${conversationId}/invite`,
+    { userIds, ...(title ? { title } : {}) },
+  );
+}
+
+// 내 개인 방 별명 설정/해제 (빈 문자열이면 기본 이름으로)
+export function setConversationAlias(conversationId: string, alias: string) {
+  return apiPatch<{ conversationId: string }>(
+    `/conversations/${conversationId}/alias`,
+    { alias },
   );
 }
 

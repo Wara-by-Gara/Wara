@@ -30,8 +30,17 @@ export class WaraIoAdapter extends IoAdapter {
         credentials: true,
       },
     }) as Server;
-    server.adapter(createAdapter(this.pubClient, this.subClient));
-    logger.log('Socket.IO Redis adapter attached');
+    // Redis 어댑터는 멀티 인스턴스(prod) 전용. 단일 인스턴스(로컬)에선 in-memory가
+    // 더 빠르고 안정적이라 건너뛴다. (SOCKET_REDIS_ADAPTER=true로 강제 가능)
+    const useRedis =
+      process.env.NODE_ENV === 'production' ||
+      process.env.SOCKET_REDIS_ADAPTER === 'true';
+    if (useRedis) {
+      server.adapter(createAdapter(this.pubClient, this.subClient));
+      logger.log('Socket.IO Redis adapter attached');
+    } else {
+      logger.log('Socket.IO in-memory adapter (single instance)');
+    }
     return server;
   }
 }
