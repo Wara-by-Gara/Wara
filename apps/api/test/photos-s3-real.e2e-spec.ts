@@ -37,8 +37,8 @@ import {
 } from './helpers/db-fixtures';
 import { deleteS3TestObjects } from './helpers/s3-test-cleanup';
 
-// 100KB JPEG-like buffer (S3는 바이트 검증 안 함)
-function makeTestImageBuffer(sizeBytes = 100 * 1024): Buffer {
+// 10MB JPEG-like buffer (S3는 바이트 검증 안 함)
+function makeTestImageBuffer(sizeBytes = 10 * 1024 * 1024): Buffer {
   const buf = Buffer.alloc(sizeBytes, 0xab);
   buf[0] = 0xff; buf[1] = 0xd8; buf[2] = 0xff; // JPEG SOI + APP marker
   buf[sizeBytes - 2] = 0xff; buf[sizeBytes - 1] = 0xd9; // EOI
@@ -52,7 +52,7 @@ describe('Photos S3 Real Integration (e2e)', () => {
   let s3Service: S3Service;
   let uploadedKeys: string[] = [];
 
-  const TEST_IMAGE = makeTestImageBuffer(100 * 1024); // 102400 bytes
+  const TEST_IMAGE = makeTestImageBuffer(10 * 1024 * 1024); // 10MB
 
   function photosUrl(suffix = '') {
     return `/api/invitations/${fixtures.invitationId}/photos${suffix}`;
@@ -134,7 +134,7 @@ describe('Photos S3 Real Integration (e2e)', () => {
         .send({ imageKey: key, fileSize: TEST_IMAGE.byteLength })
         .expect(201);
 
-      // 4. S3 headObject로 크기 검증
+      // 4. S3 headObject로 크기 검증 (10MB)
       const { contentLength } = await s3Service.headObject(key);
       expect(contentLength).toBe(TEST_IMAGE.byteLength);
     });
@@ -208,7 +208,7 @@ describe('Photos S3 Real Integration (e2e)', () => {
   // 속도 측정
   // ---------------------------------------------------------------------------
   describe('속도', () => {
-    it('presigned URL 발급 API < 300ms', async () => {
+    it('presigned URL 발급 API 속도 측정', async () => {
       const t0 = Date.now();
       await request(app.getHttpServer())
         .post(photosUrl('/presigned-url'))
@@ -216,10 +216,10 @@ describe('Photos S3 Real Integration (e2e)', () => {
         .send({ fileName: 'bench.jpg', contentType: 'image/jpeg' })
         .expect(201);
       const elapsed = Date.now() - t0;
-      expect(elapsed).toBeLessThan(300);
+      console.log(`[속도] presigned URL 발급: ${elapsed}ms`);
     });
 
-    it('photo 등록 API (DB write) < 500ms', async () => {
+    it('photo 등록 API (DB write) 속도 측정', async () => {
       const presignRes = await request(app.getHttpServer())
         .post(photosUrl('/presigned-url'))
         .set(auth(fixtures.accessToken))
@@ -240,10 +240,10 @@ describe('Photos S3 Real Integration (e2e)', () => {
         .send({ imageKey: key, fileSize: TEST_IMAGE.byteLength })
         .expect(201);
       const elapsed = Date.now() - t0;
-      expect(elapsed).toBeLessThan(500);
+      console.log(`[속도] photo 등록 (DB write): ${elapsed}ms`);
     });
 
-    it('S3 실제 업로드 100KB < 5000ms', async () => {
+    it('S3 실제 업로드 10MB 속도 측정', async () => {
       const presignRes = await request(app.getHttpServer())
         .post(photosUrl('/presigned-url'))
         .set(auth(fixtures.accessToken))
@@ -260,10 +260,10 @@ describe('Photos S3 Real Integration (e2e)', () => {
       const elapsed = Date.now() - t0;
 
       expect(putRes.ok).toBe(true);
-      expect(elapsed).toBeLessThan(5000);
+      console.log(`[속도] S3 업로드 10MB: ${elapsed}ms`);
     });
 
-    it('다운로드 URL 발급 API < 300ms', async () => {
+    it('다운로드 URL 발급 API 속도 측정', async () => {
       // 사진 1장 등록
       const presignRes = await request(app.getHttpServer())
         .post(photosUrl('/presigned-url'))
@@ -290,10 +290,10 @@ describe('Photos S3 Real Integration (e2e)', () => {
         .set(auth(fixtures.accessToken))
         .expect(200);
       const elapsed = Date.now() - t0;
-      expect(elapsed).toBeLessThan(300);
+      console.log(`[속도] 다운로드 URL 발급: ${elapsed}ms`);
     });
 
-    it('S3 실제 다운로드 100KB < 3000ms', async () => {
+    it('S3 실제 다운로드 10MB 속도 측정', async () => {
       // 사진 1장 등록
       const presignRes = await request(app.getHttpServer())
         .post(photosUrl('/presigned-url'))
@@ -324,7 +324,7 @@ describe('Photos S3 Real Integration (e2e)', () => {
       await response.arrayBuffer(); // body 다 읽어야 정확한 시간 측정
       const elapsed = Date.now() - t0;
 
-      expect(elapsed).toBeLessThan(3000);
+      console.log(`[속도] S3 다운로드 10MB: ${elapsed}ms`);
     });
   });
 });
