@@ -61,6 +61,7 @@
 | `PARTICIPANT_NOT_FOUND` | 404 | 참가자 조회 실패 |
 | `PARTICIPANT_ALREADY_EXISTS` | 409 | 이미 참가한 초대장에 재참가 시도 |
 | `HOST_CANNOT_LEAVE` | 400 | HOST 본인 탈퇴 시도 |
+| `PARTICIPANT_ALREADY_HOST` | 400 | 이미 HOST인 참가자에게 호스트 권한 위임 시도 |
 | `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/RSVP 변경 시도 |
 | `RSVP_PERMISSION_DENIED` | 403 | absent 상태 열람 시도 또는 HOST RSVP 변경 시도 |
 
@@ -160,6 +161,7 @@
 | `MESSAGE_NOT_FOUND` | 404 | 메시지 없음 또는 해당 대화방 소속 아님 |
 | `MESSAGE_FORBIDDEN` | 403 | 본인이 보낸 메시지가 아님 (삭제 시도) |
 | `CANNOT_MESSAGE_SELF` | 400 | 자기 자신과 대화 생성 시도 |
+| `MESSAGE_IMAGE_INVALID` | 400 | imageKey가 대화방 prefix 불일치 또는 미업로드(존재하지 않는 객체) |
 
 ## Terms
 

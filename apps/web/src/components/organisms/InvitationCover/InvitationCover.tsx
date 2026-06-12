@@ -1,16 +1,11 @@
 "use client";
 
-import { forwardRef, useEffect, useState, type ReactNode } from "react";
+import { forwardRef, type ReactNode } from "react";
 import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Badge } from "@/components/primitives/Badge";
 import { IconButton } from "@/components/primitives/IconButton";
 import { cn } from "@/lib/cn";
-import {
-  clampCoverRatio,
-  clampDetailCoverRatio,
-  COVER_DEFAULT_RATIO,
-} from "@/utils/invitationCoverAspect";
 
 export interface InvitationCoverProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 표지 모드 */
@@ -61,43 +56,26 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       hideBottomGradient = false,
       fitToImage = false,
       detailMode = false,
-      style,
       ...props
     },
     ref,
   ) {
-    const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
-
     const mediaUrl =
       gifUrl ??
       ((variant === "image" || variant === "template") && imageUrl ? imageUrl : undefined);
     const fit = detailMode || (fitToImage && !!mediaUrl);
-    const displayRatio = detailMode
-      ? clampDetailCoverRatio(naturalRatio ?? 1)
-      : clampCoverRatio(naturalRatio ?? COVER_DEFAULT_RATIO);
     const hasCoverMedia = !!(mediaUrl || gifUrl);
     const showBottomGradient =
       hasCoverMedia &&
       !hideBottomGradient &&
       (variant === "image" || variant === "template");
 
-    useEffect(() => {
-      setNaturalRatio(null);
-    }, [mediaUrl]);
-
-    const handleMediaLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-      const img = e.currentTarget;
-      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-        setNaturalRatio(img.naturalWidth / img.naturalHeight);
-      }
-    };
-
     return (
       <div
         ref={ref}
         className={cn(
           fit
-            ? cn("relative w-full overflow-hidden rounded-lg")
+            ? cn("relative w-full overflow-hidden rounded-lg aspect-[3/2]")
             : containerBase,
           !fit && variant === "color" && (backgroundClass ?? "bg-white"),
           !fit && variant === "no-image" && "bg-gray-100",
@@ -105,7 +83,6 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
           fit && variant === "no-image" && "bg-gray-100",
           className,
         )}
-        style={fit ? { aspectRatio: String(displayRatio), ...style } : style}
         {...props}
       >
         {fit && mediaUrl ? (
@@ -113,7 +90,6 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
           <img
             src={mediaUrl}
             alt=""
-            onLoad={handleMediaLoad}
             className="absolute inset-0 size-full object-cover"
           />
         ) : gifUrl ? (

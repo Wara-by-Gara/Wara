@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import {
   getEventLocation,
@@ -23,6 +28,10 @@ export function useSetEventLocation(invitationId: string) {
       setEventLocation(invitationId, payload),
     onSuccess: (data) => {
       queryClient.setQueryData(QUERY_KEYS.invitations.location(invitationId), data);
+      // 상세 페이지는 invitation.eventLocation(detail 쿼리)을 읽으므로 함께 무효화
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.invitations.detail(invitationId),
+      });
     },
   });
 }
@@ -47,9 +56,13 @@ export function useLocationSearch(
 ) {
   const rLat = roundCoord(origin?.lat);
   const rLng = roundCoord(origin?.lng);
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["locations", "search", query, rLat, rLng],
-    queryFn: () => searchPlaces(query),
+    queryFn: ({ pageParam }) => searchPlaces(query, pageParam),
+    initialPageParam: 1,
+    // Kakao meta.isEnd로 다음 페이지 유무 판단 (pageableCount=min(totalCount,45) 상한)
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.meta.isEnd ? undefined : allPages.length + 1,
     enabled: query.trim().length >= 2,
     staleTime: 60 * 1000,
   });

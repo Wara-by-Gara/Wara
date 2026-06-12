@@ -33,6 +33,7 @@ export interface CommentItemProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   liked?: boolean;
   onLike?: () => void;
   onAvatarClick?: () => void;
+  isDarkBg?: boolean;
 }
 
 export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
@@ -58,6 +59,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
       liked,
       onLike,
       onAvatarClick,
+      isDarkBg,
       ...props
     },
     ref,
@@ -111,10 +113,10 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <p className="text-[14px] font-semibold text-text-primary">
+                  <p className={cn('text-[14px] font-semibold', isDarkBg ? 'text-white' : 'text-text-primary')}>
                     {authorName}
                     {authorHandle ? (
-                      <span className="ml-1 font-normal text-text-tertiary">@{authorHandle}</span>
+                      <span className={cn('ml-1 font-normal', isDarkBg ? 'text-white/60' : 'text-text-tertiary')}>@{authorHandle}</span>
                     ) : null}
                   </p>
                   {variant === "host" ? (
@@ -125,14 +127,14 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                   {variant === "mine" ? (
                     <span className="rounded-full bg-primary-soft px-1.5 text-[11px] font-semibold text-primary">나</span>
                   ) : null}
-                  <span className="text-[12px] text-text-tertiary">· {createdAt}</span>
+                  <span className={cn('text-[12px]', isDarkBg ? 'text-white/60' : 'text-text-tertiary')}>· {createdAt}</span>
                 </div>
                 {variant === "editing" && editingSlot ? (
                   <div className="mt-1">{editingSlot}</div>
                 ) : (
                   <>
                     {content ? (
-                      <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] text-text-primary">
+                      <p className={cn('mt-0.5 whitespace-pre-wrap break-words text-[14px]', isDarkBg ? 'text-white' : 'text-text-primary')}>
                         {renderMentions(content)}
                       </p>
                     ) : null}
@@ -154,7 +156,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                     <button
                       type="button"
                       onClick={onReply}
-                      className="text-[13px] font-semibold text-text-tertiary transition-colors hover:text-primary"
+                      className={cn('text-[13px] font-semibold transition-colors hover:text-primary', isDarkBg ? 'text-white/70' : 'text-text-tertiary')}
                     >
                       답글 달기
                     </button>
@@ -165,7 +167,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       onClick={onLike}
                       className={cn(
                         "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
-                        liked ? "text-brand" : "text-text-tertiary hover:text-brand",
+                        liked ? "text-brand" : isDarkBg ? "text-white/70 hover:text-brand" : "text-text-tertiary hover:text-brand",
                       )}
                     >
                       {liked ? (
@@ -201,6 +203,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 variant="ghost"
                 size="sm"
                 aria-label="더보기"
+                className={cn(isDarkBg && 'text-white')}
                 onClick={() => {
                   setMenuOpen((v) => !v);
                   onMore?.();
@@ -256,7 +259,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
             aria-label={`${authorName}님 댓글의 답글`}
           >
             {replies.map((reply) => (
-              <CommentReplyItem key={reply.id ?? `${reply.authorName}-${reply.createdAt}`} {...reply} />
+              <CommentReplyItem key={reply.id ?? `${reply.authorName}-${reply.createdAt}`} {...reply} isDarkBg={isDarkBg} />
             ))}
           </div>
         ) : null}

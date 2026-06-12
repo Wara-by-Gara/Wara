@@ -34,12 +34,13 @@ export interface LocationSelectorProps {
   onModeChange?: (mode: "search" | "manual") => void;
   error?: string;
   className?: string;
+  /** 토글 표시 여부 */
+  hideToggle?: boolean;
 }
 
 export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps>(
   function LocationSelector(
     {
-      label = "장소",
       mode: modeProp,
       query,
       onQueryChange,
@@ -50,13 +51,13 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
       unknown,
       onUnknownChange,
       state = "default",
-      onModeChange,
       error,
       className,
+      hideToggle = false,
     },
     ref,
   ) {
-    const [internalMode, setInternalMode] = useState<NonNullable<LocationSelectorProps["mode"]>>(
+    const [internalMode] = useState<NonNullable<LocationSelectorProps["mode"]>>(
       modeProp ?? (selected ? "selected" : "search"),
     );
     const [internalUnknown, setInternalUnknown] = useState(false);
@@ -64,17 +65,9 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
     const effectiveUnknown = unknown !== undefined ? unknown : internalUnknown;
     const mode = modeProp ?? (effectiveUnknown ? "unknown" : internalMode);
 
-    const clearUnknown = () => {
-      if (unknown !== undefined) {
-        if (unknown) onUnknownChange?.(false);
-      } else if (internalUnknown) {
-        setInternalUnknown(false);
-      }
-    };
-
     return (
       <div ref={ref} className={cn("flex flex-col gap-2", className)}>
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <span className="text-[14px] font-medium text-text-primary">{label}</span>
           <div className="flex gap-1.5">
             <button
@@ -92,7 +85,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               검색
             </button>
           </div>
-        </div>
+        </div> */}
 
         {mode === "search" && (
           <>
@@ -143,16 +136,18 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
           />
         )}
 
-        <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
-          <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
-          <Switch
-            checked={effectiveUnknown}
-            onCheckedChange={(v) => {
-              if (unknown === undefined) setInternalUnknown(v);
-              onUnknownChange?.(v);
-            }}
-          />
-        </label>
+        {!hideToggle && (
+          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
+            <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
+            <Switch
+              checked={effectiveUnknown}
+              onCheckedChange={(v) => {
+                if (unknown === undefined) setInternalUnknown(v);
+                onUnknownChange?.(v);
+              }}
+            />
+          </label>
+        )}
 
         {error ? <span className="text-[13px] text-danger">{error}</span> : null}
       </div>

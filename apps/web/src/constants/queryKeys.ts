@@ -14,8 +14,8 @@ export const QUERY_KEYS = {
     vote: (id: string) => ["invitations", id, "vote"] as const,
     voteResults: (id: string) => ["invitations", id, "vote", "results"] as const,
     weather: (id: string) => ["invitations", id, "weather"] as const,
-    explore: (category?: string) =>
-      category ? (["invitations", "explore", category] as const) : (["invitations", "explore"] as const),
+    explore: (category?: string, q?: string, sort?: string) =>
+      ["invitations", "explore", category ?? "all", q ?? "", sort ?? "latest"] as const,
   },
   notifications: {
     all: () => ["notifications"] as const,
@@ -39,6 +39,8 @@ export const QUERY_KEYS = {
     unreadCount: () => ["conversations", "unread-count"] as const,
     detail: (id: string) => ["conversations", id] as const,
     messages: (id: string) => ["conversations", id, "messages"] as const,
+    reactors: (id: string, messageId: string) =>
+      ["conversations", id, "messages", messageId, "reactors"] as const,
   },
   templates: {
     all: () => ["templates"] as const,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getInvitation, getMyInvitations } from "@/lib/api/invitations";
+import { getInvitation, getMyInvitations, getHiddenInvitations } from "@/lib/api/invitations";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthStore } from "@/stores/authStore";
 import { useTermsCompliance } from "@/hooks/useTermsCompliance";
@@ -23,5 +23,12 @@ export function useMyInvitations() {
     queryKey: QUERY_KEYS.invitations.all(),
     queryFn: () => getMyInvitations(),
     enabled: hydrated && isLoggedIn && isCompliant === true,
+  });
+}
+
+export function useHiddenInvitations() {
+  return useQuery({
+    queryKey: QUERY_KEYS.invitations.myList(),
+    queryFn: () => getHiddenInvitations(),
   });
 }
