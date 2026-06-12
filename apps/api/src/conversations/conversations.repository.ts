@@ -74,7 +74,8 @@ export class ConversationsRepository {
   // 기존 그룹에 멤버 추가 (이미 있으면 무시).
   async addParticipants(conversationId: string, userIds: string[]) {
     if (userIds.length === 0) return;
-    // 재초대: 나갔던(leftAt 있는) 멤버는 row가 남아 있으므로 leftAt을 비워 재활성화
+    // 재초대: 나갔던(leftAt 있는) 멤버는 row가 남아 있으므로 leftAt을 비워 재활성화하고
+    // joinedAt을 now로 갱신 → 재입장 시점 이후 메시지만 보이게(이전 대화는 숨김).
     await this.db
       .insert(conversationParticipants)
       .values(userIds.map((userId) => ({ conversationId, userId })))
@@ -83,7 +84,7 @@ export class ConversationsRepository {
           conversationParticipants.conversationId,
           conversationParticipants.userId,
         ],
-        set: { leftAt: null },
+        set: { leftAt: null, joinedAt: new Date() },
       });
   }
 
@@ -231,6 +232,8 @@ export class ConversationsRepository {
             isNull(conversationParticipants.lastReadAt),
             sql`${messages.createdAt} > ${conversationParticipants.lastReadAt}`,
           ),
+          // (재)입장 이후 메시지만 카운트 (입장 전 대화는 안 보임)
+          gt(messages.createdAt, conversationParticipants.joinedAt),
           // 나간 이후 메시지만 카운트
           or(
             isNull(conversationParticipants.leftAt),
@@ -242,12 +245,12 @@ export class ConversationsRepository {
   }
 
   // 대화방 메시지 — cursor(ULID)보다 오래된 것부터 최신순으로 limit개.
-  // leftAt 이후 메시지만 (나간 뒤 재진입 시 이전 기록 숨김).
+  // anchor 이후 메시지만 (= (재)입장 시점. 입장 전 기록 숨김).
   async listMessages(
     conversationId: string,
     cursor: string | undefined,
     limit: number,
-    leftAt: Date | null,
+    anchor: Date,
   ) {
     const reply = alias(messages, 'reply');
     return this.db
@@ -273,7 +276,7 @@ export class ConversationsRepository {
           eq(messages.conversationId, conversationId),
           // 삭제된 메시지도 포함 ("삭제된 메시지입니다" 표시용)
           cursor ? lt(messages.id, cursor) : undefined,
-          leftAt ? gt(messages.createdAt, leftAt) : undefined,
+          gt(messages.createdAt, anchor),
         ),
       )
       .orderBy(desc(messages.id))
@@ -375,6 +378,8 @@ export class ConversationsRepository {
             isNull(conversationParticipants.lastReadAt),
             gt(messages.createdAt, conversationParticipants.lastReadAt),
           ),
+          // (재)입장 이후 메시지만 카운트
+          gt(messages.createdAt, conversationParticipants.joinedAt),
           or(
             isNull(conversationParticipants.leftAt),
             gt(messages.createdAt, conversationParticipants.leftAt),
@@ -533,20 +538,21 @@ export class ConversationsRepository {
       );
   }
 
-  // 참여자별 읽음시각/나감 (메시지별 안읽음 수 계산용)
+  // 참여자별 읽음시각/나감/입장 (메시지별 안읽음 수 계산용)
   async listParticipantsRead(conversationId: string) {
     return this.db
       .select({
         userId: conversationParticipants.userId,
         lastReadAt: conversationParticipants.lastReadAt,
         leftAt: conversationParticipants.leftAt,
+        joinedAt: conversationParticipants.joinedAt,
       })
       .from(conversationParticipants)
       .where(eq(conversationParticipants.conversationId, conversationId));
   }
 
-  // 대화방에 올라온 사진(이미지 메시지)만 최신순 — 갤러리용
-  async listPhotos(conversationId: string, leftAt: Date | null) {
+  // 대화방에 올라온 사진(이미지 메시지)만 최신순 — 갤러리용. anchor 이후만.
+  async listPhotos(conversationId: string, anchor: Date) {
     return this.db
       .select({
         messageId: messages.id,
@@ -562,7 +568,7 @@ export class ConversationsRepository {
           eq(messages.conversationId, conversationId),
           isNotNull(messages.imageKey),
           isNull(messages.deletedAt),
-          leftAt ? gt(messages.createdAt, leftAt) : undefined,
+          gt(messages.createdAt, anchor),
         ),
       )
       .orderBy(desc(messages.id));

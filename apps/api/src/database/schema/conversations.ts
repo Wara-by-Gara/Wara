@@ -45,6 +45,9 @@ export const conversationParticipants = pgTable(
     // 채팅방 나가기 시각 (카톡식). 이 시각 이전 메시지는 내 화면에서 숨김.
     // 새 메시지(left_at 이후)가 오면 목록에 다시 등장 — 상대 기록은 유지.
     leftAt: timestamp('left_at', { withTimezone: true }),
+    // (재)입장 시각 — 이 시각 이후 메시지만 내 화면에 보임 (카톡식).
+    // 처음 초대/재초대 모두 now로 갱신. 입장 전·재초대 전 대화는 안 보임.
+    joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

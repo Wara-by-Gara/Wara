@@ -362,7 +362,7 @@ export class ConversationsService {
       conversationId,
       cursor,
       limit,
-      participant.leftAt,
+      this.visibilityAnchor(participant),
     );
     const hasMore = rows.length === limit;
     const nextCursor = hasMore ? rows[rows.length - 1]!.id : null;
@@ -397,7 +397,10 @@ export class ConversationsService {
     const unreadCountFor = (senderId: string, createdAt: Date) =>
       reads.filter(
         (p) =>
-          p.userId !== senderId && (!p.lastReadAt || p.lastReadAt < createdAt),
+          p.userId !== senderId &&
+          // 입장(joinedAt) 전 메시지는 그 멤버에게 안 보이므로 카운트 제외
+          p.joinedAt < createdAt &&
+          (!p.lastReadAt || p.lastReadAt < createdAt),
       ).length;
 
     // 최신순으로 가져온 뒤 화면 표시용으로 오래된→최신 정렬
@@ -630,7 +633,10 @@ export class ConversationsService {
   // 대화방 사진 갤러리 — 이미지 메시지의 조회용 presigned URL 생성
   async getPhotos(userId: string, conversationId: string) {
     const participant = await this.assertMember(conversationId, userId);
-    const rows = await this.repository.listPhotos(conversationId, participant.leftAt);
+    const rows = await this.repository.listPhotos(
+      conversationId,
+      this.visibilityAnchor(participant),
+    );
     const photos = await Promise.all(
       rows.map(async (r) => ({
         messageId: r.messageId,
@@ -670,6 +676,12 @@ export class ConversationsService {
       throw new ForbiddenException(ErrorCode.CONVERSATION_FORBIDDEN);
     }
     return participant;
+  }
+
+  // 내 화면에 보일 메시지 시작 시각 = (재)입장 시각과 나가기 시각 중 더 늦은 쪽.
+  // 입장 전·나간 뒤 대화는 숨기고, 재입장하면 재입장 시점부터 보이게 한다.
+  private visibilityAnchor(p: { joinedAt: Date; leftAt: Date | null }): Date {
+    return p.leftAt && p.leftAt > p.joinedAt ? p.leftAt : p.joinedAt;
   }
 
   // 답장 대상 메시지 미리보기 해석 (삭제됐으면 내용 숨김)
