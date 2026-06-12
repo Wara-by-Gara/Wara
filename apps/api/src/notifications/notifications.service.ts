@@ -21,6 +21,7 @@ type NotificationSettingKey =
   | 'isFeedback'
   | 'isInvitationDate'
   | 'isPhoto'
+  | 'isParticipant'
   | 'isParticipantLocations'
   | 'isEventLocations';
 
@@ -32,6 +33,7 @@ const TYPE_TO_SETTING: Partial<
   mention: 'isFeedback',
   invitation_date: 'isInvitationDate',
   photo: 'isPhoto',
+  participant_joined: 'isParticipant',
   participantLocations: 'isParticipantLocations',
   eventLocations: 'isEventLocations',
   arrived: 'isParticipantLocations',
@@ -66,6 +68,10 @@ export class NotificationsService {
       throw new ForbiddenException(ErrorCode.NOTIFICATION_FORBIDDEN);
     }
     await this.repository.deleteNotification(id);
+  }
+
+  async deleteAllNotifications(userId: string) {
+    await this.repository.deleteAllByUser(userId);
   }
 
   async markAsRead(userId: string, id: string) {

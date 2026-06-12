@@ -81,7 +81,7 @@ describe('NotificationItem', () => {
     expect(onRead).toHaveBeenCalledWith('n1');
   });
 
-  it('이미 읽은 알림 클릭 시 onRead가 호출되지 않는다', async () => {
+  it('이미 읽은 알림도 클릭 시 onReadAction이 호출된다 (초대장 이동용)', async () => {
     const onRead = vi.fn();
     render(
       <NotificationItem
@@ -96,6 +96,6 @@ describe('NotificationItem', () => {
     );
     const buttons = screen.getAllByRole('button');
     await userEvent.click(buttons[0]!);
-    expect(onRead).not.toHaveBeenCalled();
+    expect(onRead).toHaveBeenCalledWith('n1');
   });
 });

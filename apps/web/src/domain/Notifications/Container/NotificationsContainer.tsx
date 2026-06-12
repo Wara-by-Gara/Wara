@@ -9,6 +9,7 @@ import {
   useMarkAsRead,
   useMarkAllAsRead,
   useDeleteNotification,
+  useDeleteAllNotifications,
   useNotificationSettings,
   useUpdateNotificationSettings,
 } from '@/hooks/useNotifications';
@@ -49,6 +50,7 @@ export default function NotificationsContainer() {
   const { mutate: markAsRead } = useMarkAsRead();
   const { mutate: markAllAsRead, isPending: isMarkingAllRead } = useMarkAllAsRead();
   const { mutate: deleteNotification } = useDeleteNotification();
+  const { mutate: deleteAllNotifications, isPending: isDeletingAll } = useDeleteAllNotifications();
   const { data: settings, isLoading: isSettingsLoading } = useNotificationSettings();
   const { mutate: updateSettings, isPending: isSettingsPending } = useUpdateNotificationSettings();
 
@@ -92,9 +94,17 @@ export default function NotificationsContainer() {
   const VOTE_NOTIFICATION_TYPES = new Set(['vote_reminder', 'vote_tied', 'vote_confirmed']);
 
   const handleItemClick = (id: string) => {
-    markAsRead(id);
     const notification = allItems.find((n) => n.id === id);
-    if (!notification?.targetId) return;
+    if (notification && !notification.isRead) markAsRead(id);
+    if (!notification) return;
+
+    // 참가자 위치 공유 알림 → 알림 설정 시트 (on/off 토글)
+    if (notification.targetType === 'participantLocations') {
+      setSettingsOpen(true);
+      return;
+    }
+
+    if (!notification.targetId) return;
 
     if (notification.targetType === 'invitation') {
       if (VOTE_NOTIFICATION_TYPES.has(notification.type)) {
@@ -102,10 +112,6 @@ export default function NotificationsContainer() {
       } else {
         router.push(ROUTES.INVITATIONS.DETAIL(notification.targetId));
       }
-      return;
-    }
-    if (notification.targetType === 'participantLocations') {
-      router.push(ROUTES.INVITATIONS.LOCATION(notification.targetId));
       return;
     }
     // sub-resource 라우팅 — invitationId가 있을 때만
@@ -116,7 +122,7 @@ export default function NotificationsContainer() {
     } else if (notification.targetType === 'mission') {
       router.push(ROUTES.INVITATIONS.DETAIL(invId));
     } else if (notification.targetType === 'feedback') {
-      router.push(ROUTES.INVITATIONS.COMMENTS(invId));
+      router.push(`${ROUTES.INVITATIONS.DETAIL(invId)}?focus=comments`);
     }
   };
 
@@ -131,7 +137,9 @@ export default function NotificationsContainer() {
         onRetry={() => refetch()}
         onSettings={() => setSettingsOpen(true)}
         onRequestPushPermission={handleRequestPushPermission}
+        onDeleteAll={() => deleteAllNotifications()}
         isMarkingAllRead={isMarkingAllRead}
+        isDeletingAll={isDeletingAll}
       />
       <NotificationSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)}>
         <NotificationSettingsForm

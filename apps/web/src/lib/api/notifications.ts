@@ -12,7 +12,9 @@ export type NotificationType =
   | 'vote_reminder'
   | 'vote_tied'
   | 'vote_confirmed'
-  | 'ai_complete';
+  | 'ai_complete'
+  | 'mention'
+  | 'participant_joined';
 
 export type NotificationTargetType =
   | 'photo'
@@ -81,6 +83,10 @@ export function fetchUnreadCount() {
 
 export function deleteNotification(id: string) {
   return apiDelete(`/notifications/${id}`);
+}
+
+export function deleteAllNotifications() {
+  return apiDelete('/notifications');
 }
 
 export function markAsRead(id: string) {

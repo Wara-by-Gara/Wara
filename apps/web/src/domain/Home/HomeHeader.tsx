@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { ROUTES } from "@/constants/routes";
+import { useUnreadCount } from "@/hooks/useNotifications";
 import { cn } from "@/lib/cn";
 
 const pillActionClass =
@@ -11,6 +12,8 @@ const pillActionClass =
 
 export function HomeHeader() {
   const router = useRouter();
+  const { data: unreadData } = useUnreadCount();
+  const hasUnread = (unreadData?.count ?? 0) > 0;
 
   return (
     <StickyHeader
@@ -26,11 +29,14 @@ export function HomeHeader() {
           </button>
           <button
             type="button"
-            aria-label="알림"
-            className={cn(pillActionClass, "ml-0.5")}
+            aria-label={hasUnread ? "알림, 읽지 않은 알림 있음" : "알림"}
+            className={cn(pillActionClass, "relative ml-0.5")}
             onClick={() => router.push(ROUTES.NOTIFICATIONS.LIST)}
           >
             <Icon name="bell" size="sm" color="currentColor" decorative />
+            {hasUnread && (
+              <span className="absolute right-1 top-1 size-2 rounded-full bg-red-500" />
+            )}
           </button>
         </div>
       }
