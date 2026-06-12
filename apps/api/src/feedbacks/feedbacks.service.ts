@@ -183,6 +183,16 @@ export class FeedbacksService {
       );
     }
 
+    if (feedback) {
+      await this.notifyCommentTargets({
+        invitationId,
+        feedbackId: feedback.id,
+        commenterUserId: participant.userId,
+        parentId: dto.parentId,
+        mentionedUserIds: dto.mentionedUserIds ?? [],
+      });
+    }
+
     return feedback;
   }
 
@@ -233,7 +243,54 @@ export class FeedbacksService {
       );
     }
 
+    if (feedback) {
+      await this.notifyCommentTargets({
+        invitationId,
+        feedbackId: feedback.id,
+        commenterUserId: participant.userId,
+        parentId: dto.parentId,
+        mentionedUserIds: dto.mentionedUserIds ?? [],
+      });
+    }
+
     return feedback;
+  }
+
+  /**
+   * 새 댓글/답글 알림 — 작성자를 제외한 전체 참여자에게 'feedback' 알림 발송.
+   * 이미 @mention 알림을 받는 사람은 중복 방지를 위해 제외한다.
+   */
+  private async notifyCommentTargets(params: {
+    invitationId: string;
+    feedbackId: string;
+    commenterUserId: string;
+    parentId?: string;
+    mentionedUserIds: string[];
+  }): Promise<void> {
+    const { invitationId, feedbackId, commenterUserId, parentId, mentionedUserIds } = params;
+
+    const userIds = await this.repository.findParticipantUserIds(invitationId, commenterUserId);
+    const mentioned = new Set(mentionedUserIds);
+    const recipients = userIds.filter((id) => !mentioned.has(id));
+
+    if (!recipients.length) return;
+
+    const nickname = (await this.repository.findUserNickname(commenterUserId)) ?? '누군가';
+    await Promise.all(
+      recipients.map((userId) =>
+        this.notificationsService.notify({
+          userId,
+          actorUserId: commenterUserId,
+          type: 'feedback',
+          content: parentId
+            ? `${nickname}님이 댓글에 답글을 남겼습니다`
+            : `${nickname}님이 댓글을 남겼습니다`,
+          targetType: 'feedback',
+          targetId: feedbackId,
+          invitationId,
+        }),
+      ),
+    );
   }
 
   //본인 댓글인지 검증하는 헬퍼 메서드

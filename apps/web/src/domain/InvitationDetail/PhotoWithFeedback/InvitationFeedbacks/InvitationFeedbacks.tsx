@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
@@ -26,6 +27,9 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
   const currentUserDisplayName = me?.name ?? null;
 
+  const searchParams = useSearchParams();
+  const sectionRef = useRef<HTMLDivElement>(null);
+
   const {
     data,
     submitComment,
@@ -42,6 +46,16 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   } = useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const commentCount = total ?? allRows.length;
+
+  // 댓글 알림 클릭으로 진입(?focus=comments) 시 댓글 섹션으로 스크롤.
+  // 위쪽 Album 이미지가 비동기 로드되며 레이아웃 높이가 변하므로 한 틱 미뤄서 스크롤한다.
+  useEffect(() => {
+    if (searchParams.get('focus') !== 'comments') return;
+    const timer = setTimeout(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{
@@ -120,7 +134,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   };
 
   return (
-    <div className="mt-4">
+    <div ref={sectionRef} id="comments" className="mt-4">
       <div>
         <h3 className={cn('mb-3 text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>
           댓글 {commentCount}

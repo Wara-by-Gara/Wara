@@ -6,10 +6,11 @@ import { PhotosService } from './photos.service';
 import { PhotosRepository } from './photos.repository';
 import { AuthModule } from '../auth/auth.module';
 import { LocationsModule } from '../locations/locations.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
 
 @Module({
-  imports: [AuthModule, LocationsModule, BullModule.registerQueue({ name: IMAGE_PROCESSING_QUEUE })],
+  imports: [AuthModule, LocationsModule, NotificationsModule, BullModule.registerQueue({ name: IMAGE_PROCESSING_QUEUE })],
   controllers: [PhotosController, PhotoMapController],
   providers: [PhotosService, PhotosRepository],
 })

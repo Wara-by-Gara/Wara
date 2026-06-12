@@ -29,6 +29,10 @@ export class WaraIoAdapter extends IoAdapter {
         origin: this.origin,
         credentials: true,
       },
+      // ALB idle timeout(기본 60s) 전에 ping을 주고받아 연결 유지.
+      // 25s마다 ping, 20s 내 pong 없으면 끊김 판정 (socket.io 기본값을 명시화).
+      pingInterval: 25_000,
+      pingTimeout: 20_000,
     }) as Server;
     server.adapter(createAdapter(this.pubClient, this.subClient));
     logger.log('Socket.IO Redis adapter attached');

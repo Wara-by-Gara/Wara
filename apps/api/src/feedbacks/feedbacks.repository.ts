@@ -1,11 +1,13 @@
-import { and, eq, inArray, isNull, or, SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, or, SQL, sql } from 'drizzle-orm';
 import { Injectable, Inject } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import {
   feedbackLikes,
   feedbacks,
   NewFeedback,
+  participants,
   photos,
+  users,
 } from '../database/schema';
 import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 
@@ -219,13 +221,29 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
     });
   }
 
+  //댓글 알림 fan-out 대상 — 작성자(excludeUserId) 제외한 참여자 userId 목록
+  async findParticipantUserIds(invitationId: string, excludeUserId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ userId: participants.userId })
+      .from(participants)
+      .innerJoin(users, eq(participants.userId, users.id))
+      .where(
+        and(
+          eq(participants.invitationId, invitationId),
+          isNull(users.deletedAt),
+          ne(participants.userId, excludeUserId),
+        ),
+      );
+    return rows.map((r) => r.userId);
+  }
+
   //닉네임 조회 (멘션 알림용)
   async findUserNickname(userId: string): Promise<string | null> {
     const user = await this.db.query.users.findFirst({
       where: (t, { eq }) => eq(t.id, userId),
-      columns: { nickname: true },
+      columns: { name: true },
     });
-    return user?.nickname ?? null;
+    return user?.name ?? null;
   }
 
   //댓글 생성

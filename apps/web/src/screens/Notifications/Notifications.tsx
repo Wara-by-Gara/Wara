@@ -50,7 +50,9 @@ export interface NotificationsProps {
   onRetry?: () => void;
   onSettings?: () => void;
   onRequestPushPermission?: () => void;
+  onDeleteAll?: () => void;
   isMarkingAllRead?: boolean;
+  isDeletingAll?: boolean;
 }
 
 export const Notifications = ({
@@ -63,11 +65,14 @@ export const Notifications = ({
   onRetry,
   onSettings,
   onRequestPushPermission,
+  onDeleteAll,
   isMarkingAllRead,
+  isDeletingAll,
 }: NotificationsProps) => {
   const [markAllReadModalOpen, setMarkAllReadModalOpen] = useState(
     state === 'markAllReadModal',
   );
+  const [deleteAllModalOpen, setDeleteAllModalOpen] = useState(false);
 
   if (state === 'settings') {
     return (
@@ -173,14 +178,24 @@ export const Notifications = ({
             안 읽음
           </Chip>
         </div>
-        <button
-          type="button"
-          onClick={() => setMarkAllReadModalOpen(true)}
-          disabled={isMarkingAllRead}
-          className="text-[13px] text-primary disabled:opacity-40"
-        >
-          모두 읽음
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMarkAllReadModalOpen(true)}
+            disabled={isMarkingAllRead}
+            className="text-[13px] text-primary disabled:opacity-40"
+          >
+            모두 읽음
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeleteAllModalOpen(true)}
+            disabled={isDeletingAll}
+            className="text-[13px] text-red-500 disabled:opacity-40"
+          >
+            전체 삭제
+          </button>
+        </div>
       </div>
 
       <main
@@ -266,6 +281,18 @@ export const Notifications = ({
         onConfirm={() => {
           onMarkAllAsRead?.();
           setMarkAllReadModalOpen(false);
+        }}
+      />
+
+      <ConfirmModal
+        contained
+        open={deleteAllModalOpen}
+        onOpenChange={setDeleteAllModalOpen}
+        title="모든 알림을 삭제할까요?"
+        confirmLabel="전체 삭제"
+        onConfirm={() => {
+          onDeleteAll?.();
+          setDeleteAllModalOpen(false);
         }}
       />
     </div>

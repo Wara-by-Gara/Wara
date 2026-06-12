@@ -79,13 +79,26 @@ export class ParticipantsRepository {
 
   async findInvitationInfo(
     invitationId: string,
-  ): Promise<{ status: 'active' | 'closed'; eventStartAt: Date | null } | null> {
+  ): Promise<{ status: 'active' | 'closed'; eventStartAt: Date | null; hostUserId: string } | null> {
     const rows = await this.db
-      .select({ status: invitations.status, eventStartAt: invitations.eventStartAt })
+      .select({
+        status: invitations.status,
+        eventStartAt: invitations.eventStartAt,
+        hostUserId: invitations.userId,
+      })
       .from(invitations)
       .where(eq(invitations.id, invitationId))
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  async findUserNickname(userId: string): Promise<string | null> {
+    const rows = await this.db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return rows[0]?.name ?? null;
   }
 
   async create(data: {

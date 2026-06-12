@@ -16,6 +16,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   vote_tied: '투표',
   vote_confirmed: '날짜 확정',
   ai_complete: 'AI 사진',
+  mention: '멘션',
+  participant_joined: '참여',
 };
 
 type Props = {
@@ -29,7 +31,7 @@ export function NotificationItem({ notification, onReadAction, onDelete }: Props
     <div className={`flex items-center ${notification.isRead ? '' : 'bg-primary-soft/40'}`}>
       <button
         type="button"
-        onClick={() => !notification.isRead && onReadAction(notification.id)}
+        onClick={() => onReadAction(notification.id)}
         className="flex-1 text-left px-4 py-3 flex gap-3 hover:bg-gray-50 transition-colors duration-150 min-w-0"
       >
         <span

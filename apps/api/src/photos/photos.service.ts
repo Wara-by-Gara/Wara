@@ -17,6 +17,8 @@ import { ImageProcessingService } from '../image-processing/image-processing.ser
 import { ImageProcessingJobsRepository } from '../image-processing/image-processing-jobs.repository';
 import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
 import { KakaoLocalService } from '../locations/kakao-local.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import type { Photo } from '../database/schema';
 
 const MAX_DOWNLOAD_LIMIT = 9999;
 
@@ -29,6 +31,7 @@ export class PhotosService {
     private readonly imageJobs: ImageProcessingJobsRepository,
     @InjectQueue(IMAGE_PROCESSING_QUEUE) private readonly imageQueue: Queue,
     private readonly kakaoLocalService: KakaoLocalService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // 업로드용 presigned URL 발급 (15분)
@@ -102,21 +105,42 @@ export class PhotosService {
       if (address) exifMetadata = { ...exifMetadata, gps_address: address };
     }
 
+    let photo: Photo;
     try {
-      return await this.repository.create({
+      photo = (await this.repository.create({
         invitationId,
         participantId,
         imageKey: dto.imageKey,
         takenAt: dto.takenAt ? new Date(dto.takenAt) : undefined,
         exifMetadata,
         exifFingerprint,
-      });
+      }))!;
     } catch (e: unknown) {
       if (typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === '23505') {
         throw new ConflictException(ErrorCode.PHOTO_DUPLICATE);
       }
       throw e;
     }
+
+    // 업로더 제외한 전체 참여자에게 실시간 알림 (isPhoto 설정 ON 대상만 — notify 내부에서 게이팅)
+    const recipients = await this.repository.findParticipantUserIds(invitationId, participantId);
+    if (recipients.length) {
+      const nickname = (await this.repository.findNicknameByParticipantId(participantId)) ?? '누군가';
+      await Promise.all(
+        recipients.map((userId) =>
+          this.notificationsService.notify({
+            userId,
+            type: 'photo',
+            content: `${nickname}님이 새 사진을 올렸습니다`,
+            targetType: 'photo',
+            targetId: photo.id,
+            invitationId,
+          }),
+        ),
+      );
+    }
+
+    return photo;
   }
 
   // 다운로드용 URL 발급 (낱개, 선택)

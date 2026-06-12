@@ -823,7 +823,11 @@ export default function InvitationCreateContainer({
   if (published) {
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="초대장 만들기" />
+        <TopAppBar
+          className="shrink-0"
+          title="초대장 만들기"
+          onBack={() => router.replace('/')}
+        />
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">
