@@ -88,6 +88,13 @@ type Particle = {
 
 function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string): Particle[] {
   const c = CONFIG[effect];
+
+  // TODO(human): bgClass (constants.ts의 DESIGN_BG_THEMES.cls, 예: "bg-invite-starry",
+  // "bg-invite-aurora")에 따라 petal/confetti 파티클 색상 팔레트를 조정해줘.
+  // 어둡거나 채도 높은 배경 테마에서는 기본 pastel 팔레트(c.colors) 대신
+  // 더 대비되는 색상 배열을 particleColors에 할당.
+  const particleColors = c.colors;
+
   return Array.from({ length: c.count }, (_, i) => {
     const size = rand(i, 1, c.size[0], c.size[1]) * 2;
     const duration = rand(i, 2, c.duration[0], c.duration[1]);
@@ -139,12 +146,12 @@ function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string):
     if (c.visual === "emoji" && c.emojis) {
       content = c.emojis[i % c.emojis.length] ?? c.emojis[0] ?? null;
     } else if (c.visual === "petal") {
-      const color = c.colors?.[i % c.colors.length] ?? "#ffffff";
+      const color = particleColors?.[i % particleColors.length] ?? "#ffffff";
       style.backgroundColor = color;
       style.borderRadius = "50% 0 50% 50%";
       style.boxShadow = "0 1px 2px rgb(255 79 163 / 0.18)";
     } else if (c.visual === "confetti") {
-      const color = c.colors?.[i % c.colors.length] ?? "#ff6db3";
+      const color = particleColors?.[i % particleColors.length] ?? "#ff6db3";
       style.backgroundColor = color;
       style.borderRadius = "1px";
     } else if (c.visual === "bubble") {

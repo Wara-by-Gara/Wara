@@ -41,7 +41,6 @@ export interface LocationSelectorProps {
 export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps>(
   function LocationSelector(
     {
-      label = "장소",
       mode: modeProp,
       query,
       onQueryChange,
@@ -52,28 +51,19 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
       unknown,
       onUnknownChange,
       state = "default",
-      onModeChange,
       error,
       className,
       hideToggle = false,
     },
     ref,
   ) {
-    const [internalMode, setInternalMode] = useState<NonNullable<LocationSelectorProps["mode"]>>(
+    const [internalMode] = useState<NonNullable<LocationSelectorProps["mode"]>>(
       modeProp ?? (selected ? "selected" : "search"),
     );
     const [internalUnknown, setInternalUnknown] = useState(false);
 
     const effectiveUnknown = unknown !== undefined ? unknown : internalUnknown;
     const mode = modeProp ?? (effectiveUnknown ? "unknown" : internalMode);
-
-    const clearUnknown = () => {
-      if (unknown !== undefined) {
-        if (unknown) onUnknownChange?.(false);
-      } else if (internalUnknown) {
-        setInternalUnknown(false);
-      }
-    };
 
     return (
       <div ref={ref} className={cn("flex flex-col gap-2", className)}>

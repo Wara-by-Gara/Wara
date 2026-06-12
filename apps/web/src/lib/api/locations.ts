@@ -1,4 +1,4 @@
-import { apiGet, apiPut, apiDelete } from "./client";
+import { apiGet, apiPut, apiDelete, apiPost } from "./client";
 
 export interface EventLocation {
   id: string;

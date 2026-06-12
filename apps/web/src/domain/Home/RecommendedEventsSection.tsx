@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Icon } from "@/components/icons";
 import { TextInput } from "@/components/primitives/TextInput";
 import { useRouter } from "next/navigation";
-import { Chip } from "@/components/primitives/Chip";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { InvitationCard } from "@/components/organisms/InvitationCard";
 import { ROUTES } from "@/constants/routes";

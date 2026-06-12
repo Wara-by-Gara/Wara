@@ -229,9 +229,8 @@ export default function InvitationCreateContainer({
   const locationResultsRef = useRef<HTMLDivElement>(null);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
-  const [votePollError, setVotePollError] = useState(false);
+  const [, setVotePollError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
