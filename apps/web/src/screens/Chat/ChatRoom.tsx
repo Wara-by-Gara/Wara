@@ -401,6 +401,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         {senderName}
                       </span>
                     )}
+                    {/* 말풍선 + 메타(시간/안읽음)를 한 줄에 — 리액션이 생겨도 메타가 안 밀리게 */}
+                    <div
+                      className={`flex items-end gap-1.5 ${
+                        mine ? "flex-row-reverse" : "flex-row"
+                      }`}
+                    >
                     {m.deleted ? (
                       <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
                         삭제된 메시지입니다
@@ -468,6 +474,27 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         {m.content}
                       </div>
                     )}
+                      <div
+                        className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
+                          mine ? "items-end" : "items-start"
+                        }`}
+                      >
+                        {(isGroup || mine) && !m.deleted && m.unreadCount > 0 && (
+                          <span
+                            data-testid="read-receipt"
+                            className="text-[11px] font-bold text-primary"
+                          >
+                            {m.unreadCount}
+                          </span>
+                        )}
+                        {m.edited && !m.deleted && (
+                          <span className="text-[10px] text-text-tertiary">수정됨</span>
+                        )}
+                        <span className="text-[10px] text-text-tertiary">
+                          {formatTime(m.createdAt)}
+                        </span>
+                      </div>
+                    </div>
                     {/* 리액션 배지 — 말풍선 외부 아래, 페이지 배경 위 칩 */}
                     {!m.deleted && m.reactions.length > 0 && (
                       <div className="flex flex-wrap gap-1 px-0.5">
@@ -499,26 +526,6 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div
-                    className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
-                      mine ? "items-end" : "items-start"
-                    }`}
-                  >
-                    {(isGroup || mine) && !m.deleted && m.unreadCount > 0 && (
-                      <span
-                        data-testid="read-receipt"
-                        className="text-[11px] font-bold text-primary"
-                      >
-                        {m.unreadCount}
-                      </span>
-                    )}
-                    {m.edited && !m.deleted && (
-                      <span className="text-[10px] text-text-tertiary">수정됨</span>
-                    )}
-                    <span className="text-[10px] text-text-tertiary">
-                      {formatTime(m.createdAt)}
-                    </span>
                   </div>
                 </li>
               );
