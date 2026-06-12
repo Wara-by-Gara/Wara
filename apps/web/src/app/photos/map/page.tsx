@@ -1,6 +1,6 @@
 import { PhotoMapPage } from "@/domain/PhotoMap/PhotoMapPage";
 
-export const metadata = { title: "사진 지도" };
+export const metadata = { title: "Place log" };
 
 export default function PhotosMapPage() {
   return (

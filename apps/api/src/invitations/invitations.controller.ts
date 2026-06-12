@@ -38,6 +38,10 @@ import {
   ListPublicInvitationsDto,
   ListPublicInvitationsSchema,
 } from './dto/list-public-invitations.dto';
+import {
+  ListPublicMapInvitationsDto,
+  ListPublicMapInvitationsSchema,
+} from './dto/list-public-map-invitations.dto';
 
 @Controller('invitations')
 export class InvitationsController {
@@ -64,6 +68,16 @@ export class InvitationsController {
     dto: ListPublicInvitationsDto,
   ) {
     return this.invitationsService.findPublicExplore(dto);
+  }
+
+  /** 탐색 지도 — bbox 안의 공개 초대장 마커 */
+  @Public()
+  @Get('explore/map')
+  findPublicForMap(
+    @Query(new ZodValidationPipe(ListPublicMapInvitationsSchema))
+    dto: ListPublicMapInvitationsDto,
+  ) {
+    return this.invitationsService.findPublicForMap(dto);
   }
 
   @Public()

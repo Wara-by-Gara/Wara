@@ -4,6 +4,11 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { SharedArray } from 'k6/data';
+import { Trend, Counter } from 'k6/metrics';
+
+const dbTime = new Trend('db_time_ms', true);
+const dbQueryCount = new Trend('db_query_count');
+const dbMissingHeader = new Counter('db_header_missing');
 
 const hostTokens = new SharedArray('hostTokens', () => {
   const data = JSON.parse(open('../apps/api/drizzle/seed/seed-tokens.json'));
@@ -30,5 +35,15 @@ export default function () {
   check(res, {
     'status 200': (r) => r.status === 200,
   });
+
+  const dbTimeRaw = res.headers['X-Db-Time'] ?? res.headers['X-DB-Time'];
+  const dbCountRaw = res.headers['X-Db-Query-Count'] ?? res.headers['X-DB-Query-Count'];
+  if (dbTimeRaw !== undefined) {
+    dbTime.add(parseFloat(dbTimeRaw));
+    if (dbCountRaw !== undefined) dbQueryCount.add(parseInt(dbCountRaw, 10));
+  } else {
+    dbMissingHeader.add(1);
+  }
+
   sleep(0.5);
 }

@@ -424,7 +424,7 @@ KAKAO_REST_API_KEY=여기에_카카오_REST_API_키_입력
    └── socket.on('location:updated', ...) → 해당 participantId 마커 갱신
 
 5. 도착 감지
-   └── 거리 <= 50m → isArrived: true 전송 → GPS 중지 → unsubscribe
+   └── 거리 <= 10m → isArrived: true 전송 → GPS 중지 → unsubscribe
 ```
 
 ### 에러 처리

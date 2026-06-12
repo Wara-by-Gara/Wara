@@ -10,5 +10,6 @@ import { DateVoteScheduler } from './date-vote.scheduler';
   imports: [AuthModule, NotificationsModule],
   controllers: [DateVoteController],
   providers: [DateVoteService, DateVoteRepository, DateVoteScheduler],
+  exports: [DateVoteService],
 })
 export class DateVoteModule {}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Login, type LoginState } from '@/screens/Login';
+import type { SocialProvider } from '@/components/primitives/SocialLoginButton/providers';
 import { toast } from '@/components/molecules/Toast';
 import { API_BASE } from '@/lib/env';
 
@@ -19,6 +20,7 @@ const ERROR_MESSAGES: Partial<Record<LoginState, string>> = {
 
 export default function LoginContainer() {
   const [state, setState] = useState<LoginState>('default');
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -37,33 +39,16 @@ export default function LoginContainer() {
     }
   }, [state]);
 
-  function handleKakao() {
-    setState('kakaoLoading');
-    window.location.href = `${API_BASE}/auth/kakao/redirect`;
-  }
-
-  function handleNaver() {
-    setState('naverLoading');
-    window.location.href = `${API_BASE}/auth/naver/redirect`;
-  }
-
-  function handleGoogle() {
-    setState('googleLoading');
-    window.location.href = `${API_BASE}/auth/google/redirect`;
-  }
-
-  function handleApple() {
-    setState('appleLoading');
-    window.location.href = `${API_BASE}/auth/apple/redirect`;
+  function handleLogin(provider: SocialProvider) {
+    setLoadingProvider(provider);
+    window.location.href = `${API_BASE}/auth/${provider}/redirect`;
   }
 
   return (
     <Login
       state={state}
-      onKakao={handleKakao}
-      onNaver={handleNaver}
-      onGoogle={handleGoogle}
-      onApple={handleApple}
+      loadingProvider={loadingProvider}
+      onLogin={handleLogin}
     />
   );
 }

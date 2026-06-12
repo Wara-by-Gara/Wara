@@ -11,6 +11,7 @@ import { useInvitation } from "@/hooks/useInvitations";
 import { useJoinInvitation, useMyParticipant, useUpdateRsvp } from "@/hooks/useParticipants";
 import { useUpdateMe } from "@/hooks/useUsers";
 import { getPoll } from "@/lib/api/dateVote";
+import { isOptionalVotePollError } from "@/lib/api/getApiErrorCode";
 import { getMe } from "@/lib/api/users";
 import { Icon } from "@/components/icons";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
@@ -39,15 +40,20 @@ type FormValues = z.infer<typeof schema>;
 
 const FORM_STORAGE_KEY = (id: string) => `rsvp_form_${id}`;
 
-async function resolvePostRsvpRoute(invitationId: string): Promise<string> {
+async function resolvePostRsvpRoute(
+  invitationId: string,
+  dateVotePollStatus?: 'open' | 'closed' | 'confirmed' | null,
+): Promise<string> {
+  if (dateVotePollStatus !== 'open') {
+    return ROUTES.INVITATIONS.DETAIL(invitationId);
+  }
   try {
     const pollData = await getPoll(invitationId);
     if (pollData.poll.status === "open") {
       return ROUTES.INVITATIONS.VOTE(invitationId);
     }
   } catch (err) {
-    const code = (err as { error?: { code?: string } })?.error?.code;
-    if (code !== "VOTE_POLL_NOT_FOUND" && code !== "PARTICIPANT_NOT_FOUND") {
+    if (!isOptionalVotePollError(err)) {
       throw err;
     }
   }
@@ -84,7 +90,7 @@ export default function PublicInvitationContainer({ invitationId }: { invitation
 
 function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   const router = useRouter();
-  const { isLoggedIn, hydrated, hydrate } = useAuthStore();
+  const { isLoggedIn, hydrated } = useAuthStore();
   const [rsvp, setRsvp] = useState<RSVPValue>("attending");
   const [isEditing, setIsEditing] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
@@ -107,7 +113,6 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   });
 
   useEffect(() => {
-    hydrate();
     const saved = sessionStorage.getItem(FORM_STORAGE_KEY(invitation.id));
     if (saved) {
       const { note, rsvp: savedRsvp } = JSON.parse(saved) as FormValues & { rsvp: RSVPValue };
@@ -116,12 +121,12 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
       sessionStorage.removeItem(FORM_STORAGE_KEY(invitation.id));
       prefilled.current = true;
     }
-  }, [hydrate, invitation.id, rsvp, setValue]);
+  }, [invitation.id, rsvp, setValue]);
 
   useEffect(() => {
     if (!hydrated || !isLoggedIn || isCheckingParticipant) return;
     if (myParticipant && myParticipant.rsvpStatus !== "absent") {
-      void resolvePostRsvpRoute(invitation.id).then((path) => {
+      void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
         router.replace(path);
       });
     }
@@ -188,7 +193,7 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
             if (rsvp === "declined") {
               setIsEditing(false);
             } else {
-              void resolvePostRsvpRoute(invitation.id).then((path) => {
+              void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
                 router.push(path);
               });
             }
@@ -202,14 +207,14 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
       { rsvpStatus: RSVP_MAP[rsvp], note: data.note || undefined },
       {
         onSuccess: () => {
-          void resolvePostRsvpRoute(invitation.id).then((path) => {
+          void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
             router.push(path);
           });
         },
         onError: (err: unknown) => {
           const code = (err as { error?: { code?: string } })?.error?.code;
           if (code === "PARTICIPANT_ALREADY_EXISTS") {
-            void resolvePostRsvpRoute(invitation.id).then((path) => {
+            void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
               router.push(path);
             });
           }

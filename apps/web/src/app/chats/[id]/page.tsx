@@ -1,10 +1,10 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { ChatRoom } from "@/screens/Chat/ChatRoom";
 
-export default function ChatRoomPage() {
-  const params = useParams();
-  const id = params.id as string;
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ChatRoomPage({ params }: Props) {
+  const { id } = await params;
   return <ChatRoom id={id} />;
 }

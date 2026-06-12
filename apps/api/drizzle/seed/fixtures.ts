@@ -36,10 +36,10 @@ const DICEBEAR_PROFILE_PREFIX = 'dicebear:';
 /** 유저별 결정적 랜덤 DiceBear 시드 (재시드 시 동일 아바타) */
 const profileDicebearSeed = (userKey: string) =>
   `${DICEBEAR_PROFILE_PREFIX}${id(`avatar:${userKey}`).slice(0, 12).toLowerCase()}`;
-const { all: LUMA_IMAGE_PATHS, byFolder: LUMA_IMAGE_PATHS_BY_FOLDER } = collectLumaImagePaths();
+const { all: TEMPLATE_IMAGE_PATHS, byFolder: TEMPLATE_IMAGE_PATHS_BY_FOLDER } = collectTemplateImagePaths();
 
-function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, string[]> } {
-  const root = path.resolve(__dirname, '../../../web/public/luma_images');
+function collectTemplateImagePaths(): { all: string[]; byFolder: Record<string, string[]> } {
+  const root = path.resolve(__dirname, '../../../web/public/template_images');
   if (!fs.existsSync(root)) return { all: [], byFolder: {} };
 
   const all: string[] = [];
@@ -50,18 +50,18 @@ function collectLumaImagePaths(): { all: string[]; byFolder: Record<string, stri
     const folderPaths: string[] = [];
     for (const file of fs.readdirSync(categoryDir)) {
       if (!/\.(png|jpe?g|webp)$/i.test(file)) continue;
-      const rel = `/luma_images/${entry.name}/${file}`;
+      const rel = `/template_images/${entry.name}/${file}`;
       folderPaths.push(rel);
       all.push(rel);
     }
     if (folderPaths.length > 0) {
-      byFolder[entry.name] = folderPaths.sort();
+      byFolder[entry.name.normalize('NFC')] = folderPaths.sort();
     }
   }
   return { all: all.sort(), byFolder };
 }
 
-const lumaUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
+const templateImageUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
   if (pool.length === 0) {
     return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
   }
@@ -73,47 +73,37 @@ const lumaUrlFromPool = (pool: string[], namespace: string, seedKey: string) => 
   return `${base}/${urlPath}`;
 };
 
-const lumaCategoryCoverUrl = (folder: string, seedKey: string) =>
-  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-cover:${folder}`, seedKey);
+const templateCoverUrl = (folder: string, seedKey: string) =>
+  templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-cover:${folder}`, seedKey);
 
-const lumaCategoryPhotoUrl = (folder: string, seedKey: string) =>
-  lumaUrlFromPool(LUMA_IMAGE_PATHS_BY_FOLDER[folder] ?? LUMA_IMAGE_PATHS, `luma-photo:${folder}`, seedKey);
+const templatePhotoUrl = (folder: string, seedKey: string) =>
+  templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-photo:${folder}`, seedKey);
 
-/** luma_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
-const lumaImageUrl = (namespace: string, seedKey: string) => {
-  if (LUMA_IMAGE_PATHS.length === 0) {
+/** template_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
+const templateImageUrl = (namespace: string, seedKey: string) => {
+  if (TEMPLATE_IMAGE_PATHS.length === 0) {
     return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
   }
   const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
-  const idx = hash.readUInt32BE(0) % LUMA_IMAGE_PATHS.length;
-  const rel = LUMA_IMAGE_PATHS[idx]!;
+  const idx = hash.readUInt32BE(0) % TEMPLATE_IMAGE_PATHS.length;
+  const rel = TEMPLATE_IMAGE_PATHS[idx]!;
   const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
   const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
   return `${base}/${urlPath}`;
 };
-const invitationCoverUrl = (seedKey: string) => lumaImageUrl('luma-cover', seedKey);
-const photoUrl = (seedKey: string) => lumaImageUrl('luma-photo', seedKey);
-const templatePreviewUrl = (seedKey: string) => lumaImageUrl('luma-template', seedKey);
+const invitationCoverUrl = (seedKey: string) => templateImageUrl('template-cover', seedKey);
+const photoUrl = (seedKey: string) => templateImageUrl('template-photo', seedKey);
+const templatePreviewUrl = (seedKey: string) => templateImageUrl('template-preview', seedKey);
 
-const lumaImageUrlFromRel = (rel: string) => {
+const templateImageUrlFromRel = (rel: string) => {
   const base = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
   const urlPath = rel.split('/').filter(Boolean).map(encodeURIComponent).join('/');
   return `${base}/${urlPath}`;
 };
 
-/** luma_images 폴더에서 대표 미리보기 1장 선택 */
-const templatePreviewFromFolder = (
-  folder: string,
-  imageIndex: number,
-  previewFile?: string,
-) => {
-  if (previewFile) {
-    return lumaImageUrlFromRel(`/luma_images/${folder}/${previewFile}`);
-  }
-  const pool = LUMA_IMAGE_PATHS_BY_FOLDER[folder];
-  if (!pool?.length) return templatePreviewUrl(`template-${folder}`);
-  return lumaImageUrlFromRel(pool[imageIndex % pool.length]!);
-};
+/** template_images AI 풀에서 folder 기반 결정적 미리보기 URL */
+const templatePreviewFromFolder = (folder: string) =>
+  templatePreviewUrl(`template-${folder.normalize('NFC')}`);
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
 // 기본은 dev 작업용 작은 규모. 부하 테스트 시 일시적으로 늘려 사용.
@@ -168,16 +158,16 @@ const MISSION_CONTENT_BASE = [
 ];
 
 const TEMPLATE_DEFS = [
-  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티',   previewFile: 'imgi_10_1f5b32e2-8467-4bfd-9048-8dfd0231b7c1.png' },
-  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일',   previewFile: 'imgi_10_8e9ed34a-cc86-4632-83ec-cb4097a80961.png' },
-  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃',     previewFile: 'imgi_10_1074f31e-22b4-471b-b857-8afcb2698179.png' },
-  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름',   previewFile: 'imgi_10_806d0940-d8e2-46e9-9704-f25ae0e49375.png' },
-  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대',   previewFile: 'imgi_10_468d0b37-6b49-491d-a0f5-bb2af2ef9719.png' },
-  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교',   previewFile: 'imgi_10_51ffeb4e-b392-4fc4-b105-a408c1f96987.png' },
-  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식',   previewFile: 'imgi_10_46a752da-c51b-4e24-b8d7-e3844aa37023.png' },
-  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠', previewFile: 'imgi_12_7b6b9201-46c4-43e1-b394-a401b7db95d3.png' },
-  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료',   previewFile: 'imgi_10_5d8e6e58-f50d-40d4-9ba8-feb9b5a1ef72.png' },
-  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI',     previewFile: 'imgi_100_3c3db379-bc3e-493e-8677-d2fb311882f8.png' },
+  { key: 'tmpl1',  name: '파티 나이트',   theme: 'party',    font: 'display', effect: 'confetti', isActive: true, previewFolder: '파티' },
+  { key: 'tmpl2',  name: '생일 축하',     theme: 'birthday', font: 'serif',   effect: 'sparkle',  isActive: true, previewFolder: '생일' },
+  { key: 'tmpl3',  name: '플라워 가든',   theme: 'floral',   font: 'serif',   effect: null,       isActive: true, previewFolder: '꽃' },
+  { key: 'tmpl4',  name: '여름 바캉스',   theme: 'summer',   font: 'sans',    effect: null,       isActive: true, previewFolder: '여름' },
+  { key: 'tmpl5',  name: '클래식 초대',   theme: 'classic',  font: 'serif',   effect: null,       isActive: true, previewFolder: '초대' },
+  { key: 'tmpl6',  name: '학교 축제',     theme: 'school',   font: 'sans',    effect: 'confetti', isActive: true, previewFolder: '학교' },
+  { key: 'tmpl7',  name: '디너 파티',     theme: 'food',     font: 'sans',    effect: null,       isActive: true, previewFolder: '음식' },
+  { key: 'tmpl8',  name: '스포츠 데이',   theme: 'sports',   font: 'display', effect: null,       isActive: true, previewFolder: '스포츠' },
+  { key: 'tmpl9',  name: '브런치 타임',   theme: 'brunch',   font: 'sans',    effect: null,       isActive: true, previewFolder: '음료' },
+  { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  isActive: true, previewFolder: 'AI' },
 ] as const;
 
 // ── 실재하는 한국 모임 장소 데이터셋 ──────────────────────────────────────────
@@ -546,14 +536,14 @@ function buildSeeds() {
     isEventLocations: true,
   }));
 
-  // 5. Templates (previewImageKey: luma_images URL)
+  // 5. Templates (previewImageKey: template_images URL)
   const templateIdByKey: Record<string, string> = {};
   for (const t of TEMPLATE_DEFS) templateIdByKey[t.key] = id(`template:${t.key}`);
 
   const templates = TEMPLATE_DEFS.map((t) => ({
     id: templateIdByKey[t.key]!,
     name: t.name,
-    previewImageKey: templatePreviewFromFolder(t.previewFolder, 0, t.previewFile),
+    previewImageKey: templatePreviewFromFolder(t.previewFolder),
     theme: t.theme,
     font: t.font,
     effect: t.effect,
@@ -567,7 +557,7 @@ function buildSeeds() {
     isActive: mt.isActive,
   }));
 
-  // 6. Invitations (mainImageKey: luma_images URL — S3Service.getPublicUrl 패스스루)
+  // 6. Invitations (mainImageKey: template_images URL — S3Service.getPublicUrl 정적 URL 변환)
   const invIdByKey: Record<string, string> = {};
   for (const inv of INV_DEFS) invIdByKey[inv.key] = id(`invitation:${inv.key}`);
 
@@ -804,11 +794,15 @@ function buildSeeds() {
         participantId: uploaderId,
         invitationId: invIdByKey[invKey]!,
         imageKey: photoUrl(`${invKey}-${i}`),
+        // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산.
+        // 사진 지도에서 마커 클러스터링 동작을 보기 위해 사진별 deterministic 변동.
         exifMetadata: {
           width: 1280,
           height: 853,
           takenAt: `2026-04-${String((i % 28) + 1).padStart(2, '0')}T${String(10 + (i % 10)).padStart(2, '0')}:00:00Z`,
           camera: 'iPhone 15',
+          gps_lat: 37.5665 + ((i % 11) - 5) * 0.005,
+          gps_lng: 126.978 + ((invIdx % 11) - 5) * 0.005,
         },
         viewCount: 0,
         likeCount: likers.length,
@@ -1086,8 +1080,8 @@ function buildSeeds() {
     templateIdByKey,
     hostKeys: HOST_KEYS,
     guestKeys: GUEST_KEYS,
-    lumaCategoryCoverUrl,
-    lumaCategoryPhotoUrl,
+    templateCoverUrl,
+    templatePhotoUrl,
     realEventLocations: REAL_EVENT_LOCATIONS,
     feedbackInvTemplates: FEEDBACK_INV_TEMPLATES,
     feedbackPhotoTemplates: FEEDBACK_PHOTO_TEMPLATES,

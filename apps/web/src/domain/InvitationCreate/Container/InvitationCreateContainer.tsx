@@ -22,6 +22,9 @@ import { InvitationCover } from "@/components/organisms/InvitationCover";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
+import type { SocialProvider } from "@/components/primitives/SocialLoginButton/providers";
+import { API_BASE } from "@/lib/env";
 import { createInvitation, updateInvitation, getInvitationImagePresignedUrl, type Invitation } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
 import { setEventLocation } from "@/lib/api/locations";
@@ -159,9 +162,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const router = useRouter();
   const queryClient = useQueryClient();
   useLightTheme();
-  const { isLoggedIn, hydrated, hydrate, login } = useAuthStore();
-
-  useEffect(() => { hydrate(); }, [hydrate]);
+  const { isLoggedIn, hydrated, login } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [titleError, setTitleError] = useState(false);
   const [titleFocused, setTitleFocused] = useState(false);
@@ -181,7 +182,9 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
+  const [votePollError, setVotePollError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
@@ -423,8 +426,16 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         return;
       }
       setCreatedInvitationId(data.id);
+      setVotePollError(false);
       if (voteDraft) {
-        try { await createPoll(data.id, voteDraft); } catch { /* invitation은 이미 생성됨 */ }
+        try {
+          await createPoll(data.id, voteDraft);
+          await queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.invitations.detail(data.id),
+          });
+        } catch {
+          setVotePollError(true);
+        }
       }
       setPublished(true);
     },
@@ -519,7 +530,10 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         const { places } = await searchPlaces(q);
         setLocationResults(places);
         setLocationSearchState(places.length === 0 ? "no-result" : "default");
-      } catch {
+      } catch (err) {
+        // 디버깅: 실패 원인(에러 코드, 메시지)을 콘솔에 노출.
+        // 카카오 API 키 만료/네트워크 오류/인증 실패 등을 구분하기 위함.
+        console.error("[location-search]", err);
         setLocationSearchState("error");
       }
     }, 400);
@@ -609,7 +623,13 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">초대장이 만들어졌어요!</p>
-          <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
+          {votePollError ? (
+            <p className="text-[14px] font-medium text-[var(--color-warning)]">
+              날짜 투표 설정에 실패했어요. 초대장 상세에서 다시 설정해주세요.
+            </p>
+          ) : (
+            <p className="text-[14px] text-text-secondary">친구들에게 공유해보세요</p>
+          )}
           <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
             <Button size="lg" variant="primary" fullWidth onClick={() => setShareSheetOpen(true)}>
               공유하기
@@ -931,6 +951,17 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
           state={locationSearchState}
           unknown={locationUnknown}
           onUnknownChange={(v) => { setLocationUnknown(v); if (locationError) setLocationError(false); }}
+          onModeChange={(m) => {
+            // 수정 모드에서 selected → search 전환 시 검색 input 노출.
+            // 선택된 placeName/address는 사용자가 새 장소를 고를 때까지 form에 유지
+            // (취소 시 기존 장소 복원 가능). 결과 리스트와 검색어만 초기화.
+            // InvitationCreate는 manual 모드 미사용 — search로 정규화.
+            if (m === "manual") return;
+            setLocationMode(m);
+            setLocationResults([]);
+            setLocationQuery("");
+            setLocationSearchState("default");
+          }}
           error={locationError ? "장소를 선택해주세요" : undefined}
         />
         {locationMode === "search" && locationResults.length > 0 && (
@@ -1232,28 +1263,20 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
         <BottomSheetContent title="로그인이 필요해요" description="초대장을 만들려면 먼저 로그인해주세요">
-          <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver", "google"] as const).map((provider) => {
-              const config = {
-                kakao: { label: "카카오로 시작하기", cls: "bg-[#FEE500] text-[#181600]", path: "kakao" },
-                naver: { label: "네이버로 시작하기", cls: "bg-[#03C75A] text-white", path: "naver" },
-                google: { label: "Google로 시작하기", cls: "border border-border bg-white text-text-primary", path: "google" },
-              }[provider];
-              const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + "/api";
-              return (
-                <button
-                  key={provider}
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
-                    window.location.href = `${apiBase}/auth/${config.path}/redirect`;
-                  }}
-                  className={`flex h-14 w-full items-center justify-center gap-2 rounded-xs text-[16px] font-bold ${config.cls}`}
-                >
-                  {config.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-col gap-2 pt-2">
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => {
+                  setLoadingProvider(provider);
+                  sessionStorage.setItem("wara_oauth_return", "/invitations/create?auth_success=1");
+                  window.location.href = `${API_BASE}/auth/${provider}/redirect`;
+                }}
+              />
+            ))}
           </div>
         </BottomSheetContent>
       </BottomSheet>

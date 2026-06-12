@@ -1,3 +1,6 @@
+// Sentry.init은 다른 모듈 import보다 먼저 실행되어야 자동 계측이 동작 (공식 가이드).
+// prod + DSN 둘 다 있을 때만 init, 아니면 no-op.
+import './sentry/instrument';
 import { NestFactory } from '@nestjs/core';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -5,6 +8,7 @@ import type { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { WaraIoAdapter } from './adapters/socket-io.adapter';
 import { DbTimeInterceptor } from './common/interceptors/db-time.interceptor';
@@ -32,7 +36,8 @@ async function bootstrap() {
     throw new Error('[보안] COOKIE_SECRET 환경변수가 설정되지 않았습니다. .env 파일을 확인하세요.');
   }
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(PinoLogger));
 
   // helmet 기본 옵션 (CSP 포함). JSON API라 CSP 영향 없음.
   app.use(helmet());

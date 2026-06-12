@@ -290,6 +290,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               return (
                 <li
                   key={m.id}
+                  data-testid="chat-message"
+                  data-message-id={m.id}
                   className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : "flex-row"}`}
                 >
                   {!mine &&
@@ -414,7 +416,12 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     }`}
                   >
                     {unread && (
-                      <span className="text-[11px] font-bold text-primary">1</span>
+                      <span
+                        data-testid="read-receipt"
+                        className="text-[11px] font-bold text-primary"
+                      >
+                        1
+                      </span>
                     )}
                     {m.edited && !m.deleted && (
                       <span className="text-[10px] text-text-tertiary">수정됨</span>
@@ -531,6 +538,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         </button>
         <input
           ref={inputRef}
+          data-testid="chat-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={MAX_MESSAGE}

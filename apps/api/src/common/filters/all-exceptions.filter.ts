@@ -1,4 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { sendErrorResponse } from './error-response.helper';
 
 @Catch()
@@ -8,6 +9,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    if (status >= 500) {
+      Sentry.captureException(exception);
+    }
 
     const raw =
       exception instanceof HttpException

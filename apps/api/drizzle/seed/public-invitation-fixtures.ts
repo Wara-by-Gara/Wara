@@ -22,8 +22,8 @@ type SeedDeps = {
   templateIdByKey: Record<string, string>;
   hostKeys: string[];
   guestKeys: string[];
-  lumaCategoryCoverUrl: (folder: string, seedKey: string) => string;
-  lumaCategoryPhotoUrl: (folder: string, seedKey: string) => string;
+  templateCoverUrl: (folder: string, seedKey: string) => string;
+  templatePhotoUrl: (folder: string, seedKey: string) => string;
   realEventLocations: ReadonlyArray<{
     readonly placeName: string;
     readonly address: string;
@@ -270,7 +270,7 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
         title: cat.titles[n]!,
         description: cat.descriptions[n]!,
         mainCoverType: 'image',
-        mainImageKey: deps.lumaCategoryCoverUrl(cat.folder, invKey),
+        mainImageKey: deps.templateCoverUrl(cat.folder, invKey),
         mainGifUrl: null,
         eventStartAt: eventDate,
         isMissionEnabled: false,
@@ -324,8 +324,15 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
           id: photoId,
           participantId: uploaderId,
           invitationId: invId,
-          imageKey: deps.lumaCategoryPhotoUrl(cat.folder, `${invKey}-${pi}`),
-          exifMetadata: { width: 1280, height: 853, camera: 'iPhone 15' },
+          imageKey: deps.templatePhotoUrl(cat.folder, `${invKey}-${pi}`),
+          // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산 — 사진 지도 표시용.
+          exifMetadata: {
+            width: 1280,
+            height: 853,
+            camera: 'iPhone 15',
+            gps_lat: 37.5665 + ((pi % 11) - 5) * 0.005,
+            gps_lng: 126.978 + ((invKey.length % 11) - 5) * 0.005,
+          },
           viewCount: pi * 3,
           likeCount: likers.length,
           deletedAt: null,

@@ -108,6 +108,11 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
             {state === "no-result" && (
               <p className="text-[13px] text-text-tertiary">검색 결과가 없어요</p>
             )}
+            {state === "error" && (
+              <p className="text-[13px] text-danger">
+                장소 검색 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.
+              </p>
+            )}
             {state === "permission-required" && (
               <div className="flex items-center justify-between gap-3 rounded-md bg-background-soft p-3">
                 <p className="text-[14px] text-text-primary">위치 권한이 필요해요</p>

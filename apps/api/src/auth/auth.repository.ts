@@ -1,10 +1,9 @@
 import { Injectable, Inject, InternalServerErrorException } from '@nestjs/common';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import {
   users,
   socialAccounts,
-  refreshTokens,
   invitations,
   participants,
   invitationSendLogs,
@@ -17,7 +16,6 @@ import {
   userTermAgreements,
   serviceTerms,
   faqItems,
-  type NewRefreshToken,
 } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
 import { Provider } from './enums/provider.enum';
@@ -172,85 +170,6 @@ export class AuthRepository {
         message: '소셜 계정 처리 중 오류가 발생했습니다.',
       });
     }
-  }
-
-  async saveRefreshToken(
-    data: Pick<
-      NewRefreshToken,
-      'userId' | 'tokenHash' | 'expiresAt' | 'deviceInfo' | 'ipAddress'
-    >,
-  ): Promise<void> {
-    await this.db.insert(refreshTokens).values(data);
-  }
-
-  async findValidRefreshToken(tokenHash: string) {
-    return await this.db.query.refreshTokens.findFirst({
-      where: (t, { and, eq, isNull, gt }) =>
-        and(
-          eq(t.tokenHash, tokenHash),
-          isNull(t.revokedAt),
-          gt(t.expiresAt, new Date()),
-        ),
-    });
-  }
-
-  /**
-   * 유효한 토큰을 원자적으로 무효화 (find + revoke를 단일 쿼리로 처리)
-   * race condition 방지: 동시 요청이 와도 한 번만 성공
-   */
-  async revokeValidRefreshToken(tokenHash: string) {
-    const [revoked] = await this.db
-      .update(refreshTokens)
-      .set({ revokedAt: new Date() })
-      .where(
-        and(
-          eq(refreshTokens.tokenHash, tokenHash),
-          isNull(refreshTokens.revokedAt),
-          gt(refreshTokens.expiresAt, new Date()),
-        ),
-      )
-      .returning();
-    return revoked ?? null;
-  }
-    
-  async findRefreshTokenByHash(tokenHash: string) {
-    return await this.db.query.refreshTokens.findFirst({
-      where: (t, { eq }) => eq(t.tokenHash, tokenHash),
-    });
-  }
-
-  async revokeRefreshToken(
-    userId: string,
-
-    tokenHash: string,
-  ): Promise<void> {
-    await this.db
-      .update(refreshTokens)
-      .set({
-        revokedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(refreshTokens.userId, userId),
-          eq(refreshTokens.tokenHash, tokenHash),
-        ),
-      );
-  }
-
-  /**
-   * 사용자의 모든 Refresh Token 무효화 (전체 기기 로그아웃)
-   * 해당 userId의 모든 유효한 토큰을 revoke
-   */
-  async revokeAllByUserId(userId: string): Promise<void> {
-    await this.db
-      .update(refreshTokens)
-      .set({ revokedAt: new Date() })
-      .where(
-        and(
-          eq(refreshTokens.userId, userId),
-          isNull(refreshTokens.revokedAt),
-        ),
-      );
   }
 
   async findUserById(userId: string) {
@@ -500,18 +419,7 @@ export class AuthRepository {
         .set({ userId: targetUserId })
         .where(eq(aiImageJobs.userId, sourceUserId));
 
-      // 7. source의 활성 refresh 토큰 전부 revoke
-      await tx
-        .update(refreshTokens)
-        .set({ revokedAt: new Date() })
-        .where(
-          and(
-            eq(refreshTokens.userId, sourceUserId),
-            isNull(refreshTokens.revokedAt),
-          ),
-        );
-
-      // 8. source user soft delete
+      // 7. source user soft delete (refresh token revoke는 service 레이어에서 Redis로 처리)
       await tx
         .update(users)
         .set({ deletedAt: new Date(), withdrawalReason: 'merged' })

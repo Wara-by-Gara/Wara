@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,6 +13,7 @@ import { BlocklistRepository } from '../common/repositories/blocklist.repository
 import { ParticipantRepository } from '../common/repositories/participant.repository';
 import { AuthController } from './auth.controller';
 import { AuthRepository } from './auth.repository';
+import { AuthRedisStore } from './auth.redis-store';
 import { AuthService } from './auth.service';
 import { SocialAuthFactory } from './social-auth.factory';
 import { OauthPolicyService } from './oauth-policy.service';
@@ -24,6 +25,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
 
+@Global()
 @Module({
   imports: [
     HttpModule,
@@ -52,6 +54,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
   providers: [
     AuthService,
     AuthRepository,
+    AuthRedisStore,
     SocialAuthFactory,
     OauthPolicyService,
     AppleService,
@@ -86,6 +89,7 @@ import { NaverStrategy } from './strategies/naver.strategy';
   exports: [
     AuthService,
     AuthRepository,
+    AuthRedisStore,
     HostGuard,
     BlocklistGuard,
     ParticipantGuard,
