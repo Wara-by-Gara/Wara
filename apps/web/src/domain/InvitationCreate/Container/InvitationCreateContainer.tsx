@@ -1104,7 +1104,7 @@ export default function InvitationCreateContainer({
                               setAiSheetOpen(true);
                             }}
                           >
-                            AI로 다듬기
+                            AI로 합성하기
                           </Button>
                         )}
                       </div>

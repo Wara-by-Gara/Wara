@@ -66,7 +66,7 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
 
   return (
     <BottomSheet open={open} onOpenChange={handleClose}>
-      <BottomSheetContent title="AI로 다듬기">
+      <BottomSheetContent title="AI로 합성하기">
         <div className="flex flex-col gap-5 pt-1">
           <p className="text-[13px] text-text-secondary">
             업로드한 사진과 선택한 배경을 자연스럽게 합성해요. 결과는 다운로드만
