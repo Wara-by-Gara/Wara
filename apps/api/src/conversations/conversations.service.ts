@@ -215,19 +215,26 @@ export class ConversationsService {
       throw new NotFoundException(ErrorCode.CONVERSATION_NOT_FOUND);
     }
 
-    // 현재 멤버 = 나 + 나머지 참가자(leftAt 무관 — 생성자가 빠지면 안 됨)
+    // 현재 멤버 = 나 + 나머지 참가자(leftAt 무관 — direct→group 시 상대/생성자 보존용)
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     const memberSet = new Set([userId, ...others]);
 
-    // 기존멤버/중복 제외 후 실제 존재하는 유저만
-    const candidates = [...new Set(inviteeIds)].filter((id) => !memberSet.has(id));
+    // "이미 멤버"는 활성 참가자(leftAt null)만 — 나간 사람은 다시 초대할 수 있어야 함
+    const activeIds = new Set(
+      (await this.repository.listParticipants(conversationId)).map((p) => p.userId),
+    );
+    activeIds.add(userId);
+
+    // 활성멤버/중복 제외 후 실제 존재하는 유저만
+    const candidates = [...new Set(inviteeIds)].filter((id) => !activeIds.has(id));
     const invitees = await this.repository.filterActiveUserIds(candidates);
     if (invitees.length === 0) {
       throw new BadRequestException(ErrorCode.GROUP_NO_VALID_INVITEES);
     }
 
     if (conversation.type === 'group') {
-      if (memberSet.size + invitees.length > MAX_GROUP_MEMBERS) {
+      // 정원은 활성 멤버 + 신규(재초대 포함) 기준
+      if (activeIds.size + invitees.length > MAX_GROUP_MEMBERS) {
         throw new BadRequestException(ErrorCode.GROUP_MEMBER_LIMIT_EXCEEDED);
       }
       await this.repository.addParticipants(conversationId, invitees);

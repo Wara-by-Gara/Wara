@@ -74,14 +74,16 @@ export class ConversationsRepository {
   // 기존 그룹에 멤버 추가 (이미 있으면 무시).
   async addParticipants(conversationId: string, userIds: string[]) {
     if (userIds.length === 0) return;
+    // 재초대: 나갔던(leftAt 있는) 멤버는 row가 남아 있으므로 leftAt을 비워 재활성화
     await this.db
       .insert(conversationParticipants)
       .values(userIds.map((userId) => ({ conversationId, userId })))
-      .onConflictDoNothing({
+      .onConflictDoUpdate({
         target: [
           conversationParticipants.conversationId,
           conversationParticipants.userId,
         ],
+        set: { leftAt: null },
       });
   }
 
