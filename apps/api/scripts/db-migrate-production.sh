@@ -48,9 +48,28 @@ DATABASE_URL="$(load_database_url)"
 AFTER=$(docker run --rm postgres:17 psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM drizzle.__drizzle_migrations;")
 echo "적용 후 migration 수: $AFTER"
 
-if [[ "${RESTART_API:-}" == "1" ]]; then
-  echo "wara-api 재시작 중..."
-  docker start wara-api
+# migration 전에 이미 stop 된 상태면 RESTART_API가 안 잡혀 API가 계속 내려감 → 항상 기동 시도
+if docker ps -a --format '{{.Names}}' | grep -qx wara-api; then
+  if docker ps --format '{{.Names}}' | grep -qx wara-api; then
+    echo "wara-api 이미 실행 중"
+  else
+    echo "wara-api 시작 중..."
+    docker start wara-api
+  fi
+
+  echo "API health 대기 (최대 60초)..."
+  for _ in $(seq 1 30); do
+    if curl -sf http://127.0.0.1:3001/api/health >/dev/null 2>&1; then
+      echo "API health OK"
+      break
+    fi
+    sleep 2
+  done
+  if ! curl -sf http://127.0.0.1:3001/api/health >/dev/null 2>&1; then
+    echo "경고: API health 실패 — docker logs wara-api --tail 80 확인" >&2
+  fi
+else
+  echo "경고: wara-api 컨테이너 없음 — deploy 또는 docker run 으로 수동 기동 필요" >&2
 fi
 
 echo "완료"
