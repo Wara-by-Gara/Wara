@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { Avatar } from "@/components/primitives/Avatar";
 import { Badge } from "@/components/primitives/Badge";
@@ -9,6 +11,8 @@ import { cn } from "@/lib/cn";
 import type { BadgeProps } from "@/components/primitives/Badge";
 import { useUserProfile } from "@/hooks/useUsers";
 import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
+import { createConversation } from "@/lib/api/conversations";
+import { ROUTES } from "@/constants/routes";
 
 export type ParticipantRsvp = "attending" | "maybe" | "declined" | "noResponse";
 
@@ -37,8 +41,6 @@ export interface ParticipantProfileModalProps {
   bio?: string;
   /** Storybook 베젤 등 부모(relative) 안에 맞출 때 */
   contained?: boolean;
-  /** 1:1 DM 버튼 콜백 */
-  onDm?: () => void;
 }
 
 export const ParticipantProfileModal = ({
@@ -54,13 +56,21 @@ export const ParticipantProfileModal = ({
   requestPreview,
   bio,
   contained = false,
-  onDm,
 }: ParticipantProfileModalProps) => {
+  const router = useRouter();
   const { data: fetched } = useUserProfile(userId);
   const name = fetched ? getCommentAuthorName(fetched) : (nameProp ?? '');
   const handle = fetched?.nickname ?? handleProp;
   const avatarUrl = fetched?.profileImageUrl ?? avatarUrlProp;
   const rsvp = status ? RSVP_LABEL[status] : null;
+
+  const startChat = useMutation({
+    mutationFn: (targetUserId: string) => createConversation(targetUserId),
+    onSuccess: (data) => {
+      onOpenChange(false);
+      router.push(ROUTES.CHAT.ROOM(data.id));
+    },
+  });
 
   const overlayClass = cn(
     "z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in",
@@ -137,21 +147,36 @@ export const ParticipantProfileModal = ({
           ) : null}
         </div>
 
-        {/* DM 버튼 */}
-        <div className="border-t border-border px-page py-4">
-          <Button
-            fullWidth
-            size="lg"
-            onClick={() => {
-              onDm?.();
-              onOpenChange(false);
-            }}
-            className="gap-2"
-          >
-            <Icon name="message-circle" size="sm" color="currentColor" decorative />
-            1:1 DM 보내기
-          </Button>
-        </div>
+        {/* 액션 버튼 */}
+        {userId ? (
+          <div className="border-t border-border px-page py-4">
+            <div className="flex gap-2">
+              <Button
+                fullWidth
+                size="lg"
+                variant="secondary"
+                onClick={() => {
+                  onOpenChange(false);
+                  router.push(ROUTES.FRIENDS.DETAIL(userId));
+                }}
+                className="gap-2"
+              >
+                <Icon name="user" size="sm" color="currentColor" decorative />
+                프로필 보기
+              </Button>
+              <Button
+                fullWidth
+                size="lg"
+                disabled={startChat.isPending}
+                onClick={() => startChat.mutate(userId)}
+                className="gap-2"
+              >
+                <Icon name="message-circle" size="sm" color="currentColor" decorative />
+                1:1 DM
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </ModalPrimitive.Content>
     </>
   );

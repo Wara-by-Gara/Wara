@@ -95,6 +95,7 @@ export interface Invitation {
   mainImageUrl: string | null;
   mainImageThumbnailUrl: string | null;
   eventStartAt: string | null;
+  isPublic: boolean;
   isMissionEnabled: boolean;
   isPublic?: boolean;
   category?: string | null;
@@ -267,4 +268,8 @@ export function getAiJobStatus(
   return apiGet<AiJobStatusResponse>(
     `/invitations/${invitationId}/main-image/ai/jobs/${jobId}`,
   );
+}
+
+export function getHiddenInvitations(): Promise<Invitation[]> {
+  return apiGet<Invitation[]>("/invitations/hidden");
 }

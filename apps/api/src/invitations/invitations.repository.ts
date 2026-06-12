@@ -155,7 +155,7 @@ export class InvitationsRepository {
       .limit(dto.limit);
   }
 
-  async findAllByUserId(userId: string) {
+  private async findByUserId(userId: string, isHidden: boolean) {
     const rows = await this.db
       .select({
         invitation: invitations,
@@ -167,6 +167,7 @@ export class InvitationsRepository {
         and(
           eq(participants.userId, userId),
           isNull(invitations.deletedAt),
+          eq(participants.isHidden, isHidden),
         ),
       )
       .orderBy(desc(invitations.createdAt));
@@ -192,6 +193,14 @@ export class InvitationsRepository {
       myRole: r.myRole,
       eventLocation: locationByInvitationId.get(r.invitation.id) ?? null,
     }));
+  }
+
+  findAllByUserId(userId: string) {
+    return this.findByUserId(userId, false);
+  }
+
+  findHiddenByUserId(userId: string) {
+    return this.findByUserId(userId, true);
   }
 
   async findParticipantPreviewsByInvitationIds(

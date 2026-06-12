@@ -19,11 +19,19 @@ import {
   CreateConversationSchema,
   CreateConversationDto,
 } from './dto/create-conversation.dto';
-import { SendMessageSchema, SendMessageDto } from './dto/send-message.dto';
+import {
+  SendMessageSchema,
+  SendMessageDto,
+  EditMessageSchema,
+  EditMessageDto,
+  MessageImagePresignedSchema,
+  MessageImagePresignedDto,
+} from './dto/send-message.dto';
 import {
   ListMessagesQuerySchema,
   ListMessagesQueryDto,
 } from './dto/list-messages.query.dto';
+import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -72,6 +80,17 @@ export class ConversationsController {
     );
   }
 
+  // 이미지 업로드용 presigned URL 발급
+  @Post(':id/messages/presigned-url')
+  generateImagePresignedUrl(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(MessageImagePresignedSchema))
+    dto: MessageImagePresignedDto,
+  ) {
+    return this.conversationsService.generateImagePresignedUrl(user.id, id, dto);
+  }
+
   @Post(':id/messages')
   sendMessage(
     @CurrentUser() user: JwtPayload,
@@ -83,6 +102,7 @@ export class ConversationsController {
       id,
       dto.content,
       dto.replyToMessageId,
+      dto.imageKey,
     );
   }
 
@@ -91,9 +111,30 @@ export class ConversationsController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUlidPipe) id: string,
     @Param('messageId', ParseUlidPipe) messageId: string,
-    @Body(new ZodValidationPipe(SendMessageSchema)) dto: SendMessageDto,
+    @Body(new ZodValidationPipe(EditMessageSchema)) dto: EditMessageDto,
   ) {
     return this.conversationsService.editMessage(user.id, id, messageId, dto.content);
+  }
+
+  // 이모지 리액션 토글
+  @Post(':id/messages/:messageId/reactions')
+  toggleReaction(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+    @Body(new ZodValidationPipe(ReactMessageSchema)) dto: ReactMessageDto,
+  ) {
+    return this.conversationsService.toggleReaction(user.id, id, messageId, dto.emoji);
+  }
+
+  // 리액션 상세 (누가 어떤 이모지를 눌렀는지)
+  @Get(':id/messages/:messageId/reactions')
+  getMessageReactors(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Param('messageId', ParseUlidPipe) messageId: string,
+  ) {
+    return this.conversationsService.getMessageReactors(user.id, id, messageId);
   }
 
   @Post(':id/read')

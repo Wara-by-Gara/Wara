@@ -124,6 +124,15 @@ export class InvitationsService {
     return this.s3Service.getViewPresignedUrl(key);
   }
 
+  async findHidden(userId: string) {
+    const invitations = await this.repository.findHiddenByUserId(userId);
+    return Promise.all(
+      invitations.map(async (invitation) => ({
+        ...this.toResponse(invitation),
+      })),
+    );
+  }
+
   async findAll(userId: string) {
     const invitations = await this.repository.findAllByUserId(userId);
     const invitationIds = invitations.map((inv) => inv.id);

@@ -39,6 +39,8 @@ export const QUERY_KEYS = {
     unreadCount: () => ["conversations", "unread-count"] as const,
     detail: (id: string) => ["conversations", id] as const,
     messages: (id: string) => ["conversations", id, "messages"] as const,
+    reactors: (id: string, messageId: string) =>
+      ["conversations", id, "messages", messageId, "reactors"] as const,
   },
   templates: {
     all: () => ["templates"] as const,

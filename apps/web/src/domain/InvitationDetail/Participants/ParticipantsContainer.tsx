@@ -19,15 +19,17 @@ import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { useParticipants, useMyParticipant, useTransferHost } from "@/hooks/useParticipants";
 import { useInvitation } from "@/hooks/useInvitations";
+import { useBlocklist, useUnblockUser } from "@/hooks/useBlocklist";
+import type { BlockedUser } from "@/lib/api/blocklist";
 import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import type { IconName } from "@/components/icons";
 import type { RsvpStatus } from "@/lib/api/participants";
 import { ParticipantProfilePanel, type ParticipantRow } from "./ParticipantProfilePanel";
 
-type Tab = "all" | RsvpStatus | "memo";
+type Tab = "all" | RsvpStatus | "memo" | "blocked";
 type SortKey = "joined-asc" | "joined-desc" | "name-asc";
-type SheetMode = "action" | "memo" | "rsvp" | "kick" | "transfer" | null;
+type SheetMode = "action" | "memo" | "rsvp" | "kick" | "transfer" | "unblock" | null;
 
 const RSVP_TO_PARTICIPANT: Record<RsvpStatus, ParticipantRsvp> = {
   attending: "attending",
@@ -89,6 +91,10 @@ export default function ParticipantsContainer() {
   const { data: myParticipant } = useMyParticipant(invitationId);
   const { data: invitation } = useInvitation(invitationId);
   const isHost = myParticipant?.memberRole === "HOST";
+
+  const { data: blocklistData, isLoading: blocklistLoading } = useBlocklist(invitationId, isHost && tab === "blocked");
+  const unblockMutation = useUnblockUser(invitationId);
+  const [selectedBlockedUser, setSelectedBlockedUser] = useState<BlockedUser | null>(null);
 
   const rsvpLabels = {
     attending: invitation?.rsvpAttendingLabel ?? "참석",
@@ -305,12 +311,32 @@ export default function ParticipantsContainer() {
         open={sheetMode === "kick"}
         onOpenChange={(open) => !open && setSheetMode("action")}
         title="참석자를 명단에서 빼시겠어요?"
-        description="다시 추가하려면 초대 링크가 필요해요"
+        description="내보낸 참가자는 차단 탭에서 차단을 해제해야 재참가할 수 있어요"
         confirmLabel="내보내기"
         confirmVariant="danger"
         loading={kickMutation.isPending}
         onConfirm={() => kickMutation.mutate({ participantId: selectedRow!.participant.id })}
       />
+
+      {/* 차단 유저 액션 바텀시트 */}
+      <BottomSheet open={sheetMode === "unblock"} onOpenChange={(open) => !open && setSheetMode(null)}>
+        <BottomSheetContent
+          title={selectedBlockedUser ? (selectedBlockedUser.name ?? selectedBlockedUser.nickname ?? "") : ""}
+          description="차단을 해제하면 초대 링크로 재참가할 수 있어요"
+        >
+          <button
+            className="w-full rounded-xs bg-danger py-3 text-sm font-semibold text-white disabled:opacity-50"
+            disabled={unblockMutation.isPending}
+            onClick={() => {
+              unblockMutation.mutate(selectedBlockedUser!.userId, {
+                onSuccess: () => { setSheetMode(null); setSelectedBlockedUser(null); },
+              });
+            }}
+          >
+            {unblockMutation.isPending ? "처리 중..." : "차단 해제"}
+          </button>
+        </BottomSheetContent>
+      </BottomSheet>
 
       <div className="flex flex-col gap-4 px-page py-5">
         <ParticipantSummaryCard
@@ -336,17 +362,44 @@ export default function ParticipantsContainer() {
         )}
 
         <div className="flex gap-1.5 overflow-x-auto">
-          {(["all", "attending", "undecided", "absent", "memo"] as Tab[]).filter((t) => t !== "memo" || isHost).map((t) => {
-            const label = t === "all" ? "전체" : t === "attending" ? "참석" : t === "undecided" ? "미정" : t === "memo" ? "메모" : "불참";
-            return (
-              <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
-                {label}
-              </Chip>
-            );
-          })}
+          {(["all", "attending", "undecided", "absent", "memo", "blocked"] as Tab[])
+            .filter((t) => (t !== "memo" && t !== "blocked") || isHost)
+            .map((t) => {
+              const label =
+                t === "all" ? "전체" :
+                t === "attending" ? "참석" :
+                t === "undecided" ? "미정" :
+                t === "absent" ? "불참" :
+                t === "memo" ? "메모" : "차단";
+              return (
+                <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
+                  {label}
+                </Chip>
+              );
+            })}
         </div>
 
-        {isLoading ? (
+        {tab === "blocked" ? (
+          blocklistLoading ? (
+            <ParticipantListSkeleton />
+          ) : (blocklistData?.data ?? []).length === 0 ? (
+            <EmptyState icon="users-round" title="차단된 참가자가 없어요" />
+          ) : (
+            <div className="divide-y divide-border">
+              {(blocklistData?.data ?? []).map((u) => (
+                <ParticipantItem
+                  key={u.userId}
+                  name={u.name ?? u.nickname ?? "이름 없음"}
+                  avatarName={u.name ?? undefined}
+                  handle={u.nickname ?? undefined}
+                  avatarUrl={u.profileImageUrl ?? undefined}
+                  status="declined"
+                  onMore={() => { setSelectedBlockedUser(u); setSheetMode("unblock"); }}
+                />
+              ))}
+            </div>
+          )
+        ) : isLoading ? (
           <ParticipantListSkeleton />
         ) : isError ? (
           <ErrorState title="명단을 불러오지 못했어요" onRetry={() => refetch()} />
