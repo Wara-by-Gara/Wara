@@ -33,6 +33,7 @@ export interface CommentReplyItemProps extends Omit<React.HTMLAttributes<HTMLDiv
   liked?: boolean;
   onLike?: () => void;
   onAvatarClick?: () => void;
+  isDarkBg?: boolean;
 }
 
 export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps>(
@@ -56,6 +57,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
       liked,
       onLike,
       onAvatarClick,
+      isDarkBg,
       ...props
     },
     ref,
@@ -106,10 +108,10 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             {/* 이름행 + 사진 썸네일을 같은 높이에 배치 */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1">
-                <p className="text-[13px] font-semibold text-text-primary">
+                <p className={cn('text-[13px] font-semibold', isDarkBg ? 'text-white' : 'text-text-primary')}>
                   {authorName}
                   {authorHandle ? (
-                    <span className="ml-1 font-normal text-text-tertiary">@{authorHandle}</span>
+                    <span className={cn('ml-1 font-normal', isDarkBg ? 'text-white/60' : 'text-text-tertiary')}>@{authorHandle}</span>
                   ) : null}
                 </p>
                 {variant === "host" ? (
@@ -123,7 +125,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                     나
                   </span>
                 ) : null}
-                <span className="text-[11px] text-text-tertiary">· {createdAt}</span>
+                <span className={cn('text-[11px]', isDarkBg ? 'text-white/60' : 'text-text-tertiary')}>· {createdAt}</span>
               </div>
               {imageUrl ? (
                 <button
@@ -141,7 +143,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             {editingSlot ? (
               <div className="mt-1">{editingSlot}</div>
             ) : content ? (
-              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-snug text-text-primary">
+              <p className={cn('mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-snug', isDarkBg ? 'text-white' : 'text-text-primary')}>
                 {replyToName ? (
                   <>
                     <span className="font-semibold text-primary">@{replyToName}</span>{" "}
@@ -156,7 +158,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 onClick={onLike}
                 className={cn(
                   "mt-1 inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
-                  liked ? "text-brand" : "text-text-tertiary hover:text-brand",
+                  liked ? "text-brand" : isDarkBg ? "text-white/70 hover:text-brand" : "text-text-tertiary hover:text-brand",
                 )}
               >
                 {liked ? (

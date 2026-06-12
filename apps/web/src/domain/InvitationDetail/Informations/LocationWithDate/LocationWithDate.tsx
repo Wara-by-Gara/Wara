@@ -22,6 +22,7 @@ type Props = {
   hideDateInHeader?: boolean;
   /** 상세 페이지 글래스 배경용 스타일 */
   immersive?: boolean;
+  bgColor?: string;
 };
 
 export default function LocationWithDate({
@@ -32,7 +33,9 @@ export default function LocationWithDate({
   showWeather = true,
   hideDateInHeader = false,
   immersive = false,
+  bgColor,
 }: Props) {
+  const isDarkBg = bgColor?.includes('aurora') || bgColor?.includes('starry');
   const router = useRouter();
   const eventLocation = invitation.eventLocation ?? null;
   const { data: weather, within3Days, isFuture } = useWeather(
@@ -76,6 +79,7 @@ export default function LocationWithDate({
                 투표 결과
               </Link>
             ) : undefined}
+            isDarkBg={isDarkBg}
           />
         );
       })()}
@@ -85,6 +89,7 @@ export default function LocationWithDate({
           <LocationCard
             variant="preview"
             immersive={immersive}
+            isDarkBg={isDarkBg}
             placeName={eventLocation.placeName}
             address={
               eventLocation.detailAddress
@@ -98,7 +103,7 @@ export default function LocationWithDate({
           />
         ) : (
           <>
-            <LocationCard variant="unknown" immersive={immersive} />
+            <LocationCard variant="unknown" immersive={immersive} isDarkBg={isDarkBg} />
             {isHost && (
               <Link
                 href={ROUTES.INVITATIONS.LOCATION(invitationId)}

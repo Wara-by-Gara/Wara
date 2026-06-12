@@ -11,6 +11,7 @@ export function useInvitationDetail(invitationId: string) {
   const { data: invitation, isLoading, isError } = useQuery({
     queryKey: QUERY_KEYS.invitations.detail(invitationId),
     queryFn: () => getInvitation(invitationId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: me } = useQuery({

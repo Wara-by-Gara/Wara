@@ -7,8 +7,6 @@ import { z } from 'zod';
 export const UpdateInvitationSchema = z
   .object({
     title: z.string().min(1).max(100).optional(),
-    // CreateInvitationSchema는 description 빈 문자열을 허용하므로 수정도 동일 정책.
-    // 빈 문자열로 생성된 초대장이 수정 시 거부되는 비대칭 방지.
     description: z.string().optional(),
     mainImageKey: z.string().min(1).optional(),
     mainGifUrl: z
@@ -19,6 +17,11 @@ export const UpdateInvitationSchema = z
     templateId: z.string().optional().nullable(),
   eventStartAt: z.coerce.date().optional().nullable(),
   isMissionEnabled: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+  category: z.string().max(20).optional(),
+  fee: z.string().max(100).optional().nullable(),
+  dressCode: z.string().max(100).optional().nullable(),
+  parkingInfo: z.string().optional().nullable(),
   status: z.enum(['active', 'closed']).optional(),
   bgColor: z.string().max(50).optional(),
   font: z.string().max(50).optional(),
@@ -28,6 +31,7 @@ export const UpdateInvitationSchema = z
   rsvpMaybeLabel: z.string().max(20).optional(),
     rsvpDeclinedEmoji: z.string().max(10).optional(),
     rsvpDeclinedLabel: z.string().max(20).optional(),
+    animation: z.string().max(50).optional(),
   })
   .refine((d) => !d.mainGifUrl || !d.mainImageKey, {
     message: 'mainImageKey and mainGifUrl are mutually exclusive',

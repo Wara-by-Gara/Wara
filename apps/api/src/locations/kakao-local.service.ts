@@ -28,6 +28,23 @@ interface KakaoKeywordResponse {
   };
 }
 
+interface KakaoAddressDocument {
+  address_name: string;
+  x: string;
+  y: string;
+  address: { address_name: string } | null;
+  road_address: { address_name: string; building_name: string } | null;
+}
+
+interface KakaoAddressResponse {
+  documents: KakaoAddressDocument[];
+  meta: {
+    total_count: number;
+    pageable_count: number;
+    is_end: boolean;
+  };
+}
+
 export interface PlaceResult {
   placeId: string;
   placeName: string;
@@ -69,6 +86,20 @@ export class KakaoLocalService {
     page: number,
     size: number,
   ): Promise<PlaceSearchResponse> {
+    const keyword = await this.fetchKeyword(query, page, size);
+    // keyword.json은 상호(POI) 검색이라 도로명+건물번호(예: 28-6)를
+    // 못 잡음. 1페이지 결과가 비면 주소 검색(address.json)으로 폴백.
+    if (keyword.places.length === 0 && page === 1) {
+      return this.fetchAddress(query, page, size);
+    }
+    return keyword;
+  }
+
+  private async fetchKeyword(
+    query: string,
+    page: number,
+    size: number,
+  ): Promise<PlaceSearchResponse> {
     try {
       const { data } = await firstValueFrom(
         this.httpService.get<KakaoKeywordResponse>(
@@ -93,6 +124,53 @@ export class KakaoLocalService {
     }
   }
 
+  private async fetchAddress(
+    query: string,
+    page: number,
+    size: number,
+  ): Promise<PlaceSearchResponse> {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get<KakaoAddressResponse>(
+          `${this.baseUrl}/v2/local/search/address.json`,
+          {
+            headers: { Authorization: `KakaoAK ${this.apiKey}` },
+            params: { query, page, size },
+          },
+        ),
+      );
+
+      return {
+        places: data.documents.map(this.mapAddressDocument),
+        meta: {
+          totalCount: data.meta.total_count,
+          pageableCount: data.meta.pageable_count,
+          isEnd: data.meta.is_end,
+        },
+      };
+    } catch {
+      throw new InternalServerErrorException('KAKAO_API_ERROR');
+    }
+  }
+
+  // 주소 문서엔 place_name/id가 없어 좌표로 placeId 합성, 도로명/건물명으로 표시명 구성
+  private mapAddressDocument(doc: KakaoAddressDocument): PlaceResult {
+    const road = doc.road_address?.address_name ?? '';
+    const jibun = doc.address?.address_name ?? doc.address_name;
+    const buildingName = doc.road_address?.building_name ?? '';
+    return {
+      placeId: `addr_${doc.x}_${doc.y}`,
+      placeName: buildingName || road || doc.address_name,
+      address: jibun,
+      roadAddress: road,
+      lat: parseFloat(doc.y),
+      lng: parseFloat(doc.x),
+      phone: '',
+      category: '',
+      placeUrl: '',
+      distance: null,
+    };
+  }
   async reverseGeocode(lat: number, lng: number): Promise<string | null> {
     const latKey = lat.toFixed(3);
     const lngKey = lng.toFixed(3);
