@@ -1,3 +1,4 @@
+CREATE TYPE "public"."activity_event_type" AS ENUM('login', 'invitation_created', 'invitation_sent', 'participant_joined', 'link_opened', 'feedback_created');--> statement-breakpoint
 CREATE TYPE "public"."date_vote_poll_status" AS ENUM('open', 'closed', 'confirmed');--> statement-breakpoint
 CREATE TYPE "public"."date_vote_response" AS ENUM('good', 'maybe', 'bad');--> statement-breakpoint
 CREATE TYPE "public"."gender" AS ENUM('female', 'male');--> statement-breakpoint
@@ -8,12 +9,12 @@ CREATE TYPE "public"."link_event_type" AS ENUM('opened', 'joined');--> statement
 CREATE TYPE "public"."main_cover_type" AS ENUM('image', 'gif');--> statement-breakpoint
 CREATE TYPE "public"."member_role" AS ENUM('HOST', 'GUEST');--> statement-breakpoint
 CREATE TYPE "public"."notification_target_type" AS ENUM('photo', 'feedback', 'invitation', 'mission', 'participantLocations');--> statement-breakpoint
-CREATE TYPE "public"."notification_type" AS ENUM('remind', 'participantLocations', 'eventLocations', 'feedback', 'invitation_date', 'photo', 'arrived', 'nudge', 'ai_complete', 'vote_reminder', 'vote_confirmed', 'vote_tied', 'mention');--> statement-breakpoint
+CREATE TYPE "public"."notification_type" AS ENUM('remind', 'participantLocations', 'eventLocations', 'feedback', 'invitation_date', 'photo', 'arrived', 'nudge', 'ai_complete', 'vote_reminder', 'vote_confirmed', 'vote_tied', 'mention', 'participant_joined');--> statement-breakpoint
 CREATE TYPE "public"."remind_type" AS ENUM('D+7', 'D+30', 'D+365');--> statement-breakpoint
 CREATE TYPE "public"."rsvp_status" AS ENUM('attending', 'undecided', 'absent');--> statement-breakpoint
 CREATE TYPE "public"."send_channel" AS ENUM('link', 'kakao', 'sms', 'email', 'dm', 'instagram');--> statement-breakpoint
 CREATE TYPE "public"."social_provider" AS ENUM('google', 'kakao', 'naver', 'apple');--> statement-breakpoint
-CREATE TYPE "public"."term_type" AS ENUM('service', 'privacy', 'marketing', 'location');--> statement-breakpoint
+CREATE TYPE "public"."term_type" AS ENUM('service', 'privacy', 'marketing', 'location', 'analytics', 'age');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('member', 'admin');--> statement-breakpoint
 CREATE TABLE "social_accounts" (
 	"id" text PRIMARY KEY NOT NULL,
@@ -31,6 +32,7 @@ CREATE TABLE "users" (
 	"id" text PRIMARY KEY NOT NULL,
 	"email" varchar(255),
 	"profile_image_url" text,
+	"profile_image_thumbnail_key" text,
 	"name" varchar(100),
 	"nickname" varchar(20),
 	"birth_year" integer,
@@ -42,7 +44,9 @@ CREATE TABLE "users" (
 	"refresh_token" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"deleted_at" timestamp with time zone
+	"deleted_at" timestamp with time zone,
+	"withdrawal_reason" varchar(32),
+	"withdrawal_detail" text
 );
 --> statement-breakpoint
 CREATE TABLE "oauth_states" (
@@ -53,19 +57,6 @@ CREATE TABLE "oauth_states" (
 	"expires_at" timestamp with time zone NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "oauth_states_state_unique" UNIQUE("state")
-);
---> statement-breakpoint
-CREATE TABLE "refresh_tokens" (
-	"id" text PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
-	"token_hash" text NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL,
-	"revoked_at" timestamp with time zone,
-	"device_info" text,
-	"ip_address" text,
-	"last_used_at" timestamp with time zone,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "refresh_tokens_token_hash_unique" UNIQUE("token_hash")
 );
 --> statement-breakpoint
 CREATE TABLE "invitation_blocklists" (
@@ -116,6 +107,7 @@ CREATE TABLE "invitations" (
 	"description" text NOT NULL,
 	"main_cover_type" "main_cover_type" DEFAULT 'image' NOT NULL,
 	"main_image_key" text,
+	"main_image_thumbnail_key" text,
 	"main_gif_url" text,
 	"event_start_at" timestamp with time zone,
 	"is_mission_enabled" boolean DEFAULT false NOT NULL,
@@ -127,6 +119,13 @@ CREATE TABLE "invitations" (
 	"rsvp_maybe_label" varchar(20) DEFAULT '미정' NOT NULL,
 	"rsvp_declined_emoji" varchar(10) DEFAULT '😭' NOT NULL,
 	"rsvp_declined_label" varchar(20) DEFAULT '불참' NOT NULL,
+	"animation" varchar(50),
+	"fee" varchar(100),
+	"dress_code" varchar(100),
+	"parking_info" text,
+	"is_public" boolean DEFAULT false NOT NULL,
+	"category" varchar(20),
+	"view_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"deleted_at" timestamp with time zone,
@@ -141,7 +140,6 @@ CREATE TABLE "participants" (
 	"member_role" "member_role" NOT NULL,
 	"rsvp_status" "rsvp_status" DEFAULT 'undecided' NOT NULL,
 	"is_hidden" boolean DEFAULT false NOT NULL,
-	"display_name" varchar(100),
 	"note" text,
 	"host_memo" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -161,6 +159,35 @@ CREATE TABLE "ai_image_jobs" (
 	"completed_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "ai_generations" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"template_id" text NOT NULL,
+	"source_image_key" text NOT NULL,
+	"result_image_key" text,
+	"status" varchar(20) DEFAULT 'pending' NOT NULL,
+	"error_code" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"completed_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "image_processing_jobs" (
+	"id" text PRIMARY KEY NOT NULL,
+	"target_type" varchar(30) NOT NULL,
+	"target_id" text NOT NULL,
+	"source_key" text NOT NULL,
+	"thumbnail_key" text,
+	"status" varchar(20) DEFAULT 'pending' NOT NULL,
+	"mime_type" text,
+	"size_bytes" integer,
+	"error_code" text,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"completed_at" timestamp with time zone
+);
+--> statement-breakpoint
 CREATE TABLE "event_locations" (
 	"id" text PRIMARY KEY NOT NULL,
 	"invitation_id" text NOT NULL,
@@ -172,6 +199,7 @@ CREATE TABLE "event_locations" (
 	"place_id" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
 	CONSTRAINT "event_locations_invitation_id_unique" UNIQUE("invitation_id"),
 	CONSTRAINT "check_event_location_coords" CHECK ("event_locations"."lat" >= -90 AND "event_locations"."lat" <= 90 AND "event_locations"."lng" >= -180 AND "event_locations"."lng" <= 180)
 );
@@ -184,6 +212,7 @@ CREATE TABLE "participant_locations" (
 	"lat" double precision NOT NULL,
 	"lng" double precision NOT NULL,
 	"is_arrived" boolean DEFAULT false NOT NULL,
+	"status_message" varchar(100),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "check_participant_location_coords" CHECK ("participant_locations"."lat" >= -90 AND "participant_locations"."lat" <= 90 AND "participant_locations"."lng" >= -180 AND "participant_locations"."lng" <= 180),
@@ -227,6 +256,7 @@ CREATE TABLE "photos" (
 	"participant_id" text NOT NULL,
 	"invitation_id" text NOT NULL,
 	"image_key" text NOT NULL,
+	"thumbnail_key" text,
 	"taken_at" timestamp with time zone,
 	"exif_metadata" jsonb,
 	"view_count" integer DEFAULT 0 NOT NULL,
@@ -235,6 +265,7 @@ CREATE TABLE "photos" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"deleted_at" timestamp with time zone,
+	"exif_fingerprint" text,
 	CONSTRAINT "check_photo_view_count" CHECK ("photos"."view_count" >= 0),
 	CONSTRAINT "check_photo_like_count" CHECK ("photos"."like_count" >= 0),
 	CONSTRAINT "check_photo_feedback_count" CHECK ("photos"."feedback_count" >= 0)
@@ -274,6 +305,7 @@ CREATE TABLE "notification_settings" (
 	"is_invitation_date" boolean DEFAULT true NOT NULL,
 	"is_photo" boolean DEFAULT true NOT NULL,
 	"is_mission" boolean DEFAULT true NOT NULL,
+	"is_participant" boolean DEFAULT true NOT NULL,
 	"is_participant_locations" boolean DEFAULT true NOT NULL,
 	"is_event_locations" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -289,6 +321,7 @@ CREATE TABLE "notifications" (
 	"content" text NOT NULL,
 	"target_type" "notification_target_type",
 	"target_id" text,
+	"invitation_id" text,
 	"is_read" boolean DEFAULT false NOT NULL,
 	"read_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -332,12 +365,14 @@ CREATE TABLE "faq_items" (
 --> statement-breakpoint
 CREATE TABLE "service_terms" (
 	"id" text PRIMARY KEY NOT NULL,
+	"document_id" varchar(64) NOT NULL,
 	"term_type" "term_type" NOT NULL,
 	"version" varchar(20) NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"content" text NOT NULL,
 	"is_active" boolean DEFAULT false NOT NULL,
 	"is_required" boolean DEFAULT false NOT NULL,
+	"effective_date" timestamp with time zone NOT NULL,
 	"published_at" timestamp with time zone NOT NULL,
 	"created_by" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -383,9 +418,76 @@ CREATE TABLE "date_vote_slots" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "user_activity_events" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"event_type" "activity_event_type" NOT NULL,
+	"metadata" jsonb,
+	"occurred_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "conversation_participants" (
+	"conversation_id" text NOT NULL,
+	"user_id" text NOT NULL,
+	"last_read_at" timestamp with time zone,
+	"alias" text,
+	"left_at" timestamp with time zone,
+	"joined_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "conversation_participants_conversation_id_user_id_pk" PRIMARY KEY("conversation_id","user_id")
+);
+--> statement-breakpoint
+CREATE TABLE "conversations" (
+	"id" text PRIMARY KEY NOT NULL,
+	"type" text DEFAULT 'direct' NOT NULL,
+	"title" text,
+	"direct_key" text,
+	"last_message_text" text,
+	"last_message_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "conversations_direct_key_unique" UNIQUE("direct_key")
+);
+--> statement-breakpoint
+CREATE TABLE "message_reactions" (
+	"id" text PRIMARY KEY NOT NULL,
+	"message_id" text NOT NULL,
+	"user_id" text NOT NULL,
+	"emoji" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "messages" (
+	"id" text PRIMARY KEY NOT NULL,
+	"conversation_id" text NOT NULL,
+	"sender_id" text NOT NULL,
+	"type" text DEFAULT 'user' NOT NULL,
+	"content" text NOT NULL,
+	"image_key" text,
+	"reply_to_message_id" text,
+	"edited_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "friend_hides" (
+	"user_id" text NOT NULL,
+	"hidden_user_id" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "friend_hides_user_id_hidden_user_id_pk" PRIMARY KEY("user_id","hidden_user_id")
+);
+--> statement-breakpoint
+CREATE TABLE "geocode_cache" (
+	"id" text PRIMARY KEY NOT NULL,
+	"lat_key" text NOT NULL,
+	"lng_key" text NOT NULL,
+	"address" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "social_accounts" ADD CONSTRAINT "social_accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_promoted_by_users_id_fk" FOREIGN KEY ("promoted_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_blocked_user_id_users_id_fk" FOREIGN KEY ("blocked_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation_blocklists" ADD CONSTRAINT "invitation_blocklists_blocked_by_user_id_users_id_fk" FOREIGN KEY ("blocked_by_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -399,6 +501,7 @@ ALTER TABLE "participants" ADD CONSTRAINT "participants_user_id_users_id_fk" FOR
 ALTER TABLE "participants" ADD CONSTRAINT "participants_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ai_image_jobs" ADD CONSTRAINT "ai_image_jobs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ai_image_jobs" ADD CONSTRAINT "ai_image_jobs_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "ai_generations" ADD CONSTRAINT "ai_generations_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "event_locations" ADD CONSTRAINT "event_locations_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "participant_locations" ADD CONSTRAINT "participant_locations_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "participant_locations" ADD CONSTRAINT "participant_locations_participant_id_participants_id_fk" FOREIGN KEY ("participant_id") REFERENCES "public"."participants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -420,6 +523,7 @@ ALTER TABLE "feedbacks" ADD CONSTRAINT "feedbacks_attached_photo_id_photos_id_fk
 ALTER TABLE "notification_settings" ADD CONSTRAINT "notification_settings_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_actor_user_id_users_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "remind_logs" ADD CONSTRAINT "remind_logs_invitation_id_invitations_id_fk" FOREIGN KEY ("invitation_id") REFERENCES "public"."invitations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_admin_id_users_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -431,31 +535,60 @@ ALTER TABLE "date_vote_polls" ADD CONSTRAINT "date_vote_polls_invitation_id_invi
 ALTER TABLE "date_vote_responses" ADD CONSTRAINT "date_vote_responses_slot_id_date_vote_slots_id_fk" FOREIGN KEY ("slot_id") REFERENCES "public"."date_vote_slots"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "date_vote_responses" ADD CONSTRAINT "date_vote_responses_participant_id_participants_id_fk" FOREIGN KEY ("participant_id") REFERENCES "public"."participants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "date_vote_slots" ADD CONSTRAINT "date_vote_slots_poll_id_date_vote_polls_id_fk" FOREIGN KEY ("poll_id") REFERENCES "public"."date_vote_polls"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_activity_events" ADD CONSTRAINT "user_activity_events_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "conversation_participants" ADD CONSTRAINT "conversation_participants_conversation_id_conversations_id_fk" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "conversation_participants" ADD CONSTRAINT "conversation_participants_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "message_reactions" ADD CONSTRAINT "message_reactions_message_id_messages_id_fk" FOREIGN KEY ("message_id") REFERENCES "public"."messages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "message_reactions" ADD CONSTRAINT "message_reactions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_conversation_id_conversations_id_fk" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_sender_id_users_id_fk" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_reply_to_message_id_messages_id_fk" FOREIGN KEY ("reply_to_message_id") REFERENCES "public"."messages"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "friend_hides" ADD CONSTRAINT "friend_hides_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "friend_hides" ADD CONSTRAINT "friend_hides_hidden_user_id_users_id_fk" FOREIGN KEY ("hidden_user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_social_accounts_user_provider" ON "social_accounts" USING btree ("user_id","provider");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_social_accounts_provider_account" ON "social_accounts" USING btree ("provider","provider_account_id");--> statement-breakpoint
-CREATE INDEX "idx_refresh_tokens_user" ON "refresh_tokens" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_blocklist_active" ON "invitation_blocklists" USING btree ("invitation_id","blocked_user_id") WHERE "invitation_blocklists"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE INDEX "idx_blocklist_invitation" ON "invitation_blocklists" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_link_events_log_id" ON "invitation_link_events" USING btree ("log_id");--> statement-breakpoint
 CREATE INDEX "idx_link_events_type" ON "invitation_link_events" USING btree ("event_type");--> statement-breakpoint
 CREATE INDEX "idx_link_events_created_at" ON "invitation_link_events" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "idx_send_logs_created_at" ON "invitation_send_logs" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "idx_invitations_user_id" ON "invitations" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "idx_invitations_public_explore" ON "invitations" USING btree ("is_public","category");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_participants_user_invitation" ON "participants" USING btree ("user_id","invitation_id");--> statement-breakpoint
+CREATE INDEX "idx_participants_invitation_id" ON "participants" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_ai_jobs_user_created" ON "ai_image_jobs" USING btree ("user_id","created_at");--> statement-breakpoint
 CREATE INDEX "idx_ai_jobs_invitation" ON "ai_image_jobs" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_ai_jobs_status" ON "ai_image_jobs" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "idx_ai_generations_user_created" ON "ai_generations" USING btree ("user_id","created_at");--> statement-breakpoint
+CREATE INDEX "idx_ai_generations_status" ON "ai_generations" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "idx_image_jobs_target" ON "image_processing_jobs" USING btree ("target_type","target_id");--> statement-breakpoint
+CREATE INDEX "idx_image_jobs_status" ON "image_processing_jobs" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "idx_event_locations_coords" ON "event_locations" USING btree ("lat","lng");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_participant_locations_participant_invitation" ON "participant_locations" USING btree ("invitation_id","participant_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_mission_assignments_mission_participant" ON "mission_assignments" USING btree ("mission_id","participant_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_photo_likes_photo_participant" ON "photo_likes" USING btree ("photo_id","participant_id");--> statement-breakpoint
 CREATE INDEX "idx_photos_invitation_taken_at" ON "photos" USING btree ("invitation_id","taken_at");--> statement-breakpoint
 CREATE INDEX "idx_photos_deleted_at" ON "photos" USING btree ("deleted_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_photos_invitation_fingerprint" ON "photos" USING btree ("invitation_id","exif_fingerprint") WHERE "photos"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_feedback_likes_feedback_participant" ON "feedback_likes" USING btree ("feedback_id","participant_id");--> statement-breakpoint
+CREATE INDEX "idx_notifications_invitation" ON "notifications" USING btree ("invitation_id");--> statement-breakpoint
+CREATE INDEX "idx_notifications_user_id" ON "notifications" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_remind_logs_invitation_type" ON "remind_logs" USING btree ("invitation_id","remind_type");--> statement-breakpoint
 CREATE INDEX "idx_remind_logs_invitation" ON "remind_logs" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_inquiries_user_id" ON "inquiries" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "idx_inquiries_deleted_at" ON "inquiries" USING btree ("deleted_at") WHERE "inquiries"."deleted_at" IS NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_service_terms_document_id" ON "service_terms" USING btree ("document_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_user_term_agreements_user_term" ON "user_term_agreements" USING btree ("user_id","term_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "uq_date_vote_polls_invitation" ON "date_vote_polls" USING btree ("invitation_id");--> statement-breakpoint
 CREATE INDEX "idx_date_vote_polls_status" ON "date_vote_polls" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "idx_date_vote_polls_closes_at" ON "date_vote_polls" USING btree ("closes_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "uq_date_vote_responses_slot_participant" ON "date_vote_responses" USING btree ("slot_id","participant_id");
+CREATE UNIQUE INDEX "uq_date_vote_responses_slot_participant" ON "date_vote_responses" USING btree ("slot_id","participant_id");--> statement-breakpoint
+CREATE INDEX "idx_activity_events_user_occurred" ON "user_activity_events" USING btree ("user_id","occurred_at");--> statement-breakpoint
+CREATE INDEX "idx_activity_events_type_occurred" ON "user_activity_events" USING btree ("event_type","occurred_at");--> statement-breakpoint
+CREATE INDEX "idx_activity_events_occurred" ON "user_activity_events" USING btree ("occurred_at");--> statement-breakpoint
+CREATE INDEX "idx_conversation_participants_user" ON "conversation_participants" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_message_reactions_message_user" ON "message_reactions" USING btree ("message_id","user_id");--> statement-breakpoint
+CREATE INDEX "idx_messages_conversation_created" ON "messages" USING btree ("conversation_id","created_at");--> statement-breakpoint
+CREATE INDEX "idx_friend_hides_user" ON "friend_hides" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_geocode_cache_lat_lng" ON "geocode_cache" USING btree ("lat_key","lng_key");

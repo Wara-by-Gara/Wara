@@ -12,10 +12,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import { readMigrationFiles } from 'drizzle-orm/migrator';
 import postgres from 'postgres';
 import path from 'path';
-import {
-  bootstrapLegacySchema,
-  isLegacyBootstrappedDb,
-} from './bootstrap-legacy-schema';
 
 const MIGRATIONS_FOLDER = path.join(__dirname, 'migrations');
 const MIGRATIONS_SCHEMA = 'drizzle';
@@ -125,16 +121,6 @@ async function main(): Promise<void> {
     throw new Error(
       `journal(${journal.entries.length})와 migration 파일(${migrations.length}) 개수가 다릅니다.`,
     );
-  }
-
-  const legacyDb = await isLegacyBootstrappedDb(client);
-  const firstMigration = migrations[0];
-  if (
-    legacyDb &&
-    firstMigration &&
-    !appliedHashes.has(firstMigration.hash)
-  ) {
-    await bootstrapLegacySchema(client);
   }
 
   for (let i = 0; i < migrations.length; i++) {
