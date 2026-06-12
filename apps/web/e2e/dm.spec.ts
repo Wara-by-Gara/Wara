@@ -873,7 +873,8 @@ test.describe("dm-batch8-drawer", () => {
     await page.getByRole("button", { name: "초대하기" }).click();
     const inviteSheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await inviteSheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await inviteSheet.getByRole("button", { name: /초대/ }).click();
+    await inviteSheet.getByRole("button", { name: /다음/ }).click();
+    await inviteSheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
 
@@ -919,7 +920,8 @@ test.describe("dm-batch8b-chat-photo-nav", () => {
     await page.getByRole("button", { name: "초대하기" }).click();
     const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
 
@@ -959,7 +961,8 @@ test.describe("dm-batch9-group", () => {
     const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByPlaceholder("이름으로 친구 검색").fill(GUEST002_NAME);
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
 
     // 새 단톡방으로 이동 + 입장 시스템 메시지
     await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
@@ -985,13 +988,14 @@ test.describe("dm-batch9-group", () => {
     const dmPath = await hostEnterDmWith(page, GUEST001_ID);
     const dmId = dmPath.split("/").pop()!;
 
-    // 초대 + 공유 방 이름 설정
+    // 초대 -> 다음 -> 이름 입력 창에서 공유 방 이름 설정 -> 만들기
     await page.getByRole("button", { name: "대화방 메뉴" }).click();
     await page.getByRole("button", { name: "초대하기" }).click();
     const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
-    await sheet.getByPlaceholder("단톡방 이름 (선택)").fill("E2E모임");
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await page.getByPlaceholder("예: 주말 모임").fill("E2E모임");
+    await page.getByRole("button", { name: "단톡방 만들기" }).click();
     await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
 
     // 헤더에 공유 이름
@@ -1030,7 +1034,8 @@ test.describe("dm-batch10-group-realtime", () => {
     await host.page.getByRole("button", { name: "초대하기" }).click();
     const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await host.page.waitForURL((url) => !url.pathname.includes(dmId), {
       timeout: 10_000,
     });
@@ -1076,7 +1081,8 @@ test.describe("dm-batch11-leave", () => {
     await host.page.getByRole("button", { name: "초대하기" }).click();
     const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     const groupPath = new URL(host.page.url()).pathname;
 
@@ -1114,7 +1120,8 @@ test.describe("dm-batch12-unread-count", () => {
     await host.page.getByRole("button", { name: "초대하기" }).click();
     const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     const groupPath = new URL(host.page.url()).pathname;
 
@@ -1152,7 +1159,8 @@ test.describe("dm-batch12-unread-count", () => {
     await host.page.getByRole("button", { name: "초대하기" }).click();
     const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
     await sheet.getByText(GUEST002_NAME, { exact: true }).click();
-    await sheet.getByRole("button", { name: /초대/ }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
     await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
     const groupPath = new URL(host.page.url()).pathname;
 

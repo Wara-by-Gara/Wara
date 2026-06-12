@@ -293,6 +293,7 @@ function InvitePickerContent({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState("");
   const [query, setQuery] = useState("");
+  const [nameOpen, setNameOpen] = useState(false); // 새 단톡방 이름 입력 창
 
   const friends = useFriends().data?.friends ?? [];
   const memberSet = new Set(memberIds);
@@ -316,6 +317,7 @@ function InvitePickerContent({
       { userIds: [...selected], title: canSetTitle ? title : undefined },
       {
         onSuccess: (res) => {
+          setNameOpen(false);
           onDone();
           router.push(ROUTES.CHAT.ROOM(res.conversationId));
         },
@@ -324,18 +326,15 @@ function InvitePickerContent({
     );
   };
 
+  // 새 단톡방 생성(canSetTitle)이면 이름 입력 창을 먼저, 아니면 바로 초대
+  const handlePrimary = () => {
+    if (selected.size === 0) return;
+    if (canSetTitle) setNameOpen(true);
+    else handleInvite();
+  };
+
   return (
     <div>
-      {/* 새 단톡방 생성 시(1:1에서 초대) 공유 방 이름 — 생성자만 1회 */}
-      {canSetTitle && (
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={50}
-          placeholder="단톡방 이름 (선택)"
-          className="mb-3 w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
-        />
-      )}
       <div className="mb-2">
         <SearchBar
           placeholder="이름으로 친구 검색"
@@ -381,12 +380,41 @@ function InvitePickerContent({
       )}
       <button
         type="button"
-        onClick={handleInvite}
+        onClick={handlePrimary}
         disabled={selected.size === 0 || invite.isPending}
         className="mt-4 w-full rounded-lg bg-primary py-3 text-[15px] font-bold text-text-inverse disabled:opacity-40"
       >
-        {invite.isPending ? "초대 중..." : `초대${selected.size > 0 ? ` (${selected.size})` : ""}`}
+        {canSetTitle ? "다음" : "초대"}
+        {selected.size > 0 ? ` (${selected.size})` : ""}
       </button>
+
+      {/* 새 단톡방 이름 입력 창 (생성자만, 1회) */}
+      <Modal open={nameOpen} onOpenChange={(o) => !invite.isPending && setNameOpen(o)}>
+        <ModalContent className="max-w-[320px]">
+          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+            단톡방 이름
+          </ModalPrimitive.Title>
+          <ModalPrimitive.Description className="mt-1 text-[13px] text-text-secondary">
+            이름을 정하면 모든 멤버에게 보여요. 비워두면 멤버 이름으로 표시됩니다.
+          </ModalPrimitive.Description>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={50}
+            placeholder="예: 주말 모임"
+            autoFocus
+            className="mt-4 w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+          />
+          <button
+            type="button"
+            onClick={handleInvite}
+            disabled={invite.isPending}
+            className="mt-4 w-full rounded-lg bg-primary py-3 text-[15px] font-bold text-text-inverse disabled:opacity-40"
+          >
+            {invite.isPending ? "만드는 중..." : "단톡방 만들기"}
+          </button>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

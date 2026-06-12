@@ -200,6 +200,8 @@ export function useSendImageMessage(id: string) {
     },
     onSuccess: (msg) => {
       appendMessage(qc, id, msg);
+      // 서랍 사진 갤러리 즉시 갱신
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.photos(id) });
       if (!applyIncomingToList(qc, msg, { incrementUnread: false })) {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.list() });
       }
@@ -326,6 +328,10 @@ export function useChatRealtime(id: string) {
       if (msg.type === 'system') {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.detail(id) });
         qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.participants(id) });
+      }
+      // 사진 수신 -> 서랍 갤러리 갱신
+      if (msg.imageUrl) {
+        qc.invalidateQueries({ queryKey: QUERY_KEYS.conversations.photos(id) });
       }
       // 읽음 처리는 디바운스 (메시지마다 POST /read 호출 방지 -> rate limit 방지)
       scheduleMarkRead(qc, id);
