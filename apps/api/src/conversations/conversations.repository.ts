@@ -124,14 +124,6 @@ export class ConversationsRepository {
       );
   }
 
-  async countParticipants(conversationId: string) {
-    const rows = await this.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(conversationParticipants)
-      .where(eq(conversationParticipants.conversationId, conversationId));
-    return rows[0]?.count ?? 0;
-  }
-
   async findConversationById(id: string) {
     const rows = await this.db
       .select()
