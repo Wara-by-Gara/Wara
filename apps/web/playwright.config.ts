@@ -60,6 +60,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], storageState: authFile("newHost") },
     },
     {
+      // 트랙 A 위치 공유 회귀 방지 — REST·WS 모두 request fixture + devToken 직접 사용하므로
+      // 페르소나 storageState 불필요. anon과 동일하게 setup 의존성 없이 단독 실행.
+      name: "locationApi",
+      testMatch: /location-(privacy|realtime|auth)\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
       name: "dmFlow",
       testMatch: /dm-flow\.spec\.ts/,
       dependencies: ["setup"],
