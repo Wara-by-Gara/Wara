@@ -190,6 +190,13 @@
       "when": 1781249303357,
       "tag": "0024_soft_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1781200000003,
+      "tag": "0024_ai_generations",
+      "breakpoints": true
     }
   ]
 }

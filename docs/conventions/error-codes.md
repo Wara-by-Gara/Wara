@@ -42,6 +42,7 @@
 |------|:--------:|------|
 | `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
 | `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
+| `INVITATION_VERSION_CONFLICT` | 409 | 다른 세션이 먼저 수정. 클라이언트가 `expectedUpdatedAt`을 보냈는데 서버의 `updatedAt`과 불일치. 최신 상태 재조회 후 재시도 |
 
 ## Social Link
 
@@ -151,6 +152,7 @@
 | `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
 | `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
 | `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+| `AI_GENERATION_NOT_FOUND` | 404 | AI generation 없음 또는 본인 소유 아님 |
 
 ## DM (1:1 채팅)
 

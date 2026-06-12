@@ -91,11 +91,25 @@ export function apiGet<T>(path: string): Promise<T> {
   );
 }
 
-export function apiPost<T>(path: string, body?: unknown): Promise<T> {
+export interface ApiPostOptions {
+  // 멱등성 보장이 필요한 변경 작업에 전달. 서버는 같은 키로 들어온 직전 요청이
+  // 진행 중이면 409 IDEMPOTENCY_IN_PROGRESS, 완료된 응답은 그대로 replay.
+  idempotencyKey?: string;
+}
+
+export function apiPost<T>(
+  path: string,
+  body?: unknown,
+  options?: ApiPostOptions,
+): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (options?.idempotencyKey) {
+    headers["Idempotency-Key"] = options.idempotencyKey;
+  }
   return request<T>(
     () => fetch(`${API_BASE}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: "include",
     }),

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
   HttpException,
   HttpStatus,
   ServiceUnavailableException,
@@ -271,8 +272,18 @@ export class InvitationsService {
     const current = await this.repository.findById(id);
     if (!current) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
 
-    if (dto.templateId && dto.templateId !== current.templateId) {
-      await this.validateTemplateId(dto.templateId);
+    // 낙관적 락. 클라이언트가 보낸 expectedUpdatedAt이 서버의 최신 updatedAt과
+    // 다르면 누군가가 먼저 수정한 것. 미전송이면 검사 스킵(옛 클라이언트 호환).
+    const { expectedUpdatedAt, ...updatable } = dto;
+    if (
+      expectedUpdatedAt &&
+      current.updatedAt.getTime() !== expectedUpdatedAt.getTime()
+    ) {
+      throw new ConflictException(ErrorCode.INVITATION_VERSION_CONFLICT);
+    }
+
+    if (updatable.templateId && updatable.templateId !== current.templateId) {
+      await this.validateTemplateId(updatable.templateId);
     }
 
     // 커버 입력(GIF/이미지)이 있을 때만 커버 관련 필드를 변경.
@@ -286,30 +297,38 @@ export class InvitationsService {
     } = {};
 
     let verifiedImage: { mime: string; contentLength: number } | null = null;
-    if (dto.mainGifUrl) {
+    if (updatable.mainGifUrl) {
       coverPatch.mainCoverType = 'gif';
-      coverPatch.mainGifUrl = dto.mainGifUrl;
+      coverPatch.mainGifUrl = updatable.mainGifUrl;
       coverPatch.mainImageKey = null;
       // image → gif 전환 시 기존 main 섬네일 키도 초기화 (orphan 표시값 방지)
       coverPatch.mainImageThumbnailKey = null;
-    } else if (dto.mainImageKey && dto.mainImageKey !== current.mainImageKey) {
+    } else if (
+      updatable.mainImageKey &&
+      updatable.mainImageKey !== current.mainImageKey
+    ) {
       // 키가 실제로 바뀐 경우에만 verify — FE가 변경 없는 update에도 기존 키를 그대로
       // 보내므로 무조건 verify하면 S3 호출 실패 시 update 자체가 막힘.
-      verifiedImage = await this.imageProcessing.verifyUpload(dto.mainImageKey);
+      verifiedImage = await this.imageProcessing.verifyUpload(
+        updatable.mainImageKey,
+      );
       coverPatch.mainCoverType = 'image';
-      coverPatch.mainImageKey = dto.mainImageKey;
+      coverPatch.mainImageKey = updatable.mainImageKey;
       coverPatch.mainGifUrl = null;
       // 새 이미지 들어왔으니 이전 섬네일은 무효 — 워커가 재생성 전까지 null
       coverPatch.mainImageThumbnailKey = null;
     }
 
-    const updated = await this.repository.update(id, { ...dto, ...coverPatch });
+    const updated = await this.repository.update(id, {
+      ...updatable,
+      ...coverPatch,
+    });
     if (!updated) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
 
-    if (verifiedImage && dto.mainImageKey) {
+    if (verifiedImage && updatable.mainImageKey) {
       await this.enqueueMainImageThumbnail(
         updated.id,
-        dto.mainImageKey,
+        updatable.mainImageKey,
         verifiedImage.mime,
         verifiedImage.contentLength,
       );

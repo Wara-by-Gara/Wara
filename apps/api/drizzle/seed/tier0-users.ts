@@ -36,6 +36,7 @@ export async function seedTier0(db: DrizzleDB) {
         font: sql`excluded.font`,
         effect: sql`excluded.effect`,
         isActive: sql`excluded.is_active`,
+        prompt: sql`excluded.prompt`,
         updatedAt: new Date(),
       },
     });
