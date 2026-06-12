@@ -69,6 +69,8 @@ export function updateHostMemo(invitationId: string, participantId: string, memo
 
 export function transferHost(invitationId: string, participantId: string): Promise<void> {
   return apiPatch<void>(`/invitations/${invitationId}/participants/${participantId}/transfer-host`, {});
+}
+
 export function updateHidden(invitationId: string, isHidden: boolean): Promise<Participant> {
   return apiPatch<Participant>(`/invitations/${invitationId}/participants/me/hidden`, { isHidden });
 }

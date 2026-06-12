@@ -97,7 +97,6 @@ export interface Invitation {
   eventStartAt: string | null;
   isPublic: boolean;
   isMissionEnabled: boolean;
-  isPublic?: boolean;
   category?: string | null;
   fee?: string | null;
   dressCode?: string | null;
