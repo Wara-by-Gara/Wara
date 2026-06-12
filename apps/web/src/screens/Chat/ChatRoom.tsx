@@ -100,6 +100,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   // 상세 시트 이모지 필터 (null = 전체). 다른 메시지 열면 초기화.
   const [reactionFilter, setReactionFilter] = useState<string | null>(null);
   const reactorsQuery = useMessageReactors(id, reactionDetail?.id ?? null);
+  const reactors = reactorsQuery.data?.reactors ?? [];
   useEffect(() => {
     setReactionFilter(null);
   }, [reactionDetail?.id]);
@@ -809,8 +810,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         onOpenChange={(open) => !open && setReactionDetail(null)}
       >
         <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
-          {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터 */}
-          <div className="flex flex-wrap gap-2 pb-2">
+          {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터
+              data-vaul-no-drag: 칩 탭 시 시트가 드래그로 닫히는 것 방지 */}
+          <div data-vaul-no-drag className="flex flex-wrap gap-2 pb-2">
             <button
               type="button"
               onClick={() => setReactionFilter(null)}
@@ -820,7 +822,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   : "text-text-secondary ring-border"
               }`}
             >
-              전체 {reactorsQuery.data?.reactors.length ?? 0}
+              전체 {reactors.length}
             </button>
             {reactionDetail?.reactions.map((r) => (
               <button
@@ -838,12 +840,14 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               </button>
             ))}
           </div>
-          {/* 리액션한 사람 목록 (필터 적용) */}
-          <ul className="flex flex-col">
-            {(reactorsQuery.data?.reactors ?? [])
+          {/* 리액션한 사람 목록 (필터 적용)
+              minHeight: 필터해도 시트(하단 고정) 높이가 줄지 않게 전체 인원 기준으로 고정.
+              줄어들면 칩이 아래로 밀려 모바일 ghost click이 오버레이에 떨어지며 시트가 닫힘. */}
+          <ul className="flex flex-col" style={{ minHeight: reactors.length * 52 }}>
+            {reactors
               .filter((rc) => !reactionFilter || rc.emoji === reactionFilter)
               .map((rc) => (
-                <li key={rc.userId} className="flex items-center gap-3 py-2">
+                <li key={rc.userId} className="flex h-13 items-center gap-3">
                   <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
                   <span className="flex-1 text-[15px] text-text-primary">
                     {rc.name ?? "사용자"}

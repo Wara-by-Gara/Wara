@@ -794,6 +794,7 @@ test.describe("dm-batch6-reactions", () => {
     await host.context.close();
     await guest.context.close();
   });
+
 });
 
 // 1x1 PNG (S3 mock 응답 + 업로드 파일용)
