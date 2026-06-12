@@ -86,6 +86,7 @@ export const ErrorCode = {
   MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
   MESSAGE_FORBIDDEN: 'MESSAGE_FORBIDDEN',
   CANNOT_MESSAGE_SELF: 'CANNOT_MESSAGE_SELF',
+  MESSAGE_IMAGE_INVALID: 'MESSAGE_IMAGE_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

@@ -141,6 +141,20 @@
       "when": 1749600000000,
       "tag": "0020_album_photo_timeline",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1781200000000,
+      "tag": "0021_message_reactions",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1781200000001,
+      "tag": "0022_message_image_key",
+      "breakpoints": true
     }
   ]
 }
