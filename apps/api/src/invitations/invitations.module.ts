@@ -24,5 +24,6 @@ import { IMAGE_PROCESSING_QUEUE } from '../queues/queue.constants';
   ],
   controllers: [InvitationsController, OgImageController],
   providers: [InvitationsService, InvitationsRepository, AiImageJobsRepository, OgImageService],
+  exports: [AiImageJobsRepository],
 })
 export class InvitationsModule {}

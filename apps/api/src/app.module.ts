@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { TemplatesModule } from './templates/templates.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { AiGenerationsModule } from './ai-generations/ai-generations.module';
 import { ParticipantsModule } from './participants/participants.module';
 import { LocationsModule } from './locations/locations.module';
 import { MissionsModule } from './missions/missions.module';
@@ -73,6 +74,7 @@ import { LoggerModule } from './logger/logger.module';
     UsersModule,
     TemplatesModule,
     InvitationsModule,
+    AiGenerationsModule,
     ParticipantsModule,
     LocationsModule,
     MissionsModule,

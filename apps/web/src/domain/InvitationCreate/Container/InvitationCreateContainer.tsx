@@ -27,6 +27,7 @@ import type { SocialProvider } from "@/components/primitives/SocialLoginButton/p
 import { API_BASE } from "@/lib/env";
 import { createInvitation, updateInvitation, getInvitationImagePresignedUrl, type Invitation } from "@/lib/api/invitations";
 import { GifPicker } from "@/components/organisms/GifPicker";
+import { AiCompositeSheet } from "@/domain/InvitationCreate/Sheets/AiCompositeSheet";
 import { setEventLocation } from "@/lib/api/locations";
 import { getMissionTemplates, createMission } from "@/lib/api/missions";
 import { getTemplates } from "@/lib/api/templates";
@@ -188,6 +189,7 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [published, setPublished] = useState(false);
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
   // vote draft
   const [subScreen, setSubScreen] = useState<"dateVoteSetup" | null>(null);
   const [voteDraft, setVoteDraft] = useState<VoteDraft | null>(null);
@@ -771,13 +773,24 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
                       </div>
                     </button>
                   ) : (
-                    <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                      <InvitationCover
-                        imageUrl={localPreviewUrl ?? form.mainImageKey}
-                        variant="image"
-                        fitToImage
-                      />
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button type="button" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                        <InvitationCover
+                          imageUrl={localPreviewUrl ?? form.mainImageKey}
+                          variant="image"
+                          fitToImage
+                        />
+                      </button>
+                      {form.mainImageKey !== DEFAULT_COVER_KEY && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setAiSheetOpen(true)}
+                        >
+                          AI로 다듬기
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </>
               ) : (
@@ -1259,6 +1272,12 @@ export default function InvitationCreateContainer({ editInvitation }: { editInvi
         confirmLabel={editInvitation ? "저장" : "만들기"}
         loading={isPending}
         onConfirm={() => { setPublishError(false); publish(); }}
+      />
+
+      <AiCompositeSheet
+        open={aiSheetOpen}
+        onOpenChange={setAiSheetOpen}
+        sourceImageKey={form.mainImageKey === DEFAULT_COVER_KEY ? null : form.mainImageKey}
       />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
