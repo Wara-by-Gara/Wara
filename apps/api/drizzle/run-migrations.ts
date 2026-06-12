@@ -28,19 +28,28 @@ const IGNORABLE_PG_CODES = new Set([
   '42704', // undefined_object (DROP IF NOT EXISTS 후속)
 ]);
 
-function isIgnorableMigrationError(err: unknown): boolean {
+function isIgnorableMigrationError(err: unknown, stmt: string): boolean {
   if (typeof err !== 'object' || err === null) return false;
   const e = err as { code?: string; message?: string };
   if (e.code && IGNORABLE_PG_CODES.has(e.code)) return true;
+
   const msg = e.message ?? '';
-  return /already exists/i.test(msg);
+  if (/already exists/i.test(msg)) return true;
+
+  // 레거시 RDS: 0005 등에서 이미 없는 컬럼/테이블 DROP 시도
+  if (/does not exist/i.test(msg)) {
+    if (/DROP\s+COLUMN/i.test(stmt) && e.code === '42703') return true;
+    if (/DROP\s+TABLE/i.test(stmt) && e.code === '42P01') return true;
+  }
+
+  return false;
 }
 
 async function execStatement(client: postgres.Sql, stmt: string): Promise<void> {
   try {
     await client.unsafe(stmt);
   } catch (err) {
-    if (isIgnorableMigrationError(err)) {
+    if (isIgnorableMigrationError(err, stmt)) {
       const message = err instanceof Error ? err.message : String(err);
       process.stdout.write(`[migrate]   notice (skip): ${message}\n`);
       return;
