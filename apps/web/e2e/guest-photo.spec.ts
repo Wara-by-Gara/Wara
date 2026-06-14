@@ -1,7 +1,7 @@
 import { test, expect, expectNoPageErrors, expectNotCrashed } from "./fixtures";
 import {
   findGuestInvitation,
-  getOtherParticipantNicknames,
+  getOtherParticipantNames,
   mockGifTrending,
   MOCK_KLIPY_GIF_URL,
   openFirstPhotoViewer,
@@ -44,22 +44,23 @@ test.describe("guest-photo", () => {
     const inv = await findGuestInvitation(page);
     test.skip(!inv, "참여 중인 초대장이 없어 스킵");
 
-    const nicknames = await getOtherParticipantNicknames(page, inv!.id);
-    test.skip(nicknames.length === 0, "멘션 대상 참가자가 없어 스킵");
+    // 멘션 자동완성은 이름(name) 기준 (닉네임 아님).
+    const names = await getOtherParticipantNames(page, inv!.id);
+    test.skip(names.length === 0, "멘션 대상 참가자가 없어 스킵");
     test.skip(!(await openFirstPhotoViewer(page, inv!.id)), "앨범에 사진이 없어 스킵");
 
-    const targetNickname = nicknames[0]!;
+    const targetName = names[0]!;
     const commentText = `E2E 사진멘션 ${Date.now()}`;
     const viewer = await openPhotoViewerComments(page);
     const input = viewer.getByPlaceholder("댓글 남기기");
 
-    await input.fill(`@${targetNickname.slice(0, 2)}`);
+    await input.fill(`@${targetName.slice(0, 2)}`);
     await viewer
-      .locator("div.rounded-2xl.border.border-white\\/10 ul")
-      .getByRole("button", { name: `@${targetNickname}` })
+      .getByRole("button")
+      .filter({ hasText: `@${targetName}` })
       .first()
-      .click();
-    await input.fill(`@${targetNickname} ${commentText}`);
+      .click({ timeout: 10_000 });
+    await input.fill(`@${targetName} ${commentText}`);
 
     const postWait = page.waitForResponse(
       (r) =>
@@ -74,7 +75,7 @@ test.describe("guest-photo", () => {
 
     const commentRow = viewer.locator("li").filter({ hasText: commentText }).first();
     await expect(commentRow).toBeVisible({ timeout: 15_000 });
-    await expect(commentRow.locator(".mention-highlight")).toHaveText(`@${targetNickname}`);
+    await expect(commentRow.locator(".mention-highlight")).toHaveText(`@${targetName}`);
     await expectNotCrashed(page);
     expectNoPageErrors(pageErrors);
   });

@@ -161,22 +161,38 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                       답글 달기
                     </button>
                   ) : null}
-                  {(onLike || likeCount !== undefined) ? (
-                    <button
-                      type="button"
-                      onClick={onLike}
-                      className={cn(
-                        "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
-                        liked ? "text-brand" : isDarkBg ? "text-white/70 hover:text-brand" : "text-text-tertiary hover:text-brand",
-                      )}
-                    >
-                      {liked ? (
-                        <IoHeart className="size-3.5 shrink-0" aria-hidden />
-                      ) : (
-                        <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
-                      )}
-                      {likeCount ?? 0}
-                    </button>
+                  {likeCount !== undefined ? (
+                    onLike ? (
+                      <button
+                        type="button"
+                        onClick={onLike}
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors",
+                          liked ? "text-brand" : isDarkBg ? "text-white/70 hover:text-brand" : "text-text-tertiary hover:text-brand",
+                        )}
+                      >
+                        {liked ? (
+                          <IoHeart className="size-3.5 shrink-0" aria-hidden />
+                        ) : (
+                          <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+                        )}
+                        {likeCount}
+                      </button>
+                    ) : (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[13px] font-semibold",
+                          liked ? "text-brand" : isDarkBg ? "text-white/70" : "text-text-tertiary",
+                        )}
+                      >
+                        {liked ? (
+                          <IoHeart className="size-3.5 shrink-0" aria-hidden />
+                        ) : (
+                          <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+                        )}
+                        {likeCount}
+                      </span>
+                    )
                   ) : null}
                 </div>
               </div>

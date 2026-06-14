@@ -1,6 +1,10 @@
 import { test as setup, expect } from "@playwright/test";
 import fs from "node:fs";
-import { PERSONAS, API_BASE_URL, authFile } from "./personas";
+import { PERSONAS, API_BASE_URL, WEB_BASE_URL, authFile } from "./personas";
+
+// 쿠키 도메인은 테스트가 접속하는 웹 호스트와 일치해야 한다.
+// (WEB_BASE_URL이 127.0.0.1이면 localhost 도메인 쿠키는 전송되지 않아 비인증 처리됨)
+const COOKIE_DOMAIN = new URL(WEB_BASE_URL).hostname;
 
 // 웹에는 dev 로그인 UI가 없으므로, API dev 토큰 엔드포인트로 페르소나별 토큰을 받아
 // accessToken(httpOnly) + is_logged_in(평문) 쿠키를 storageState로 저장한다.
@@ -23,7 +27,7 @@ setup("authenticate all personas", async ({ playwright }) => {
         {
           name: "accessToken",
           value: token,
-          domain: "localhost",
+          domain: COOKIE_DOMAIN,
           path: "/",
           httpOnly: true,
           secure: false,
@@ -33,7 +37,7 @@ setup("authenticate all personas", async ({ playwright }) => {
         {
           name: "is_logged_in",
           value: "1",
-          domain: "localhost",
+          domain: COOKIE_DOMAIN,
           path: "/",
           httpOnly: false,
           secure: false,

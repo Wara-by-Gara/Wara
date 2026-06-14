@@ -8,7 +8,7 @@ import { FormField } from "@/components/molecules/FormField";
 import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { ConfirmModal } from "@/components/molecules/Modal";
 import { StickyCTA } from "@/components/layout/StickyCTA";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export type ProfileEditState =
   | "default"
@@ -43,9 +43,14 @@ export const ProfileEdit = ({
   onImageDelete,
   onRetry,
 }: ProfileEditProps) => {
-  const [modalOpen, setModalOpen] = useState(state === "imageDeleteModal");
+  const [localModalOpen, setLocalModalOpen] = useState(false);
+  const modalOpen = state === "imageDeleteModal" || localModalOpen;
   const [nickname, setNickname] = useState(defaultNickname);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (state !== "imageDeleteModal") setLocalModalOpen(false);
+  }, [state]);
 
   if (state === "saveComplete") {
     return (
@@ -78,15 +83,15 @@ export const ProfileEdit = ({
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-page py-6">
         <section className="flex flex-col items-center gap-3">
           <button type="button" className="relative" onClick={() => fileInputRef.current?.click()}>
-            <Avatar size="xl" src={avatarUrl} alt={defaultNickname} name={defaultName ?? defaultNickname} className="size-28" />
+            <Avatar size="2xl" src={avatarUrl} alt={defaultNickname} name={defaultName ?? defaultNickname} />
             <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
               <Icon name="camera" size="sm" color="currentColor" decorative />
             </span>
           </button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>사진 변경</Button>
+            <Button variant="outline" size="sm" className="min-h-11" onClick={() => fileInputRef.current?.click()}>사진 변경</Button>
             {avatarUrl ? (
-              <Button variant="text" size="sm" onClick={() => setModalOpen(true)}>삭제</Button>
+              <Button variant="text" size="sm" className="min-h-11" onClick={() => setLocalModalOpen(true)}>삭제</Button>
             ) : null}
           </div>
           <input
@@ -130,12 +135,12 @@ export const ProfileEdit = ({
 
       <ConfirmModal contained
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(open) => { if (!open) setLocalModalOpen(false); }}
         title="사진을 삭제할까요?"
         description="기본 이미지로 바뀝니다"
         confirmLabel="삭제"
         confirmVariant="danger"
-        onConfirm={() => { onImageDelete?.(); setModalOpen(false); }}
+        onConfirm={() => { onImageDelete?.(); setLocalModalOpen(false); }}
       />
     </div>
   );

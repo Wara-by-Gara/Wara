@@ -52,9 +52,46 @@ export async function findHostedInvitation(page: Page): Promise<InvitationLite |
   return list.find((i) => i.myRole === "HOST") ?? list[0] ?? null;
 }
 
+// location/dm/vote E2E가 동적 생성한 초대장은 ASCII 제목("E2E Loc 178...", "T178...")이고
+// 댓글·사진 등 콘텐츠가 비어 있어 콘텐츠 검증 테스트에 부적합하다.
+// 시드 초대장은 모두 한글 제목(예: "수채화 원데이")이므로 한글 포함 여부로 시드를 식별한다.
+// 시드 초대장을 우선 선택하고, 없으면 기존 동작으로 폴백한다.
+const isSeededInvitation = (i: InvitationLite) => /[가-힣]/.test(i.title ?? "");
+
 export async function findGuestInvitation(page: Page): Promise<InvitationLite | null> {
   const list = await getMyInvitations(page);
-  return list.find((i) => i.myRole === "GUEST") ?? list[0] ?? null;
+  return (
+    list.find((i) => i.myRole === "GUEST" && isSeededInvitation(i)) ??
+    list.find((i) => i.myRole === "GUEST") ??
+    list.find(isSeededInvitation) ??
+    list[0] ??
+    null
+  );
+}
+
+/**
+ * 참가자가 min명 이상인 초대장을 찾는다.
+ * findGuestInvitation은 location E2E가 동적 생성한 빈 초대장을 반환할 수 있어,
+ * 참가자 목록·프로필 모달 테스트에는 실제 참가자가 있는 초대장이 필요하다.
+ */
+export async function findInvitationWithParticipants(
+  page: Page,
+  min = 2,
+): Promise<InvitationLite | null> {
+  const list = await getMyInvitations(page);
+  // 시드 초대장(참가자·콘텐츠 풍부)을 먼저, 없으면 나머지에서 탐색
+  const ordered = [
+    ...list.filter(isSeededInvitation),
+    ...list.filter((i) => !isSeededInvitation(i)),
+  ];
+  for (const inv of ordered) {
+    const data = await apiData<{ participants: unknown[] }>(
+      page,
+      `/api/invitations/${inv.id}/participants`,
+    );
+    if ((data?.participants?.length ?? 0) >= min) return inv;
+  }
+  return null;
 }
 
 export async function findGuestInvitationWithOpenPoll(
@@ -120,6 +157,31 @@ export async function safeGoto(page: Page, path: string): Promise<void> {
     if (!isClientRedirect) throw err;
     await page.waitForLoadState("domcontentloaded").catch(() => {});
   }
+}
+
+/**
+ * dev 전용 플로팅 오버레이를 숨긴다.
+ * - TanStack Query Devtools(`.tsqd-parent-container`): 좌하단 버튼
+ * - Next.js dev indicator(`nextjs-portal`): 좌하단 인디케이터
+ * 둘 다 화면 하단 모서리에 떠 있어 하단 내비 등 bottom 영역 클릭을 가로챈다.
+ * 실제 제품 UX와 무관하므로 E2E에서 무력화한다. goto 이전에 호출할 것.
+ * (페이지 런타임 에러는 pageErrors fixture로 별도 검증하므로 시각 오버레이를 숨겨도 안전)
+ */
+export async function hideDevOverlays(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const inject = () => {
+      const target = document.head ?? document.documentElement;
+      if (!target) return false;
+      const style = document.createElement("style");
+      style.textContent =
+        ".tsqd-parent-container{display:none !important;}nextjs-portal{display:none !important;}";
+      target.appendChild(style);
+      return true;
+    };
+    if (!inject()) {
+      document.addEventListener("DOMContentLoaded", inject, { once: true });
+    }
+  });
 }
 
 /** domcontentloaded + (가능하면) networkidle까지 대기 */
@@ -274,6 +336,22 @@ export async function getOtherParticipantNicknames(
     .map((p) => p.user.nickname!);
 }
 
+// 멘션 자동완성은 이름(getCommentAuthorName = user.name) 기준으로 필터·삽입·하이라이트된다.
+// 멘션 테스트는 닉네임이 아니라 이름을 사용해야 한다.
+export async function getOtherParticipantNames(
+  page: Page,
+  invitationId: string,
+): Promise<string[]> {
+  const me = await apiData<{ id: string }>(page, "/api/users/me");
+  const data = await apiData<{
+    participants: { user: { id: string; name?: string | null } }[];
+  }>(page, `/api/invitations/${invitationId}/participants`);
+  if (!data?.participants) return [];
+  return data.participants
+    .filter((p) => p.user.id !== me?.id && !!p.user.name?.trim())
+    .map((p) => p.user.name!.trim());
+}
+
 export async function getInvitationPhotos(
   page: Page,
   invitationId: string,
@@ -293,11 +371,14 @@ export async function openFirstPhotoViewer(
   const albumHeading = page.getByText("사진 앨범");
   await albumHeading.waitFor({ state: "visible", timeout: 20_000 });
   await albumHeading.scrollIntoViewIfNeeded();
-  await page
-    .locator("button")
+  // 앨범 사진은 PhotoGridItem(button.aspect-square + img)로 렌더된다.
+  // 페이지 첫 번째 img 버튼(뒤로가기 등)이 아니라 실제 앨범 사진 버튼을 클릭한다.
+  const photoButton = page
+    .locator("button.aspect-square")
     .filter({ has: page.locator("img") })
-    .first()
-    .click();
+    .first();
+  await photoButton.scrollIntoViewIfNeeded();
+  await photoButton.click();
   await page.getByRole("button", { name: "닫기" }).waitFor({ state: "visible", timeout: 10_000 });
   return true;
 }
@@ -358,6 +439,59 @@ export async function longPress(locator: Locator, ms = 550): Promise<void> {
 }
 
 /** API 요청을 mock 실패로 고정한다 (2차 엣지·에러 UI 검증용). */
+/** 모바일 최소 터치 영역 (WCAG 2.5.5 권장 44px) */
+export async function assertMinTapTarget(
+  locator: Locator,
+  minPx = 44,
+): Promise<void> {
+  await locator.waitFor({ state: "visible" });
+  const box = await locator.boundingBox();
+  expect(box, "터치 대상 bounding box 없음").not.toBeNull();
+  const touchSize = Math.min(box!.width, box!.height);
+  expect(
+    touchSize,
+    `터치 영역 ${touchSize}px < 최소 ${minPx}px`,
+  ).toBeGreaterThanOrEqual(minPx - 1);
+}
+
+/** 가로 스크롤(overflow) 없음 */
+export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
+  const hasOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return root.scrollWidth > root.clientWidth + 1;
+  });
+  expect(hasOverflow, "페이지 가로 overflow 발생").toBe(false);
+}
+
+/** 정사각형 요소 크기 범위 검증 (px, ±tolerance) */
+export async function assertBoxSize(
+  locator: Locator,
+  minPx: number,
+  maxPx: number,
+  tolerance = 2,
+): Promise<void> {
+  await locator.waitFor({ state: "visible" });
+  const box = await locator.boundingBox();
+  expect(box, "요소 bounding box 없음").not.toBeNull();
+  expect(box!.width).toBeGreaterThanOrEqual(minPx - tolerance);
+  expect(box!.width).toBeLessThanOrEqual(maxPx + tolerance);
+  expect(box!.height).toBeGreaterThanOrEqual(minPx - tolerance);
+  expect(box!.height).toBeLessThanOrEqual(maxPx + tolerance);
+}
+
+/** 모바일에서 요소가 뷰포트 안에 있는지 */
+export async function assertInViewport(page: Page, locator: Locator): Promise<void> {
+  await locator.waitFor({ state: "visible" });
+  const box = await locator.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(-2);
+  expect(box!.y).toBeGreaterThanOrEqual(-2);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 2);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 2);
+}
+
 export async function mockApiRouteFailure(
   page: Page,
   urlPattern: string | RegExp,
