@@ -55,6 +55,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
 const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   function handleSocialLogin(provider: SocialProvider) {
@@ -86,11 +87,18 @@ const canViewFeed = !!myParticipant;
   ];
 
   const handleRsvp = (next: RSVPValue) => {
+    setRsvpError(null);
     const rsvpStatus = fromRsvpButtonValue(next);
     if (myParticipant) {
       updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus });
     } else {
-      joinInvitation.mutate({ rsvpStatus });
+      joinInvitation.mutate({ rsvpStatus }, {
+        onError: (err) => {
+          if (err instanceof Error && err.message === 'INVITATION_ACCESS_REVOKED') {
+            setRsvpError('참가가 제한된 초대장입니다.');
+          }
+        },
+      });
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
@@ -219,9 +227,10 @@ const canViewFeed = !!myParticipant;
               loading={updateRsvp.isPending || joinInvitation.isPending}
               isDarkBg={isDarkBg}
               helperText={
-                invitation.status === "closed"
+                rsvpError ??
+                (invitation.status === "closed"
                   ? "호스트가 참석 응답을 마감했어요"
-                  : undefined
+                  : undefined)
               }
             />
           )}
