@@ -7,7 +7,6 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { WeatherService } from '../weather.service';
 import { WeatherRepository } from '../weather.repository';
