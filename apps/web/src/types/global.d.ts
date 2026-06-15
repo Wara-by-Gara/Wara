@@ -19,6 +19,7 @@ interface KakaoStatic {
         link: { mobileWebUrl: string; webUrl: string };
       }>;
     }): void;
+    sendScrap(options: { requestUrl: string }): void;
   };
 }
 
