@@ -41,6 +41,8 @@ export const QUERY_KEYS = {
     messages: (id: string) => ["conversations", id, "messages"] as const,
     reactors: (id: string, messageId: string) =>
       ["conversations", id, "messages", messageId, "reactors"] as const,
+    participants: (id: string) => ["conversations", id, "participants"] as const,
+    photos: (id: string) => ["conversations", id, "photos"] as const,
   },
   templates: {
     all: () => ["templates"] as const,

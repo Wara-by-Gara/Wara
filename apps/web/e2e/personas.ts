@@ -1,4 +1,4 @@
-export type PersonaKey = "newHost" | "hostOperator" | "guest" | "admin";
+export type PersonaKey = "newHost" | "hostOperator" | "guest" | "guest2" | "admin";
 
 export interface Persona {
   key: PersonaKey;
@@ -11,6 +11,7 @@ export const PERSONAS: Persona[] = [
   { key: "newHost", email: "host001@wara.dev", description: "초대장 생성/공유/호스트 상세" },
   { key: "hostOperator", email: "host002@wara.dev", description: "시드된 초대장 운영" },
   { key: "guest", email: "guest001@wara.dev", description: "RSVP/사진/댓글 게스트" },
+  { key: "guest2", email: "guest002@wara.dev", description: "단톡방 3번째 멤버" },
   { key: "admin", email: "admin@wara.dev", description: "관리자(문의/FAQ/대시보드)" },
 ];
 

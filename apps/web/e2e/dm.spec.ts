@@ -8,6 +8,7 @@ import type { Browser, Page, Locator } from "@playwright/test";
 const GUEST001_ID = "P6NG7VXYRZ2R4D7VHV55B8MT80"; // guest001@wara.dev
 const GUEST002_ID = "C6K2N2V2V63RGX3Z1RTMSC0EFN"; // guest002@wara.dev (host001과 친구)
 const HOST001_ID = "CHH1HEK72R2RH21YWJTXXM99TC"; // host001@wara.dev (self)
+const GUEST002_NAME = "송지안"; // guest002@wara.dev 시드 표시 이름 (초대 피커 선택용)
 const MSG_INPUT = "메시지를 입력하세요";
 
 // host(newHost)가 임의의 친구(targetId)와 1:1 채팅에 진입해 경로를 반환
@@ -18,7 +19,7 @@ async function hostEnterDmWith(page: Page, targetId: string): Promise<string> {
   return new URL(page.url()).pathname;
 }
 
-async function openAs(browser: Browser, persona: "newHost" | "guest") {
+async function openAs(browser: Browser, persona: "newHost" | "guest" | "guest2") {
   const context = await browser.newContext({ storageState: authFile(persona) });
   const page = await context.newPage();
   return { context, page };
@@ -756,6 +757,44 @@ test.describe("dm-batch6-reactions", () => {
     await host.context.close();
     await guest.context.close();
   });
+
+  test("상세 시트에서 이모지 칩을 누르면 종류별로 목록이 필터된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const guest = await openAs(browser, "guest");
+    const convPath = await hostEnterDmWithGuest(host.page);
+    await guest.page.goto(convPath, { waitUntil: "domcontentloaded" });
+    const msg = `E2E 리액션필터 ${Date.now()}`;
+    await send(host.page, msg);
+    await expect(guest.page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    // host=❤️, guest=👍 (같은 메시지에 서로 다른 이모지)
+    await longPress(host.page, host.page.getByText(msg));
+    await host.page.getByRole("button", { name: "heart 리액션" }).click();
+    await longPress(guest.page, guest.page.getByText(msg));
+    await guest.page.getByRole("button", { name: "thumbsup 리액션" }).click();
+
+    // host 화면에 두 배지 모두 표시될 때까지 대기
+    const hostRow = host.page.locator("li").filter({ hasText: msg });
+    await expect(hostRow.locator("button", { hasText: "👍" })).toBeVisible({ timeout: 10_000 });
+
+    // 배지 길게눌러 상세 시트 -> 전체 2명
+    await longPress(host.page, hostRow.locator("button", { hasText: "❤️" }));
+    const sheet = host.page.getByRole("dialog");
+    await expect(sheet.getByText("리액션", { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(sheet.locator("ul li")).toHaveCount(2, { timeout: 10_000 });
+
+    // ❤️ 칩 -> 1명, 👍 칩 -> 1명, 전체 -> 다시 2명
+    await sheet.getByRole("button", { name: /❤️/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(1);
+    await sheet.getByRole("button", { name: /👍/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(1);
+    await sheet.getByRole("button", { name: /전체/ }).click();
+    await expect(sheet.locator("ul li")).toHaveCount(2);
+
+    await host.context.close();
+    await guest.context.close();
+  });
+
 });
 
 // 1x1 PNG (S3 mock 응답 + 업로드 파일용)
@@ -810,5 +849,405 @@ test.describe("dm-batch7-image", () => {
     await expect(guest.page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
     await host.context.close();
     await guest.context.close();
+  });
+});
+
+test.describe("dm-batch8-drawer", () => {
+  test("대화방 서랍에 대화상대 목록과 보낸 사진 갤러리가 보인다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    // 사진 1장 전송 -> 갤러리에 떠야 함
+    await page.setInputFiles('input[type="file"]', {
+      name: "gallery.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+    await page.getByRole("button", { name: "보내기", exact: true }).click();
+    await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+
+    // 우측 상단 메뉴 -> 서랍 열기
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer.getByText(/대화상대/)).toBeVisible({ timeout: 10_000 });
+    await expect(drawer.getByRole("button", { name: /초대하기/ })).toBeVisible();
+    // 갤러리에 보낸 사진
+    await expect(drawer.locator('img[alt="사진"]').first()).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+
+  test("사진 메시지를 누르면 크게 보기가 열리고 저장 버튼이 있다", async ({ browser }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    await hostEnterDmWithGuest(page);
+
+    await page.setInputFiles('input[type="file"]', {
+      name: "viewer.png",
+      mimeType: "image/png",
+      buffer: PNG_1x1,
+    });
+    await page.getByRole("button", { name: "보내기", exact: true }).click();
+    const sent = page.locator('img[alt="사진"]').last();
+    await expect(sent).toBeVisible({ timeout: 15_000 });
+
+    // 사진 탭 -> 크게 보기 + 저장 버튼
+    await sent.click();
+    await expect(
+      page.getByRole("img", { name: "사진 크게 보기" }),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "사진 저장" })).toBeVisible();
+
+    await context.close();
+  });
+
+  test("갤러리 사진은 좌우로 넘겨볼 수 있고 업로더·시간이 표시된다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    // 누적 없는 빈 그룹방을 만들어 사진을 올린다 (누적 DM은 느려 타임아웃)
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const inviteSheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await inviteSheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await inviteSheet.getByRole("button", { name: /다음/ }).click();
+    await inviteSheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+
+    // 빈 그룹에 사진 2장
+    for (const n of ["a", "b"]) {
+      await page.setInputFiles('input[type="file"]', {
+        name: `slide-${n}.png`,
+        mimeType: "image/png",
+        buffer: PNG_1x1,
+      });
+      await page.getByRole("button", { name: "보내기", exact: true }).click();
+      await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    }
+
+    // 서랍 갤러리 첫 사진 클릭 -> 뷰어 (vaul 드로어 애니메이션 회피로 force)
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    const drawer = page.getByRole("dialog");
+    const thumbs = drawer.locator('button:has(img[alt="사진"])');
+    await expect(thumbs.first()).toBeVisible({ timeout: 10_000 });
+    // vaul 우측 드로어 애니메이션/위치 무관하게 onClick만 발화
+    await thumbs.first().dispatchEvent("click");
+
+    // 뷰어: 업로더 시간(년) 표시 + 1/N -> 다음 -> 2/N
+    await expect(page.getByRole("img", { name: "사진 크게 보기" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/\d{4}년/)).toBeVisible();
+    await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+    await page.getByRole("button", { name: "다음 사진" }).click();
+    await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
+
+    await context.close();
+  });
+});
+
+test.describe("dm-batch8b-chat-photo-nav", () => {
+  test("채팅 사진을 누르면 뷰어에서 좌우로 다른 사진을 넘길 수 있다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    // 빈 그룹 생성 (누적 DM은 느림)
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+
+    // 사진 2장
+    for (const n of ["a", "b"]) {
+      await page.setInputFiles('input[type="file"]', {
+        name: `chat-${n}.png`,
+        mimeType: "image/png",
+        buffer: PNG_1x1,
+      });
+      await page.getByRole("button", { name: "보내기", exact: true }).click();
+      await expect(page.locator('img[alt="사진"]').last()).toBeVisible({ timeout: 15_000 });
+    }
+
+    // 첫 사진 메시지 클릭 -> 뷰어 -> 다음 -> 2/N
+    await page.locator('img[alt="사진"]').first().click();
+    await expect(page.getByRole("img", { name: "사진 크게 보기" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+    await page.getByRole("button", { name: "다음 사진" }).click();
+    await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
+
+    await context.close();
+  });
+});
+
+test.describe("dm-batch9-group", () => {
+  test("1:1에서 친구를 초대하면 새 단톡방이 만들어지고 메시지를 보낼 수 있다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    const dmPath = await hostEnterDmWithGuest(page); // guest001과 1:1
+    const dmId = dmPath.split("/").pop()!;
+
+    // 서랍 -> 초대하기 -> 친구 검색 -> 선택 -> 초대
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByPlaceholder("이름으로 친구 검색").fill(GUEST002_NAME);
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+
+    // 새 단톡방으로 이동 + 입장 시스템 메시지
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    await expect(page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByText(`${GUEST002_NAME}님이 들어왔습니다.`),
+    ).toBeVisible({ timeout: 10_000 });
+    const msg = `E2E 단톡 ${Date.now()}`;
+    await send(page, msg);
+    await expect(page.getByText(msg)).toBeVisible({ timeout: 10_000 });
+
+    // 서랍 열어 대화상대 3명 확인 (나 + 상대 + 초대 1명)
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(page.getByText("대화상대 3")).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+
+  test("생성 시 방 이름을 정하고, 내 별명으로 바꾸면 내 화면만 바뀐다", async ({
+    browser,
+  }) => {
+    const { context, page } = await openAs(browser, "newHost");
+    const dmPath = await hostEnterDmWith(page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+
+    // 초대 -> 다음 -> 이름 입력 창에서 공유 방 이름 설정 -> 만들기
+    await page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await page.getByPlaceholder("예: 주말 모임").fill("E2E모임");
+    await page.getByRole("button", { name: "단톡방 만들기" }).click();
+    await page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+
+    // 헤더에 공유 이름
+    await expect(page.getByRole("button", { name: /E2E모임/ })).toBeVisible({ timeout: 10_000 });
+
+    // 헤더(그룹명) 탭 -> 서랍 -> 이름 변경(내 별명)
+    await page.getByRole("button", { name: /E2E모임/ }).click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer.getByText("채팅방 이름")).toBeVisible({ timeout: 10_000 });
+    await drawer.getByRole("button", { name: "변경" }).click();
+    const aliasSheet = page.getByRole("dialog").filter({ hasText: "채팅방 이름 변경" });
+    await aliasSheet.getByPlaceholder("나만 보이는 방 이름").fill("내방별명");
+    await aliasSheet.getByRole("button", { name: "저장" }).click();
+
+    // 내 별명이 반영됨 (드로어 방 이름) + 드로어 닫으면 헤더도 별명으로
+    await expect(drawer.getByText("내방별명")).toBeVisible({ timeout: 10_000 });
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: /내방별명/ })).toBeVisible({ timeout: 10_000 });
+
+    await context.close();
+  });
+});
+
+test.describe("dm-batch10-group-realtime", () => {
+  test("3계정 단톡방: 실시간 메시지가 세 명 모두에게 전달된다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost"); // host001
+    const g1 = await openAs(browser, "guest"); // guest001
+    const g2 = await openAs(browser, "guest2"); // guest002
+
+    // host: guest001과 1:1 -> guest002 초대 -> 새 단톡방(3명)
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), {
+      timeout: 10_000,
+    });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // 나머지 두 명이 같은 방에 진입
+    await g1.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g1.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await expect(g2.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    // 게스트 소켓이 user 룸에 join할 여유 (join 전 emit은 socket.io가 놓침)
+    await g1.page.waitForTimeout(2500);
+
+    // host 전송 -> g1, g2 실시간 수신
+    const msgA = `E2E 그룹A ${Date.now()}`;
+    await send(host.page, msgA);
+    await expect(g1.page.getByText(msgA)).toBeVisible({ timeout: 15_000 });
+    await expect(g2.page.getByText(msgA)).toBeVisible({ timeout: 15_000 });
+
+    // g1 전송 -> host, g2 실시간 수신
+    const msgB = `E2E 그룹B ${Date.now()}`;
+    await send(g1.page, msgB);
+    await expect(host.page.getByText(msgB)).toBeVisible({ timeout: 10_000 });
+    await expect(g2.page.getByText(msgB)).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await g1.context.close();
+    await g2.context.close();
+  });
+});
+
+test.describe("dm-batch11-leave", () => {
+  test("그룹에서 나가면 남은 멤버에게 시스템 메시지가 뜨고 인원이 줄어든다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost"); // host001
+    const g2 = await openAs(browser, "guest2"); // guest002(송지안)
+
+    // host: guest001과 1:1 -> guest002 초대 -> 그룹(3명)
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // g2가 그룹 진입 후 나가기
+    await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g2.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await g2.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(g2.page.getByText(/대화상대/)).toBeVisible({ timeout: 10_000 });
+    await g2.page.getByRole("button", { name: "채팅방 나가기" }).click();
+    const leaveModal = g2.page.getByRole("dialog").filter({ hasText: "나가면" });
+    await leaveModal.getByRole("button", { name: "나가기" }).click();
+
+    // host: 시스템 메시지(실시간) + 대화상대 2명으로 감소
+    await expect(
+      host.page.getByText(`${GUEST002_NAME}님이 나갔습니다.`),
+    ).toBeVisible({ timeout: 10_000 });
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await expect(host.page.getByText("대화상대 2")).toBeVisible({ timeout: 10_000 });
+
+    await host.context.close();
+    await g2.context.close();
+  });
+});
+
+test.describe("dm-batch12-unread-count", () => {
+  test("그룹 메시지 안읽음 수가 멤버가 읽을 때마다 줄어든다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const g1 = await openAs(browser, "guest");
+    const g2 = await openAs(browser, "guest2");
+
+    // 그룹 생성 (host + guest001 + guest002 = 3명)
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // g1, g2는 방 밖(채팅 목록)에 머문다 (아직 안 읽음)
+    await g1.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+    await g2.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+
+    // host 전송 -> 안읽음 2
+    const msg = `E2E 안읽음수 ${Date.now()}`;
+    await send(host.page, msg);
+    const row = host.page.locator("li").filter({ hasText: msg });
+    await expect(row.locator("span.text-primary")).toHaveText("2", { timeout: 10_000 });
+
+    // g1 입장(읽음) -> 1
+    await g1.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(row.locator("span.text-primary")).toHaveText("1", { timeout: 12_000 });
+
+    // g2 입장(읽음) -> 0 (숫자 사라짐)
+    await g2.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(row.locator("span.text-primary")).toHaveCount(0, { timeout: 12_000 });
+
+    await host.context.close();
+    await g1.context.close();
+    await g2.context.close();
+  });
+
+  test("그룹에서는 상대 메시지에도 안읽음 수가 표시된다", async ({ browser }) => {
+    const host = await openAs(browser, "newHost");
+    const g1 = await openAs(browser, "guest");
+    const g2 = await openAs(browser, "guest2");
+
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await sheet.page().getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+
+    // g1은 방 입장, g2는 방 밖(안 읽음 유지)
+    await g1.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(g1.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await g2.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+    await g1.page.waitForTimeout(2500); // 소켓 연결
+
+    // g1이 전송 -> host(상대)가 g1 메시지에 안읽음 수를 본다 (g2 미독)
+    const msg = `E2E 상대안읽음 ${Date.now()}`;
+    await send(g1.page, msg);
+    const row = host.page.locator("li").filter({ hasText: msg });
+    await expect(row).toBeVisible({ timeout: 12_000 });
+    await expect(row.locator("span.text-primary")).toBeVisible({ timeout: 12_000 });
+
+    await host.context.close();
+    await g1.context.close();
+    await g2.context.close();
+  });
+
+  test("내가 상대 메시지를 읽으면 그 메시지 안읽음 수가 내 화면에서 줄어든다", async ({
+    browser,
+  }) => {
+    const host = await openAs(browser, "newHost");
+    const a = await openAs(browser, "guest"); // 보내는 사람
+    const b = await openAs(browser, "guest2"); // 안 읽고 남아있는 사람
+    const dmPath = await hostEnterDmWith(host.page, GUEST001_ID);
+    const dmId = dmPath.split("/").pop()!;
+    await host.page.getByRole("button", { name: "대화방 메뉴" }).click();
+    await host.page.getByRole("button", { name: "초대하기" }).click();
+    const sheet = host.page.getByRole("dialog").filter({ hasText: "초대할 친구" });
+    await sheet.getByText(GUEST002_NAME, { exact: true }).click();
+    await sheet.getByRole("button", { name: /다음/ }).click();
+    await host.page.getByRole("button", { name: "단톡방 만들기" }).click();
+    await host.page.waitForURL((url) => !url.pathname.includes(dmId), { timeout: 10_000 });
+    const groupPath = new URL(host.page.url()).pathname;
+    // A는 방 안(보냄), host도 방 안(받고 읽음), B는 방 밖(안 읽음 유지)
+    await a.page.goto(groupPath, { waitUntil: "domcontentloaded" });
+    await expect(a.page.getByPlaceholder(MSG_INPUT)).toBeVisible({ timeout: 10_000 });
+    await b.page.goto("/friends?tab=chat", { waitUntil: "domcontentloaded" });
+    await a.page.waitForTimeout(2500);
+    // A 전송 -> host가 방 안에서 받고 읽음 -> host 화면의 A 메시지 카운트가 2->1 (B만 남음)
+    const msg = `E2E 내가읽음 ${Date.now()}`;
+    await send(a.page, msg);
+    const row = host.page.locator("li").filter({ hasText: msg });
+    await expect(row.locator("span.text-primary")).toHaveText("1", { timeout: 12_000 });
+    await host.context.close();
+    await a.context.close();
+    await b.context.close();
   });
 });

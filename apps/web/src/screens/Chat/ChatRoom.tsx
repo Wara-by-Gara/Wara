@@ -8,6 +8,8 @@ import { TopAppBar } from "@/components/molecules/TopAppBar";
 import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { toast } from "@/components/molecules/Toast";
+import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
+import { PhotoViewer, type ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 import { useMe } from "@/hooks/useUsers";
 import {
   useConversation,
@@ -18,6 +20,7 @@ import {
   useChatRealtime,
   useToggleReaction,
   useMessageReactors,
+  useConversationParticipants,
   useSendImageMessage,
 } from "@/hooks/useChat";
 import {
@@ -59,6 +62,11 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   useChatRealtime(id);
 
   const [text, setText] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [viewer, setViewer] = useState<{
+    photos: ViewerPhoto[];
+    index: number;
+  } | null>(null);
   const [editing, setEditing] = useState<Message | null>(null);
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -89,7 +97,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
 
   // 리액션 배지 꾸욱 누르기 -> 누가 어떤 이모지를 눌렀는지 상세 시트
   const [reactionDetail, setReactionDetail] = useState<Message | null>(null);
+  // 상세 시트 이모지 필터 (null = 전체). 다른 메시지 열면 초기화.
+  const [reactionFilter, setReactionFilter] = useState<string | null>(null);
   const reactorsQuery = useMessageReactors(id, reactionDetail?.id ?? null);
+  const reactors = reactorsQuery.data?.reactors ?? [];
+  useEffect(() => {
+    setReactionFilter(null);
+  }, [reactionDetail?.id]);
   const reactionPressTimer = useRef<number | null>(null);
   const reactionLongPressed = useRef(false);
   const startReactionPress = (m: Message) => {
@@ -106,8 +120,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
   };
   const pressTimer = useRef<number | null>(null);
+  const pressFired = useRef(false); // 길게누르기 발동 여부 (탭=사진 뷰어 / 길게=메뉴 구분)
   const startPress = (m: Message) => {
-    pressTimer.current = window.setTimeout(() => setMenuTarget(m), LONG_PRESS_MS);
+    pressFired.current = false;
+    pressTimer.current = window.setTimeout(() => {
+      pressFired.current = true;
+      setMenuTarget(m);
+    }, LONG_PRESS_MS);
   };
   const cancelPress = () => {
     if (pressTimer.current) {
@@ -116,6 +135,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     }
   };
   const menuMine = menuTarget?.senderId === myId;
+  const menuIsImage = !!menuTarget?.imageUrl; // 사진 메시지는 복사/수정 불가
   const handleCopy = () => {
     if (menuTarget) {
       navigator.clipboard?.writeText(menuTarget.content);
@@ -170,9 +190,27 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const cancelReply = () => setReplyTarget(null);
 
   const partnerName = conversation?.partner?.name ?? "상대";
-  const partnerReadAt = conversation?.partnerLastReadAt
-    ? new Date(conversation.partnerLastReadAt).getTime()
-    : null;
+  const isGroup = conversation?.type === "group";
+  const headerTitle = conversation?.title ?? partnerName;
+  // 그룹: 발신자별 아바타/이름 표시용 멤버 맵 (그룹일 때만 조회)
+  const groupMembers =
+    useConversationParticipants(id, !!isGroup).data?.participants ?? [];
+  const memberMap = new Map(groupMembers.map((p) => [p.userId, p]));
+
+  // 발신자 표시 이름 (그룹=멤버맵, 1:1=상대, 내것=내 이름)
+  const displayNameOf = (senderId: string) =>
+    senderId === myId
+      ? (me?.name ?? "나")
+      : isGroup
+        ? (memberMap.get(senderId)?.name ?? "사용자")
+        : partnerName;
+  // 대화 내 사진 메시지 목록 (뷰어 < > 이동용)
+  const imageMessages = messages.filter((m) => m.imageUrl && !m.deleted);
+  const chatPhotos: ViewerPhoto[] = imageMessages.map((m) => ({
+    imageUrl: m.imageUrl!,
+    uploaderName: displayNameOf(m.senderId),
+    createdAt: m.createdAt,
+  }));
 
   // 새 메시지/입장 시 맨 아래로 스크롤
   const lastMessageId = messages[messages.length - 1]?.id;
@@ -227,6 +265,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const goProfile = () => {
     if (partnerId) router.push(ROUTES.FRIENDS.DETAIL(partnerId));
   };
+  const goUserProfile = (userId: string) =>
+    router.push(ROUTES.FRIENDS.DETAIL(userId));
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
@@ -235,14 +275,37 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         largeTitle
         className="min-h-0 pt-2"
         title={
+          isGroup ? (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70"
+            >
+              {headerTitle}
+              <span className="ml-1 text-[14px] font-normal text-text-tertiary">
+                {conversation?.memberCount}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={goProfile}
+              disabled={!partnerId}
+              aria-label={`${partnerName} 프로필 보기`}
+              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+            >
+              {partnerName}
+            </button>
+          )
+        }
+        rightSlot={
           <button
             type="button"
-            onClick={goProfile}
-            disabled={!partnerId}
-            aria-label={`${partnerName} 프로필 보기`}
-            className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="대화방 메뉴"
+            className="flex size-9 items-center justify-center rounded-full text-text-secondary active:opacity-70"
           >
-            {partnerName}
+            <Icon name="menu" size="lg" color="currentColor" decorative />
           </button>
         }
       />
@@ -270,15 +333,27 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         ) : (
           <ul className="flex flex-col gap-2 py-3">
             {messages.map((m, i) => {
+              // 시스템 메시지(입장/퇴장 안내) — 말풍선 없이 가운데 표시
+              if (m.type === "system") {
+                return (
+                  <li key={m.id} className="my-1 flex justify-center">
+                    <span className="rounded-full bg-background-soft px-3 py-1 text-[12px] text-text-tertiary">
+                      {m.content}
+                    </span>
+                  </li>
+                );
+              }
               const mine = m.senderId === myId;
-              const unread =
-                mine &&
-                !m.deleted &&
-                (partnerReadAt === null || new Date(m.createdAt).getTime() > partnerReadAt);
               // 연속 그룹의 첫 메시지 (보낸 사람이 바뀌는 지점)
               const firstOfGroup = messages[i - 1]?.senderId !== m.senderId;
               // 상대 메시지의 첫 번째에만 프로필 표시
               const showAvatar = !mine && firstOfGroup;
+              // 발신자 표시정보 — 그룹은 멤버맵, 1:1은 상대
+              const sender = memberMap.get(m.senderId);
+              const senderName = isGroup ? (sender?.name ?? "사용자") : partnerName;
+              const senderAvatar = isGroup
+                ? (sender?.avatarUrl ?? null)
+                : (conversation?.partner?.avatarUrl ?? null);
               // 각 그룹 첫 말풍선은 자기 쪽으로 꼬리(tail) 표시
               const bubbleClass = mine
                 ? firstOfGroup
@@ -298,15 +373,17 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     (showAvatar ? (
                       <button
                         type="button"
-                        onClick={goProfile}
-                        aria-label={`${partnerName} 프로필 보기`}
+                        onClick={() =>
+                          isGroup ? goUserProfile(m.senderId) : goProfile()
+                        }
+                        aria-label={`${senderName} 프로필 보기`}
                         className="self-start active:opacity-70"
                       >
                         <Avatar
                           size="sm"
-                          src={conversation?.partner?.avatarUrl ?? undefined}
-                          alt={partnerName}
-                          initial={partnerName[0]}
+                          src={senderAvatar ?? undefined}
+                          alt={senderName}
+                          initial={senderName[0]}
                         />
                       </button>
                     ) : (
@@ -318,6 +395,18 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       mine ? "items-end" : "items-start"
                     }`}
                   >
+                    {/* 그룹: 상대 메시지 묶음 첫 줄에 발신자 이름 */}
+                    {isGroup && !mine && firstOfGroup && (
+                      <span className="px-1 text-[12px] text-text-tertiary">
+                        {senderName}
+                      </span>
+                    )}
+                    {/* 말풍선 + 메타(시간/안읽음)를 한 줄에 — 리액션이 생겨도 메타가 안 밀리게 */}
+                    <div
+                      className={`flex items-end gap-1.5 ${
+                        mine ? "flex-row-reverse" : "flex-row"
+                      }`}
+                    >
                     {m.deleted ? (
                       <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
                         삭제된 메시지입니다
@@ -330,6 +419,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         onPointerLeave={cancelPress}
                         onPointerCancel={cancelPress}
                         onContextMenu={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (pressFired.current) return; // 길게누르기였으면 메뉴만
+                          if (!m.imageUrl) return;
+                          // 대화 내 전체 사진 중 이 사진부터 -> 뷰어에서 < > 이동
+                          const idx = imageMessages.findIndex((x) => x.id === m.id);
+                          setViewer({ photos: chatPhotos, index: idx < 0 ? 0 : idx });
+                        }}
                         className="relative max-w-full cursor-pointer select-none overflow-hidden rounded-2xl"
                       >
                         {/* presigned S3 URL은 만료·쿼리파라미터라 next/image 부적합 (기존 사진 기능 관례) */}
@@ -378,6 +474,27 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         {m.content}
                       </div>
                     )}
+                      <div
+                        className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
+                          mine ? "items-end" : "items-start"
+                        }`}
+                      >
+                        {(isGroup || mine) && !m.deleted && m.unreadCount > 0 && (
+                          <span
+                            data-testid="read-receipt"
+                            className="text-[11px] font-bold text-primary"
+                          >
+                            {m.unreadCount}
+                          </span>
+                        )}
+                        {m.edited && !m.deleted && (
+                          <span className="text-[10px] text-text-tertiary">수정됨</span>
+                        )}
+                        <span className="text-[10px] text-text-tertiary">
+                          {formatTime(m.createdAt)}
+                        </span>
+                      </div>
+                    </div>
                     {/* 리액션 배지 — 말풍선 외부 아래, 페이지 배경 위 칩 */}
                     {!m.deleted && m.reactions.length > 0 && (
                       <div className="flex flex-wrap gap-1 px-0.5">
@@ -409,26 +526,6 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div
-                    className={`flex shrink-0 flex-col justify-end gap-0.5 leading-none ${
-                      mine ? "items-end" : "items-start"
-                    }`}
-                  >
-                    {unread && (
-                      <span
-                        data-testid="read-receipt"
-                        className="text-[11px] font-bold text-primary"
-                      >
-                        1
-                      </span>
-                    )}
-                    {m.edited && !m.deleted && (
-                      <span className="text-[10px] text-text-tertiary">수정됨</span>
-                    )}
-                    <span className="text-[10px] text-text-tertiary">
-                      {formatTime(m.createdAt)}
-                    </span>
                   </div>
                 </li>
               );
@@ -601,13 +698,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
-            >
-              복사
-            </button>
+            {!menuIsImage && (
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+              >
+                복사
+              </button>
+            )}
             <button
               type="button"
               onClick={startReply}
@@ -617,13 +716,15 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             </button>
             {menuMine && (
               <>
-                <button
-                  type="button"
-                  onClick={startEdit}
-                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
-                >
-                  수정
-                </button>
+                {!menuIsImage && (
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+                  >
+                    수정
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={openDelete}
@@ -716,34 +817,78 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         onOpenChange={(open) => !open && setReactionDetail(null)}
       >
         <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
-          {/* 상단 이모지+카운트 요약 칩 */}
-          <div className="flex flex-wrap gap-2 pb-2">
+          {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터
+              data-vaul-no-drag + pointerdown 전파 차단: vaul Drawer가 칩의 포인터를
+              가로채(드래그/포인터캡처) 클릭이 간헐적으로 안 먹는 것 방지 */}
+          <div
+            data-vaul-no-drag
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex flex-wrap gap-2 pb-2"
+          >
+            <button
+              type="button"
+              onClick={() => setReactionFilter(null)}
+              className={`rounded-full px-3 py-1 text-[14px] font-bold ring-1 active:opacity-70 ${
+                reactionFilter === null
+                  ? "bg-primary text-text-inverse ring-primary"
+                  : "text-text-secondary ring-border"
+              }`}
+            >
+              전체 {reactors.length}
+            </button>
             {reactionDetail?.reactions.map((r) => (
-              <span
+              <button
                 key={r.emoji}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] ring-1 ring-border"
+                type="button"
+                onClick={() => setReactionFilter(r.emoji)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] ring-1 active:opacity-70 ${
+                  reactionFilter === r.emoji
+                    ? "bg-primary text-text-inverse ring-primary"
+                    : "ring-border"
+                }`}
               >
                 <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
-                <span className="font-bold text-text-secondary">{r.count}</span>
-              </span>
+                <span className="font-bold">{r.count}</span>
+              </button>
             ))}
           </div>
-          {/* 리액션한 사람 목록 */}
-          <ul className="flex flex-col">
-            {reactorsQuery.data?.reactors.map((rc) => (
-              <li key={rc.userId} className="flex items-center gap-3 py-2">
-                <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
-                <span className="flex-1 text-[15px] text-text-primary">
-                  {rc.name ?? "사용자"}
-                </span>
-                <span className="text-[20px]">
-                  {REACTION_EMOJI_CHAR[rc.emoji as ReactionEmoji] ?? rc.emoji}
-                </span>
-              </li>
-            ))}
+          {/* 리액션한 사람 목록 (필터 적용)
+              minHeight: 필터해도 시트(하단 고정) 높이가 줄지 않게 전체 인원 기준으로 고정.
+              줄어들면 칩이 아래로 밀려 모바일 ghost click이 오버레이에 떨어지며 시트가 닫힘. */}
+          <ul className="flex flex-col" style={{ minHeight: reactors.length * 52 }}>
+            {reactors
+              .filter((rc) => !reactionFilter || rc.emoji === reactionFilter)
+              .map((rc) => (
+                <li key={rc.userId} className="flex h-13 items-center gap-3">
+                  <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
+                  <span className="flex-1 text-[15px] text-text-primary">
+                    {rc.name ?? "사용자"}
+                  </span>
+                  <span className="text-[20px]">
+                    {REACTION_EMOJI_CHAR[rc.emoji as ReactionEmoji] ?? rc.emoji}
+                  </span>
+                </li>
+              ))}
           </ul>
         </BottomSheetContent>
       </BottomSheet>
+
+      {/* 우측 슬라이딩 서랍 — 사진/대화상대/초대 */}
+      <ChatDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        conversationId={id}
+        isDirect={!isGroup}
+        roomTitle={headerTitle}
+        onPhotoClick={(photos, index) => setViewer({ photos, index })}
+      />
+
+      {/* 사진 크게 보기 + 다운로드 */}
+      <PhotoViewer
+        photos={viewer?.photos ?? null}
+        startIndex={viewer?.index ?? 0}
+        onClose={() => setViewer(null)}
+      />
     </div>
   );
 };

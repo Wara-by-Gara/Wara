@@ -65,6 +65,12 @@ export class NotificationsController {
     return this.notificationsService.updateSettings(user.id, dto);
   }
 
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteAllNotifications(@CurrentUser() user: JwtPayload) {
+    return this.notificationsService.deleteAllNotifications(user.id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteNotification(

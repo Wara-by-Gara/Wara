@@ -5,7 +5,8 @@ import { SEEDS } from './fixtures';
 import { loadLegalSeeds } from './legal-loader';
 import { chunkedInsert } from './util';
 
-export async function seedTier0(db: DrizzleDB) {
+/** 약관 · 초대 템플릿 · 미션 템플릿만 upsert (프로덕션 essential 시드) */
+export async function seedEssential(db: DrizzleDB) {
   // .md SoT — frontmatter/본문이 바뀌면 시드 시 자동 동기화 (id는 유지, 나머지는 갱신)
   await db
     .insert(serviceTerms)
@@ -36,10 +37,15 @@ export async function seedTier0(db: DrizzleDB) {
         font: sql`excluded.font`,
         effect: sql`excluded.effect`,
         isActive: sql`excluded.is_active`,
+        prompt: sql`excluded.prompt`,
         updatedAt: new Date(),
       },
     });
   await db.insert(missionTemplates).values(SEEDS.missionTemplates).onConflictDoNothing();
+}
+
+export async function seedTier0(db: DrizzleDB) {
+  await seedEssential(db);
   await chunkedInsert(
     (chunk) => db.insert(users).values(chunk).onConflictDoNothing(),
     SEEDS.users,

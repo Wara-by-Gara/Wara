@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import InvitationDetailContainer from '@/domain/InvitationDetail/Container/InvitationDetailContainer';
 import type { Invitation } from '@/lib/api/invitations';
 import { API_ORIGIN } from '@/lib/env';
@@ -48,5 +49,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function InvitationsDetailPage({ params }: Props) {
   const { invitationId } = await params;
-  return <InvitationDetailContainer invitationId={invitationId} />;
+  return (
+    <Suspense>
+      <InvitationDetailContainer invitationId={invitationId} />
+    </Suspense>
+  );
 }

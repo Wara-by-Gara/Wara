@@ -72,7 +72,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
             ) : null}
           </span>
           <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            <p className="line-clamp-1 text-[15px] font-semibold text-text-primary">{title}</p>
+            <p className="line-clamp-3 text-[15px] font-semibold text-text-primary">{title}</p>
             {description ? (
               <p className="line-clamp-1 text-[13px] text-text-secondary">{description}</p>
             ) : null}

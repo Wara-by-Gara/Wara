@@ -22,7 +22,7 @@
 - 단일 사용 코드에 추상화 금지.
 - 요청하지 않은 유연성·설정 가능성 추가 금지.
 - 200줄로 짤 걸 50줄로 짤 수 있으면 다시 짤 것.
-- V1.1+ 기능을 V1.0에 미리 만들지 마 (DM / AI / 날짜 투표 / 이모지 / Album / 체류시간)
+- 구현 범위 밖 기능을 임의로 추가하지 마 (아래 Scope 참고)
 
 ## 3. 필요한 부분만 수정
 요청한 것만 건드려. 내가 만든 것만 정리해.
@@ -77,6 +77,18 @@ LLM은 아래 형식을 반드시 따른다.
 ## Verify
 PR 머지 전 반드시 통과
 `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+
+## Scope (현재 구현 기준)
+아래 기능은 **현재 제품 범위에 포함**되어 있으며, 신규 작업 시 이를 기준으로 한다.
+
+- **DM** — conversations (1:1 채팅, 이미지 메시지, 이모지 리액션)
+- **AI** — 초대장 메인 이미지 AI 생성
+- **날짜 투표** — date-vote (생성 플로우·투표 페이지 포함)
+- **Album / Photo** — 사진 업로드·피드백·리마인드 앨범(Best 9)·사진 지도
+- **위치** — 실시간 위치 공유, tier별 privacy
+- **알림·차단·친구·마이페이지** — notifications, blocklist, friends
+
+템플릿 미리보기 이미지 경로 SoT: `apps/web/public/template_images/{slug}/`
 
 ## Refs
 - @docs/api/WARA_API_설계_v0.7.md

@@ -40,7 +40,7 @@
 - Service ↔ Service 직접 호출
 - @Body() 그대로 DB에 저장
 - V1.0 소셜 로그인 정책 위반: Web/iOS는 카카오·네이버·구글·애플, Android는 카카오·네이버·구글 (Android에서 Apple 제외)
-- DM / AI / 날짜 투표 / Album / PhotoView 코드 작성 (V1.1+)
+- Scope 밖 기능 임의 추가 (루트 CLAUDE.md Scope 참고)
 
 ## Refs
 

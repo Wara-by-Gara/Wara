@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { Avatar, AvatarGroup } from "@/components/primitives/Avatar";
@@ -108,12 +108,13 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
     },
     ref,
   ) {
+    const [imgError, setImgError] = useState(false);
     const rawBadge = STATUS_BADGE[variant];
     const statusBadge =
       rawBadge && variant === "upcoming" && ddayLabel
         ? { ...rawBadge, label: ddayLabel }
         : rawBadge;
-    const showImage = variant !== "noImage" && imageUrl;
+    const showImage = variant !== "noImage" && imageUrl && !imgError;
     const isHorizontal = layout === "horizontal";
     const visibleParticipants = participantAvatars?.slice(0, PARTICIPANT_AVATAR_VISIBLE_MAX) ?? [];
     const participantOverflow = Math.max(
@@ -136,6 +137,7 @@ export const InvitationCard = forwardRef<HTMLButtonElement, InvitationCardProps>
             unoptimized
             className="object-cover"
             sizes={isHorizontal ? "120px" : "100vw"}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="flex size-full items-center justify-center">

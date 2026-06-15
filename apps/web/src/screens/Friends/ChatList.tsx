@@ -22,7 +22,7 @@ export const ChatList = () => {
 
   const keyword = query.trim();
   const filtered = keyword
-    ? conversations.filter((c) => matchName(c.partner.name, keyword))
+    ? conversations.filter((c) => matchName(c.title, keyword))
     : conversations;
 
   const goRoom = (id: string) => router.push(ROUTES.CHAT.ROOM(id));
@@ -98,7 +98,7 @@ export const ChatList = () => {
       ) : (
         <ul className="divide-y divide-border bg-surface">
           {filtered.map((c) => {
-            const name = c.partner.name ?? "이름 없음";
+            const name = c.title || "이름 없음";
             return (
               <li key={c.id}>
                 <div
@@ -118,9 +118,16 @@ export const ChatList = () => {
                   onContextMenu={(e) => e.preventDefault()}
                   className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
                 >
-                  <Avatar size="md" src={c.partner.avatarUrl ?? undefined} alt={name} initial={name[0]} />
+                  <Avatar size="md" src={c.avatarUrl ?? undefined} alt={name} initial={name[0]} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold text-text-primary">{name}</p>
+                    <p className="truncate text-[15px] font-bold text-text-primary">
+                      {name}
+                      {c.type === "group" && (
+                        <span className="ml-1 text-[13px] font-normal text-text-tertiary">
+                          {c.memberCount}
+                        </span>
+                      )}
+                    </p>
                     <p className="line-clamp-2 text-[13px] text-text-tertiary">
                       {c.lastMessageText ?? "대화를 시작해보세요"}
                     </p>
@@ -149,7 +156,7 @@ export const ChatList = () => {
       >
         <ModalContent className="max-w-[280px]" aria-describedby={undefined}>
           <ModalPrimitive.Title className="text-left text-[16px] font-bold text-text-primary">
-            {actionTarget?.partner.name ?? "대화"}
+            {actionTarget?.title ?? "대화"}
           </ModalPrimitive.Title>
           <div className="mt-4">
             <button

@@ -21,15 +21,15 @@
 - ID = ULID
 - 모든 테이블에 created_at, updated_at
 - snake_case (Drizzle casing 자동 적용)
-- migration 순서: 스키마 수정 → db:generate → SQL 검토 → db:migrate
+- migration 순서: 스키마 수정 → db:generate → SQL 검토 → db:migrate (`drizzle/run-migrations.ts`, drizzle-kit migrate 사용 금지)
 
 ## Never
 - migration 없이 스키마 직접 수정
 - hard delete (soft delete 사용)
 - 평문 비밀번호 저장 (bcrypt 사용)
 - raw SQL 직접 작성 (Drizzle query builder 사용)
-- V1.1+ 테이블 V1.0에 생성 (dm / ai / albums / photo_views / photo_emojis)
 - migration 파일 자동 실행 (SQL 검토 후 수동 실행)
+- `meta/_journal.json`만 git 추적 (EC2 migrate용). snapshot은 gitignore
 
 ## Refs
 - @docs/db/WARA_ERD_v0.6.1.md

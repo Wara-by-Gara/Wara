@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
@@ -26,6 +27,9 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
   const currentUserDisplayName = me?.name ?? null;
 
+  const searchParams = useSearchParams();
+  const sectionRef = useRef<HTMLDivElement>(null);
+
   const {
     data,
     submitComment,
@@ -42,6 +46,16 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   } = useInvitationFeedback(invitationId);
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const commentCount = total ?? allRows.length;
+
+  // 댓글 알림 클릭으로 진입(?focus=comments) 시 댓글 섹션으로 스크롤.
+  // 위쪽 Album 이미지가 비동기 로드되며 레이아웃 높이가 변하므로 한 틱 미뤄서 스크롤한다.
+  useEffect(() => {
+    if (searchParams.get('focus') !== 'comments') return;
+    const timer = setTimeout(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{
@@ -78,16 +92,26 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const filteredParticipants =
     mentionQuery !== null
       ? allParticipants.filter((p) =>
-          (p.user.nickname ?? '')
+          getCommentAuthorName(p.user)
             .toLowerCase()
-            .includes(mentionQuery!.toLowerCase()),
+            .includes((mentionQuery ?? '').toLowerCase()),
         )
       : [];
 
+  const showAllOption = mentionQuery != null && 'all'.includes(mentionQuery.toLowerCase());
+
   const handleSelectMention = (userId: string, nickname: string) => {
-    const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
-    setInputValue(newValue);
-    setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    if (userId === '__all__') {
+      const allUserIds = allParticipants
+        .map((p) => p.user.id)
+        .filter((id) => id !== currentUserId);
+      setMentionedUserIds([...new Set(allUserIds)]);
+      setInputValue(inputValue.replace(/@\S*$/, '@all '));
+    } else {
+      const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+      setInputValue(newValue);
+      setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +144,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   };
 
   return (
-    <div className="mt-4">
+    <div ref={sectionRef} id="comments" className="mt-4">
       <div>
         <h3 className={cn('mb-3 text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>
           댓글 {commentCount}
@@ -160,15 +184,30 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           </div>
         )}
         {mentionQuery !== null && (
-          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-hidden">
+          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-y-auto max-h-[220px]">
             {isParticipantsLoading ? (
               <MentionListSkeleton count={3} />
-            ) : filteredParticipants.length === 0 ? (
+            ) : filteredParticipants.length === 0 && !showAllOption ? (
               <p className="px-4 py-3 text-[13px] text-text-tertiary">
                 일치하는 참가자 없음
               </p>
             ) : (
               <ul>
+                {showAllOption && (
+                  <li>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectMention('__all__', 'all');
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <span className="text-[14px] font-medium text-text-primary">@all</span>
+                      <span className="text-[12px] text-text-tertiary">전체 참여자</span>
+                    </button>
+                  </li>
+                )}
                 {filteredParticipants.map((p) => (
                   <li key={p.user.id}>
                     <button
@@ -177,19 +216,19 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                         e.preventDefault(); // input blur 방지
                         handleSelectMention(
                           p.user.id,
-                          p.user.nickname ?? p.user.id,
+                          getCommentAuthorName(p.user),
                         );
                       }}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
                     >
                       <Avatar
                         src={p.user.profileImageUrl ?? undefined}
-                        alt={p.user.nickname ?? ''}
+                        alt={getCommentAuthorName(p.user)}
                         size="xs"
-                        initial={p.user.nickname?.[0]}
+                        initial={getCommentAuthorName(p.user)[0]}
                       />
                       <span className="text-[14px] text-text-primary">
-                        @{p.user.nickname}
+                        @{getCommentAuthorName(p.user)}
                       </span>
                     </button>
                   </li>
@@ -218,6 +257,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           onGifButtonClick={() => setGifPickerOpen((v) => !v)}
           onPhotoButtonClick={() => fileInputRef.current?.click()}
           hasPendingPhoto={!!pendingFile}
+          highlightMentions
           onSubmit={async (text) => {
             await submitComment(
               text,

@@ -4,19 +4,19 @@ import userEvent from '@testing-library/user-event';
 import { NotificationBell } from './notification-bell';
 
 describe('NotificationBell', () => {
-  it('unreadCount가 0이면 뱃지가 없다', () => {
+  it('unreadCount가 0이면 읽지 않음 표시(빨간 점)가 없다', () => {
     render(<NotificationBell unreadCount={0} onClick={vi.fn()} />);
-    expect(screen.queryByText('0')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '알림' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /읽지 않은 알림/ }),
+    ).not.toBeInTheDocument();
   });
 
-  it('unreadCount가 5이면 뱃지에 5가 표시된다', () => {
+  it('unreadCount가 1 이상이면 읽지 않음 표시(빨간 점)가 있다', () => {
     render(<NotificationBell unreadCount={5} onClick={vi.fn()} />);
-    expect(screen.getByText('5')).toBeInTheDocument();
-  });
-
-  it('unreadCount가 100이면 뱃지에 99+가 표시된다', () => {
-    render(<NotificationBell unreadCount={100} onClick={vi.fn()} />);
-    expect(screen.getByText('99+')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /읽지 않은 알림/ }),
+    ).toBeInTheDocument();
   });
 
   it('클릭 시 onClick이 호출된다', async () => {

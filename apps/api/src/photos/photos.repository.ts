@@ -7,6 +7,7 @@ import {
   participants,
   photoLikes,
   photos,
+  users,
 } from '../database/schema';
 
 @Injectable()
@@ -27,6 +28,32 @@ export class PhotosRepository {
         ),
       );
     return row?.id ?? null;
+  }
+
+  // 사진 업로드 알림 fan-out 대상 — 업로더(excludeParticipantId) 제외한 참여자 userId 목록
+  async findParticipantUserIds(invitationId: string, excludeParticipantId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ userId: participants.userId })
+      .from(participants)
+      .innerJoin(users, eq(participants.userId, users.id))
+      .where(
+        and(
+          eq(participants.invitationId, invitationId),
+          isNull(users.deletedAt),
+          sql`${participants.id} <> ${excludeParticipantId}`,
+        ),
+      );
+    return rows.map((r) => r.userId);
+  }
+
+  async findNicknameByParticipantId(participantId: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ name: users.name })
+      .from(participants)
+      .innerJoin(users, eq(participants.userId, users.id))
+      .where(eq(participants.id, participantId))
+      .limit(1);
+    return row?.name ?? null;
   }
 
   //커서 형식으로 모든 사진 가져옴(초대장 사진 목록 무한스크롤용 DB 쿼리)

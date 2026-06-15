@@ -49,6 +49,7 @@ import {
 import { useLightTheme } from '@/hooks/useLightTheme';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { CreateCanvas } from '@/domain/InvitationCreate/Canvas/CreateCanvas';
+import { AiCompositeSheet } from '@/domain/InvitationCreate/Sheets/AiCompositeSheet';
 import {
   DEFAULT_COVER_KEY,
   DEFAULT_BG_COLOR,
@@ -268,6 +269,7 @@ export default function InvitationCreateContainer({
   const [customInput, setCustomInput] = useState('');
   const [missionError, setMissionError] = useState(false);
   const [imageSheetOpen, setImageSheetOpen] = useState(false);
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [rsvpSheetOpen, setRsvpSheetOpen] = useState(false);
@@ -823,7 +825,11 @@ export default function InvitationCreateContainer({
   if (published) {
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" title="초대장 만들기" />
+        <TopAppBar
+          className="shrink-0"
+          title="초대장 만들기"
+          onBack={() => router.replace('/')}
+        />
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
           <p className="text-[20px] font-bold text-text-primary">
@@ -1081,17 +1087,31 @@ export default function InvitationCreateContainer({
                         </div>
                       </button>
                     ) : (
-                      <button
-                        type="button"
-                        className="w-full"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <InvitationCover
-                          imageUrl={localPreviewUrl ?? form.mainImageKey}
-                          variant="image"
-                          fitToImage
-                        />
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          type="button"
+                          className="w-full"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <InvitationCover
+                            imageUrl={localPreviewUrl ?? form.mainImageKey}
+                            variant="image"
+                            fitToImage
+                          />
+                        </button>
+                        {form.mainImageKey !== DEFAULT_COVER_KEY && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setImageSheetOpen(false);
+                              setAiSheetOpen(true);
+                            }}
+                          >
+                            AI로 합성하기
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </>
                 ) : (
@@ -1867,6 +1887,14 @@ export default function InvitationCreateContainer({
           setPublishError(false);
           publish();
         }}
+      />
+
+      <AiCompositeSheet
+        open={aiSheetOpen}
+        onOpenChange={setAiSheetOpen}
+        sourceImageKey={
+          form.mainImageKey === DEFAULT_COVER_KEY ? null : form.mainImageKey
+        }
       />
 
       <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>

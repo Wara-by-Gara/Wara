@@ -1,1 +1,0 @@
-ALTER TABLE "conversation_participants" ADD COLUMN "left_at" timestamp with time zone;

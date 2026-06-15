@@ -42,6 +42,7 @@
 |------|:--------:|------|
 | `INVITATION_ACCESS_REVOKED` | 403 | HOST에 의해 차단된 사용자가 초대장에 접근 |
 | `INVITATION_ID_REQUIRED` | 400 | BlocklistGuard가 적용된 라우트에 invitationId 파라미터 없음 |
+| `INVITATION_VERSION_CONFLICT` | 409 | 다른 세션이 먼저 수정. 클라이언트가 `expectedUpdatedAt`을 보냈는데 서버의 `updatedAt`과 불일치. 최신 상태 재조회 후 재시도 |
 
 ## Social Link
 
@@ -151,6 +152,7 @@
 | `AI_TEMPLATE_NOT_FOUND` | 404 | 초대장에 템플릿이 없어 AI 합성 불가 |
 | `AI_DAILY_LIMIT_EXCEEDED` | 429 | 유저당 하루 AI 생성 횟수(3회) 초과 |
 | `AI_SERVICE_UNAVAILABLE` | 503 | 사용량 급증으로 서킷 브레이커 동작 중 |
+| `AI_GENERATION_NOT_FOUND` | 404 | AI generation 없음 또는 본인 소유 아님 |
 
 ## DM (1:1 채팅)
 
@@ -161,6 +163,8 @@
 | `MESSAGE_NOT_FOUND` | 404 | 메시지 없음 또는 해당 대화방 소속 아님 |
 | `MESSAGE_FORBIDDEN` | 403 | 본인이 보낸 메시지가 아님 (삭제 시도) |
 | `CANNOT_MESSAGE_SELF` | 400 | 자기 자신과 대화 생성 시도 |
+| `GROUP_MEMBER_LIMIT_EXCEEDED` | 400 | 단톡방 최대 인원(30명) 초과 초대 |
+| `GROUP_NO_VALID_INVITEES` | 400 | 초대 대상이 모두 기존 멤버이거나 존재하지 않음 |
 | `MESSAGE_IMAGE_INVALID` | 400 | imageKey가 대화방 prefix 불일치 또는 미업로드(존재하지 않는 객체) |
 
 ## Terms

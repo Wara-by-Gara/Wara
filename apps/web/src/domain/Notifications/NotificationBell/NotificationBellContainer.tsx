@@ -67,9 +67,18 @@ export function NotificationBellContainer() {
           isFetchingNextPage={isFetchingNextPage}
           isMarkingAllRead={isMarkingAllRead}
           onMarkAsRead={(id) => {
-            markAsRead(id);
             const n = notifications.find((item) => item.id === id);
-            if (!n?.targetId) return;
+            if (n && !n.isRead) markAsRead(id);
+            if (!n) return;
+
+            // 참가자 위치 공유 알림 → 알림 설정 시트 (on/off 토글)
+            if (n.targetType === 'participantLocations') {
+              setOpen(false);
+              setSettingsOpen(true);
+              return;
+            }
+
+            if (!n.targetId) return;
 
             if (n.targetType === 'invitation') {
               setOpen(false);
@@ -80,11 +89,6 @@ export function NotificationBellContainer() {
               }
               return;
             }
-            if (n.targetType === 'participantLocations') {
-              setOpen(false);
-              router.push(ROUTES.INVITATIONS.LOCATION(n.targetId));
-              return;
-            }
             const invId = n.invitationId;
             if (!invId) return;
             setOpen(false);
@@ -93,7 +97,7 @@ export function NotificationBellContainer() {
             } else if (n.targetType === 'mission') {
               router.push(ROUTES.INVITATIONS.DETAIL(invId));
             } else if (n.targetType === 'feedback') {
-              router.push(ROUTES.INVITATIONS.COMMENTS(invId));
+              router.push(`${ROUTES.INVITATIONS.DETAIL(invId)}?focus=comments`);
             }
           }}
           onMarkAllAsRead={() => markAllAsRead()}

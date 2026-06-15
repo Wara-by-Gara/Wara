@@ -26,6 +26,8 @@ export interface CommentInputBarProps {
   onPhotoButtonClick?: () => void;
   /** 사진 첨부됨 — 텍스트 없이도 등록 가능 */
   hasPendingPhoto?: boolean;
+  /** 입력값 내 @멘션 토큰에 배경 하이라이트 표시 */
+  highlightMentions?: boolean;
 }
 
 export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
@@ -45,6 +47,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       onGifButtonClick,
       onPhotoButtonClick,
       hasPendingPhoto = false,
+      highlightMentions = false,
     },
     ref,
   ) {
@@ -56,6 +59,13 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       onValueChange?.(v);
     };
     const isSubmittingRef = useRef(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const mirrorRef = useRef<HTMLDivElement>(null);
+    const syncScroll = () => {
+      if (inputRef.current && mirrorRef.current) {
+        mirrorRef.current.scrollLeft = inputRef.current.scrollLeft;
+      }
+    };
     const isTop = placement === 'top';
     const isGlass = variant === 'glass';
     const edgeBorder = isGlass
@@ -142,27 +152,46 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
               state === 'error' && 'ring-2 ring-danger',
             )}
           >
-            <input
-              type="text"
-              value={value}
-              disabled={disabled}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setValue(e.target.value)
-              }
-              placeholder={placeholder}
-              onKeyDown={(e) => {
-                if (
-                  e.key === 'Enter' &&
-                  !e.shiftKey &&
-                  !e.nativeEvent.isComposing
-                ) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSubmit();
+            <div className="relative flex-1">
+              {highlightMentions && value && (
+                <div
+                  ref={mirrorRef}
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 select-none overflow-x-hidden whitespace-pre py-2.5 text-[15px]"
+                >
+                  {value.split(/(@\S+)/).map((part, i) =>
+                    /^@\S+/.test(part) ? (
+                      <mark key={i} className="rounded-[3px] bg-pink-500/15 text-transparent">{part}</mark>
+                    ) : (
+                      <span key={i} className="text-transparent">{part}</span>
+                    )
+                  )}
+                </div>
+              )}
+              <input
+                ref={inputRef}
+                type="text"
+                value={value}
+                disabled={disabled}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setValue(e.target.value)
                 }
-              }}
-              className="flex-1 bg-transparent py-2.5 text-[15px] text-text-primary placeholder:text-text-tertiary outline-none disabled:cursor-not-allowed"
-            />
+                onScroll={syncScroll}
+                placeholder={placeholder}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === 'Enter' &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit();
+                  }
+                }}
+                className="relative z-10 w-full bg-transparent py-2.5 text-[15px] text-text-primary placeholder:text-text-tertiary outline-none disabled:cursor-not-allowed"
+              />
+            </div>
             {onGifButtonClick ? (
               <button
                 type="button"

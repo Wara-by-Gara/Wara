@@ -11,8 +11,15 @@ import { ErrorCode } from '../common/constants/error-codes';
 import { ParticipantsRepository } from './participants.repository';
 import { S3Service } from '../s3/s3.service';
 import { LocationsService } from '../locations/locations.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { JoinInvitationDto } from './dto/join-invitation.dto';
 import { UpdateRsvpDto } from './dto/update-rsvp.dto';
+
+const RSVP_STATUS_LABEL: Record<UpdateRsvpDto['rsvpStatus'], string> = {
+  attending: '참석',
+  undecided: '미정',
+  absent: '불참',
+};
 
 @Injectable()
 export class ParticipantsService {
@@ -20,6 +27,7 @@ export class ParticipantsService {
     private readonly repository: ParticipantsRepository,
     private readonly s3Service: S3Service,
     private readonly locationsService: LocationsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private async resolveProfileImageUrl(url: string | null): Promise<string | null> {
@@ -69,7 +77,23 @@ export class ParticipantsService {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
-    return this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, note: dto.note });
+    const participant = await this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, note: dto.note });
+
+    // 호스트 본인이 가입하는 경우는 없지만(이미 participant), 방어적으로 자기 알림 차단
+    if (info.hostUserId !== userId) {
+      const nickname = (await this.repository.findUserNickname(userId)) ?? '누군가';
+      await this.notificationsService.notify({
+        userId: info.hostUserId,
+        actorUserId: userId,
+        type: 'participant_joined',
+        content: `${nickname}님이 초대장에 참여했습니다`,
+        targetType: 'invitation',
+        targetId: invitationId,
+        invitationId,
+      });
+    }
+
+    return participant;
   }
 
   async updateRsvp(
@@ -95,7 +119,23 @@ export class ParticipantsService {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
-    return this.repository.updateRsvpStatus(participantId, dto.rsvpStatus);
+    const updated = await this.repository.updateRsvpStatus(participantId, dto.rsvpStatus);
+
+    // 게스트가 본인 RSVP를 변경하면 호스트에게 알림 (호스트가 대신 변경한 경우는 제외)
+    if (viewer.memberRole !== 'HOST' && viewer.userId !== info.hostUserId) {
+      const name = (await this.repository.findUserNickname(viewer.userId)) ?? '누군가';
+      await this.notificationsService.notify({
+        userId: info.hostUserId,
+        actorUserId: viewer.userId,
+        type: 'participant_joined',
+        content: `${name}님이 참석 여부를 ${RSVP_STATUS_LABEL[dto.rsvpStatus]}(으)로 변경했습니다`,
+        targetType: 'invitation',
+        targetId: invitationId,
+        invitationId,
+      });
+    }
+
+    return updated;
   }
 
   async updateHostMemo(invitationId: string, participantId: string, memo: string | null) {

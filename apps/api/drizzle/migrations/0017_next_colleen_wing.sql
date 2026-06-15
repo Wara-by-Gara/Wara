@@ -1,1 +1,0 @@
-ALTER TABLE "invitations" ADD COLUMN "main_image_thumbnail_key" text;

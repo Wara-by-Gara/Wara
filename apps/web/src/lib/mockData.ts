@@ -3,8 +3,8 @@
  * 실제 API 응답을 흉내내며 V1.0 시나리오를 cover.
  */
 
-/** 로그인 사용자 프로필 사진 (Storybook·마이페이지·홈 헤더) */
-export const mockMeAvatarUrl = "/profile-me.png";
+/** 로그인 사용자 프로필 사진 (Storybook·마이페이지·홈 헤더 mock) */
+export const mockMeAvatarUrl = undefined;
 
 export interface MockInvitation {
   id: string;
@@ -34,7 +34,7 @@ export const mockInvitation: MockInvitation = {
   time: "오후 7시",
   location: "전주 한옥마을",
   address: "전북 전주시 완산구 기린대로 99",
-  coverImageUrl: "/invitation-cover-cake.png",
+  coverImageUrl: undefined,
   ddayLabel: "D-3",
   host: { name: "김와라", avatarUrl: mockMeAvatarUrl, handle: "@wara_kim" },
   rsvp: { current: 12, capacity: 20 },
@@ -181,13 +181,13 @@ export const mockComments: MockComment[] = [
   { id: "c15", authorName: "최하나", authorAvatarUrl: "https://i.pravatar.cc/80?img=44", content: "너무 기대돼요 ✨", createdAt: "6일 전", likeCount: 6 },
 ];
 
-/** 초대장 상세·앨범 mock용 로컬 사진 (외부 URL 차단 환경 대비) */
+/** 초대장 상세·앨범 mock용 사진 (로컬 public 에셋 삭제 후 외부 placeholder) */
 export const mockAlbumLocalSrcs = [
-  "/album-birthday-1.jpg",
-  "/album-birthday-2.jpg",
-  "/album-birthday-3.jpg",
-  "/album-birthday-4.jpg",
-  "/album-birthday-5.jpg",
+  "https://picsum.photos/seed/wara-album-1/400/400",
+  "https://picsum.photos/seed/wara-album-2/400/400",
+  "https://picsum.photos/seed/wara-album-3/400/400",
+  "https://picsum.photos/seed/wara-album-4/400/400",
+  "https://picsum.photos/seed/wara-album-5/400/400",
 ] as const;
 
 /** 초대장 상세 앨범 미리보기 (3×2 중 앞 5칸) */
@@ -200,7 +200,7 @@ export const mockAlbumPreviewBirthdaySrcs = mockAlbumLocalSrcs;
 export const mockAlbumPreviewOverflow = 18;
 
 /** 앨범 뷰어 등 단일 사진 미리보기용 (그리드 타일은 src 없이 회색 프레임) */
-export const albumViewerSampleSrc = "/invitation-cover-cake.png";
+export const albumViewerSampleSrc = mockAlbumLocalSrcs[0];
 
 export const mockPhotos = Array.from({ length: 12 }, (_, i) => {
   const author = mockParticipants[i % mockParticipants.length]!;
@@ -252,11 +252,11 @@ export const mockNotifications: MockNotification[] = [
   { id: "n7", type: "hostNotice", title: "호스트가 공지를 보냈어요", description: "주차장 안내가 있어요", time: "3일 전" },
 ];
 
-/** 템플릿 자동 슬라이드용 로컬 이미지 */
+/** 템플릿 자동 슬라이드용 mock 이미지 */
 export const mockTemplateSlides = [
-  { src: "/template-slide-blue.png", alt: "BLUE 콜라주 템플릿" },
-  { src: "/template-slide-retro.png", alt: "레트로 포스터 템플릿" },
-  { src: "/template-slide-y2k.png", alt: "Y2K 콜라주 템플릿" },
+  { src: "/template_images/general/imgi_101_3f6e9e99-4dde-421d-a6e9-1a67ef20a882.png", alt: "BLUE 콜라주 템플릿" },
+  { src: "/template_images/general/imgi_10_140618ff-47cf-4683-be3f-164e79146505.png", alt: "레트로 포스터 템플릿" },
+  { src: "/template_images/general/imgi_11_41bfeadf-5fc0-475d-916a-31afe461dede.png", alt: "Y2K 콜라주 템플릿" },
 ] as const;
 
 export interface MockTemplate {

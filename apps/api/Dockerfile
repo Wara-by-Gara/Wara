@@ -13,7 +13,8 @@ COPY packages/tsconfig/package.json packages/tsconfig/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY apps/api/package.json apps/api/
 
-RUN pnpm install --frozen-lockfile
+ENV HUSKY=0
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # 패키지 소스 복사 후 빌드
 COPY packages/ packages/
@@ -35,7 +36,7 @@ COPY packages/tsconfig/package.json packages/tsconfig/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY apps/api/package.json apps/api/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # 빌드 결과물 복사
 COPY --from=builder /app/apps/api/dist apps/api/dist

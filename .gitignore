@@ -44,8 +44,9 @@ Thumbs.db
 # Test coverage
 coverage/
 
-# Drizzle
-drizzle/migrations/meta/
+# Drizzle snapshot은 로컬 generate용 (git 추적하지 않음)
+apps/api/drizzle/migrations/meta/*
+!apps/api/drizzle/migrations/meta/_journal.json
 
 # Personal work notes (개인 작업 계획)
 TODO.md

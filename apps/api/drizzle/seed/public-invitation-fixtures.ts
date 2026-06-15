@@ -54,7 +54,7 @@ const GUEST_COUNT_PER_INV = 20;
 const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   {
     slug: 'tech',
-    folder: 'AI',
+    folder: 'tech-meetup',
     titles: [
       'AI 크리에이터 밋업', '프롬프트 워크숍', '생성형 AI 쇼케이스', 'LLM 스터디 모임',
       'AI 스타트업 네트워킹', '코딩 에이전트 실습', 'AI 트렌드 브런치', '이미지 생성 핸즈온',
@@ -75,7 +75,7 @@ const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   },
   {
     slug: 'fitness',
-    folder: '스포츠',
+    folder: 'sports-day',
     titles: [
       '한강 러닝 크루', '주말 풋살 번개', '요가 야외 클래스', '클라이밍 챌린지',
       '주말 사이클링', '배드민턴 동호회', 'HIIT 그룹 트레이닝', '테니스 더블 매치',
@@ -96,7 +96,7 @@ const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   },
   {
     slug: 'food',
-    folder: '음식',
+    folder: 'dinner-party',
     titles: [
       '홈파티 디너', '파스타 나이트', '바비큐 파티', '디저트 테이블',
       '한식 풀코스', '브런치 모임', '포틀럭 파티', '셰프 테이블',
@@ -117,7 +117,7 @@ const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   },
   {
     slug: 'art',
-    folder: '꽃',
+    folder: 'flower-garden',
     titles: [
       '플라워 아트 클래스', '갤러리 나이트', '수채화 원데이', '도예 체험 모임',
       '플로럴 포토 데이', '전시 관람 후 토크', '콜라주 워크숍', '일러스트 스케치',
@@ -138,7 +138,7 @@ const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   },
   {
     slug: 'culture',
-    folder: '파티',
+    folder: 'party-night',
     titles: [
       '재즈 나이트', '독립 영화 상영회', '클래식 소극장', '북토크 살롱',
       '전통 공연 관람', '박물관 야간 개장', '문학 낭독회', '뮤지컬 단체 관람',
@@ -159,7 +159,7 @@ const PUBLIC_CATEGORIES: PublicCategoryDef[] = [
   },
   {
     slug: 'health',
-    folder: '음료',
+    folder: 'brunch',
     titles: [
       '웰니스 브런치', '명상 & 티타임', '디톡스 주스 클래스', '숲속 힐링 워크',
       '수면 건강 세미나', '마음챙김 모임', '건강 요리 워크숍', '아로마 릴렉스 데이',
