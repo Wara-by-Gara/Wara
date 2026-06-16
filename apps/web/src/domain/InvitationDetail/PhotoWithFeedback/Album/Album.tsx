@@ -63,6 +63,9 @@ export default function Album({
 }: Props) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // 진행 중인 좋아요 토글 photoId. 모바일 이중 이벤트(touch+click)·더블탭이
+  // 같은 사진에 토글 2번을 보내 서버 최종 상태가 뒤집히는(새로고침 시 풀림) 것을 막는다.
+  const pendingLikeIdsRef = useRef<Set<string>>(new Set());
 
   const [showModal, setShowModal] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -116,6 +119,8 @@ export default function Album({
   };
 
   const handlePhotoLike = async (photoId: string) => {
+    if (pendingLikeIdsRef.current.has(photoId)) return;
+    pendingLikeIdsRef.current.add(photoId);
     const currentLiked = likedMap.has(photoId) ? likedMap.get(photoId)! : (photos.find((p) => p.id === photoId)?.liked ?? false);
     const currentCount = likeCountMap.get(photoId) ?? photos.find((p) => p.id === photoId)?.likeCount ?? 0;
     const newLiked = !currentLiked;
@@ -125,6 +130,8 @@ export default function Album({
       handleLikeChange(photoId, result.liked, result.likeCount);
     } catch {
       handleLikeChange(photoId, currentLiked, currentCount);
+    } finally {
+      pendingLikeIdsRef.current.delete(photoId);
     }
   };
 

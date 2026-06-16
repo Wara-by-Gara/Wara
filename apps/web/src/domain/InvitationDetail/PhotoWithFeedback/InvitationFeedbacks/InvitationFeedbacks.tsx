@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { CommentItem } from '@/components/domain';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
@@ -89,7 +90,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
 
   // 마지막 @ 이후 텍스트 추출
   const mentionQuery = (() => {
-    const match = inputValue.match(/@(\S*)$/);
+    // 토큰 경계를 공백/@ 까지로 한정 (\S* 는 닉네임 내 @ 를 삼켜 멘션 매칭이 깨짐)
+    const match = inputValue.match(/@([^\s@]*)$/);
     return match ? match[1] : null;
   })();
 
@@ -102,7 +104,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
         )
       : [];
 
-  const showAllOption = mentionQuery != null && 'all'.includes(mentionQuery.toLowerCase());
+  // @ 입력 직후(빈 쿼리)엔 숨김 — 'all'.includes('') === true 라서 @가 뜨자마자 @all이 노출되던 버그 방지
+  const showAllOption = mentionQuery != null && mentionQuery.length > 0 && 'all'.includes(mentionQuery.toLowerCase());
 
   const handleSelectMention = (userId: string, nickname: string) => {
     if (userId === '__all__') {
@@ -110,9 +113,9 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
         .map((p) => p.user.id)
         .filter((id) => id !== currentUserId);
       setMentionedUserIds([...new Set(allUserIds)]);
-      setInputValue(inputValue.replace(/@\S*$/, '@all '));
+      setInputValue(inputValue.replace(/@[^\s@]*$/, '@all '));
     } else {
-      const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+      const newValue = inputValue.replace(/@[^\s@]*$/, `@${nickname} `);
       setInputValue(newValue);
       setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
     }
@@ -402,8 +405,10 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
         </div>
       </div>
 
-      {/* 하단 고정 댓글 입력창 — "댓글 쓰기"/"답글" 트리거 시에만 노출 */}
-      {composerOpen && (
+      {/* 하단 고정 댓글 입력창 — "댓글 쓰기"/"답글" 트리거 시에만 노출.
+          body로 portal: GuestView의 `relative z-10`가 만든 stacking context에 갇히면
+          MainBottomNav(z-10)가 위로 덮어 입력창이 가려지므로 root 레벨로 빼낸다. */}
+      {composerOpen && typeof document !== 'undefined' && createPortal(
         <>
           <button
             type="button"
@@ -532,7 +537,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
               state={isSubmitting ? 'submitting' : 'default'}
             />
           </div>
-        </>
+        </>,
+        document.body,
       )}
 
       {selectedPhoto ? (
