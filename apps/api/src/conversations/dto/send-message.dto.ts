@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const SendMessageSchema = z
   .object({
-    content: z.string().trim().max(2000).optional().default(''),
+    content: z.string().trim().max(1000).optional().default(''),
     imageKey: z.string().min(1).optional(),
     replyToMessageId: z.string().min(1).optional(),
   })
@@ -21,7 +21,7 @@ export type SendMessageDto = z.infer<typeof SendMessageSchema>;
  * PATCH /conversations/:id/messages/:messageId
  */
 export const EditMessageSchema = z.object({
-  content: z.string().trim().min(1).max(2000),
+  content: z.string().trim().min(1).max(1000),
 });
 
 export type EditMessageDto = z.infer<typeof EditMessageSchema>;

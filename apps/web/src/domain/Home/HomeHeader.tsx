@@ -8,7 +8,7 @@ import { useUnreadCount } from "@/hooks/useNotifications";
 import { cn } from "@/lib/cn";
 
 const pillActionClass =
-  "inline-flex size-8 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-white/30 active:bg-white/40";
+  "inline-flex size-8 items-center justify-center rounded-full text-text transition-colors hover:bg-white/30 active:bg-white/40";
 
 export function HomeHeader() {
   const router = useRouter();

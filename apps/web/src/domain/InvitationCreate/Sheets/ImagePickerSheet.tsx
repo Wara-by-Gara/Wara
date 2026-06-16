@@ -89,7 +89,7 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
         <div className="flex flex-col gap-5 pt-1">
           {/* 템플릿 */}
           <section>
-            <p className="mb-2 text-[14px] font-semibold text-text-primary">템플릿</p>
+            <p className="mb-2 text-[14px] font-semibold text-text">템플릿</p>
             {categories.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-1.5">
                 <Chip selected={selectedCategory === ""} onClick={() => onCategoryChange("")}>
@@ -115,7 +115,7 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                 ))}
               </div>
             ) : (
-              <p className="text-[13px] text-text-tertiary">사용 가능한 템플릿이 없어요. 직접 업로드해보세요.</p>
+              <p className="text-[13px] text-text-disabled">사용 가능한 템플릿이 없어요. 직접 업로드해보세요.</p>
             )}
           </section>
 
@@ -127,7 +127,7 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                 onClick={() => onImageTabChange("upload")}
                 className={cn(
                   "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
-                  imageTab === "upload" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
+                  imageTab === "upload" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-muted",
                 )}
               >
                 이미지 업로드
@@ -137,7 +137,7 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                 onClick={() => onImageTabChange("gif")}
                 className={cn(
                   "rounded-full px-3 py-1 text-[13px] font-semibold transition-colors",
-                  imageTab === "gif" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-secondary",
+                  imageTab === "gif" ? "bg-primary text-text-inverse" : "bg-gray-100 text-text-muted",
                 )}
               >
                 GIF
@@ -155,7 +155,7 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                 />
                 {cropSrc ? (
                   <div className="flex flex-col gap-3">
-                    <p className="text-[13px] text-text-secondary">
+                    <p className="text-[13px] text-text-muted">
                       사진 비율이 표시 범위를 벗어나요. 드래그·확대로 맞춰주세요.
                     </p>
                     <ImageCropEditor
@@ -190,11 +190,11 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                     type="button"
                     className={cn(
                       "flex aspect-[4/5] w-full items-center justify-center rounded-lg border-2 border-dashed",
-                      imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
+                      imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-surface-muted",
                     )}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                    <div className="flex flex-col items-center gap-2 text-text-disabled">
                       <Icon name="image" size="xl" color={imageError ? "danger" : "inactive"} decorative />
                       <span className={cn("text-[13px]", imageError && "text-danger")}>
                         {imageError ? "대표 이미지를 추가해주세요" : "사진을 추가해보세요"}
@@ -232,11 +232,11 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
                     type="button"
                     className={cn(
                       "flex aspect-[4/5] w-full items-center justify-center rounded-lg border-2 border-dashed",
-                      imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-background-soft",
+                      imageError ? "border-danger bg-danger-soft" : "border-border-strong bg-surface-muted",
                     )}
                     onClick={() => onGifPickerOpenChange(true)}
                   >
-                    <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                    <div className="flex flex-col items-center gap-2 text-text-disabled">
                       <span className={cn("text-[28px] font-bold", imageError && "text-danger")}>GIF</span>
                       <span className={cn("text-[13px]", imageError && "text-danger")}>
                         {imageError ? "대표 이미지를 추가해주세요" : "GIF를 선택해보세요"}

@@ -26,7 +26,7 @@ export const Friends = () => {
   const ghost = useScrolled();
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당 */}
       <StickyHeader />
 
@@ -86,11 +86,11 @@ const SegmentTab = ({
       // 유령 모드: 흰 배경 대신 선택탭은 테두리만, 글자는 연하게 → 리스트 안 가림
       ghost
         ? active
-          ? "ring-1 ring-inset ring-text-primary/12 text-text-primary/55"
-          : "text-text-secondary/35 active:opacity-70"
+          ? "ring-1 ring-inset ring-text/12 text-text/55"
+          : "text-text-muted/35 active:opacity-70"
         : active
-          ? "bg-surface/85 text-text-primary shadow-sm"
-          : "text-text-secondary active:opacity-70",
+          ? "bg-surface/85 text-text shadow-sm"
+          : "text-text-muted active:opacity-70",
     )}
   >
     {label}

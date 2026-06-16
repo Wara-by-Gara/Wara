@@ -27,7 +27,7 @@ export interface DateTimeSelectorProps {
 }
 
 const inputClass =
-  'h-12 w-full rounded-xs border border-border-strong bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-primary';
+  'h-12 w-full rounded-xs border border-border-strong bg-surface px-4 text-[15px] text-text outline-none focus:border-primary';
 
 // ── 24h HH:MM ↔ 오전/오후 + 1-12h 변환 ───────────────────────────────────────
 const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -153,8 +153,8 @@ function WheelColumn<T extends number>({
                   dist === 0
                     ? 'text-[20px] font-extrabold text-primary'
                     : dist === 1
-                      ? 'text-[16px] font-semibold text-text-secondary opacity-60'
-                      : 'text-[14px] font-medium text-text-tertiary opacity-30',
+                      ? 'text-[16px] font-semibold text-text-muted opacity-60'
+                      : 'text-[14px] font-medium text-text-disabled opacity-30',
                 )}
               >
                 {format ? format(item) : String(item).padStart(2, '0')}
@@ -200,7 +200,7 @@ function TimeWheelPicker({
       )}
     >
       {/* 오전/오후 토글 */}
-      <div className="flex overflow-hidden rounded-sm border border-border bg-background-soft">
+      <div className="flex overflow-hidden rounded-sm border border-border bg-surface-muted">
         {(['오전', '오후'] as const).map((v) => (
           <button
             key={v}
@@ -211,7 +211,7 @@ function TimeWheelPicker({
             }}
             className={cn(
               'flex flex-1 items-center justify-center py-1.5 text-[13px] font-extrabold transition-all duration-150',
-              ampm === v ? 'bg-primary text-white' : 'text-text-tertiary',
+              ampm === v ? 'bg-primary text-white' : 'text-text-disabled',
             )}
           >
             {v}
@@ -234,7 +234,7 @@ function TimeWheelPicker({
           format={(v) => String(v)}
           disabled={disabled}
         />
-        <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
+        <div className="text-[20px] font-extrabold text-text-disabled">:</div>
         <WheelColumn
           items={MINUTES}
           value={minute}
@@ -286,7 +286,7 @@ export const DateTimeSelector = forwardRef<
         <div className="flex items-center justify-between">
           <label
             htmlFor={id}
-            className="text-[14px] font-medium text-text-primary"
+            className="text-[14px] font-medium text-text"
           >
             {label}
           </label>

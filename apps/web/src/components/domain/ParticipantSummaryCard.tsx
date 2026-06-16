@@ -35,7 +35,7 @@ const Stat = ({
 }) => (
   <div className="flex flex-1 flex-col items-center gap-0.5">
     <span className={cn('text-[20px] font-bold', color)}>{value}</span>
-    <span className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-tertiary')}>{label}</span>
+    <span className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-disabled')}>{label}</span>
   </div>
 );
 
@@ -61,13 +61,13 @@ export const ParticipantSummaryCard = forwardRef<
   return (
     <div ref={ref} className={cn('flex flex-col gap-3', className)} {...props}>
       <div className="flex items-baseline justify-between">
-        <p className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>참석 현황</p>
+        <p className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>참석 현황</p>
         {showCapacity ? (
-          <span className={cn('text-[13px]', isDarkBg ? 'text-white/70' : 'text-text-secondary')}>
+          <span className={cn('text-[13px]', isDarkBg ? 'text-white/70' : 'text-text-muted')}>
             정원 {summary.attending}/{summary.capacity}
           </span>
         ) : (
-          <span className={cn('text-[13px]', isDarkBg ? 'text-white/70' : 'text-text-secondary')}>
+          <span className={cn('text-[13px]', isDarkBg ? 'text-white/70' : 'text-text-muted')}>
             총 {summary.total}명
           </span>
         )}

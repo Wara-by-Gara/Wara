@@ -49,7 +49,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         {...props}
       >
         {overflowLabel ? (
-          <span className="flex size-full items-center justify-center bg-gray-200 text-[17px] font-semibold text-text-secondary">
+          <span className="flex size-full items-center justify-center bg-gray-200 text-[17px] font-semibold text-text-muted">
             {overflowLabel}
           </span>
         ) : src ? (
@@ -91,7 +91,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
           <span
             className={cn(
               "absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-xs bg-black/50 px-1.5 py-0.5 text-[11px] font-semibold",
-              liked ? "text-brand" : "text-white hover:text-brand",
+              liked ? "text-accent" : "text-white hover:text-accent",
               onLike && "cursor-pointer",
             )}
             onClick={onLike ? (e) => { e.stopPropagation(); onLike(); } : undefined}

@@ -100,7 +100,7 @@ export const Cover: Story = {
       </InvitationCover>
       <InvitationCover variant="no-image" ddayLabel="TODAY" />
       <InvitationCover variant="color" backgroundClass="bg-primary-soft">
-        <h2 className="type-cardTitle text-text-primary">컬러 표지</h2>
+        <h2 className="type-cardTitle text-text">컬러 표지</h2>
       </InvitationCover>
     </div>
   ),

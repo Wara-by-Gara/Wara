@@ -133,7 +133,7 @@ export function ParticipantProfileModal({
         </div>
 
         {bio ? (
-          <div className="w-full rounded-lg bg-background-soft px-4 py-3 text-left">
+          <div className="w-full rounded-lg bg-surface-muted px-4 py-3 text-left">
             <p className="type-bodySmall text-text-muted">{bio}</p>
           </div>
         ) : null}

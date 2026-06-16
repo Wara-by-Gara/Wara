@@ -83,7 +83,7 @@ export function QuestionnaireSheet({ invitationId, open, onOpenChange }: Props) 
                       type="button"
                       aria-label="질문 삭제"
                       onClick={() => remove(q.id)}
-                      className="shrink-0 text-text-tertiary hover:text-danger"
+                      className="shrink-0 text-text-disabled hover:text-danger"
                     >
                       <Icon name="x" size="sm" color="currentColor" decorative />
                     </button>

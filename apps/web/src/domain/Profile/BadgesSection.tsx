@@ -13,8 +13,8 @@ export function BadgesSection(stats: BadgeStats) {
     <div className="bg-surface px-4 py-4 shadow-sm">
       <div className="mb-3 flex items-center gap-1.5">
         <span className="text-[15px]">🏅</span>
-        <span className="text-[14px] font-bold text-text-primary">업적 배지</span>
-        <span className="text-[12px] text-text-tertiary">
+        <span className="text-[14px] font-bold text-text">업적 배지</span>
+        <span className="text-[12px] text-text-disabled">
           {earnedCount}/{badges.length}
         </span>
       </div>
@@ -24,7 +24,7 @@ export function BadgesSection(stats: BadgeStats) {
             key={b.key}
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center",
-              b.earned ? "bg-background-soft" : "opacity-40",
+              b.earned ? "bg-surface-muted" : "opacity-40",
             )}
           >
             <span
@@ -35,8 +35,8 @@ export function BadgesSection(stats: BadgeStats) {
             >
               <Icon name={b.icon} size="md" color="currentColor" decorative />
             </span>
-            <span className="text-[12px] font-bold text-text-primary">{b.label}</span>
-            <span className="text-[10px] leading-tight text-text-tertiary">
+            <span className="text-[12px] font-bold text-text">{b.label}</span>
+            <span className="text-[10px] leading-tight text-text-disabled">
               {b.earned ? b.description : `${b.current}/${b.threshold}`}
             </span>
           </div>

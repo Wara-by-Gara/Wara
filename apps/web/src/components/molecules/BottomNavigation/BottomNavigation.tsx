@@ -50,10 +50,10 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
         {items.map((item) => {
           const active = item.key === activeKey;
           const colorClass = item.disabled
-            ? "text-text-tertiary opacity-40"
+            ? "text-text-disabled opacity-40"
             : active
               ? "text-primary"
-              : "text-text-secondary";
+              : "text-text-muted";
 
           const content = item.fab ? (
             <span className="flex flex-col items-center justify-center -mt-5">

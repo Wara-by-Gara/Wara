@@ -36,7 +36,7 @@ export function InvitationOptions({
           <span
             className={cn(
               "shrink-0 text-[14px] font-semibold",
-              isDarkBg ? "text-white/70" : "text-text-tertiary",
+              isDarkBg ? "text-white/70" : "text-text-disabled",
             )}
           >
             {row.label}
@@ -44,7 +44,7 @@ export function InvitationOptions({
           <span
             className={cn(
               "min-w-0 flex-1 whitespace-pre-line text-left text-[15px] leading-[1.6]",
-              isDarkBg ? "text-white" : "text-text-primary",
+              isDarkBg ? "text-white" : "text-text",
               fontClass,
             )}
           >

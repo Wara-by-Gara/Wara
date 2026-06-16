@@ -103,10 +103,10 @@ function EditableRow({
         className={cn(
           'flex-1 text-[15px]',
           filled
-            ? isDarkBg ? 'text-white' : 'text-text-primary'
+            ? isDarkBg ? 'text-white' : 'text-text'
             : error
               ? 'text-danger'
-              : isDarkBg ? 'text-white/70' : 'text-text-tertiary',
+              : isDarkBg ? 'text-white/70' : 'text-text-disabled',
         )}
       >
         {text || placeholder}
@@ -214,7 +214,7 @@ export function CreateCanvas({
                     ? 'text-danger'
                     : bgClass.includes('aurora') || bgClass.includes('starry')
                       ? 'text-white/70'
-                      : 'text-text-tertiary',
+                      : 'text-text-disabled',
                 )}
               >
                 {imageError
@@ -248,7 +248,7 @@ export function CreateCanvas({
               'w-full resize-none overflow-hidden bg-transparent text-left text-[32px] font-extrabold leading-snug outline-none max-h-[2.75em]',
               bgClass.includes('aurora') || bgClass.includes('starry')
                 ? 'text-white placeholder:text-white/50'
-                : 'text-text-primary placeholder:text-text-tertiary/50',
+                : 'text-text placeholder:text-text-disabled/50',
               fontStyle(designFont),
             )}
           />
@@ -277,7 +277,7 @@ export function CreateCanvas({
                     className={cn(
                       'text-[20px] leading-tight',
                       style,
-                      designFont === id ? 'text-primary' : 'text-text-primary',
+                      designFont === id ? 'text-primary' : 'text-text',
                     )}
                   >
                     가나다
@@ -287,7 +287,7 @@ export function CreateCanvas({
                       'whitespace-nowrap text-[11px]',
                       designFont === id
                         ? 'font-semibold text-primary'
-                        : 'text-text-secondary',
+                        : 'text-text-muted',
                     )}
                   >
                     {label}
@@ -314,7 +314,7 @@ export function CreateCanvas({
           onChange={(e) => onDescriptionChange(e.target.value)}
           placeholder="모임 소개를 적어주세요"
           rows={3}
-          maxLength={500}
+          maxLength={2000}
           className={cn(
             "border-border/50 bg-[#dadada2b] backdrop-blur",
             bgClass.includes('aurora') || bgClass.includes('starry')
@@ -356,7 +356,7 @@ export function CreateCanvas({
                   'flex flex-col items-center gap-1.5 rounded-md border border-border/50 bg-[#dadada2b] px-3 py-3 backdrop-blur hover:bg-surface transition-colors',
                   bgClass.includes('aurora') || bgClass.includes('starry')
                     ? 'text-white'
-                    : 'text-text-secondary',
+                    : 'text-text-muted',
                 )}
               >
                 <span className="text-[26px] leading-none">
@@ -379,7 +379,7 @@ export function CreateCanvas({
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               bgClass.includes('aurora') || bgClass.includes('starry')
                 ? 'text-white'
-                : 'text-text-primary'
+                : 'text-text'
             )}
           >
             <Icon name="smile" size="sm" color="currentColor" decorative />
@@ -392,7 +392,7 @@ export function CreateCanvas({
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               bgClass.includes('aurora') || bgClass.includes('starry')
                 ? 'text-white'
-                : 'text-text-primary'
+                : 'text-text'
             )}
           >
             <Icon name="palette" size="sm" color="currentColor" decorative />
@@ -405,7 +405,7 @@ export function CreateCanvas({
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               bgClass.includes('aurora') || bgClass.includes('starry')
                 ? 'text-white'
-                : 'text-text-primary'
+                : 'text-text'
             )}
           >
             <Icon name="sparkles" size="sm" color="currentColor" decorative />

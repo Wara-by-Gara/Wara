@@ -33,5 +33,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     document.cookie = "is_logged_in=; Max-Age=0; path=/";
     getQueryClient().clear();
     set({ isLoggedIn: false });
+    // 다른 탭에 로그아웃 전파 (storage 이벤트는 다른 탭에서만 발화).
+    // 민감정보가 아닌 타임스탬프 신호만 저장 — 값이 바뀌어야 이벤트가 발화하므로 매번 now.
+    try {
+      localStorage.setItem("wara_logout", String(Date.now()));
+    } catch {
+      // private 모드 등 localStorage 불가 시 무시 (단일 탭 로그아웃은 정상 동작)
+    }
   },
 }));

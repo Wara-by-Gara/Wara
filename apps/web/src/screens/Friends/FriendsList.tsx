@@ -117,7 +117,7 @@ export const FriendsList = () => {
       <div className="flex flex-col gap-3 pb-6">
         {/* 최근 함께한 친구 — 스토리 형태 (그라데이션 링) */}
         <section className="pt-3">
-          <h2 className="px-page pb-2 text-[14px] font-bold text-text-primary">최근 함께한 친구</h2>
+          <h2 className="px-page pb-2 text-[14px] font-bold text-text">최근 함께한 친구</h2>
           <div className="flex gap-5 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {recentFriends.map((f) => {
               const name = f.name ?? "이름 없음";
@@ -129,11 +129,11 @@ export const FriendsList = () => {
                   className="flex w-20 shrink-0 flex-col items-center gap-1.5 active:opacity-70"
                 >
                   <span className="inline-flex rounded-full bg-gradient-to-tr from-primary via-pink-400 to-yellow-300 p-[2.5px]">
-                    <span className="inline-flex rounded-full bg-background-soft p-[2px]">
+                    <span className="inline-flex rounded-full bg-surface-muted p-[2px]">
                       <Avatar size="xl" src={f.avatarUrl ?? undefined} alt={name} name={name} />
                     </span>
                   </span>
-                  <span className="w-full truncate text-center text-[12px] text-text-secondary">
+                  <span className="w-full truncate text-center text-[12px] text-text-muted">
                     {name}
                   </span>
                 </button>
@@ -145,20 +145,20 @@ export const FriendsList = () => {
         {/* 친구 목록 — 가나다순 / 모임 많은 순 토글 */}
         <section>
           <div className="flex items-center justify-between px-page pb-1">
-            <h2 className="text-[14px] font-bold text-text-primary">친구 {friends.length}</h2>
+            <h2 className="text-[14px] font-bold text-text">친구 {friends.length}</h2>
             <div className="flex items-center gap-1.5 text-[12px]">
               <button
                 type="button"
                 onClick={() => setSortBy("name")}
-                className={sortBy === "name" ? "font-bold text-text-primary" : "text-text-tertiary active:opacity-70"}
+                className={sortBy === "name" ? "font-bold text-text" : "text-text-disabled active:opacity-70"}
               >
                 가나다순
               </button>
-              <span className="text-text-tertiary/40">·</span>
+              <span className="text-text-disabled/40">·</span>
               <button
                 type="button"
                 onClick={() => setSortBy("shared")}
-                className={sortBy === "shared" ? "font-bold text-text-primary" : "text-text-tertiary active:opacity-70"}
+                className={sortBy === "shared" ? "font-bold text-text" : "text-text-disabled active:opacity-70"}
               >
                 모임 많은 순
               </button>
@@ -203,15 +203,15 @@ export const FriendsList = () => {
                       onPointerLeave={cancelPress}
                       onPointerCancel={cancelPress}
                       onContextMenu={(e) => e.preventDefault()}
-                      className={`flex cursor-pointer items-center gap-3 py-3 pl-page active:bg-background-soft ${
+                      className={`flex cursor-pointer items-center gap-3 py-3 pl-page active:bg-surface-muted ${
                         showIndex ? "pr-8" : "pr-page"
                       }`}
                     >
                       <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} name={name} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[15px] font-bold text-text-primary">{name}</p>
-                        <p className="truncate text-[12px] text-text-tertiary">함께한 모임 {f.sharedCount}회</p>
-                        <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[12px] text-text-tertiary">
+                        <p className="truncate text-[15px] font-bold text-text">{name}</p>
+                        <p className="truncate text-[12px] text-text-disabled">함께한 모임 {f.sharedCount}회</p>
+                        <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[12px] text-text-disabled">
                           <Icon name="clock" size="sm" color="inactive" decorative />
                           <span className="truncate">{f.lastSharedTitle}</span>
                         </p>
@@ -247,7 +247,7 @@ export const FriendsList = () => {
               setConfirmTarget(actionTarget);
               setActionTarget(null);
             }}
-            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-surface-muted"
           >
             삭제
           </button>

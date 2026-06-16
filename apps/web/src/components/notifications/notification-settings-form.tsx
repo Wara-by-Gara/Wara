@@ -70,8 +70,8 @@ export function NotificationSettingsForm({
             className="flex items-center justify-between px-4 py-4"
           >
             <div>
-              <p className="text-sm font-medium text-text-primary">{label}</p>
-              <p className="text-xs text-text-tertiary mt-0.5">{description}</p>
+              <p className="text-sm font-medium text-text">{label}</p>
+              <p className="text-xs text-text-disabled mt-0.5">{description}</p>
             </div>
             <Switch
               checked={enabled}

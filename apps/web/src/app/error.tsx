@@ -18,8 +18,8 @@ export default function Error({
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-page text-center">
-      <p className="text-[18px] font-bold text-text-primary">문제가 발생했어요</p>
-      <p className="text-[14px] text-text-secondary">잠시 후 다시 시도해주세요</p>
+      <p className="text-[18px] font-bold text-text">문제가 발생했어요</p>
+      <p className="text-[14px] text-text-muted">잠시 후 다시 시도해주세요</p>
       <div className="flex gap-3">
         <button
           type="button"
@@ -31,7 +31,7 @@ export default function Error({
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="rounded-full border border-border px-5 py-2.5 text-[14px] text-text-secondary"
+          className="rounded-full border border-border px-5 py-2.5 text-[14px] text-text-muted"
         >
           홈으로
         </button>

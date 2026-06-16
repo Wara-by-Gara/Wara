@@ -12,6 +12,9 @@ import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 import { PhotoGrid } from '@/components/organisms/PhotoGrid';
 import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
 
+// 서버 PHOTO_TOO_LARGE(413)와 동일한 10MB. 업로드 전 사전 차단해 모바일 데이터·시간 낭비 방지.
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const ALLOWED_CONTENT_TYPES: Record<string, string> = {
   'image/jpeg': 'image/jpeg',
   'image/png': 'image/png',
@@ -71,6 +74,7 @@ export default function Album({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [uploadResult, setUploadResult] = useState<{ successCount: number; duplicateCount: number }>({ successCount: 0, duplicateCount: 0 });
+  const [oversizedCount, setOversizedCount] = useState(0);
   const [isLoadingAllPhotos, setIsLoadingAllPhotos] = useState(false);
 
   const previewLimit = 5;
@@ -125,8 +129,11 @@ export default function Album({
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []).filter((f) => resolveContentType(f) !== null);
+    const typeValid = Array.from(e.target.files ?? []).filter((f) => resolveContentType(f) !== null);
     e.target.value = '';
+    // 10MB 초과는 업로드 전 제외 (서버가 전량 전송 후 413을 내는 낭비 방지)
+    const files = typeValid.filter((f) => f.size <= MAX_FILE_SIZE);
+    setOversizedCount(typeValid.length - files.length);
     if (files.length === 0) return;
     const urls = await Promise.all(files.map(readAsDataUrl));
     setSelectedFiles(files);
@@ -145,7 +152,10 @@ export default function Album({
       try {
         const contentType = resolveContentType(file)!;
         const { presignedUrl, key } = await getPresignedUrl(invitationId, file.name, contentType);
-        await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
+        const putRes = await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
+        // fetch는 4xx/5xx에 throw하지 않음 — presigned URL 만료(403)·S3 오류 시 registerPhoto로 진행되면
+        // S3 객체 없는 깨진 사진이 등록됨. 명시적으로 실패 처리해 아래 catch에서 실패로 집계한다.
+        if (!putRes.ok) throw new Error('PHOTO_UPLOAD_FAILED');
         const [gps, exifFull] = await Promise.all([
           exifr.gps(file).catch(() => null),
           exifr.parse(file, ['DateTimeOriginal', 'Make', 'Model']).catch(() => null),
@@ -213,8 +223,8 @@ export default function Album({
       <div>
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>사진 앨범</span>
-            <p className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-secondary')}>{totalForOverflow}개의 사진</p>
+            <span className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>사진 앨범</span>
+            <p className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-muted')}>{totalForOverflow}개의 사진</p>
           </div>
           <button
             type="button"
@@ -225,6 +235,12 @@ export default function Album({
             <Icon name="camera" size="sm" color="currentColor" decorative />
           </button>
         </div>
+
+        {oversizedCount > 0 && (
+          <p className="mb-2 text-[12px] text-danger">
+            10MB가 넘는 사진 {oversizedCount}장은 업로드에서 제외했어요
+          </p>
+        )}
 
         <input
           ref={fileInputRef}
@@ -241,8 +257,8 @@ export default function Album({
             onClick={() => fileInputRef.current?.click()}
             className="mt-2 w-full py-8 text-center"
           >
-            <Icon name="camera" size="md" color="currentColor" decorative className={cn('mx-auto mb-2', isDarkBg ? 'text-white/80' : 'text-text-tertiary')} />
-            <p className={cn('text-[14px] font-medium', isDarkBg ? 'text-white/80' : 'text-text-secondary')}>우리 추억을 업로드 해보세요</p>
+            <Icon name="camera" size="md" color="currentColor" decorative className={cn('mx-auto mb-2', isDarkBg ? 'text-white/80' : 'text-text-disabled')} />
+            <p className={cn('text-[14px] font-medium', isDarkBg ? 'text-white/80' : 'text-text-muted')}>우리 추억을 업로드 해보세요</p>
           </button>
         ) : (
           <PhotoGrid>
@@ -278,7 +294,7 @@ export default function Album({
             ))}
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={handleCancelUpload} className="flex-1 rounded-sm border border-border py-2.5 text-[14px] text-text-secondary">
+            <button type="button" onClick={handleCancelUpload} className="flex-1 rounded-sm border border-border py-2.5 text-[14px] text-text-muted">
               취소
             </button>
             <button type="button" onClick={handleUpload} className="flex-1 rounded-sm bg-primary py-2.5 text-[14px] font-semibold text-text-inverse">
@@ -289,7 +305,7 @@ export default function Album({
       )}
 
       {uploadState === 'uploading' && (
-        <div className="mt-2 rounded-md border border-border bg-surface px-4 py-3 text-center text-[14px] text-text-secondary">
+        <div className="mt-2 rounded-md border border-border bg-surface px-4 py-3 text-center text-[14px] text-text-muted">
           사진 {uploadProgress.total}장 중 {uploadProgress.done}장 업로드 중...
         </div>
       )}

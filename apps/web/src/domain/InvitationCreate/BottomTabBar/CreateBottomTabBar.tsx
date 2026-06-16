@@ -45,7 +45,7 @@ export function CreateBottomTabBar({
             key={key}
             type="button"
             onClick={handlers[key]}
-            className="flex flex-col items-center gap-1 rounded-sm py-1.5 text-text-secondary hover:text-text-primary"
+            className="flex flex-col items-center gap-1 rounded-sm py-1.5 text-text-muted hover:text-text"
           >
             <Icon name={icon} size="md" color="currentColor" decorative />
             <span className="text-[11px] font-medium">{label}</span>

@@ -1,9 +1,11 @@
 /* ============================================================
-   WARA 전역 스타일 — 디자인 시스템 v2 (Phase 2)
-   순서: Tailwind → 구 자산(_legacy, Phase 11 제거) → 새 토큰(@wara/tokens, 우선)
+   WARA 전역 스타일 — 디자인 시스템 v2
+   순서: Tailwind → 폰트/팔레트/앱 자산 → 새 토큰(@wara/tokens, 우선)
    ============================================================ */
 @import "tailwindcss";
-@import "../styles/_legacy.css";
+@import "../styles/fonts.css";
+@import "../styles/theme.css";
+@import "../styles/app.css";
 @import "@wara/tokens/css/tokens.css";
 
 /* 디자인 시스템 패키지의 Tailwind 클래스 스캔 (node_modules 기본 제외 대상) */

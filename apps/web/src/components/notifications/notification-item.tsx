@@ -41,12 +41,12 @@ export function NotificationItem({ notification, onReadAction, onDelete }: Props
         />
         <div className="flex-1 min-w-0">
           <div className="mb-0.5">
-            <span className="text-xs font-medium text-text-secondary">
+            <span className="text-xs font-medium text-text-muted">
               {TYPE_LABELS[notification.type]}
             </span>
           </div>
-          <p className="text-sm text-text-primary">{notification.content}</p>
-          <p className="text-xs text-text-tertiary mt-1">
+          <p className="text-sm text-text">{notification.content}</p>
+          <p className="text-xs text-text-disabled mt-1">
             {new Date(notification.createdAt).toLocaleString('ko-KR', {
               month: 'short',
               day: 'numeric',
@@ -60,7 +60,7 @@ export function NotificationItem({ notification, onReadAction, onDelete }: Props
         type="button"
         onClick={() => onDelete(notification.id)}
         aria-label="알림 삭제"
-        className="shrink-0 p-2 mr-2 text-text-secondary hover:text-red-400 transition-colors"
+        className="shrink-0 p-2 mr-2 text-text-muted hover:text-red-400 transition-colors"
       >
         <Icon name="x" size="sm" color="currentColor" decorative />
       </button>

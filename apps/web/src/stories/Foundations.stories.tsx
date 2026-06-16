@@ -17,7 +17,7 @@ const SEMANTIC = [
   "success", "warning", "danger", "info",
 ];
 
-const GRADIENTS = ["gradient-brand", "gradient-vibrant", "gradient-glow", "gradient-app-bg"];
+const GRADIENTS = ["gradient-accent", "gradient-vibrant", "gradient-glow", "gradient-app-bg"];
 
 const Swatch = ({ name }: { name: string }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

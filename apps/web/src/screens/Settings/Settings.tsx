@@ -56,7 +56,7 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-text-disabled">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -85,7 +85,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'main') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar
           className="shrink-0"
           title="설정"
@@ -230,7 +230,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
               leftIcon="info"
               onClick={() => onNavigate?.('appVersion')}
               rightSlot={
-                <span className="text-[13px] text-text-tertiary">v0.1.0</span>
+                <span className="text-[13px] text-text-disabled">v0.1.0</span>
               }
             >
               앱 버전
@@ -288,7 +288,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
     screen === 'marketingToggle'
   ) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <Section title="기본 알림">
@@ -342,7 +342,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-page py-6">
-          <p className="text-[14px] text-text-secondary">{description}</p>
+          <p className="text-[14px] text-text-muted">{description}</p>
         </main>
         <footer className="px-page py-5">
           <Button variant="secondary" fullWidth>
@@ -380,7 +380,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
                 className="flex items-center gap-3 rounded-md border border-border bg-surface p-4"
               >
                 <Radio value={opt.value} />
-                <span className="text-[15px] text-text-primary">
+                <span className="text-[15px] text-text">
                   {opt.label}
                 </span>
               </label>
@@ -406,7 +406,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
                 className="flex items-center gap-3 rounded-md border border-border bg-surface p-4"
               >
                 <Radio value={opt.value} />
-                <span className="text-[15px] text-text-primary">
+                <span className="text-[15px] text-text">
                   {opt.label}
                 </span>
               </label>
@@ -431,7 +431,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-secondary">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted">
           (본문 발췌) 본 약관은 …
         </main>
       </div>
@@ -444,8 +444,8 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
         <TopAppBar className="shrink-0" title="앱 버전" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-y-auto">
           <Icon name="send" size="xl" color="primary" decorative />
-          <p className="text-[18px] font-bold text-text-primary">Wara v0.1.0</p>
-          <p className="text-[13px] text-text-tertiary">최신 버전이에요</p>
+          <p className="text-[18px] font-bold text-text">Wara v0.1.0</p>
+          <p className="text-[13px] text-text-disabled">최신 버전이에요</p>
         </main>
       </div>
     );
@@ -453,7 +453,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'customerSupport') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar className="shrink-0" title="고객센터" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <Section title="자주 묻는 질문">

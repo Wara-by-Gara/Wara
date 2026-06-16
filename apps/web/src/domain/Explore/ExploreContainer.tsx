@@ -9,14 +9,14 @@ import { ROUTES } from "@/constants/routes";
 
 export default function ExploreContainer() {
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <StickyHeader
         title="탐색"
         rightSlot={
           <Link
             href={ROUTES.EXPLORE.MAP}
             aria-label="지도로 보기"
-            className="inline-flex size-11 items-center justify-center text-text-secondary"
+            className="inline-flex size-11 items-center justify-center text-text-muted"
           >
             <Icon name="map-pin" size="lg" color="currentColor" decorative />
           </Link>

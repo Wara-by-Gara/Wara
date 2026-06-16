@@ -37,11 +37,11 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
     if (step === "termsAgreement") {
       return (
         <section className="flex flex-col gap-4">
-          <h1 className="text-[22px] font-extrabold text-text-primary">서비스 약관에 동의해주세요</h1>
+          <h1 className="text-[22px] font-extrabold text-text">서비스 약관에 동의해주세요</h1>
           <div className="flex flex-col gap-1">
             <label className="flex items-center gap-3 rounded-md border border-border-strong px-4 py-3.5">
               <Checkbox checked={checks.all} onCheckedChange={(v) => toggleAll(!!v)} />
-              <span className="text-[15px] font-semibold text-text-primary">모두 동의</span>
+              <span className="text-[15px] font-semibold text-text">모두 동의</span>
             </label>
             <div className="mt-2 flex flex-col">
               {[
@@ -55,9 +55,9 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
                       checked={checks[item.key as keyof typeof checks]}
                       onCheckedChange={(v) => setChecks({ ...checks, [item.key]: !!v })}
                     />
-                    <span className="text-[14px] text-text-secondary">{item.label}</span>
+                    <span className="text-[14px] text-text-muted">{item.label}</span>
                   </span>
-                  <button type="button" className="text-[13px] text-text-tertiary underline">보기</button>
+                  <button type="button" className="text-[13px] text-text-disabled underline">보기</button>
                 </label>
               ))}
             </div>
@@ -70,8 +70,8 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
       const title = step === "termsDetail" ? "이용약관" : step === "privacyDetail" ? "개인정보처리방침" : "마케팅 정보 수신";
       return (
         <section className="flex flex-col gap-3">
-          <h1 className="text-[22px] font-extrabold text-text-primary">{title}</h1>
-          <p className="rounded-md bg-gray-50 p-4 text-[13px] leading-relaxed text-text-secondary">
+          <h1 className="text-[22px] font-extrabold text-text">{title}</h1>
+          <p className="rounded-md bg-gray-50 p-4 text-[13px] leading-relaxed text-text-muted">
             (약관 본문 발췌) 본 약관은 Wara(이하 &ldquo;회사&rdquo;)가 제공하는 서비스를 이용함에 있어 회사와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다…
           </p>
         </section>
@@ -81,7 +81,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
     if (step === "nicknameInput" || step === "nicknameError") {
       return (
         <section className="flex flex-col gap-4">
-          <h1 className="text-[22px] font-extrabold text-text-primary">어떻게 불러드릴까요?</h1>
+          <h1 className="text-[22px] font-extrabold text-text">어떻게 불러드릴까요?</h1>
           <FormField
             label="닉네임"
             required
@@ -98,7 +98,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
     if (step === "profileImageSelect" || step === "profileImageCrop") {
       return (
         <section className="flex flex-col items-center gap-5">
-          <h1 className="text-[22px] font-extrabold text-text-primary text-center">프로필 이미지를 골라주세요</h1>
+          <h1 className="text-[22px] font-extrabold text-text text-center">프로필 이미지를 골라주세요</h1>
           {step === "profileImageSelect" ? (
             <button
               type="button"
@@ -118,7 +118,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
               </div>
             </div>
           )}
-          <p className="text-[13px] text-text-tertiary">건너뛰면 기본 이미지가 사용돼요</p>
+          <p className="text-[13px] text-text-disabled">건너뛰면 기본 이미지가 사용돼요</p>
         </section>
       );
     }
@@ -127,8 +127,8 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
       return (
         <section className="flex flex-col items-center gap-4 text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
-          <h1 className="text-[24px] font-extrabold text-text-primary">가입이 완료됐어요!</h1>
-          <p className="text-[14px] text-text-secondary">와라에서 첫 모임을 만들어보세요</p>
+          <h1 className="text-[24px] font-extrabold text-text">가입이 완료됐어요!</h1>
+          <p className="text-[14px] text-text-muted">와라에서 첫 모임을 만들어보세요</p>
         </section>
       );
     }
@@ -136,8 +136,8 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
     return (
       <section className="flex flex-col items-center gap-3 text-center">
         <Icon name="alert-triangle" size="xl" color="danger" decorative />
-        <h1 className="text-[20px] font-bold text-text-primary">가입에 실패했어요</h1>
-        <p className="text-[13px] text-text-secondary">잠시 후 다시 시도해주세요</p>
+        <h1 className="text-[20px] font-bold text-text">가입에 실패했어요</h1>
+        <p className="text-[13px] text-text-muted">잠시 후 다시 시도해주세요</p>
       </section>
     );
   };

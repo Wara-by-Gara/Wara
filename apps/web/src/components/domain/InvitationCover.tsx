@@ -170,7 +170,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
           <div
             className={cn(
               "absolute inset-x-0 bottom-0 p-5",
-              hasCoverMedia ? "text-text-inverse" : "text-text-primary",
+              hasCoverMedia ? "text-text-inverse" : "text-text",
             )}
           >
             {children}

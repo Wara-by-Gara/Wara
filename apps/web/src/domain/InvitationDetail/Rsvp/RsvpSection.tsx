@@ -25,8 +25,8 @@ export function RsvpSection({
 }: RsvpSectionProps) {
   return (
     <section>
-      <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text-primary")}>참석 여부</h3>
-      <p className={cn("mt-0.5 text-[12px]", isDarkBg ? "text-white/70" : "text-text-secondary")}>원하는 응답을 선택해주세요</p>
+      <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text")}>참석 여부</h3>
+      <p className={cn("mt-0.5 text-[12px]", isDarkBg ? "text-white/70" : "text-text-muted")}>원하는 응답을 선택해주세요</p>
       <div className="mt-3">
         <RSVPButtonGroup
           value={value}

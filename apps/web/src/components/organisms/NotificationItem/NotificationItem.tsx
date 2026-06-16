@@ -72,11 +72,11 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
             ) : null}
           </span>
           <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            <p className="line-clamp-3 text-[15px] font-semibold text-text-primary">{title}</p>
+            <p className="line-clamp-3 text-[15px] font-semibold text-text">{title}</p>
             {description ? (
-              <p className="line-clamp-1 text-[13px] text-text-secondary">{description}</p>
+              <p className="line-clamp-1 text-[13px] text-text-muted">{description}</p>
             ) : null}
-            <p className="text-[12px] text-text-tertiary">{time}</p>
+            <p className="text-[12px] text-text-disabled">{time}</p>
           </div>
         </button>
         {onDelete && (
@@ -84,7 +84,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
             type="button"
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             aria-label="알림 삭제"
-            className="shrink-0 self-center p-2 text-text-secondary hover:text-red-400 transition-colors"
+            className="shrink-0 self-center p-2 text-text-muted hover:text-red-400 transition-colors"
           >
             <Icon name="x" size="sm" color="currentColor" decorative />
           </button>

@@ -22,7 +22,7 @@ export function ImmersiveTopBarButton({
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        "inline-flex size-10 items-center justify-center rounded-full border border-border/80 bg-white/75 text-text-primary shadow-xs backdrop-blur-md transition-colors duration-150 hover:bg-white",
+        "inline-flex size-10 items-center justify-center rounded-full border border-border/80 bg-white/75 text-text shadow-xs backdrop-blur-md transition-colors duration-150 hover:bg-white",
         className,
       )}
     >

@@ -212,10 +212,10 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                         className={cn(
                           "inline-flex items-center gap-1 type-bodySmall font-semibold transition-colors",
                           liked
-                            ? "text-brand"
+                            ? "text-accent"
                             : isDarkBg
-                              ? "text-white/70 hover:text-brand"
-                              : "text-text-muted hover:text-brand",
+                              ? "text-white/70 hover:text-accent"
+                              : "text-text-muted hover:text-accent",
                         )}
                       >
                         <Heart
@@ -229,7 +229,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                         className={cn(
                           "inline-flex items-center gap-1 type-bodySmall font-semibold",
                           liked
-                            ? "text-brand"
+                            ? "text-accent"
                             : isDarkBg
                               ? "text-white/70"
                               : "text-text-muted",

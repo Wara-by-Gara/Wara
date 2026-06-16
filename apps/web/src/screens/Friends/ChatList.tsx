@@ -114,24 +114,24 @@ export const ChatList = () => {
                   onPointerLeave={cancelPress}
                   onPointerCancel={cancelPress}
                   onContextMenu={(e) => e.preventDefault()}
-                  className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
+                  className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-surface-muted"
                 >
                   <Avatar size="md" src={c.avatarUrl ?? undefined} alt={name} name={name} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold text-text-primary">
+                    <p className="truncate text-[15px] font-bold text-text">
                       {name}
                       {c.type === "group" && (
-                        <span className="ml-1 text-[13px] font-normal text-text-tertiary">
+                        <span className="ml-1 text-[13px] font-normal text-text-disabled">
                           {c.memberCount}
                         </span>
                       )}
                     </p>
-                    <p className="line-clamp-2 text-[13px] text-text-tertiary">
+                    <p className="line-clamp-2 text-[13px] text-text-disabled">
                       {c.lastMessageText ?? "대화를 시작해보세요"}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end justify-between self-stretch py-0.5">
-                    <span className="text-[11px] text-text-tertiary">
+                    <span className="text-[11px] text-text-disabled">
                       {c.lastMessageAt ? timeAgo(c.lastMessageAt) : ""}
                     </span>
                     {c.unreadCount > 0 && (
@@ -162,7 +162,7 @@ export const ChatList = () => {
               setConfirmTarget(actionTarget);
               setActionTarget(null);
             }}
-            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-surface-muted"
           >
             나가기
           </button>
