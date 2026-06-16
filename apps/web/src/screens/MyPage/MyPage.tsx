@@ -9,15 +9,23 @@ import { ProfileSkeleton } from "@/components/organisms/Skeleton";
 import { EmptyState } from "@/components/organisms/EmptyState";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { StickyHeader } from "@/components/layout/StickyHeader";
-import { mockMe, type MockUser } from "@/lib/mockData";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { PlaceLogPreview } from "./PlaceLogPreview";
 
 export type MyPageState = "default" | "loggedOut" | "noProfile" | "loading" | "error";
 
+export interface UserData {
+  id: string;
+  name?: string;
+  nickname: string;
+  avatarUrl?: string;
+  socialProvider?: "kakao" | "naver" | "apple";
+  stats?: { created: number; joined: number };
+}
+
 export interface MyPageProps {
   state?: MyPageState;
-  user?: MockUser;
+  user?: UserData;
   recentInvitations?: { id: string; title: string; date: string; imageUrl?: string; eventLat?: number; eventLng?: number }[];
   participatedCount?: number;
   hostedCount?: number;
@@ -39,7 +47,7 @@ function StatItem({ label, value }: { label: string; value: number }) {
 
 export const MyPage = ({
   state = "default",
-  user = mockMe,
+  user,
   recentInvitations = [],
   participatedCount = 0,
   hostedCount = 0,
@@ -95,6 +103,8 @@ export const MyPage = ({
     );
   }
 
+  if (!user) return null;
+
   const memory = recentInvitations.length > 0
     ? recentInvitations[memoryIndex % recentInvitations.length]
     : null;
@@ -122,17 +132,17 @@ export const MyPage = ({
             <div className="flex flex-col items-center gap-3">
               <div className="relative shrink-0">
                 <Avatar
-                  size="xl"
+                  size="2xl"
                   src={state === "noProfile" ? undefined : user.avatarUrl}
                   alt={user.name ?? user.nickname}
                   name={user.name ?? user.nickname}
-                  className="size-25 ring-4 ring-surface shadow-md"
+                  className="ring-4 ring-surface shadow-md"
                 />
                 <button
                   type="button"
                   aria-label="프로필 사진 변경"
                   onClick={onProfileEdit}
-                  className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-border"
+                  className="absolute -bottom-1 -right-1 flex size-11 items-center justify-center rounded-full bg-surface shadow-sm ring-2 ring-border"
                 >
                   <Icon name="camera" size="xs" color="default" decorative />
                 </button>

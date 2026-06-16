@@ -1,7 +1,7 @@
 import { test, expect, expectNoPageErrors, expectNotCrashed } from "./fixtures";
 import {
   findGuestInvitation,
-  getOtherParticipantNicknames,
+  getOtherParticipantNames,
   mockApiRouteFailure,
   mockGifTrending,
   MOCK_KLIPY_GIF_URL,
@@ -160,9 +160,10 @@ test.describe("guest-comments", () => {
     const inv = await findGuestInvitation(page);
     test.skip(!inv, "참여 중인 초대장이 없어 스킵");
 
-    const nicknames = await getOtherParticipantNicknames(page, inv!.id);
-    test.skip(nicknames.length === 0, "멘션 대상 참가자가 없어 스킵");
-    const targetNickname = nicknames[0]!;
+    // 멘션 자동완성은 이름(name) 기준으로 필터·삽입·하이라이트된다 (닉네임 아님).
+    const names = await getOtherParticipantNames(page, inv!.id);
+    test.skip(names.length === 0, "멘션 대상 참가자가 없어 스킵");
+    const targetName = names[0]!;
 
     const commentText = `E2E 멘션 ${Date.now()}`;
     await page.goto(`/invitations/${inv!.id}`, { waitUntil: "domcontentloaded" });
@@ -170,13 +171,14 @@ test.describe("guest-comments", () => {
     await page.getByRole("heading", { name: /^댓글 \d+/ }).scrollIntoViewIfNeeded();
 
     const input = page.getByPlaceholder("댓글 남기기").first();
-    await input.fill(`@${targetNickname.slice(0, 2)}`);
+    await input.fill(`@${targetName.slice(0, 2)}`);
+    // 드롭다운에서 @이름 제안 클릭 → 입력창에 `@이름 ` 삽입됨
     await page
-      .locator("div.rounded-2xl.border.border-border.bg-surface.shadow-sm ul")
-      .getByRole("button", { name: `@${targetNickname}` })
+      .getByRole("button")
+      .filter({ hasText: `@${targetName}` })
       .first()
-      .click();
-    await input.fill(`@${targetNickname} ${commentText}`);
+      .click({ timeout: 10_000 });
+    await input.fill(`@${targetName} ${commentText}`);
 
     const submit = page.getByLabel("댓글 등록").first();
     await Promise.all([
@@ -191,7 +193,7 @@ test.describe("guest-comments", () => {
 
     const commentRow = page.locator("div.px-4").filter({ hasText: commentText }).first();
     await expect(commentRow).toBeVisible({ timeout: 15_000 });
-    await expect(commentRow.locator(".mention-highlight")).toHaveText(`@${targetNickname}`);
+    await expect(commentRow.locator(".mention-highlight")).toHaveText(`@${targetName}`);
     await expectNotCrashed(page);
     expectNoPageErrors(pageErrors);
   });

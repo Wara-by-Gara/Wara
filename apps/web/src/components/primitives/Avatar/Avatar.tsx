@@ -18,6 +18,7 @@ const avatarVariants = cva(
         md: "size-[52px] text-sm",
         lg: "size-[60px] text-base",
         xl: "size-[76px] text-lg",
+        "2xl": "size-[100px] text-xl",
       },
     },
     defaultVariants: { size: "md" },
@@ -30,6 +31,7 @@ const FALLBACK_ICON_SIZE = {
   md: "sm",
   lg: "sm",
   xl: "md",
+  "2xl": "lg",
 } as const;
 
 export interface AvatarProps

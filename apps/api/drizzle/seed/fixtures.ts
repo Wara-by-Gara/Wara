@@ -63,7 +63,7 @@ function collectTemplateImagePaths(): { all: string[]; byFolder: Record<string, 
 
 const templateImageUrlFromPool = (pool: string[], namespace: string, seedKey: string) => {
   if (pool.length === 0) {
-    return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
+    return `https://placehold.co/1024x576/e2e8f0/94a3b8?text=Photo`;
   }
   const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
   const idx = hash.readUInt32BE(0) % pool.length;
@@ -82,7 +82,7 @@ const templatePhotoUrl = (folder: string, seedKey: string) =>
 /** template_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
 const templateImageUrl = (namespace: string, seedKey: string) => {
   if (TEMPLATE_IMAGE_PATHS.length === 0) {
-    return `https://picsum.photos/seed/${encodeURIComponent(`${namespace}:${seedKey}`)}/1024/576`;
+    return `https://placehold.co/1024x576/e2e8f0/94a3b8?text=Photo`;
   }
   const hash = createHash('sha256').update(`${namespace}:${seedKey}`).digest();
   const idx = hash.readUInt32BE(0) % TEMPLATE_IMAGE_PATHS.length;
@@ -513,7 +513,9 @@ function buildSeeds() {
   const users = USER_DEFS.map((u) => ({
     id: userIdByKey[u.key]!,
     email: u.email,
-    profileImageUrl: profileDicebearSeed(u.key),
+    // guest003: E2E 프로필 사진 없음(fallback) 시나리오
+    profileImageUrl:
+      u.key === 'guest003' ? null : profileDicebearSeed(u.key),
     name: u.name,
     nickname: u.nickname,
     birthYear: u.birthYear,
