@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import { FRONTEND_ORIGIN } from '@/lib/env';
 import Providers from '@/providers';
@@ -6,14 +6,19 @@ import { OAuthCallbackHandler } from '@/components/auth/oauth-callback-handler';
 import { TermsComplianceRedirect } from '@/components/auth/terms-compliance-redirect';
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
 import { DmSocketMount } from '@/components/chat/dm-socket-mount';
+import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
-import { Toaster } from '@/components/molecules/Toast';
+import { Toaster } from "@wara/ui";
 import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(FRONTEND_ORIGIN),
   title: 'WARA',
   description: '요즘 모이는 방식',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#14121A',
 };
 
 export default function RootLayout({
@@ -36,6 +41,7 @@ export default function RootLayout({
           <TermsComplianceRedirect />
           <NotificationSocketMount />
           <DmSocketMount />
+          <ServiceWorkerRegister />
           {children}
           <Suspense fallback={null}>
             <MainBottomNav />

@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { Button } from "@/components/primitives/Button";
+import { Icon, Avatar, Button, TopAppBar } from "@wara/ui";
+import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { HeaderGradient } from "@/components/layout/StickyHeader";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
-import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal/ParticipantProfileModal";
+import { ParticipantProfileModal } from "@/components/domain";
 import { useMutation } from "@tanstack/react-query";
 import { createConversation } from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
@@ -74,7 +71,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
             size="xl"
             src={friend.avatarUrl ?? undefined}
             alt={name}
-            initial={name[0]}
+            name={name}
             className="size-24"
           />
           <div className="flex flex-col items-center gap-0.5">
@@ -108,7 +105,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
                   onClick={() => setSelectedMutualFriend(m)}
                   className="flex w-14 shrink-0 flex-col items-center gap-1.5 active:opacity-70"
                 >
-                  <Avatar size="md" src={m.avatarUrl ?? undefined} alt={mName} initial={mName[0]} />
+                  <Avatar size="md" src={m.avatarUrl ?? undefined} alt={mName} name={mName} />
                   <span className="w-full truncate text-center text-[12px] text-text-secondary">
                     {mName}
                   </span>
@@ -130,12 +127,11 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
               });
 
               return (
-                <InvitationCard
+                <InviteCard
                   key={inv.id}
-                  variant={chip?.variant ?? "default"}
-                  ddayLabel={chip?.ddayLabel}
+                  badge={statusChipToBadge(chip)}
                   title={inv.title}
-                  date={formatInvitationEventDate(inv.eventStartAt, "")}
+                  dateText={formatInvitationEventDate(inv.eventStartAt, "")}
                   imageUrl={inv.imageUrl ?? undefined}
                   onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
                 />

@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { API_BASE } from "@/lib/env";
 import { Icon } from "@/components/icons";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { TopAppBar } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
 import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
-import { InvitationCover } from "@/components/organisms/InvitationCover";
+import { InvitationCover } from "@/components/domain";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
 import type { AnimationId } from "@/domain/InvitationCreate/constants";
@@ -32,13 +32,9 @@ import { ImmersiveTopBarButton } from "@/domain/InvitationDetail/ImmersiveTopBar
 import { getInvitationDetailCover } from "@/domain/InvitationDetail/invitationDetailCover";
 import { formatInvitationDetailSchedule } from "@/utils/formatInvitationDetailSchedule";
 import { resolveInvitationBgClass } from "@/utils/resolveInvitationBgClass";
-import {
-  RsvpSection,
-  toRsvpButtonValue,
-  fromRsvpButtonValue,
-} from "@/domain/InvitationDetail/Rsvp/RsvpSection";
+import { RsvpSection } from "@/domain/InvitationDetail/Rsvp/RsvpSection";
 import { useMyParticipant, useUpdateRsvp, useJoinInvitation } from "@/hooks/useParticipants";
-import type { RSVPValue } from "@/components/molecules/RSVPButtonGroup";
+import type { RSVPValue } from "@/components/domain";
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
 type Me = Awaited<ReturnType<typeof getMe>>;
@@ -80,19 +76,19 @@ const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(nu
   const joinInvitation = useJoinInvitation(invitationId);
 const canViewFeed = !!myParticipant;
 
-  const rsvpOptions = [
-    { value: "attending" as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-    { value: "maybe" as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-    { value: "declined" as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
-  ];
+  const rsvpOptions = {
+    attending: { emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    undecided: { emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    absent: { emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  };
 
   const handleRsvp = (next: RSVPValue) => {
     setRsvpError(null);
-    const rsvpStatus = fromRsvpButtonValue(next);
+    // domain RSVPValue == RsvpStatus (attending/undecided/absent)
     if (myParticipant) {
-      updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus });
+      updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus: next });
     } else {
-      joinInvitation.mutate({ rsvpStatus }, {
+      joinInvitation.mutate({ rsvpStatus: next }, {
         onError: (err) => {
           if (err instanceof Error && err.message === 'INVITATION_ACCESS_REVOKED') {
             setRsvpError('참가가 제한된 초대장입니다.');
@@ -220,7 +216,7 @@ const canViewFeed = !!myParticipant;
 
           {isLoggedIn && (
             <RsvpSection
-              value={toRsvpButtonValue(myParticipant?.rsvpStatus)}
+              value={myParticipant?.rsvpStatus}
               onValueChange={handleRsvp}
               options={rsvpOptions}
               closed={invitation.status === "closed"}
@@ -292,8 +288,7 @@ const canViewFeed = !!myParticipant;
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 
 
-<BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
+<BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">
           <div className="flex flex-col gap-2 pt-2">
             {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
               <SocialLoginButton
@@ -305,8 +300,7 @@ const canViewFeed = !!myParticipant;
               />
             ))}
           </div>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
       </div>
     </div>
   );

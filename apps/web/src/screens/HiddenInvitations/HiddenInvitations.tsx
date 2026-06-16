@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
+import { TopAppBar, EmptyState } from "@wara/ui";
+import { InviteCard } from "@/components/domain";
 import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
 import { useHiddenInvitations } from "@/hooks/useInvitations";
 import { useHideInvitation } from "@/hooks/useParticipants";
@@ -39,12 +38,12 @@ export const HiddenInvitations = () => {
           <ul className="divide-y divide-border bg-surface">
             {invitations.map((inv) => (
               <li key={inv.id} className="flex items-center gap-2 pr-page">
-                <InvitationCard
+                <InviteCard
                   layout="horizontal"
                   imageUrl={getInvitationCoverImageUrl(inv) || undefined}
                   title={inv.title}
-                  date={formatInvitationEventDate(inv.eventStartAt)}
-                  location={inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? ""}
+                  dateText={formatInvitationEventDate(inv.eventStartAt)}
+                  locationText={inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? ""}
                   onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
                   className="flex-1 min-w-0"
                 />

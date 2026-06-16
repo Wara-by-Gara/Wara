@@ -4,12 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { StickyHeader } from "@/components/layout/StickyHeader";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
-import { MonthCalendar } from "@/components/organisms/MonthCalendar";
-import { IconButton } from "@/components/primitives/IconButton";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { Icon } from "@/components/icons";
+import { Icon, IconButton, BottomSheet, EmptyState } from "@wara/ui";
+import { InviteCard, MonthCalendar } from "@/components/domain";
 import { useHideInvitation } from "@/hooks/useParticipants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
@@ -122,10 +118,7 @@ export function Meetings() {
     setMonth(d.getMonth() + 1);
   };
 
-  const getDayThumbnails = (key: string) =>
-    (eventsByDay.get(key) ?? [])
-      .map((e) => getInvitationCoverImageUrl(e))
-      .filter((u): u is string => !!u);
+  const markedKeys = useMemo(() => new Set(eventsByDay.keys()), [eventsByDay]);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
@@ -149,7 +142,7 @@ export function Meetings() {
             onPrevMonth={prevMonth}
             onNextMonth={nextMonth}
             onToday={goToday}
-            getDayThumbnails={getDayThumbnails}
+            markedKeys={markedKeys}
           />
 
           <section className="rounded-md border border-border bg-surface p-4">
@@ -167,7 +160,7 @@ export function Meetings() {
               <div className="flex flex-col divide-y divide-border">
                 {listEvents.map((ev) => (
                   <div key={ev.id} className="flex items-center">
-                    <InvitationCard
+                    <InviteCard
                       layout="horizontal"
                       imageUrl={getInvitationCoverImageUrl(ev) || undefined}
                       subject={resolveInvitationCardSubject(
@@ -176,8 +169,8 @@ export function Meetings() {
                           : undefined,
                       )}
                       title={ev.title}
-                      date={formatInvitationEventDate(ev.eventStartAt)}
-                      location={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
+                      dateText={formatInvitationEventDate(ev.eventStartAt)}
+                      locationText={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
                       className="flex-1 min-w-0"
                     />
@@ -186,7 +179,7 @@ export function Meetings() {
                         icon="more-horizontal"
                         variant="ghost"
                         size="sm"
-                        aria-label="더보기"
+                        label="더보기"
                         disabled={hideInvitation.isPending}
                         onClick={() => setMoreMenuInvId(ev.id)}
                       />
@@ -198,23 +191,26 @@ export function Meetings() {
           </section>
         </main>
       )}
-      <BottomSheet open={!!moreMenuInvId} onOpenChange={(open) => { if (!open) setMoreMenuInvId(null); }}>
-        <BottomSheetContent>
-          <div className="flex flex-col py-2">
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 px-page py-4 text-left text-[15px] text-text-primary active:bg-gray-50"
-              disabled={hideInvitation.isPending}
-              onClick={() => {
-                if (moreMenuInvId) hideInvitation.mutate({ invitationId: moreMenuInvId, isHidden: true });
-                setMoreMenuInvId(null);
-              }}
-            >
-              <Icon name="eye-off" size="sm" color="currentColor" decorative />
-              초대장 숨기기
-            </button>
-          </div>
-        </BottomSheetContent>
+      <BottomSheet
+        open={!!moreMenuInvId}
+        onOpenChange={(open) => { if (!open) setMoreMenuInvId(null); }}
+        title="모임 더보기"
+        hideTitle
+      >
+        <div className="flex flex-col">
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 py-4 text-left text-[15px] text-text-primary active:bg-gray-50"
+            disabled={hideInvitation.isPending}
+            onClick={() => {
+              if (moreMenuInvId) hideInvitation.mutate({ invitationId: moreMenuInvId, isHidden: true });
+              setMoreMenuInvId(null);
+            }}
+          >
+            <Icon name="eye-off" size="sm" color="currentColor" decorative />
+            초대장 숨기기
+          </button>
+        </div>
       </BottomSheet>
     </div>
   );

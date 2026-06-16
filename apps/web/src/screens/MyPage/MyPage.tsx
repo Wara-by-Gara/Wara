@@ -2,15 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { Button } from "@/components/primitives/Button";
+import { Icon, Avatar, Button, EmptyState, ErrorState } from "@wara/ui";
 import { ProfileSkeleton } from "@/components/organisms/Skeleton";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { PlaceLogPreview } from "./PlaceLogPreview";
+import { BadgesSection } from "@/domain/Profile/BadgesSection";
 
 export type MyPageState = "default" | "loggedOut" | "noProfile" | "loading" | "error";
 
@@ -225,7 +222,7 @@ export const MyPage = ({
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">📍</span>
-                <span className="text-[14px] font-bold text-text-primary">Place log</span>
+                <span className="text-[14px] font-bold text-text-primary">Photo log</span>
               </div>
               <button
                 type="button"
@@ -244,6 +241,13 @@ export const MyPage = ({
               onViewAll={() => onPhotoMap?.(memory?.id)}
             />
           </div>
+
+          {/* ── 업적 배지 ── */}
+          <BadgesSection
+            hosted={hostedCount}
+            participated={participatedCount}
+            likes={likeCount}
+          />
 
         </div>
       </main>

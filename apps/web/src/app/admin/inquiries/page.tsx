@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MenuItem } from '@/components/molecules/MenuItem';
+import { TopAppBar } from "@wara/ui";
+import { MenuItem } from "@wara/ui";
 import { Icon } from '@/components/icons';
 import { useAdminInquiries } from '@/hooks/useInquiries';
 import { InquiryListSkeleton } from '@/components/organisms/Skeleton';

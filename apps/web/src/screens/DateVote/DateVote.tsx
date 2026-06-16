@@ -2,13 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { Avatar } from "@/components/primitives/Avatar";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { MonthCalendar } from "@/components/organisms/MonthCalendar";
+import { Icon, Button, Avatar, TopAppBar, ConfirmDialog } from "@wara/ui";
+import { MonthCalendar } from "@/components/domain";
 import { StickyCTA } from "@/components/layout/StickyCTA";
-import { ConfirmModal } from "@/components/molecules/Modal";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/constants/routes";
 import { usePoll, useCreatePoll, useVoteResults, useSubmitResponses, useClosePoll, useConfirmSlot } from "@/hooks/useDateVote";
@@ -449,7 +445,7 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       {/* 추가 버튼 */}
       <Button
         fullWidth
-        variant="outline"
+        variant="secondary"
         size="md"
         disabled={disabled}
         onClick={() => onAdd(preview, toHHMM(ampm, hour, minute))}
@@ -958,7 +954,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
           <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-2.5 text-[13px] font-bold text-text-primary">호스트 관리</p>
             <div className="mt-2.5 flex gap-2">
-              <Button variant="outline" size="sm"
+              <Button variant="secondary" size="sm"
                 className="flex-1 gap-1.5 border-rose-200 text-rose-500"
                 disabled={closePollMutation.isPending}
                 onClick={() => setCloseConfirmOpen(true)}
@@ -982,7 +978,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
                       size="xs"
                       src={user.profileImageUrl ?? undefined}
                       alt={user.nickname ?? user.name ?? undefined}
-                      initial={user.nickname?.[0] ?? user.name?.[0]}
+                      name={user.nickname ?? user.name ?? undefined}
                       className="ring-2 ring-surface"
                     />
                   ))}
@@ -1002,7 +998,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {["김", "윤", "최", "박"].map((initial, i) => (
-                  <Avatar key={i} size="xs" initial={initial} className="ring-2 ring-surface" />
+                  <Avatar key={i} size="xs" name={initial} className="ring-2 ring-surface" />
                 ))}
               </div>
               <span className="text-[13px] text-text-secondary">
@@ -1046,14 +1042,14 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
         )}
       </main>
 
-      <ConfirmModal contained open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}
+      <ConfirmDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}
         title="투표를 지금 종료할까요?"
         description="마감 전이지만 결과를 바로 처리할 수 있어요"
-        confirmLabel="종료하기" confirmVariant="danger"
+        confirmLabel="종료하기" tone="danger"
         onConfirm={() => { closePollMutation.mutate(); setCloseConfirmOpen(false); }}
       />
 
-      <ConfirmModal contained open={!!confirmSlotId} onOpenChange={(o) => { if (!o) setConfirmSlotId(null); }}
+      <ConfirmDialog open={!!confirmSlotId} onOpenChange={(o) => { if (!o) setConfirmSlotId(null); }}
         title="이 날짜로 확정할까요?"
         description={(() => {
           const slot = displaySlots.find((s) => s.id === confirmSlotId);

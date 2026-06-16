@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { TopAppBar } from "@wara/ui";
 import { usePublicInquiries } from '@/hooks/useInquiries';
 import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
 import { ROUTES } from '@/constants/routes';

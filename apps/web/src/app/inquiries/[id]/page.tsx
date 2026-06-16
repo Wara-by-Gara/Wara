@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { Divider } from '@/components/primitives/Divider';
+import { TopAppBar } from "@wara/ui";
+import { Divider } from "@wara/ui";
 import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
 import { getUserRole } from '@/lib/jwt';

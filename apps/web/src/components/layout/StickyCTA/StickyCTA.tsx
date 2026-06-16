@@ -1,8 +1,7 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
-import { Button } from "@/components/primitives/Button";
-import type { ButtonProps } from "@/components/primitives/Button";
+import { Button, type ButtonProps } from "@wara/ui";
 import { cn } from "@/lib/cn";
 
 export interface StickyCTAProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -40,7 +39,7 @@ export const StickyCTA = forwardRef<HTMLDivElement, StickyCTAProps>(
         <div className="flex flex-1 gap-2">
           {secondary ? (
             <Button
-              variant={secondary.variant ?? "outline"}
+              variant={secondary.variant ?? "secondary"}
               size="lg"
               fullWidth
               onClick={secondary.onClick}

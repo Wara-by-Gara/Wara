@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { TemplateCard } from "@/components/organisms/TemplateCard";
+import { TemplateCard } from "@/components/domain";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { getTemplates } from "@/lib/api/templates";
 import { POPULAR_TEMPLATE_CATALOG } from "@/lib/popularTemplates";

@@ -1,0 +1,221 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8">
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  @font-face{font-family:'Pretendard';font-weight:45 920;font-display:swap;
+    src:url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/PretendardVariable.woff2') format('woff2-variations');}
+  body{margin:0;font-family:var(--font-sans);background:var(--gradient-app-bg);color:var(--text);
+       padding:32px;min-height:100vh;transition:color .2s}
+  h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);
+     margin:36px 0 14px;font-weight:700}
+  section:first-of-type h2{margin-top:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{display:flex;align-items:center;gap:10px}
+  .chip{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);flex:0 0 auto}
+  code{font-size:12px;color:var(--text-muted);font-family:ui-monospace,monospace}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .rcard{width:88px;height:64px;background:var(--primary-soft);color:var(--primary-strong);
+         display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;
+         border:1px solid var(--border)}
+  .scard{width:96px;height:72px;background:var(--surface);border:1px solid var(--border);
+         border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted)}
+  .glasswrap{position:relative;border-radius:24px;overflow:hidden;padding:28px;
+    background:var(--gradient-vibrant)}
+  .glass{backdrop-filter:blur(var(--blur-glass));-webkit-backdrop-filter:blur(var(--blur-glass));
+    background:var(--surface-glass);border:1px solid var(--glass-border);border-radius:20px;
+    padding:18px 20px;color:var(--text)}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{height:44px;padding:0 22px;border-radius:9999px;border:0;font-family:var(--font-sans);
+    font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;position:relative}
+  .btn-lg{height:54px;padding:0 28px;font-size:16px;width:100%}
+  /* primary: 잉크(라이트=블랙/다크=화이트) pill + 하단 무지개 그라데이션 언더글로우 */
+  .btn-primary{background:var(--surface-inverse);color:var(--text-inverse);box-shadow:var(--ev-md)}
+  .btn-primary::after{content:'';position:absolute;left:8%;right:8%;bottom:-7px;height:20px;
+    background:var(--gradient-vibrant);filter:blur(12px);border-radius:9999px;z-index:-1;opacity:.95}
+  /* oncolor: 화이트 pill + 언더글로우 — 그라데이션/사진 위 */
+  .btn-oncolor{background:var(--btn-primary-bg);color:var(--btn-primary-fg);box-shadow:var(--ev-md)}
+  .btn-oncolor::after{content:'';position:absolute;left:8%;right:8%;bottom:-7px;height:20px;
+    background:var(--gradient-vibrant);filter:blur(12px);border-radius:9999px;z-index:-1;opacity:.95}
+  .btn-secondary{background:var(--surface-muted);color:var(--text);border:1px solid var(--border-strong)}
+  .btn-glass{backdrop-filter:blur(var(--blur-glass));-webkit-backdrop-filter:blur(var(--blur-glass));
+    background:var(--surface-glass-strong);color:var(--text);border:1px solid var(--glass-border)}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border-strong)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-text{background:transparent;color:var(--primary);padding:0 8px}
+  .ctawrap{padding:18px 14px 22px;border-radius:20px;background:var(--gradient-app-bg);margin-bottom:14px}
+  .glassbtns{padding:18px;border-radius:20px;background:var(--gradient-vibrant);display:flex;gap:10px;flex-wrap:wrap}
+  .gcard{height:96px;border-radius:20px;display:flex;align-items:flex-end;padding:12px;
+    color:#fff;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .chiprow{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{height:32px;padding:0 14px;border-radius:9999px;background:var(--surface-glass-strong);
+    border:1px solid var(--glass-border);display:inline-flex;align-items:center;font-size:13px;font-weight:600}
+</style></head>
+<body>
+  <div class="type-display" style="margin-bottom:4px">WARA 디자인 토큰</div>
+  <div class="type-bodySmall" style="color:var(--text-muted)">보라–핑크 네오-팝 · 글래스모피즘 · 라이트/다크</div>
+
+  <section><h2>Brand Gradients (포인트)</h2>
+    <div class="grid">
+      <div class="gcard" style="background:var(--gradient-brand)">gradient-brand</div>
+      <div class="gcard" style="background:var(--gradient-vibrant)">gradient-vibrant</div>
+    </div>
+    <div class="type-bodySmall" style="color:var(--text-muted);margin-top:8px">배경(app-bg) 위에 화이트/글래스 + 그라데이션 포인트</div>
+  </section>
+  <section><h2>Semantic Colors (보조 단색)</h2><div class="grid">
+  <div class="sw">
+    <div class="chip" style="background:var(--background)"></div>
+    <code>background</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--surface)"></div>
+    <code>surface</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--surface-muted)"></div>
+    <code>surface-muted</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--surface-inverse)"></div>
+    <code>surface-inverse</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text)"></div>
+    <code>text</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text-muted)"></div>
+    <code>text-muted</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text-disabled)"></div>
+    <code>text-disabled</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text-inverse)"></div>
+    <code>text-inverse</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text-on-primary)"></div>
+    <code>text-on-primary</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--text-on-accent)"></div>
+    <code>text-on-accent</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--border)"></div>
+    <code>border</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--border-strong)"></div>
+    <code>border-strong</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--primary)"></div>
+    <code>primary</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--primary-strong)"></div>
+    <code>primary-strong</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--primary-soft)"></div>
+    <code>primary-soft</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--btn-primary-bg)"></div>
+    <code>btn-primary-bg</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--btn-primary-fg)"></div>
+    <code>btn-primary-fg</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--accent)"></div>
+    <code>accent</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--accent-soft)"></div>
+    <code>accent-soft</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--success)"></div>
+    <code>success</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--success-soft)"></div>
+    <code>success-soft</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--warning)"></div>
+    <code>warning</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--warning-soft)"></div>
+    <code>warning-soft</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--danger)"></div>
+    <code>danger</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--danger-soft)"></div>
+    <code>danger-soft</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--info)"></div>
+    <code>info</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--info-soft)"></div>
+    <code>info-soft</code>
+  </div></div></section>
+  <section><h2>Glass</h2>
+    <div class="glasswrap"><div class="glass type-cardTitle">글래스 카드 · backdrop blur</div>
+      <div style="height:12px"></div>
+      <div class="chiprow"><span class="pill">예정</span><span class="pill">참석</span><span class="pill">미정</span></div>
+    </div>
+  </section>
+  <section><h2>Typography (한글 스케일)</h2><div class="type-display" style="margin:0 0 10px">display · 32px/700 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-title" style="margin:0 0 10px">title · 26px/700 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-sectionTitle" style="margin:0 0 10px">sectionTitle · 22px/700 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-cardTitle" style="margin:0 0 10px">cardTitle · 18px/600 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-bodyLarge" style="margin:0 0 10px">bodyLarge · 17px/400 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-body" style="margin:0 0 10px">body · 16px/400 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-bodySmall" style="margin:0 0 10px">bodySmall · 14px/400 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-caption" style="margin:0 0 10px">caption · 12px/400 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-button" style="margin:0 0 10px">button · 15px/600 — 다가오는 모임에 초대합니다 ✨</div>
+<div class="type-badge" style="margin:0 0 10px">badge · 12px/600 — 다가오는 모임에 초대합니다 ✨</div></section>
+  <section><h2>Buttons (Partiful 기준)</h2>
+    <div class="ctawrap"><button class="btn btn-lg btn-primary">시작하기</button></div>
+    <div class="btns" style="margin-bottom:14px">
+      <button class="btn btn-primary">초대장 만들기</button>
+      <button class="btn btn-secondary">공유하기</button>
+      <button class="btn btn-ghost">취소</button>
+      <button class="btn btn-danger">삭제</button>
+      <button class="btn btn-text">더보기</button>
+    </div>
+    <div class="glassbtns">
+      <button class="btn btn-oncolor">RSVP 하기</button>
+      <button class="btn btn-glass">참석</button>
+      <button class="btn btn-glass">미정</button>
+      <span class="pill">글래스 칩</span>
+    </div>
+    <div class="type-caption" style="color:var(--text-muted);margin-top:8px">primary=잉크(블랙/화이트)+그라데이션 글로우 · oncolor=화이트(그라데이션 위) · glass=글래스 · secondary/ghost/text=낮은 강조 · danger=위험</div>
+  </section>
+  <section><h2>Radius</h2><div class="row"><div class="rcard" style="border-radius:6px">xs</div><div class="rcard" style="border-radius:10px">sm</div><div class="rcard" style="border-radius:14px">md</div><div class="rcard" style="border-radius:20px">lg</div><div class="rcard" style="border-radius:28px">xl</div><div class="rcard" style="border-radius:28px">full</div></div></section>
+  <section><h2>Shadow</h2><div class="row"><div class="scard" style="box-shadow:var(--ev-xs)">xs</div><div class="scard" style="box-shadow:var(--ev-sm)">sm</div><div class="scard" style="box-shadow:var(--ev-md)">md</div><div class="scard" style="box-shadow:var(--ev-lg)">lg</div><div class="scard" style="box-shadow:var(--ev-xl)">xl</div></div></section>
+  <section><h2>Glass swatches</h2><div class="grid">
+  <div class="sw">
+    <div class="chip" style="background:var(--surface-glass)"></div>
+    <code>surface-glass</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--surface-glass-strong)"></div>
+    <code>surface-glass-strong</code>
+  </div>
+  <div class="sw">
+    <div class="chip" style="background:var(--glass-border)"></div>
+    <code>glass-border</code>
+  </div></div></section>
+</body></html>

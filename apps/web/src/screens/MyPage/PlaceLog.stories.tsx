@@ -307,7 +307,7 @@ function PlaceLogView({ initialPhotoId }: PlaceLogViewProps) {
           <Icon name="chevron-left" size="md" color="default" decorative />
         </button>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[16px] font-bold text-text-primary">Place log</span>
+          <span className="text-[16px] font-bold text-text-primary">Photo log</span>
           <span className="text-[11px] text-text-tertiary">{MEETING.title} · {MEETING.date}</span>
         </div>
       </div>

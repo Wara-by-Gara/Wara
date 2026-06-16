@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { useDeleteMe, useDeleteMySocial, useGetMySocials, useLinkSocialUrl, useMergeAccounts } from '@/hooks/useUsers';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { AccountSettings, type AccountScreen, type WithdrawalReasonKey } from '@/screens/AccountSettings';
-import { toast } from '@/components/molecules/Toast';
-import { ConfirmModal } from '@/components/molecules/Modal';
+import { toast, ConfirmDialog } from '@wara/ui';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { ROUTES } from '@/constants/routes';
 
@@ -36,6 +36,7 @@ export default function AccountSettingsContainer() {
   const [withdrawDetail, setWithdrawDetail] = useState<string>('');
 
   const { hydrated, isLoggedIn, logout } = useAuthStore();
+  const { disable: disablePush } = usePushSubscription();
   const queryClient = useQueryClient();
 
   // 비로그인 사용자 직접 URL 진입 차단 — 로그인 페이지로 보냄.
@@ -96,6 +97,8 @@ export default function AccountSettingsContainer() {
   const connectedProviders = socials?.map((s) => s.provider) ?? [];
 
   const handleLogout = async () => {
+    // 토큰이 살아있을 때 푸시 구독 해제 (DELETE는 인증 필요)
+    await disablePush().catch(() => {});
     await logout();
     queryClient.clear();
     router.replace(ROUTES.HOME);
@@ -192,13 +195,13 @@ export default function AccountSettingsContainer() {
       onWithdrawDetailChange={setWithdrawDetail}
     />
     {mergeModal && (
-      <ConfirmModal
+      <ConfirmDialog
         open
         onOpenChange={(open) => { if (!open && !isMerging) setMergeModal(null); }}
         title={`${PROVIDER_LABEL[mergeModal.provider] ?? mergeModal.provider} 계정과 합칠까요?`}
         description="이 소셜로 가입한 다른 wara 계정의 모든 데이터(초대장, 사진 등)가 현재 계정으로 이전돼요. 되돌릴 수 없어요."
         confirmLabel={isMerging ? '합치는 중...' : '합치기'}
-        confirmVariant="danger"
+        tone="danger"
         onConfirm={handleMergeConfirm}
         loading={isMerging}
       />

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/icons';
-import { Button } from '@/components/primitives/Button';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { Button } from "@wara/ui";
+import { TopAppBar } from "@wara/ui";
 import { InvitationDetailHero } from '@/domain/InvitationDetail/InvitationDetailHero';
 import { InvitationDescriptionBox } from '@/domain/InvitationDetail/InvitationDescriptionBox';
 import { InvitationOptions } from '@/domain/InvitationDetail/InvitationOptions/InvitationOptions';
@@ -14,12 +14,12 @@ import { ImmersiveTopBarButton } from '@/domain/InvitationDetail/ImmersiveTopBar
 import { getInvitationDetailCover } from '@/domain/InvitationDetail/invitationDetailCover';
 import { formatInvitationDetailSchedule } from '@/utils/formatInvitationDetailSchedule';
 import { resolveInvitationBgClass } from '@/utils/resolveInvitationBgClass';
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from '@/components/molecules/BottomSheet';
+import { BottomSheet } from '@wara/ui';
 import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
-import { InvitationCover } from '@/components/organisms/InvitationCover';
+import { TextBlastSheet } from '@/domain/InvitationDetail/TextBlast/TextBlastSheet';
+import { QuestionnaireSheet } from '@/domain/InvitationDetail/Questionnaire/QuestionnaireSheet';
+import { FlyerSheet } from '@/domain/InvitationDetail/Flyer/FlyerSheet';
+import { InvitationCover } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
@@ -40,6 +40,8 @@ import { ROUTES } from '@/constants/routes';
 import { FONT_CLASS } from '@/domain/InvitationDetail/types';
 import PhotoWithFeedbackContainer from '@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer';
 import { usePoll, useVoteResults } from '@/hooks/useDateVote';
+import { useCloneInvitation } from '@/hooks/useInvitations';
+import { toast } from '@wara/ui';
 import { VotePreviewCard } from '@/domain/InvitationDetail/Container/VotePreviewCard';
 
 type Invitation = NonNullable<Awaited<ReturnType<typeof getInvitation>>>;
@@ -68,8 +70,23 @@ export default function HostView({
   });
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [textBlastOpen, setTextBlastOpen] = useState(false);
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(false);
+  const [flyerOpen, setFlyerOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const { mutate: cloneInvitation, isPending: isCloning } = useCloneInvitation();
+
+  const handleClone = () => {
+    cloneInvitation(invitationId, {
+      onSuccess: (created) => {
+        setMoreSheetOpen(false);
+        toast('초대장을 복제했어요');
+        router.push(ROUTES.INVITATIONS.EDIT(created.id));
+      },
+      onError: () => toast.error('복제에 실패했어요. 다시 시도해주세요'),
+    });
+  };
 
   const fontClass = FONT_CLASS[invitation.font] ?? 'font-sans';
   const cover = getInvitationDetailCover(invitation);
@@ -80,11 +97,11 @@ export default function HostView({
   );
 
   // 호스트는 응답을 바꿀 수 없지만 게스트가 보는 RSVP 위치를 그대로 노출(읽기 전용)
-  const rsvpOptions = [
-    { value: 'attending' as const, emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-    { value: 'maybe' as const, emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-    { value: 'declined' as const, emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
-  ];
+  const rsvpOptions = {
+    attending: { emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+    undecided: { emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+    absent: { emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+  };
 
   const { mutate: submitStatusChange, isPending: isStatusPending } =
     useMutation({
@@ -287,7 +304,7 @@ export default function HostView({
             <RsvpSection
               value="attending"
               options={rsvpOptions}
-              disabled
+              closed
               isDarkBg={isDarkBg}
               helperText="호스트는 참석으로 표시돼요"
             />
@@ -302,8 +319,25 @@ export default function HostView({
           onOpenChange={setShareSheetOpen}
         />
 
-        <BottomSheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen}>
-          <BottomSheetContent>
+        <TextBlastSheet
+          invitationId={invitationId}
+          open={textBlastOpen}
+          onOpenChange={setTextBlastOpen}
+        />
+
+        <QuestionnaireSheet
+          invitationId={invitationId}
+          open={questionnaireOpen}
+          onOpenChange={setQuestionnaireOpen}
+        />
+
+        <FlyerSheet
+          invitation={invitation}
+          open={flyerOpen}
+          onOpenChange={setFlyerOpen}
+        />
+
+        <BottomSheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen} title="더보기" hideTitle>
             <div className="flex flex-col pb-2">
               <button
                 type="button"
@@ -314,6 +348,44 @@ export default function HostView({
                 className="flex h-14 items-center px-2 text-[16px] text-text-primary"
               >
                 수정
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreSheetOpen(false);
+                  setTextBlastOpen(true);
+                }}
+                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+              >
+                단체 공지 보내기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreSheetOpen(false);
+                  setQuestionnaireOpen(true);
+                }}
+                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+              >
+                맞춤 질문 관리
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMoreSheetOpen(false);
+                  setFlyerOpen(true);
+                }}
+                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+              >
+                플라이어 만들기
+              </button>
+              <button
+                type="button"
+                disabled={isCloning}
+                onClick={handleClone}
+                className="flex h-14 items-center px-2 text-[16px] text-text-primary disabled:opacity-50"
+              >
+                {isCloning ? '복제 중...' : '초대장 복제'}
               </button>
               <button
                 type="button"
@@ -338,8 +410,7 @@ export default function HostView({
                 삭제
               </button>
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         <BottomSheet
           open={deleteConfirmOpen}
@@ -347,11 +418,9 @@ export default function HostView({
             setDeleteConfirmOpen(open);
             if (!open) setDeleteError('');
           }}
+          title="초대장 삭제"
+          description="삭제하면 복구할 수 없어요. 정말 삭제할까요?"
         >
-          <BottomSheetContent
-            title="초대장 삭제"
-            description="삭제하면 복구할 수 없어요. 정말 삭제할까요?"
-          >
             <div className="flex flex-col gap-2 pt-2">
               {deleteError && (
                 <p className="text-center text-[13px] text-danger">
@@ -369,15 +438,14 @@ export default function HostView({
               </Button>
               <Button
                 fullWidth
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 onClick={() => setDeleteConfirmOpen(false)}
               >
                 취소
               </Button>
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
       </div>
     </div>
   );

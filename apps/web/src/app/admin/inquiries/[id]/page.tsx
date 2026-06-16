@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { Divider } from '@/components/primitives/Divider';
-import { Button } from '@/components/primitives/Button';
+import { TopAppBar } from "@wara/ui";
+import { Divider } from "@wara/ui";
+import { Button } from "@wara/ui";
 import { useAdminInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
 import { InquiryDetailSkeleton } from '@/components/organisms/Skeleton';

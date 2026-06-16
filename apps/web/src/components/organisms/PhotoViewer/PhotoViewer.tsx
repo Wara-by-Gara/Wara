@@ -1,17 +1,13 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
-import { IoHeart, IoHeartOutline } from "react-icons/io5";
+import { Heart } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { CommentInputBar } from "@/components/organisms/CommentInputBar";
-import { CommentItem, type CommentReplyItemProps } from "@/components/organisms/CommentItem";
-import {
-  Modal,
-  ModalPortal,
-  ModalPrimitive,
-} from "@/components/molecules/Modal";
-import { Avatar } from "@/components/primitives/Avatar";
-import { IconButton } from "@/components/primitives/IconButton";
+import { CommentItem, type CommentReplyItemProps } from "@/components/domain";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Avatar } from "@wara/ui";
+import { IconButton } from "@wara/ui";
 import { cn } from "@/lib/cn";
 
 export interface PhotoViewerComment {
@@ -125,9 +121,9 @@ function ProfileActions({
         )}
       >
         {liked ? (
-          <IoHeart className="size-3.5 shrink-0" aria-hidden />
+          <Heart className="size-3.5 shrink-0 fill-current" aria-hidden />
         ) : (
-          <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+          <Heart className="size-3.5 shrink-0" aria-hidden />
         )}
         {formatCount(likeCount ?? 0)}
       </button>
@@ -221,7 +217,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
           <IconButton
             icon="x"
             variant="ghost"
-            aria-label="닫기"
+            label="닫기"
             onClick={onClose}
             className="bg-black/40 text-white hover:bg-black/50 transition-colors duration-150"
           />
@@ -230,7 +226,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               <IconButton
                 icon="download"
                 variant="ghost"
-                aria-label="저장"
+                label="저장"
                 onClick={onSave}
                 className="text-white"
               />
@@ -239,7 +235,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               <IconButton
                 icon="share"
                 variant="ghost"
-                aria-label="공유"
+                label="공유"
                 onClick={onShare}
                 className="text-white"
               />
@@ -248,7 +244,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               <IconButton
                 icon="more-horizontal"
                 variant="ghost"
-                aria-label="더보기"
+                label="더보기"
                 onClick={onMore}
                 className="text-white"
               />
@@ -398,17 +394,17 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
 
     const modalBody = (
       <>
-<ModalPrimitive.Content className={contentClass} aria-describedby={undefined}>
-  <ModalPrimitive.Title className="sr-only">사진 뷰어</ModalPrimitive.Title>
+<Dialog.Content className={contentClass} aria-describedby={undefined}>
+  <Dialog.Title className="sr-only">사진 뷰어</Dialog.Title>
   {body}
-</ModalPrimitive.Content>
+</Dialog.Content>
       </>
     );
 
     return (
-      <Modal open={open} onOpenChange={onOpenChange}>
-        {contained ? modalBody : <ModalPortal>{modalBody}</ModalPortal>}
-      </Modal>
+      <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        {contained ? modalBody : <Dialog.Portal>{modalBody}</Dialog.Portal>}
+      </Dialog.Root>
     );
   },
 );

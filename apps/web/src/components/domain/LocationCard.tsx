@@ -1,0 +1,346 @@
+"use client";
+
+import {
+  forwardRef,
+  useState,
+  useRef,
+  useLayoutEffect,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
+import { Icon, type IconName, Button, toast } from "@wara/ui";
+import { KakaoStaticMapPreview } from "@/components/molecules/KakaoStaticMapPreview";
+import { cn } from "@/lib/cn";
+
+export interface LocationCardProps extends HTMLAttributes<HTMLDivElement> {
+  /** 카드 모드 */
+  variant?: "preview" | "selected" | "online" | "unknown";
+  /** 장소명 */
+  placeName?: string;
+  /** 주소 */
+  address?: string;
+  /** 지도 미리보기 좌표 */
+  mapLat?: number;
+  mapLng?: number;
+  /** 온라인 모임 링크 (online 모드) */
+  onlineLink?: string;
+  /** 지도에서 보기 콜백 (preview 모드) */
+  onViewMap?: () => void;
+  /** 길찾기 콜백 */
+  onGetDirections?: () => void;
+  /** 주소 행 우측 날씨 슬롯 */
+  weatherSlot?: ReactNode;
+  /** 초대장 상세 글래스 배경용 */
+  immersive?: boolean;
+  isDarkBg?: boolean;
+  /**
+   * 주소 옆 지도 아이콘 메뉴(길찾기·복사) 펼침 방향.
+   * - "bottom"(default): 아이콘 아래로 펼침
+   * - "top": 위로 펼침. 카드가 화면 하단에 고정된 레이아웃에서 사용.
+   */
+  menuPlacement?: "bottom" | "top";
+}
+
+async function copyToClipboard(text: string, successMessage: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(successMessage);
+  } catch {
+    toast.error("복사에 실패했어요");
+  }
+}
+
+function openExternalUrl(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function LocationActionMenu({
+  open,
+  onClose,
+  items,
+  className,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: { label: string; icon: IconName; onClick: () => void }[];
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return;
+    const el = ref.current;
+    el.style.right = "0";
+    el.style.left = "auto";
+    const rect = el.getBoundingClientRect();
+    if (rect.left < 8) {
+      el.style.right = "auto";
+      el.style.left = "0";
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden />
+      <div
+        ref={ref}
+        role="menu"
+        className={cn(
+          "absolute z-50 min-w-[152px] overflow-hidden rounded-xs bg-surface shadow-md",
+          className,
+        )}
+      >
+        {items.map((item, index) => (
+          <div key={item.label}>
+            {index > 0 ? <div className="h-px bg-border" /> : null}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={item.onClick}
+              className="flex w-full items-center justify-between gap-6 px-4 py-3 text-left type-body text-text transition-colors hover:bg-surface-muted"
+            >
+              <span>{item.label}</span>
+              <Icon name={item.icon} size="sm" color="currentColor" decorative />
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+export const LocationCard = forwardRef<HTMLDivElement, LocationCardProps>(
+  function LocationCard(
+    {
+      className,
+      variant = "preview",
+      placeName,
+      address,
+      mapLat,
+      mapLng,
+      onlineLink,
+      onViewMap,
+      onGetDirections: _onGetDirections,
+      weatherSlot,
+      immersive = false,
+      isDarkBg = false,
+      menuPlacement = "bottom",
+      ...props
+    },
+    ref,
+  ) {
+    const [addressMenuOpen, setAddressMenuOpen] = useState(false);
+    const hasDirections =
+      mapLat !== undefined && mapLng !== undefined && !!placeName;
+
+    const closeAddressMenu = () => setAddressMenuOpen(false);
+
+    const handleDirections = () => {
+      if (hasDirections) {
+        openExternalUrl(
+          `https://map.kakao.com/link/to/${encodeURIComponent(placeName!)},${mapLat},${mapLng}`,
+        );
+      } else {
+        const query = placeName ?? address;
+        if (query) {
+          openExternalUrl(
+            `https://map.naver.com/v5/search/${encodeURIComponent(query)}`,
+          );
+        }
+      }
+      closeAddressMenu();
+    };
+
+    const handleCopyAddress = async () => {
+      if (!address) return;
+      await copyToClipboard(address, "주소가 복사되었어요");
+      closeAddressMenu();
+    };
+
+    const addressMenuItems = [
+      { label: "길찾기", icon: "navigation" as const, onClick: handleDirections },
+      { label: "복사하기", icon: "copy" as const, onClick: handleCopyAddress },
+    ];
+
+    if (variant === "unknown") {
+      return (
+        <div
+          ref={ref}
+          className={cn(
+            immersive
+              ? "flex flex-col gap-2 p-0 text-center"
+              : "flex flex-col gap-2 rounded-md border border-dashed border-border-strong bg-surface-muted p-5 text-center",
+            className,
+          )}
+          {...props}
+        >
+          <Icon
+            name="map-pin"
+            size="lg"
+            color="currentColor"
+            decorative
+            className={cn("mx-auto", isDarkBg ? "text-white/80" : "text-text-muted")}
+          />
+          <p
+            className={cn(
+              "type-body font-semibold",
+              isDarkBg ? "text-white" : "text-text",
+            )}
+          >
+            장소가 아직 정해지지 않았어요
+          </p>
+          <p
+            className={cn(
+              "type-bodySmall",
+              isDarkBg ? "text-white/70" : "text-text-muted",
+            )}
+          >
+            호스트가 장소를 정하면 알려드릴게요
+          </p>
+        </div>
+      );
+    }
+
+    if (variant === "online") {
+      return (
+        <div
+          ref={ref}
+          className={cn(
+            "flex items-center gap-3 rounded-md border border-border bg-surface p-4",
+            className,
+          )}
+          {...props}
+        >
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xs bg-blue-100 text-blue-500">
+            <Icon name="globe" size="lg" color="currentColor" decorative />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p
+              className={cn(
+                "type-body font-semibold",
+                isDarkBg ? "text-white" : "text-text",
+              )}
+            >
+              온라인 모임
+            </p>
+            <p
+              className={cn(
+                "truncate type-bodySmall",
+                isDarkBg ? "text-white/70" : "text-text-muted",
+              )}
+            >
+              {onlineLink}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() =>
+              onlineLink && copyToClipboard(onlineLink, "링크가 복사되었어요")
+            }
+          >
+            복사
+          </Button>
+        </div>
+      );
+    }
+
+    const mapRadius = immersive ? "rounded-sm" : "rounded-md";
+
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          immersive
+            ? "flex flex-col gap-3 p-0"
+            : "flex flex-col gap-3 rounded-md border border-border bg-surface p-4",
+          className,
+        )}
+        {...props}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p
+              className={cn(
+                "type-cardTitle",
+                isDarkBg ? "text-white" : "text-text",
+              )}
+            >
+              {placeName}
+            </p>
+            {address ? (
+              <div className="mt-0.5 flex items-center gap-[3px]">
+                <p
+                  className={cn(
+                    "min-w-0 type-bodySmall leading-[1.4]",
+                    isDarkBg ? "text-white/80" : "text-text-muted",
+                  )}
+                >
+                  {address}
+                </p>
+                <span className="relative shrink-0">
+                  <button
+                    type="button"
+                    aria-label="길찾기 · 복사"
+                    aria-expanded={addressMenuOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setAddressMenuOpen((open) => !open)}
+                    className={cn(
+                      "inline-flex size-5 -translate-x-[2px] translate-y-[2px] items-center justify-center transition-colors",
+                      isDarkBg
+                        ? "text-white/70 hover:text-white"
+                        : "text-text-muted hover:text-text",
+                    )}
+                  >
+                    <Icon name="map" size={14} color="currentColor" decorative />
+                  </button>
+                  <LocationActionMenu
+                    open={addressMenuOpen}
+                    onClose={closeAddressMenu}
+                    items={addressMenuItems}
+                    className={
+                      menuPlacement === "top" ? "bottom-full mb-1" : "top-full mt-1"
+                    }
+                  />
+                </span>
+              </div>
+            ) : null}
+          </div>
+          {weatherSlot}
+        </div>
+        {mapLat !== undefined && mapLng !== undefined ? (
+          onViewMap ? (
+            <button
+              type="button"
+              onClick={onViewMap}
+              className={cn(
+                "w-full overflow-hidden transition-opacity hover:opacity-90",
+                mapRadius,
+              )}
+            >
+              <div className="pointer-events-none">
+                <KakaoStaticMapPreview
+                  lat={mapLat}
+                  lng={mapLng}
+                  heightOffset={20}
+                  className={mapRadius}
+                  alt={placeName ?? "지도 미리보기"}
+                />
+              </div>
+            </button>
+          ) : (
+            <KakaoStaticMapPreview
+              lat={mapLat}
+              lng={mapLng}
+              heightOffset={20}
+              className={mapRadius}
+              alt={placeName ?? "지도 미리보기"}
+            />
+          )
+        ) : null}
+      </div>
+    );
+  },
+);

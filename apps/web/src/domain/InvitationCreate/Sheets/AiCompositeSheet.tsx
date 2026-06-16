@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/primitives/Button";
-import { Chip } from "@/components/primitives/Chip";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { TemplateCard } from "@/components/organisms/TemplateCard";
+import { Button } from "@wara/ui";
+import { Chip } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
+import { TemplateCard } from "@/components/domain";
 import { useAiGeneration } from "@/hooks/useAiGeneration";
 import { getTemplates } from "@/lib/api/templates";
 
@@ -65,8 +65,7 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
     : templates;
 
   return (
-    <BottomSheet open={open} onOpenChange={handleClose}>
-      <BottomSheetContent title="AI로 합성하기">
+    <BottomSheet open={open} onOpenChange={handleClose} title="AI로 합성하기">
         <div className="flex flex-col gap-5 pt-1">
           <p className="text-[13px] text-text-secondary">
             업로드한 사진과 선택한 배경을 자연스럽게 합성해요. 결과는 다운로드만
@@ -78,13 +77,12 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
             <p className="mb-2 text-[14px] font-semibold text-text-primary">합성할 배경</p>
             {categories.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-1.5">
-                <Chip variant="filter" selected={category === ""} onClick={() => setCategory("")}>
+                <Chip selected={category === ""} onClick={() => setCategory("")}>
                   전체
                 </Chip>
                 {categories.map((c) => (
                   <Chip
                     key={c}
-                    variant="filter"
                     selected={category === c}
                     onClick={() => setCategory(c)}
                   >
@@ -143,7 +141,6 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
             {isCompleted || isFailed ? "다시 시도" : "AI 합성 시작"}
           </Button>
         </div>
-      </BottomSheetContent>
-    </BottomSheet>
+      </BottomSheet>
   );
 }

@@ -1,5 +1,5 @@
 import type { Invitation } from "@/lib/api/invitations";
-import type { InvitationCardVariant } from "@/components/organisms/InvitationCard";
+import type { InvitationCardVariant } from "@/utils/resolveInvitationCardStatus";
 import { formatInvitationEventDate } from "@/utils/formatInvitationEventDate";
 
 export type InvitationListTab = "all" | "createdByMe" | "joined" | "ended";

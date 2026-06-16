@@ -2,15 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/primitives/Button';
+import { Button, Modal, BottomSheet } from '@wara/ui';
 import { ROUTES } from '@/constants/routes';
 import { SocialLoginButton } from '@/components/primitives/SocialLoginButton';
 import type { SocialProvider } from '@/components/primitives/SocialLoginButton/providers';
-import { ConfirmModal } from '@/components/molecules/Modal';
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from '@/components/molecules/BottomSheet';
 import { useState, useEffect } from 'react';
 
 export type LoginState =
@@ -86,7 +81,7 @@ export const Login = ({
 
         {state === 'withInvitationContext' ||
         state === 'continueWithoutLogin' ? (
-          <Button variant="text" size="md" onClick={onContinueWithoutLogin}>
+          <Button variant="text" size="md" fullWidth onClick={onContinueWithoutLogin}>
             로그인 없이 초대장만 보기
           </Button>
         ) : null}
@@ -104,40 +99,33 @@ export const Login = ({
         </p>
       </div>
 
-      <ConfirmModal
-        contained
+      <Modal
         open={sessionModalOpen}
         onOpenChange={setSessionModalOpen}
         title="다시 로그인해주세요"
         description="보안을 위해 일정 시간이 지나면 로그아웃돼요."
-        confirmLabel="확인"
-        onConfirm={() => setSessionModalOpen(false)}
+        showClose={false}
+        footer={<Button onClick={() => setSessionModalOpen(false)}>확인</Button>}
       />
 
       {mounted && (
         <BottomSheet
           open={loginSheetOpen}
           onOpenChange={setLoginSheetOpen}
-          modal={false}
-          noBodyStyles
+          title="로그인이 필요해요"
+          description="이 기능을 쓰려면 먼저 로그인해주세요"
         >
-          <BottomSheetContent
-            contained
-            title="로그인이 필요해요"
-            description="이 기능을 쓰려면 먼저 로그인해주세요"
-          >
-            <div className="flex flex-col gap-2 pt-2">
-              {PROVIDERS.map((provider) => (
-                <SocialLoginButton
-                  key={provider}
-                  provider={provider}
-                  loading={loadingProvider === provider}
-                  disabled={loadingProvider !== null}
-                  onClick={() => onLogin?.(provider)}
-                />
-              ))}
-            </div>
-          </BottomSheetContent>
+          <div className="flex flex-col gap-2 pt-2">
+            {PROVIDERS.map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => onLogin?.(provider)}
+              />
+            ))}
+          </div>
         </BottomSheet>
       )}
     </main>

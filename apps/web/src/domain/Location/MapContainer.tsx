@@ -13,9 +13,7 @@ import { useMe } from "@/hooks/useUsers";
 import type { ParticipantLocation } from "@/lib/api/locations";
 import type { Place } from "@/lib/api/locations";
 import { nudgeParticipant } from "@/lib/api/locations";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { Button } from "@/components/primitives/Button";
-import { toast } from "@/components/molecules/Toast";
+import { BottomSheet, Button, toast } from "@wara/ui";
 import { ROUTES } from "@/constants/routes";
 
 const ARRIVAL_THRESHOLD_METERS = 10;
@@ -140,7 +138,9 @@ export function MapContainer({ invitationId }: MapContainerProps) {
   // ── WebSocket ─────────────────────────────────────────────────────────
   const { sendLocation } = useLocationSocket({
     invitationId,
-    enabled: gpsPermission === "granted" && !isArrived && inEventWindow,
+    // 구독(=다른 참가자 핀 보기)은 이벤트 시간대면 항상 활성.
+    // 내 위치 emit은 GPS 허용·미도착 조건이 따로 걸려 있다(아래 watchPosition).
+    enabled: inEventWindow,
     onLocationUpdated: useCallback((update: LocationUpdate) => {
       setParticipantLocations((prev) => {
         const next = new Map(prev);
@@ -562,32 +562,32 @@ export function MapContainer({ invitationId }: MapContainerProps) {
         isSavingPlace={isSavingPlace}
         trackingActive={inEventWindow}
       />
-      <BottomSheet open={!!selectedPin} onOpenChange={(open) => !open && setSelectedPin(null)}>
-        <BottomSheetContent
-          title={selectedPin?.nickname ?? "참석자"}
-          description={
-            selectedDistanceM != null
-              ? `모임 장소까지 약 ${selectedDistanceM}m`
-              : undefined
-          }
-        >
-          <div className="flex flex-col gap-2 pt-2">
-            {nudgeError ? (
-              <p className="text-[13px] text-(--color-warning)">
-                알림 전송에 실패했어요. 다시 시도해주세요.
-              </p>
-            ) : null}
-            <Button
-              size="lg"
-              variant="primary"
-              fullWidth
-              loading={nudgePending}
-              onClick={() => void handleSendNudge()}
-            >
-              출발 알림 보내기
-            </Button>
-          </div>
-        </BottomSheetContent>
+      <BottomSheet
+        open={!!selectedPin}
+        onOpenChange={(open) => !open && setSelectedPin(null)}
+        title={selectedPin?.nickname ?? "참석자"}
+        description={
+          selectedDistanceM != null
+            ? `모임 장소까지 약 ${selectedDistanceM}m`
+            : undefined
+        }
+      >
+        <div className="flex flex-col gap-2 pt-2">
+          {nudgeError ? (
+            <p className="text-[13px] text-(--color-warning)">
+              알림 전송에 실패했어요. 다시 시도해주세요.
+            </p>
+          ) : null}
+          <Button
+            size="lg"
+            variant="primary"
+            fullWidth
+            loading={nudgePending}
+            onClick={() => void handleSendNudge()}
+          >
+            출발 알림 보내기
+          </Button>
+        </div>
       </BottomSheet>
     </>
   );

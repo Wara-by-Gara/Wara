@@ -18,6 +18,8 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   ai_complete: 'AI 사진',
   mention: '멘션',
   participant_joined: '참여',
+  text_blast: '공지',
+  message: '메시지',
 };
 
 type Props = {

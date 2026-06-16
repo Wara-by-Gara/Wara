@@ -1,17 +1,20 @@
 'use client';
 
-import { Icon } from '@/components/icons';
-import type { IconName } from '@/components/icons';
-import { Switch } from '@/components/primitives/Switch';
-import { Divider } from '@/components/primitives/Divider';
-import { MenuItem } from '@/components/molecules/MenuItem';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { ConfirmModal } from '@/components/molecules/Modal';
-import { Radio, RadioGroup } from '@/components/primitives/Radio';
-import { Textarea } from '@/components/primitives/Textarea';
-import { Button } from '@/components/primitives/Button';
-import { FormField } from '@/components/molecules/FormField';
-import { TextInput } from '@/components/primitives/TextInput';
+import {
+  Icon,
+  type IconName,
+  Switch,
+  Divider,
+  MenuItem,
+  TopAppBar,
+  ConfirmDialog,
+  Textarea,
+  Button,
+  FormField,
+  Input,
+  Radio,
+  RadioGroup,
+} from '@wara/ui';
 import { useState } from 'react';
 
 export type SettingsScreen =
@@ -341,7 +344,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           <p className="text-[14px] text-text-secondary">{description}</p>
         </main>
         <footer className="px-page py-5">
-          <Button variant="outline" fullWidth>
+          <Button variant="secondary" fullWidth>
             시스템 설정 열기
           </Button>
         </footer>
@@ -516,7 +519,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
       <TopAppBar className="shrink-0" title="문의하기" onBack={onBack} />
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-6">
         <FormField label="이메일" required>
-          <TextInput placeholder="reply@example.com" />
+          <Input placeholder="reply@example.com" />
         </FormField>
         <FormField
           label="문의 내용"
@@ -536,8 +539,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           보내기
         </Button>
       </footer>
-      <ConfirmModal
-        contained
+      <ConfirmDialog
         open={inquiryDone}
         onOpenChange={setInquiryDone}
         title="문의가 접수됐어요"

@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Icon } from "@/components/icons";
-import { toast } from "@/components/molecules/Toast";
+import { Icon, toast } from "@wara/ui";
 
 export type ViewerPhoto = {
   imageUrl: string;

@@ -3,39 +3,33 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Chip } from "@/components/primitives/Chip";
-import { IconButton } from "@/components/primitives/IconButton";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { SearchBar } from "@/components/molecules/SearchBar";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { MenuItem } from "@/components/molecules/MenuItem";
-import { ConfirmModal } from "@/components/molecules/Modal";
-import { Button } from "@/components/primitives/Button";
+import { Chip } from "@wara/ui";
+import { IconButton } from "@wara/ui";
+import { TopAppBar } from "@wara/ui";
+import { SearchBar } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
+import { MenuItem } from "@wara/ui";
+import { ConfirmDialog } from "@wara/ui";
+import { Button } from "@wara/ui";
 import { Icon } from "@/components/icons";
-import { ParticipantSummaryCard } from "@/components/organisms/ParticipantSummaryCard";
-import { ParticipantItem, type ParticipantRsvp } from "@/components/organisms/ParticipantItem";
+import { ParticipantSummaryCard, ParticipantRow as ParticipantRowItem } from "@/components/domain";
 import { ParticipantListSkeleton } from "@/components/organisms/Skeleton";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
+import { EmptyState } from "@wara/ui";
+import { ErrorState } from "@wara/ui";
 import { useParticipants, useMyParticipant, useTransferHost } from "@/hooks/useParticipants";
 import { useInvitation } from "@/hooks/useInvitations";
 import { useBlocklist, useUnblockUser } from "@/hooks/useBlocklist";
 import type { BlockedUser } from "@/lib/api/blocklist";
-import { updateHostMemo, updateRsvp, leaveInvitation } from "@/lib/api/participants";
+import { updateHostMemo, updateRsvp, leaveInvitation, setCoHost } from "@/lib/api/participants";
+import { toast } from "@wara/ui";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import type { IconName } from "@/components/icons";
+import type { IconName } from "@wara/ui";
 import type { RsvpStatus } from "@/lib/api/participants";
 import { ParticipantProfilePanel, type ParticipantRow } from "./ParticipantProfilePanel";
 
 type Tab = "all" | RsvpStatus | "memo" | "blocked";
 type SortKey = "joined-asc" | "joined-desc" | "name-asc";
 type SheetMode = "action" | "memo" | "rsvp" | "kick" | "transfer" | "unblock" | null;
-
-const RSVP_TO_PARTICIPANT: Record<RsvpStatus, ParticipantRsvp> = {
-  attending: "attending",
-  undecided: "maybe",
-  absent: "declined",
-};
 
 const RSVP_ICONS: Record<RsvpStatus, IconName> = {
   attending: "user-check",
@@ -130,6 +124,20 @@ export default function ParticipantsContainer() {
 
   const transferMutation = useTransferHost(invitationId);
 
+  const coHostMutation = useMutation({
+    mutationFn: ({ participantId, isCoHost }: { participantId: string; isCoHost: boolean }) =>
+      setCoHost(invitationId, participantId, isCoHost),
+    onSuccess: () => { invalidateParticipants(); setSelectedRow(null); setSheetMode(null); },
+    onError: (e) => {
+      const code = e instanceof Error ? e.message : "";
+      toast.error(
+        code === "PARTICIPANT_NOT_ATTENDING"
+          ? "참석 상태인 참가자에게만 공동 호스트를 지정할 수 있어요"
+          : "공동 호스트 변경에 실패했어요",
+      );
+    },
+  });
+
   const filtered = applySort(
     (data?.participants ?? [])
       .filter(({ participant }) => tab === "all" || (tab === "memo" ? !!participant.note : participant.rsvpStatus === tab))
@@ -167,15 +175,14 @@ export default function ParticipantsContainer() {
         onBack={() => router.back()}
         rightSlot={
           <div className="flex">
-            <IconButton icon="search" aria-label="검색" active={showSearch} onClick={handleSearchToggle} />
-            <IconButton icon="sort" aria-label="정렬" onClick={() => setSortOpen(true)} />
+            <IconButton icon="search" label="검색" className={showSearch ? "text-primary" : undefined} onClick={handleSearchToggle} />
+            <IconButton icon="sort" label="정렬" onClick={() => setSortOpen(true)} />
           </div>
         }
       />
 
       {/* 정렬 바텀시트 */}
-      <BottomSheet open={sortOpen} onOpenChange={setSortOpen}>
-        <BottomSheetContent title="정렬">
+      <BottomSheet open={sortOpen} onOpenChange={setSortOpen} title="정렬">
           <div className="divide-y divide-border">
             {SORT_OPTIONS.map(({ key, label, icon }) => (
               <MenuItem
@@ -188,15 +195,15 @@ export default function ParticipantsContainer() {
               </MenuItem>
             ))}
           </div>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
 
       {/* HOST 참가자 액션 바텀시트 */}
-      <BottomSheet open={sheetMode === "action"} onOpenChange={(open) => !open && setSheetMode(null)}>
-        <BottomSheetContent
-          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
-          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
-        >
+      <BottomSheet
+        open={sheetMode === "action"}
+        onOpenChange={(open) => !open && setSheetMode(null)}
+        title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
+        description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
+      >
           {selectedRow?.participant.note && (
             <p className="mb-4 text-sm text-text-secondary">
               &ldquo;{selectedRow.participant.note}&rdquo;
@@ -222,21 +229,47 @@ export default function ParticipantsContainer() {
               내보내기
             </button>
           </div>
+          {/* 호스트는 RSVP를 못 바꾸므로 참석(attending) 상태인 참가자에게만 위임/공동호스트 지정 가능 */}
           <button
-            className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
+            className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary disabled:opacity-50"
+            disabled={selectedRow?.participant.rsvpStatus !== "attending"}
             onClick={() => setSheetMode("transfer")}
           >
             호스트 위임
           </button>
-        </BottomSheetContent>
-      </BottomSheet>
+          {selectedRow && selectedRow.participant.memberRole === "GUEST" ? (
+            <button
+              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary disabled:opacity-50"
+              disabled={coHostMutation.isPending || selectedRow.participant.rsvpStatus !== "attending"}
+              onClick={() => coHostMutation.mutate({ participantId: selectedRow.participant.id, isCoHost: true })}
+            >
+              공동 호스트 지정
+            </button>
+          ) : selectedRow &&
+            selectedRow.participant.memberRole === "HOST" &&
+            selectedRow.user.id !== invitation?.userId ? (
+            <button
+              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary disabled:opacity-50"
+              disabled={coHostMutation.isPending}
+              onClick={() => coHostMutation.mutate({ participantId: selectedRow.participant.id, isCoHost: false })}
+            >
+              공동 호스트 해제
+            </button>
+          ) : null}
+          {selectedRow && selectedRow.participant.rsvpStatus !== "attending" ? (
+            <p className="mt-2 text-center text-xs text-text-tertiary">
+              참석 상태인 참가자에게만 호스트를 위임할 수 있어요
+            </p>
+          ) : null}
+        </BottomSheet>
 
       {/* 메모 입력 바텀시트 */}
-      <BottomSheet open={sheetMode === "memo"} onOpenChange={(open) => !open && setSheetMode("action")}>
-        <BottomSheetContent
-          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
-          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
-        >
+      <BottomSheet
+        open={sheetMode === "memo"}
+        onOpenChange={(open) => !open && setSheetMode("action")}
+        title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
+        description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
+      >
           <textarea
             className="w-full resize-none rounded-md border border-border bg-surface p-4 text-sm text-text-primary outline-none"
             rows={4}
@@ -260,15 +293,15 @@ export default function ParticipantsContainer() {
               저장
             </Button>
           </div>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
 
       {/* RSVP 상태 변경 바텀시트 */}
-      <BottomSheet open={sheetMode === "rsvp"} onOpenChange={(open) => !open && setSheetMode("action")}>
-        <BottomSheetContent
-          title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
-          description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
-        >
+      <BottomSheet
+        open={sheetMode === "rsvp"}
+        onOpenChange={(open) => !open && setSheetMode("action")}
+        title={selectedRow ? (selectedRow.user.name ?? selectedRow.user.nickname ?? '') : ""}
+        description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
+      >
           <div className="divide-y divide-border">
             {(["attending", "undecided", "absent"] as RsvpStatus[]).map((status) => (
               <MenuItem
@@ -288,11 +321,10 @@ export default function ParticipantsContainer() {
               </MenuItem>
             ))}
           </div>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
 
       {/* 호스트 위임 확인 모달 */}
-      <ConfirmModal
+      <ConfirmDialog
         open={sheetMode === "transfer"}
         onOpenChange={(open) => !open && setSheetMode("action")}
         title="호스트를 위임할까요?"
@@ -302,28 +334,37 @@ export default function ParticipantsContainer() {
         onConfirm={() =>
           transferMutation.mutate(selectedRow!.participant.id, {
             onSuccess: () => { setSheetMode(null); setSelectedRow(null); },
+            onError: (e) => {
+              const code = e instanceof Error ? e.message : "";
+              toast.error(
+                code === "PARTICIPANT_NOT_ATTENDING"
+                  ? "참석 상태인 참가자에게만 호스트를 위임할 수 있어요"
+                  : "호스트 위임에 실패했어요",
+              );
+            },
           })
         }
       />
 
       {/* 강퇴 확인 모달 */}
-      <ConfirmModal
+      <ConfirmDialog
         open={sheetMode === "kick"}
         onOpenChange={(open) => !open && setSheetMode("action")}
         title="참석자를 명단에서 빼시겠어요?"
         description="내보낸 참가자는 차단 탭에서 차단을 해제해야 재참가할 수 있어요"
         confirmLabel="내보내기"
-        confirmVariant="danger"
+        tone="danger"
         loading={kickMutation.isPending}
         onConfirm={() => kickMutation.mutate({ participantId: selectedRow!.participant.id })}
       />
 
       {/* 차단 유저 액션 바텀시트 */}
-      <BottomSheet open={sheetMode === "unblock"} onOpenChange={(open) => !open && setSheetMode(null)}>
-        <BottomSheetContent
-          title={selectedBlockedUser ? (selectedBlockedUser.name ?? selectedBlockedUser.nickname ?? "") : ""}
-          description="차단을 해제하면 초대 링크로 재참가할 수 있어요"
-        >
+      <BottomSheet
+        open={sheetMode === "unblock"}
+        onOpenChange={(open) => !open && setSheetMode(null)}
+        title={selectedBlockedUser ? (selectedBlockedUser.name ?? selectedBlockedUser.nickname ?? "") : ""}
+        description="차단을 해제하면 초대 링크로 재참가할 수 있어요"
+      >
           <button
             className="w-full rounded-xs bg-danger py-3 text-sm font-semibold text-white disabled:opacity-50"
             disabled={unblockMutation.isPending}
@@ -335,8 +376,7 @@ export default function ParticipantsContainer() {
           >
             {unblockMutation.isPending ? "처리 중..." : "차단 해제"}
           </button>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
 
       <div className="flex flex-col gap-4 px-page py-5">
         <ParticipantSummaryCard
@@ -372,7 +412,7 @@ export default function ParticipantsContainer() {
                 t === "absent" ? "불참" :
                 t === "memo" ? "메모" : "차단";
               return (
-                <Chip key={t} variant="filter" selected={t === tab} onClick={() => setTab(t)}>
+                <Chip key={t} selected={t === tab} onClick={() => setTab(t)}>
                   {label}
                 </Chip>
               );
@@ -387,13 +427,15 @@ export default function ParticipantsContainer() {
           ) : (
             <div className="divide-y divide-border">
               {(blocklistData?.data ?? []).map((u) => (
-                <ParticipantItem
+                <ParticipantRowItem
                   key={u.userId}
-                  name={u.name ?? u.nickname ?? "이름 없음"}
-                  avatarName={u.name ?? undefined}
-                  handle={u.nickname ?? undefined}
-                  avatarUrl={u.profileImageUrl ?? undefined}
-                  status="declined"
+                  participant={{
+                    id: u.userId,
+                    name: u.name ?? u.nickname ?? "이름 없음",
+                    handle: u.nickname ?? undefined,
+                    avatarUrl: u.profileImageUrl ?? undefined,
+                    status: "absent",
+                  }}
                   onMore={() => { setSelectedBlockedUser(u); setSheetMode("unblock"); }}
                 />
               ))}
@@ -417,16 +459,18 @@ export default function ParticipantsContainer() {
           <div>
             <div className="divide-y divide-border">
               {filtered.map(({ participant, user }) => (
-                <ParticipantItem
+                <ParticipantRowItem
                   key={participant.id}
-                  name={user.name ?? user.nickname ?? '이름 없음'}
-                  avatarName={user.name ?? undefined}
-                  handle={user.nickname ?? undefined}
-                  avatarUrl={user.profileImageUrl ?? undefined}
-                  status={RSVP_TO_PARTICIPANT[participant.rsvpStatus]}
-                  isHost={participant.memberRole === "HOST"}
-                  requestPreview={participant.note ?? undefined}
-                  memo={isHost ? (participant.hostMemo ?? undefined) : undefined}
+                  participant={{
+                    id: participant.id,
+                    name: user.name ?? user.nickname ?? '이름 없음',
+                    handle: user.nickname ?? undefined,
+                    avatarUrl: user.profileImageUrl ?? undefined,
+                    status: participant.rsvpStatus,
+                    isHost: participant.memberRole === "HOST",
+                    requestPreview: participant.note ?? undefined,
+                    memo: isHost ? (participant.hostMemo ?? undefined) : undefined,
+                  }}
                   onClick={() => openProfile({ participant, user })}
                   onMore={isHost && participant.memberRole !== "HOST" ? () => openActionSheet({ participant, user }) : undefined}
                   className="cursor-pointer rounded-sm hover:bg-gray-50 transition-colors duration-150 active:opacity-80"

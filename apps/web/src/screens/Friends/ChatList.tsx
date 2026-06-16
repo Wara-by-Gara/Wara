@@ -2,10 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar } from "@/components/primitives/Avatar";
-import { SearchBar } from "@/components/molecules/SearchBar";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
+import { Avatar, EmptyState, SearchBar, Modal, ConfirmDialog } from "@wara/ui";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { ROUTES } from "@/constants/routes";
 import { timeAgo } from "@/utils/timeAge";
@@ -91,6 +88,7 @@ export const ChatList = () => {
           placeholder="이름으로 대화 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onClear={() => setQuery("")}
         />
       </div>
       {filtered.length === 0 ? (
@@ -118,7 +116,7 @@ export const ChatList = () => {
                   onContextMenu={(e) => e.preventDefault()}
                   className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-background-soft"
                 >
-                  <Avatar size="md" src={c.avatarUrl ?? undefined} alt={name} initial={name[0]} />
+                  <Avatar size="md" src={c.avatarUrl ?? undefined} alt={name} name={name} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold text-text-primary">
                       {name}
@@ -153,61 +151,40 @@ export const ChatList = () => {
       <Modal
         open={!!actionTarget}
         onOpenChange={(open) => !open && setActionTarget(null)}
+        size="sm"
+        showClose={false}
+        title={actionTarget?.title ?? "대화"}
       >
-        <ModalContent className="max-w-[280px]" aria-describedby={undefined}>
-          <ModalPrimitive.Title className="text-left text-[16px] font-bold text-text-primary">
-            {actionTarget?.title ?? "대화"}
-          </ModalPrimitive.Title>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setConfirmTarget(actionTarget);
-                setActionTarget(null);
-              }}
-              className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
-            >
-              나가기
-            </button>
-          </div>
-        </ModalContent>
+        <div className="mt-1">
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmTarget(actionTarget);
+              setActionTarget(null);
+            }}
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+          >
+            나가기
+          </button>
+        </div>
       </Modal>
 
-      {/* 나가기 확인 모달 (카카오톡식) */}
-      <Modal
+      {/* 나가기 확인 모달 */}
+      <ConfirmDialog
         open={!!confirmTarget}
         onOpenChange={(open) => !open && setConfirmTarget(null)}
-      >
-        <ModalContent className="max-w-[300px]">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            채팅방 나가기
-          </ModalPrimitive.Title>
-          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
-            채팅방을 나가면 대화 내용이 삭제됩니다. 상대가 새 메시지를 보내면 다시
-            표시돼요.
-          </ModalPrimitive.Description>
-          <div className="mt-6 flex justify-end gap-6">
-            <ModalClose asChild>
-              <button type="button" className="text-[15px] font-bold text-blue-500">
-                취소
-              </button>
-            </ModalClose>
-            <button
-              type="button"
-              disabled={leave.isPending}
-              onClick={() => {
-                if (!confirmTarget) return;
-                leave.mutate(confirmTarget.id, {
-                  onSuccess: () => setConfirmTarget(null),
-                });
-              }}
-              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
-            >
-              나가기
-            </button>
-          </div>
-        </ModalContent>
-      </Modal>
+        title="채팅방 나가기"
+        description="채팅방을 나가면 대화 내용이 삭제됩니다. 상대가 새 메시지를 보내면 다시 표시돼요."
+        confirmLabel="나가기"
+        cancelLabel="취소"
+        loading={leave.isPending}
+        onConfirm={() => {
+          if (!confirmTarget) return;
+          leave.mutate(confirmTarget.id, {
+            onSuccess: () => setConfirmTarget(null),
+          });
+        }}
+      />
     </div>
   );
 };

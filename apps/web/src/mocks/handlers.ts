@@ -25,6 +25,8 @@ export const mockSettings: NotificationSettings = {
   isInvitationDate: true,
   isPhoto: true,
   isMission: true,
+  isMessage: true,
+  isParticipant: true,
   isParticipantLocations: true,
   isEventLocations: true,
   createdAt: '2026-05-20T10:00:00.000Z',

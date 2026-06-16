@@ -8,7 +8,7 @@ import {
   useEffect,
   useCallback,
 } from 'react';
-import { Switch } from '@/components/primitives/Switch';
+import { Switch } from "@wara/ui";
 import { cn } from '@/lib/cn';
 
 export interface DateTimeSelectorProps {

@@ -30,13 +30,21 @@ export const RSVP_LABELS: Record<RsvpStatus, string> = {
   absent: "불참",
 };
 
-type UserNameFields = { name?: string | null; nickname?: string | null };
+type UserNameFields = {
+  name?: string | null;
+  nickname?: string | null;
+  isWithdrawn?: boolean;
+};
+
+/** 탈퇴(soft-deleted) 회원 표시 라벨 */
+export const WITHDRAWN_USER_NAME = "탈퇴한 회원";
 
 /** 참석자 목록(/participants)과 동일한 표시 이름 우선순위 */
 export function getUserDisplayName(
   user: UserNameFields | null | undefined,
   fallback = "이름 없음",
 ): string {
+  if (user?.isWithdrawn) return WITHDRAWN_USER_NAME;
   const name = user?.name?.trim();
   if (name) return name;
   const nickname = user?.nickname?.trim();
@@ -49,6 +57,7 @@ export function getCommentAuthorName(
   user: UserNameFields | null | undefined,
   fallback = "이름 없음",
 ): string {
+  if (user?.isWithdrawn) return WITHDRAWN_USER_NAME;
   const name = user?.name?.trim();
   if (name) return name;
   return fallback;

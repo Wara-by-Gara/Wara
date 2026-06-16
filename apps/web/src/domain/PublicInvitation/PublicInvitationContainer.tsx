@@ -13,25 +13,12 @@ import { useUpdateMe } from "@/hooks/useUsers";
 import { getPoll } from "@/lib/api/dateVote";
 import { isOptionalVotePollError } from "@/lib/api/getApiErrorCode";
 import { getMe } from "@/lib/api/users";
-import { Icon } from "@/components/icons";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { RSVPButtonGroup, type RSVPValue } from "@/components/molecules/RSVPButtonGroup";
-import { FormField } from "@/components/molecules/FormField";
-import { TextInput } from "@/components/primitives/TextInput";
-import { Textarea } from "@/components/primitives/Textarea";
+import { Icon, TopAppBar, FormField, Input, Textarea, EmptyState, Button } from "@wara/ui";
+import { RSVPButtonGroup, type RSVPValue, InvitationInfoCard } from "@/components/domain";
+import { useQuestions, useSubmitAnswers } from "@/hooks/useQuestionnaire";
 import { StickyCTA } from "@/components/layout/StickyCTA";
-import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { Button } from "@/components/primitives/Button";
 import type { Invitation } from "@/lib/api/invitations";
-import type { RsvpStatus } from "@/lib/api/participants";
 import { RsvpPageSkeleton } from "@/components/organisms/Skeleton";
-
-const RSVP_MAP: Record<RSVPValue, RsvpStatus> = {
-  attending: "attending",
-  maybe: "undecided",
-  declined: "absent",
-};
 
 const schema = z.object({
   note: z.string().max(200).optional(),
@@ -95,6 +82,11 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const { data: questions } = useQuestions(invitation.id, {
+    enabled: rsvp !== "absent",
+  });
+  const { mutateAsync: submitAnswersMut } = useSubmitAnswers(invitation.id);
   const originalNickname = useRef("");
   const { mutate: join, isPending: isJoining } = useJoinInvitation(invitation.id);
   const { mutate: updateMyRsvp, isPending: isUpdatingRsvp } = useUpdateRsvp(invitation.id);
@@ -162,8 +154,35 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
 
   const noteValue = watch("note") ?? "";
 
+  // RSVP 마감일이 지났으면 신규 응답·변경 불가
+  const isRsvpClosed = Boolean(
+    invitation.rsvpDeadlineAt &&
+      new Date(invitation.rsvpDeadlineAt).getTime() < Date.now(),
+  );
+  const deadlineText = invitation.rsvpDeadlineAt
+    ? new Date(invitation.rsvpDeadlineAt).toLocaleString("ko-KR", {
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  const submitPendingAnswers = async () => {
+    const arr = Object.entries(answers)
+      .map(([questionId, answer]) => ({ questionId, answer: answer.trim() }))
+      .filter((a) => a.answer);
+    if (arr.length === 0) return;
+    try {
+      await submitAnswersMut(arr);
+    } catch {
+      // 응답 저장 실패해도 참가는 진행
+    }
+  };
+
   const onSubmit = async (data: FormValues) => {
-    if (rsvp === "declined" && !myParticipant) {
+    if (isRsvpClosed) return;
+    if (rsvp === "absent" && !myParticipant) {
       setIsDeclined(true);
       return;
     }
@@ -187,15 +206,17 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
 
     if (myParticipant) {
       updateMyRsvp(
-        { participantId: myParticipant.id, rsvpStatus: RSVP_MAP[rsvp] },
+        { participantId: myParticipant.id, rsvpStatus: rsvp },
         {
           onSuccess: () => {
-            if (rsvp === "declined") {
+            if (rsvp === "absent") {
               setIsEditing(false);
             } else {
-              void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
+              void (async () => {
+                await submitPendingAnswers();
+                const path = await resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus);
                 router.push(path);
-              });
+              })();
             }
           },
         },
@@ -204,12 +225,14 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
     }
 
     join(
-      { rsvpStatus: RSVP_MAP[rsvp], note: data.note || undefined },
+      { rsvpStatus: rsvp, note: data.note || undefined },
       {
         onSuccess: () => {
-          void resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus).then((path) => {
+          void (async () => {
+            await submitPendingAnswers();
+            const path = await resolvePostRsvpRoute(invitation.id, invitation.dateVotePollStatus);
             router.push(path);
-          });
+          })();
         },
         onError: (err: unknown) => {
           const code = (err as { error?: { code?: string } })?.error?.code;
@@ -240,22 +263,28 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
 
         <div className="flex flex-col gap-2">
           <p className="text-[14px] font-medium text-text-primary">참석 여부</p>
+          {deadlineText ? (
+            <p className={`text-[13px] ${isRsvpClosed ? "text-danger" : "text-text-tertiary"}`}>
+              {isRsvpClosed ? "응답이 마감됐어요" : `응답 마감 · ${deadlineText}`}
+            </p>
+          ) : null}
           <RSVPButtonGroup
             value={rsvp}
             onValueChange={setRsvp}
-            disabled={isPending}
-            options={[
-              { value: "attending", emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-              { value: "maybe", emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-              { value: "declined", emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
-            ]}
+            closed={isRsvpClosed}
+            loading={isPending}
+            options={{
+              attending: { emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
+              undecided: { emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
+              absent: { emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+            }}
           />
         </div>
 
-        {rsvp !== "declined" && (
+        {rsvp !== "absent" && (
           <>
             <FormField label="이름">
-              <TextInput
+              <Input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="이름을 입력해주세요"
@@ -274,12 +303,31 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
                 {...register("note")}
               />
             </FormField>
+
+            {(questions ?? []).map((q) => (
+              <FormField key={q.id} label={q.question} required={q.required}>
+                <Input
+                  value={answers[q.id] ?? ""}
+                  onChange={(e) =>
+                    setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                  }
+                  placeholder="답변을 입력해주세요"
+                  disabled={isPending}
+                  maxLength={500}
+                />
+              </FormField>
+            ))}
           </>
         )}
       </form>
 
       <StickyCTA
-        primary={{ label: "응답하기", onClick: handleSubmit(onSubmit), loading: isPending }}
+        primary={{
+          label: isRsvpClosed ? "응답 마감" : "응답하기",
+          onClick: handleSubmit(onSubmit),
+          loading: isPending,
+          disabled: isRsvpClosed,
+        }}
       />
     </div>
   );

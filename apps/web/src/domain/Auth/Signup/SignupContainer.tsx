@@ -6,11 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Area } from "react-easy-crop";
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { FormField } from "@/components/molecules/FormField";
-import { TextInput } from "@/components/primitives/TextInput";
-import { Button } from "@/components/primitives/Button";
+import { Icon, Avatar, FormField, Input, Button } from "@wara/ui";
 import { useMe, useUpdateMe } from "@/hooks/useUsers";
 import { getProfileImagePresignedUrl } from "@/lib/api/users";
 import { getCroppedImageBlob } from "@/utils/cropImage";
@@ -192,31 +188,31 @@ export function SignupContainer() {
           className="mt-8 flex flex-col gap-5"
         >
           <FormField label="이름" required error={errors.name?.message}>
-            <TextInput
+            <Input
               {...register("name")}
               placeholder="이름을 입력해주세요"
               disabled={isSaving}
-              error={errors.name?.message}
+              invalid={!!errors.name}
             />
           </FormField>
 
           <FormField label="이메일" required error={errors.email?.message}>
-            <TextInput
+            <Input
               {...register("email")}
               type="email"
               placeholder="이메일을 입력해주세요"
               disabled={isSaving}
-              error={errors.email?.message}
+              invalid={!!errors.email}
             />
           </FormField>
 
           <FormField label="출생연도" required error={errors.birthYear?.message}>
-            <TextInput
+            <Input
               {...register("birthYear")}
               type="number"
               placeholder="예) 1995"
               disabled={isSaving}
-              error={errors.birthYear?.message}
+              invalid={!!errors.birthYear}
             />
           </FormField>
 
