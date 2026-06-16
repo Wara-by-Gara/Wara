@@ -129,8 +129,8 @@ export const ProfileEdit = ({
           primary={{
             label: "저장",
             loading: state === "saveLoading",
-            disabled: state === "nicknameDuplicateError" || !nickname,
-            onClick: () => onSave?.(nickname ?? ''),
+            disabled: state === "nicknameDuplicateError" || !(nickname ?? "").trim(),
+            onClick: () => onSave?.((nickname ?? "").trim()),
           }}
         />
       </div>
