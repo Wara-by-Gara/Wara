@@ -199,6 +199,23 @@
 
 ---
 
+## Push
+
+> 백그라운드/앱 닫힘 상태 푸시. 웹은 Web Push(VAPID), 모바일은 Expo Push.
+> 알림 발생 시 서버가 두 채널로 병행 발송(best-effort). 페이로드 `data.url`은 **상대 경로**(예: `/chats/:id`, `/invitations/:id`, `/notifications`) — RN Expo Router·웹 SW가 그대로 라우팅.
+
+| Method | Path | 설명 | 인증 | 비고 |
+|--------|------|------|:----:|------|
+| GET | `/push/vapid-public-key` | Web Push 공개키 | ✅ | 브라우저 구독용 |
+| POST | `/push/subscriptions` | Web Push 구독 등록 | ✅ | 브라우저 PushSubscription. endpoint upsert |
+| DELETE | `/push/subscriptions` | Web Push 구독 해제 | ✅ | body: { endpoint } |
+| POST | `/push/device` | Expo 기기 토큰 등록 | ✅ | body: { token, platform: ios\|android, deviceId?, deviceName?, appVersion? }. token upsert |
+| DELETE | `/push/device` | Expo 기기 토큰 해제 | ✅ | body: { token }. soft delete |
+
+> 모바일 등록 시점: 앱 실행(권한 보유) / 로그인 성공 직후 / Expo 토큰 갱신 시 `POST /push/device` 재동기화. 로그아웃 시 `DELETE /push/device`.
+
+---
+
 ## Inquiries
 
 > 사용자가 서비스 이용 중 문제를 보고하는 기능. 답변 받기 전(pending)에만 수정/삭제 가능.
