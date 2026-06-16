@@ -10,7 +10,7 @@ import { Button } from "@wara/ui";
 import { ConfirmDialog } from "@wara/ui";
 import { useAdminFaq, useCreateFaq, useUpdateFaq, useDeleteFaq } from '@/hooks/useFaq';
 import { ROUTES } from '@/constants/routes';
-import { FaqListSkeleton } from '@/components/organisms/Skeleton';
+import { FaqListSkeleton } from '@/components/domain/Skeleton';
 import type { FaqItem, CreateFaqPayload, UpdateFaqPayload } from '@/lib/api/faq';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (

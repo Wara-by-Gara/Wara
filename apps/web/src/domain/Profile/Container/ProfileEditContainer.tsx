@@ -6,7 +6,7 @@ import { useMe, useUpdateMe } from '@/hooks/useUsers';
 import { getProfileImagePresignedUrl } from '@/lib/api/users';
 import { getCroppedImageBlob } from '@/utils/cropImage';
 import { ProfileEdit } from '@/screens/ProfileEdit';
-import { ProfileImageCropScreen } from '@/components/organisms/ProfileImageCropScreen';
+import { ProfileImageCropScreen } from '@/components/domain/ProfileImageCropScreen';
 import { ROUTES } from '@/constants/routes';
 import { useAuthStore } from '@/stores/authStore';
 import type { Area } from 'react-easy-crop';

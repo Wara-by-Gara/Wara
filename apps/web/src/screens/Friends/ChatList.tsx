@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, EmptyState, SearchBar, Modal, ConfirmDialog } from "@wara/ui";
-import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
+import { FriendsPageSkeleton } from "@/components/domain/Skeleton";
 import { ROUTES } from "@/constants/routes";
 import { timeAgo } from "@/utils/timeAge";
 import { useConversations, useLeaveConversation } from "@/hooks/useConversations";

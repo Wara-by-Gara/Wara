@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
-import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
+import { MapLoadingSkeleton } from "@/components/domain/Skeleton";
 import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
 import { getPhotos, type PhotoLocation } from "@/lib/api/photos";
 import { clusterPhotos } from "@/domain/PhotoMap/photoMapUtils";

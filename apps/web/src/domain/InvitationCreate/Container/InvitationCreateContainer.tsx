@@ -28,7 +28,7 @@ import {
   getInvitationImagePresignedUrl,
   type Invitation,
 } from '@/lib/api/invitations';
-import { GifPicker } from '@/components/organisms/GifPicker';
+import { GifPicker } from '@/components/domain/GifPicker';
 import { setEventLocation, deleteEventLocation } from '@/lib/api/locations';
 import { getMissionTemplates, createMission } from '@/lib/api/missions';
 import { getTemplates } from '@/lib/api/templates';

@@ -11,7 +11,7 @@ import { createConversation } from "@/lib/api/conversations";
 import { ROUTES } from "@/constants/routes";
 import { resolveInvitationCardStatus } from "@/utils/resolveInvitationCardStatus";
 import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
-import { FriendProfilePageSkeleton } from "@/components/organisms/Skeleton";
+import { FriendProfilePageSkeleton } from "@/components/domain/Skeleton";
 import { useFriendProfile } from "@/hooks/useFriends";
 import type { MutualFriend } from "@/lib/api/friends";
 import { formatInvitationEventDate } from "@/utils/formatInvitationEventDate";

@@ -5,7 +5,7 @@ import { TopAppBar } from "@wara/ui";
 import { MenuItem } from "@wara/ui";
 import { Icon } from '@/components/icons';
 import { useAdminInquiries } from '@/hooks/useInquiries';
-import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryListSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 

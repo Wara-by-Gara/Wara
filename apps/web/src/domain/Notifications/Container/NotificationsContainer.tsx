@@ -18,7 +18,7 @@ import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
-import type { NotificationType as WebNotificationType } from '@/components/organisms/NotificationItem';
+import type { NotificationType as WebNotificationType } from '@/components/domain';
 
 const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
   photo: 'newPhoto',

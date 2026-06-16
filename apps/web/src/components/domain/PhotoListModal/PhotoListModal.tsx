@@ -3,13 +3,13 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/icons';
 import { Button } from "@wara/ui";
-import { PhotoGrid } from '@/components/organisms/PhotoGrid';
-import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
-import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import { PhotoGrid } from '@/components/domain/PhotoGrid';
+import { PhotoGridItem } from '@/components/domain/PhotoGridItem';
+import { PhotoViewer } from '@/components/domain/PhotoViewer';
 import * as Dialog from '@radix-ui/react-dialog';
-import { AlbumGridSkeleton } from '@/components/organisms/Skeleton';
+import { AlbumGridSkeleton } from '@/components/domain/Skeleton';
 import { cn } from '@/lib/cn';
-import type { PhotoViewerComment } from '@/components/organisms/PhotoViewer';
+import type { PhotoViewerComment } from '@/components/domain/PhotoViewer';
 
 export interface PhotoListModalPhoto {
   id: string;

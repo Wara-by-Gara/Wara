@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { GifGridSkeleton } from "@/components/organisms/Skeleton";
+import { GifGridSkeleton } from "@/components/domain/Skeleton";
 import { type KlipyGif, type KlipySearchResponse } from "@/lib/klipy";
 
 interface GifPickerProps {

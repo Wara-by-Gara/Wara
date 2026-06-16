@@ -8,7 +8,7 @@ import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { ROUTES } from "@/constants/routes";
 import { usePublicInvitations } from "@/hooks/usePublicInvitations";
 import type { ExploreSort, PublicInvitationExplore } from "@/lib/api/invitations";
-import { EventListSkeleton } from "@/components/organisms/Skeleton";
+import { EventListSkeleton } from "@/components/domain/Skeleton";
 import {
   EVENT_CATEGORIES,
   EVENT_CATEGORY_LABELS,

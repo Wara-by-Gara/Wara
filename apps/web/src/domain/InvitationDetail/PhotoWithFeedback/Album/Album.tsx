@@ -9,8 +9,8 @@ import { Icon } from '@/components/icons';
 import { cn } from '@/lib/cn';
 import AlbumModal from '../AlbumModal/AlbumModal';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
-import { PhotoGrid } from '@/components/organisms/PhotoGrid';
-import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
+import { PhotoGrid } from '@/components/domain/PhotoGrid';
+import { PhotoGridItem } from '@/components/domain/PhotoGridItem';
 
 // 서버 PHOTO_TOO_LARGE(413)와 동일한 10MB. 업로드 전 사전 차단해 모바일 데이터·시간 낭비 방지.
 const MAX_FILE_SIZE = 10 * 1024 * 1024;

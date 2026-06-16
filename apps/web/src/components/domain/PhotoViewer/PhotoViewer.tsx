@@ -3,7 +3,7 @@
 import { forwardRef, type ReactNode } from "react";
 import { Heart } from "lucide-react";
 import { Icon } from "@/components/icons";
-import { CommentInputBar } from "@/components/organisms/CommentInputBar";
+import { CommentInputBar } from "@/components/domain/CommentInputBar";
 import { CommentItem, type CommentReplyItemProps } from "@/components/domain";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Avatar } from "@wara/ui";

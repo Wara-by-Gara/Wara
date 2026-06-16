@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@wara/ui';
-import { TextContentSkeleton } from '@/components/organisms/Skeleton';
+import { TextContentSkeleton } from '@/components/domain/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 import { TermContent } from './TermContent';
 

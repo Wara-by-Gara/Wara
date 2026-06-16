@@ -5,7 +5,7 @@ import {
   NotificationItem,
   type NotificationType,
 } from '@/components/domain';
-import { NotificationListSkeleton } from '@/components/organisms/Skeleton';
+import { NotificationListSkeleton } from '@/components/domain/Skeleton';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';

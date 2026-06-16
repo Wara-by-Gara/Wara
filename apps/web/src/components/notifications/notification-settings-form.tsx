@@ -1,6 +1,6 @@
 'use client';
 
-import { SettingsToggleListSkeleton } from '@/components/organisms/Skeleton';
+import { SettingsToggleListSkeleton } from '@/components/domain/Skeleton';
 import { Switch } from "@wara/ui";
 import type { NotificationSettings } from '@/lib/api/notifications';
 
