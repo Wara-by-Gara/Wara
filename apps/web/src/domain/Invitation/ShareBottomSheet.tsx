@@ -1,7 +1,8 @@
 "use client";
 
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
+import { BottomSheet } from "@wara/ui";
+import { ShareOptionItem } from "@/components/domain";
+import { Icon as BrandIcon } from "@/components/icons";
 import { useShareInvitation } from "@/hooks/useShareInvitation";
 
 interface Props {
@@ -15,9 +16,8 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
     useShareInvitation(invitationId);
 
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="공유하기">
-        <div className="flex flex-col gap-1 pb-2">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="공유하기">
+      <div className="flex flex-col gap-1 pb-2">
           <ShareOptionItem
             icon="link"
             title={copied ? "복사됨!" : "링크 복사"}
@@ -25,7 +25,7 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
             onClick={copyLink}
           />
           <ShareOptionItem
-            icon="kakao-logo"
+            iconNode={<BrandIcon name="kakao-logo" size="lg" color="currentColor" decorative />}
             title="카카오톡 공유"
             iconBg="bg-[#FEE500]"
             onClick={shareViaKakao}
@@ -42,8 +42,7 @@ export default function ShareBottomSheet({ invitationId, open, onOpenChange }: P
             iconBg="bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400"
             onClick={shareViaInstagram}
           />
-        </div>
-      </BottomSheetContent>
+      </div>
     </BottomSheet>
   );
 }

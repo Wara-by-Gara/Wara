@@ -8,6 +8,55 @@
       "when": 1781275661579,
       "tag": "0000_curious_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781605083447,
+      "tag": "0001_cultured_sauron",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781606517323,
+      "tag": "0002_spicy_genesis",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781607360023,
+      "tag": "0003_brief_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781609044803,
+      "tag": "0004_misty_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781610071481,
+      "tag": "0005_lumpy_crystal",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781618374383,
+      "tag": "0006_strong_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781622462182,
+      "tag": "0007_brave_the_renegades",
+      "breakpoints": true
     }
   ]
 }

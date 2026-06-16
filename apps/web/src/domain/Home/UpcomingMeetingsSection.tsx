@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
+import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { SectionHeader } from "@/components/layout/SectionHeader";
-import { Button } from "@/components/primitives/Button";
+import { Button } from "@wara/ui";
 import type { InvitationListItem } from "@/domain/InvitationList/invitationListUtils";
 import { ROUTES } from "@/constants/routes";
 import type { Invitation } from "@/lib/api/invitations";
@@ -55,15 +55,14 @@ export function UpcomingMeetingsSection({
             });
 
             return (
-              <InvitationCard
+              <InviteCard
                 key={inv.id}
                 layout="horizontal"
-                variant={chip?.variant ?? "default"}
-                ddayLabel={chip?.ddayLabel}
+                badge={statusChipToBadge(chip)}
                 imageUrl={inv.coverImageUrl || undefined}
                 title={inv.title}
-                date={inv.date}
-                location={inv.location}
+                dateText={inv.date}
+                locationText={inv.location}
                 onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
                 className="w-full text-left"
               />

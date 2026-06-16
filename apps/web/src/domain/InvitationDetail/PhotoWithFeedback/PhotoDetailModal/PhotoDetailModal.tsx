@@ -9,9 +9,9 @@ import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';
 import { useDeletePhoto } from '@/hooks/useDeletePhoto';
-import { ConfirmModal } from '@/components/molecules/Modal';
+import { ConfirmDialog } from "@wara/ui";
 import { timeAgo } from '@/utils/timeAge';
-import { Avatar } from '@/components/primitives/Avatar';
+import { Avatar } from "@wara/ui";
 import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
@@ -218,12 +218,12 @@ export default function PhotoDetailModal({
 
   return (
     <>
-    <ConfirmModal
+    <ConfirmDialog
       open={showDeleteConfirm}
       onOpenChange={(o) => { if (!o) setShowDeleteConfirm(false); }}
       title="이 사진을 삭제하시겠습니까?"
       confirmLabel="삭제"
-      confirmVariant="danger"
+      tone="danger"
       onConfirm={() => deleteMutate(photo.id)}
       loading={isDeleting}
     />

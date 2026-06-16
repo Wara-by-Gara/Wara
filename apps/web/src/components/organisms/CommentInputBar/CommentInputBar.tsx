@@ -104,9 +104,14 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       if (!trimmed && !pendingGif && !hasPendingPhoto) return;
       if (isSubmittingRef.current) return;
       isSubmittingRef.current = true;
-      setValue('');
-      await onSubmit?.(trimmed);
-      isSubmittingRef.current = false;
+      try {
+        await onSubmit?.(trimmed);
+        // 성공 시에만 입력값 초기화 — 실패 시 텍스트 유지로 재시도 가능
+        setValue('');
+      } finally {
+        // 항상 잠금 해제 — 에러 시에도 잠금이 고착돼 새로고침해야 하던 문제 방지
+        isSubmittingRef.current = false;
+      }
     };
 
     const disabled = state === 'disabled' || state === 'submitting';

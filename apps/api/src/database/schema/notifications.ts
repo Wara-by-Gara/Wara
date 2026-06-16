@@ -19,6 +19,8 @@ export const notifications = pgTable('notifications', {
   isRead: boolean('is_read').notNull().default(false),
   readAt: timestamp('read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // soft delete — 전체/개별 삭제 시 row 보존, 조회에서 제외 (hard delete 금지 규약).
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   check('check_notification_target', sql`(${t.targetType} IS NOT NULL AND ${t.targetId} IS NOT NULL) OR (${t.targetType} IS NULL AND ${t.targetId} IS NULL)`),
   index('idx_notifications_invitation').on(t.invitationId),
@@ -33,6 +35,7 @@ export const notificationSettings = pgTable('notification_settings', {
   isInvitationDate: boolean('is_invitation_date').notNull().default(true),
   isPhoto: boolean('is_photo').notNull().default(true),
   isMission: boolean('is_mission').notNull().default(true),
+  isMessage: boolean('is_message').notNull().default(true),
   isParticipant: boolean('is_participant').notNull().default(true),
   isParticipantLocations: boolean('is_participant_locations').notNull().default(true),
   isEventLocations: boolean('is_event_locations').notNull().default(true),

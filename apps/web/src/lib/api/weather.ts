@@ -1,5 +1,5 @@
 import { apiGet } from './client';
-import type { WeatherCondition } from '@/components/organisms/WeatherCard';
+import type { WeatherCondition } from '@/components/domain';
 
 export type WeatherConditionKo =
   | '맑음'

@@ -120,7 +120,27 @@ export function useDeleteAllNotifications() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteAllNotifications,
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.notifications.list() });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.notifications.unread() });
+
+      const prevList = queryClient.getQueryData<InfiniteNotifications>(QUERY_KEYS.notifications.list());
+      const prevUnread = queryClient.getQueryData<{ count: number }>(QUERY_KEYS.notifications.unread());
+
+      // 첫 페이지만 남기고 비워 즉시 EmptyState로 전환 (재요청 전 깜빡임 방지)
+      queryClient.setQueryData<InfiniteNotifications>(QUERY_KEYS.notifications.list(), {
+        pages: [{ items: [], nextCursor: null, hasNext: false }],
+        pageParams: [undefined],
+      });
+      queryClient.setQueryData(QUERY_KEYS.notifications.unread(), { count: 0 });
+
+      return { prevList, prevUnread };
+    },
+    onError: (_err, _v, ctx) => {
+      if (ctx?.prevList) queryClient.setQueryData(QUERY_KEYS.notifications.list(), ctx.prevList);
+      if (ctx?.prevUnread) queryClient.setQueryData(QUERY_KEYS.notifications.unread(), ctx.prevUnread);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.list() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications.unread() });
     },

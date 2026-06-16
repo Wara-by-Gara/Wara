@@ -1,5 +1,5 @@
-import { InvitationCover } from "@/components/organisms";
-import { Avatar } from "@/components/primitives";
+import { InvitationCover } from "@/components/domain";
+import { Avatar } from "@wara/ui";
 import { Invitation } from "@/lib/api/invitations";
 
 
@@ -24,6 +24,7 @@ export default function DetailCard({ invitation }: Props) {
             <Avatar
               src={invitation.host.profileImageUrl ?? undefined}
               alt={invitation.host.nickname ?? '호스트'}
+              name={invitation.host.nickname ?? '호스트'}
               size="xs"
             />
             <span>{invitation.host.nickname ?? '호스트'}</span>

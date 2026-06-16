@@ -82,6 +82,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
               name: true,
               nickname: true,
               profileImageUrl: true,
+              deletedAt: true,
             },
           },
         },

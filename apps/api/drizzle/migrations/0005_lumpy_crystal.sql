@@ -1,0 +1,1 @@
+ALTER TYPE "public"."remind_type" ADD VALUE 'D-1' BEFORE 'D+7';

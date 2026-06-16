@@ -1,13 +1,17 @@
 "use client";
 
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { Radio, RadioGroup } from "@/components/primitives/Radio";
-import { Textarea } from "@/components/primitives/Textarea";
-import { TextInput } from "@/components/primitives/TextInput";
-import { MenuItem } from "@/components/molecules/MenuItem";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { ConfirmModal } from "@/components/molecules/Modal";
+import {
+  Icon,
+  Button,
+  Radio,
+  RadioGroup,
+  Textarea,
+  Input,
+  MenuItem,
+  TopAppBar,
+  ConfirmDialog,
+} from "@wara/ui";
+import { Icon as BrandIcon } from "@/components/icons";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { useState } from "react";
 
@@ -86,7 +90,11 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
               return (
                 <MenuItem
                   key={provider}
-                  leftIcon={icon}
+                  leftSlot={
+                    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted">
+                      <BrandIcon name={icon} size="sm" color="default" decorative />
+                    </span>
+                  }
                   onClick={handleClick}
                   rightSlot={<span className="text-[13px] text-text-tertiary">{rightText}</span>}
                 >
@@ -105,7 +113,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         </section>
         </main>
 
-        <ConfirmModal
+        <ConfirmDialog
           open={screen === "disconnectModal" ? true : modalOpen}
           onOpenChange={(open) => { if (!open) { if (screen === "disconnectModal") onBack?.(); else setModalOpen(false); } }}
           title={screen === "disconnectModal" ? "연결 해제할까요?" : "로그아웃 할까요?"}
@@ -115,8 +123,8 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
               : "다시 들어오려면 다시 로그인해야 해요"
           }
           confirmLabel={screen === "disconnectModal" ? "해제" : "로그아웃"}
-          confirmVariant="danger"
-          onConfirm={screen === "disconnectModal" ? onDisconnectConfirm : onLogout}
+          tone="danger"
+          onConfirm={() => (screen === "disconnectModal" ? onDisconnectConfirm : onLogout)?.()}
           loading={screen === "disconnectModal" ? isDisconnecting : undefined}
         />
       </div>
@@ -212,7 +220,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <Icon name="user-x" size="xl" color="inactive" decorative />
         <p className="text-[18px] font-bold text-text-primary">탈퇴가 완료됐어요</p>
         <p className="text-[14px] text-text-secondary">언젠가 다시 만나길 바라요</p>
-        <Button variant="outline" size="md" onClick={onWithdrawComplete}>홈으로</Button>
+        <Button variant="secondary" size="md" onClick={onWithdrawComplete}>홈으로</Button>
       </main>
     </div>
   );
@@ -239,7 +247,7 @@ function WithdrawFinalConfirm({ onBack, onWithdrawCancel, onWithdrawConfirm, isW
           탈퇴하면 모든 데이터가 즉시 삭제되고 복구할 수 없어요.
           확인을 위해 아래에 <span className="font-bold">‘{WITHDRAW_CONFIRM_PHRASE}’</span> 을(를) 입력해주세요.
         </p>
-        <TextInput
+        <Input
           className="mt-6"
           value={phrase}
           onChange={(e) => setPhrase(e.target.value)}

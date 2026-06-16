@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { ConfirmModal } from '@/components/molecules/Modal';
-import { IconButton } from '@/components/primitives/IconButton';
+import { TopAppBar } from "@wara/ui";
+import { ConfirmDialog } from "@wara/ui";
+import { IconButton } from "@wara/ui";
 import { useMyInquiries, useDeleteInquiry } from '@/hooks/useInquiries';
 import { useAuthStore } from '@/stores/authStore';
 import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
@@ -82,12 +82,12 @@ export default function MyInquiriesPage() {
         </Section>
       </main>
 
-      <ConfirmModal
+      <ConfirmDialog
         open={!!deleteTargetId}
         onOpenChange={(open) => !open && setDeleteTargetId(null)}
         title="문의를 삭제하시겠습니까?"
         confirmLabel="삭제"
-        confirmVariant="danger"
+        tone="danger"
         onConfirm={() => {
           if (deleteTargetId) {
             remove(deleteTargetId);
@@ -147,7 +147,7 @@ function InquiryCard({
             icon="trash"
             variant="danger"
             size="sm"
-            aria-label="문의 삭제"
+            label="문의 삭제"
             onClick={onDelete}
           />
         )}

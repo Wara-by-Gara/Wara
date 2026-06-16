@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { FormField } from '@/components/molecules/FormField';
-import { TextInput } from '@/components/primitives/TextInput';
-import { Textarea } from '@/components/primitives/Textarea';
-import { Button } from '@/components/primitives/Button';
-import { Chip } from '@/components/primitives/Chip';
-import { ConfirmModal } from '@/components/molecules/Modal';
+import { TopAppBar } from "@wara/ui";
+import { FormField } from "@wara/ui";
+import { Input } from "@wara/ui";
+import { Textarea } from "@wara/ui";
+import { Button } from "@wara/ui";
+import { Chip } from "@wara/ui";
+import { ConfirmDialog } from "@wara/ui";
 import { useCreateInquiry } from '@/hooks/useInquiries';
 import { useAuthStore } from '@/stores/authStore';
 import { ROUTES } from '@/constants/routes';
@@ -66,7 +66,6 @@ export default function InquiryWritePage() {
             {INQUIRY_TYPES.map((type) => (
               <Chip
                 key={type.value}
-                variant="selectable"
                 selected={form.inquiryType === type.value}
                 disabled={isCreating}
                 onClick={() =>
@@ -80,7 +79,7 @@ export default function InquiryWritePage() {
         </FormField>
 
         <FormField label="제목" required>
-          <TextInput
+          <Input
             placeholder="제목을 입력해주세요"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -136,7 +135,7 @@ export default function InquiryWritePage() {
         </Button>
       </footer>
 
-      <ConfirmModal
+      <ConfirmDialog
         open={doneModalOpen}
         onOpenChange={setDoneModalOpen}
         title="문의가 접수됐어요"

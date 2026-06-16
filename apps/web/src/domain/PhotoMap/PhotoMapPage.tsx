@@ -114,7 +114,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-background">
       <StickyHeader
-        title="Place log"
+        title="Photo log"
         rightSlot={
           <button
             type="button"

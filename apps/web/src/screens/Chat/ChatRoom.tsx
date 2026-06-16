@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar } from "@/components/primitives/Avatar";
-import { Icon } from "@/components/icons";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { toast } from "@/components/molecules/Toast";
+import { Avatar, Icon, TopAppBar, Modal, ConfirmDialog, BottomSheet, toast } from "@wara/ui";
 import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
 import { PhotoViewer, type ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 import { useMe } from "@/hooks/useUsers";
@@ -139,7 +134,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const handleCopy = () => {
     if (menuTarget) {
       navigator.clipboard?.writeText(menuTarget.content);
-      toast.show("복사했어요");
+      toast("복사했어요");
     }
     setMenuTarget(null);
   };
@@ -189,9 +184,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   };
   const cancelReply = () => setReplyTarget(null);
 
-  const partnerName = conversation?.partner?.name ?? "상대";
+  const partnerName = conversation?.partner?.name || "상대";
   const isGroup = conversation?.type === "group";
-  const headerTitle = conversation?.title ?? partnerName;
+  const headerTitle = conversation?.title || partnerName;
   // 그룹: 발신자별 아바타/이름 표시용 멤버 맵 (그룹일 때만 조회)
   const groupMembers =
     useConversationParticipants(id, !!isGroup).data?.participants ?? [];
@@ -383,7 +378,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                           size="sm"
                           src={senderAvatar ?? undefined}
                           alt={senderName}
-                          initial={senderName[0]}
+                          name={senderName}
                         />
                       </button>
                     ) : (
@@ -678,9 +673,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       </form>
 
       {/* 메시지 길게 누르기 메뉴 */}
-      <Modal open={!!menuTarget} onOpenChange={(open) => !open && setMenuTarget(null)}>
-        <ModalContent className="max-w-[260px] px-3 py-2" aria-describedby={undefined}>
-          <ModalPrimitive.Title className="sr-only">메시지 메뉴</ModalPrimitive.Title>
+      <Modal
+        open={!!menuTarget}
+        onOpenChange={(open) => !open && setMenuTarget(null)}
+        size="sm"
+        showClose={false}
+        title={<span className="sr-only">메시지 메뉴</span>}
+      >
           <div className="flex flex-col">
             {/* 이모지 리액션 행 (메뉴 최상단) */}
             <div className="mb-1 flex items-center justify-between border-b border-border px-1 pb-2">
@@ -735,40 +734,24 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               </>
             )}
           </div>
-        </ModalContent>
       </Modal>
 
       {/* 메시지 삭제 확인 모달 */}
-      <Modal open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <ModalContent className="max-w-[300px]">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            메시지 삭제
-          </ModalPrimitive.Title>
-          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
-            이 메시지를 삭제하면 상대방 화면에서도 사라집니다.
-          </ModalPrimitive.Description>
-          <div className="mt-6 flex justify-end gap-6">
-            <ModalClose asChild>
-              <button type="button" className="text-[15px] font-bold text-blue-500">
-                취소
-              </button>
-            </ModalClose>
-            <button
-              type="button"
-              disabled={deleteMutation.isPending}
-              onClick={() => {
-                if (!deleteTarget) return;
-                deleteMutation.mutate(deleteTarget.id, {
-                  onSuccess: () => setDeleteTarget(null),
-                });
-              }}
-              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
-            >
-              삭제
-            </button>
-          </div>
-        </ModalContent>
-      </Modal>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="메시지 삭제"
+        description="이 메시지를 삭제하면 상대방 화면에서도 사라집니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        loading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteMutation.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+          });
+        }}
+      />
 
       {/* 사진 전송 미리보기 + 확인 */}
       <Modal
@@ -776,29 +759,18 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         onOpenChange={(open) => {
           if (!open && !imageMutation.isPending) setPreviewFile(null);
         }}
-      >
-        <ModalContent className="max-w-[320px]" aria-describedby={undefined}>
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            사진 보내기
-          </ModalPrimitive.Title>
-          {previewUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewUrl}
-              alt="보낼 사진 미리보기"
-              className="mt-3 max-h-80 w-full rounded-lg bg-background-soft object-contain"
-            />
-          )}
-          <div className="mt-6 flex justify-end gap-6">
-            <ModalClose asChild>
-              <button
-                type="button"
-                disabled={imageMutation.isPending}
-                className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
-              >
-                취소
-              </button>
-            </ModalClose>
+        size="sm"
+        title="사진 보내기"
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={imageMutation.isPending}
+              onClick={() => setPreviewFile(null)}
+              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
+            >
+              취소
+            </button>
             <button
               type="button"
               disabled={imageMutation.isPending}
@@ -807,16 +779,25 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             >
               {imageMutation.isPending ? "보내는 중..." : "보내기"}
             </button>
-          </div>
-        </ModalContent>
+          </>
+        }
+      >
+        {previewUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt="보낼 사진 미리보기"
+            className="max-h-80 w-full rounded-lg bg-background-soft object-contain"
+          />
+        )}
       </Modal>
 
       {/* 리액션 상세 — 누가 어떤 이모지를 눌렀는지 */}
       <BottomSheet
         open={!!reactionDetail}
         onOpenChange={(open) => !open && setReactionDetail(null)}
+        title={<span className="block w-full text-center">리액션</span>}
       >
-        <BottomSheetContent title={<span className="block w-full text-center">리액션</span>}>
           {/* 상단 이모지+카운트 칩 — 클릭해서 종류별로 필터
               data-vaul-no-drag + pointerdown 전파 차단: vaul Drawer가 칩의 포인터를
               가로채(드래그/포인터캡처) 클릭이 간헐적으로 안 먹는 것 방지 */}
@@ -870,7 +851,6 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 </li>
               ))}
           </ul>
-        </BottomSheetContent>
       </BottomSheet>
 
       {/* 우측 슬라이딩 서랍 — 사진/대화상대/초대 */}

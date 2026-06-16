@@ -1,11 +1,8 @@
 "use client";
 
-import { Chip } from "@/components/primitives/Chip";
-import { Button } from "@/components/primitives/Button";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
+import { Chip, Button, EmptyState, ErrorState } from "@wara/ui";
+import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
 import {
   INVITATION_LIST_TAB_LABELS,
   type InvitationListItem,
@@ -46,7 +43,6 @@ export function InvitationListSection({
         {(Object.keys(INVITATION_LIST_TAB_LABELS) as InvitationListTab[]).map((t) => (
           <Chip
             key={t}
-            variant="filter"
             selected={t === tab}
             className="shrink-0"
             onClick={() => onTabChange(t)}
@@ -75,13 +71,15 @@ export function InvitationListSection({
         ) : (
           <div className={listClass}>
             {invitations.map((inv) => (
-              <InvitationCard
+              <InviteCard
                 key={inv.id}
                 title={inv.title}
-                date={inv.date}
-                location={inv.location}
+                dateText={inv.date}
+                locationText={inv.location}
                 imageUrl={inv.coverImageUrl}
-                variant={inv.variant ?? (tab === "ended" ? "ended" : "default")}
+                badge={statusChipToBadge({
+                  variant: inv.variant ?? (tab === "ended" ? "ended" : "default"),
+                })}
                 onClick={() => onCardClick?.(inv.id)}
               />
             ))}

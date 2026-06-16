@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TextInput } from "@/components/primitives/TextInput";
+import { Input } from "@wara/ui";
 import { useRouter } from "next/navigation";
 import { SectionHeader } from "@/components/layout/SectionHeader";
-import { InvitationCard } from "@/components/organisms/InvitationCard";
+import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { ROUTES } from "@/constants/routes";
 import { usePublicInvitations } from "@/hooks/usePublicInvitations";
 import type { ExploreSort, PublicInvitationExplore } from "@/lib/api/invitations";
@@ -37,15 +37,14 @@ function EventListItem({ event }: { event: PublicInvitationExplore }) {
   });
 
   return (
-    <InvitationCard
+    <InviteCard
       layout="horizontal"
-      variant={chip?.variant ?? "default"}
-      ddayLabel={chip?.ddayLabel}
+      badge={statusChipToBadge(chip)}
       imageUrl={event.mainImageUrl ?? undefined}
       subject={chip ? undefined : categoryLabel}
       title={event.title}
-      date={formatExploreEventDate(event.eventStartAt)}
-      location={event.location ?? undefined}
+      dateText={formatExploreEventDate(event.eventStartAt)}
+      locationText={event.location ?? undefined}
       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(event.id))}
       className="w-full"
     />
@@ -119,7 +118,7 @@ export function RecommendedEventsSection({
       {showHeading ? <SectionHeader heading="추천 이벤트" /> : null}
       <div className="home-section-content">
       <div className="mb-3 flex flex-col gap-2">
-        <TextInput
+        <Input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="초대장 제목 검색"

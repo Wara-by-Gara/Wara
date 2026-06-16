@@ -3,8 +3,8 @@
 import Cropper from 'react-easy-crop';
 import { useState, useRef, useCallback } from 'react';
 import type { Area } from 'react-easy-crop';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { Button } from '@/components/primitives/Button';
+import { TopAppBar } from "@wara/ui";
+import { Button } from "@wara/ui";
 
 interface Props {
   imageSrc: string;

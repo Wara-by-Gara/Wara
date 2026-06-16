@@ -2,20 +2,16 @@
 
 import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { ConfirmModal } from "@/components/molecules/Modal";
-import { CommentItem } from "@/components/organisms/CommentItem";
-import { CommentInputBar } from "@/components/organisms/CommentInputBar";
+import { TopAppBar, ConfirmDialog, EmptyState, ErrorState } from "@wara/ui";
+import { CommentBox, CommentItem } from "@/components/domain";
 import { CommentListSkeleton } from "@/components/organisms/Skeleton";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
 import { mobileMainScroll, mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";
 import { useMe } from "@/hooks/useUsers";
 import { getCommentAuthorName } from "@/domain/InvitationDetail/types";
 import { timeAgo } from "@/utils/timeAge";
-import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal/ParticipantProfileModal";
+import { ParticipantProfileModal } from "@/components/domain";
 
 interface Props {
   invitationId: string;
@@ -151,7 +147,7 @@ export const Comments = ({ invitationId }: Props) => {
             <button type="button" onClick={() => setReplyingTo(null)} className="text-[13px] text-text-tertiary hover:text-text-secondary">취소</button>
           </div>
         )}
-        <CommentInputBar
+        <CommentBox
           placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
           onSubmit={async (text) => {
             await submitComment(text, replyingTo?.id);
@@ -160,15 +156,14 @@ export const Comments = ({ invitationId }: Props) => {
         />
       </div>
 
-      <ConfirmModal
-        contained
+      <ConfirmDialog
         open={!!deletingCommentId}
         onOpenChange={(open) => {
           if (!open) setDeletingCommentId(undefined);
         }}
         title="이 댓글을 삭제할까요?"
         confirmLabel="삭제"
-        confirmVariant="danger"
+        tone="danger"
         onConfirm={handleDelete}
         loading={isDeleting}
       />
@@ -178,7 +173,6 @@ export const Comments = ({ invitationId }: Props) => {
           onOpenChange={(open) => { if (!open) setProfileModal(null); }}
           userId={profileModal.userId}
           isHost={profileModal.isHost}
-          contained
         />
       )}
     </div>

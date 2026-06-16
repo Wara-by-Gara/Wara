@@ -1,16 +1,9 @@
 "use client";
 
-import { ParticipantProfileModal } from "@/components/organisms/ParticipantProfileModal";
-import type { ParticipantsResponse, RsvpStatus } from "@/lib/api/participants";
-import type { ParticipantRsvp } from "@/components/organisms/ParticipantItem";
+import { ParticipantProfileModal } from "@/components/domain";
+import type { ParticipantsResponse } from "@/lib/api/participants";
 
 export type ParticipantRow = ParticipantsResponse["participants"][number];
-
-const RSVP_TO_PARTICIPANT: Record<RsvpStatus, ParticipantRsvp> = {
-  attending: "attending",
-  undecided: "maybe",
-  absent: "declined",
-};
 
 interface Props {
   row: ParticipantRow | null;
@@ -25,10 +18,10 @@ export function ParticipantProfilePanel({ row, open, onOpenChange }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       userId={row.user.id}
-      name={row.user.name ?? row.user.nickname ?? '이름 없음'}
+      name={row.user.name ?? row.user.nickname ?? "이름 없음"}
       handle={row.user.nickname ?? undefined}
       avatarUrl={row.user.profileImageUrl ?? undefined}
-      status={RSVP_TO_PARTICIPANT[row.participant.rsvpStatus]}
+      status={row.participant.rsvpStatus}
       isHost={row.participant.memberRole === "HOST"}
       requestPreview={row.participant.note ?? undefined}
     />

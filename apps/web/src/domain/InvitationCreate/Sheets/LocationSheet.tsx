@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/primitives/Button";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { Button } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
 import { LocationSelector } from "@/components/molecules/LocationSelector";
 import type { Place } from "@/lib/api/locations";
 
@@ -37,8 +37,7 @@ export function LocationSheet({
   onUnknownChange,
 }: LocationSheetProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="모임 장소">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="모임 장소">
         <div className="flex flex-col gap-3 pt-1">
           <LocationSelector
             mode={unknown ? "unknown" : mode}
@@ -69,7 +68,6 @@ export function LocationSheet({
             완료
           </Button>
         </div>
-      </BottomSheetContent>
-    </BottomSheet>
+      </BottomSheet>
   );
 }

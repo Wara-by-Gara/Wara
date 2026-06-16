@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MenuItem } from '@/components/molecules/MenuItem';
+import { TopAppBar } from "@wara/ui";
+import { MenuItem } from "@wara/ui";
 import { Icon } from '@/components/icons';
-import { Divider } from '@/components/primitives/Divider';
+import { Divider } from "@wara/ui";
 import { ROUTES } from '@/constants/routes';
 import { useActiveFaq } from '@/hooks/useFaq';
 import { FaqListSkeleton } from '@/components/organisms/Skeleton';

@@ -1,6 +1,6 @@
 "use client";
 
-import { TopAppBar, type TopAppBarProps } from "@/components/molecules/TopAppBar";
+import { TopAppBar, type TopAppBarProps } from "@wara/ui";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { cn } from "@/lib/cn";
 import { HeaderGradient } from "./HeaderGradient";

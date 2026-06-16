@@ -30,6 +30,8 @@ interface CreateInvitationPayload {
   mainGifUrl?: string;
   templateId?: string;
   eventStartAt?: string;
+  rsvpDeadlineAt?: string | null;
+  accessPassword?: string;
   isMissionEnabled?: boolean;
   isPublic?: boolean;
   category?: string;
@@ -56,6 +58,9 @@ interface UpdateInvitationPayload {
   uploadedImageKey?: string | null;
   templateId?: string | null;
   eventStartAt?: string | null;
+  rsvpDeadlineAt?: string | null;
+  /** 빈 문자열/null = 비밀번호 제거, 값 = 설정/변경 */
+  accessPassword?: string | null;
   isMissionEnabled?: boolean;
   isPublic?: boolean;
   category?: string;
@@ -95,6 +100,8 @@ export interface Invitation {
   mainImageUrl: string | null;
   mainImageThumbnailUrl: string | null;
   eventStartAt: string | null;
+  rsvpDeadlineAt: string | null;
+  hasPassword: boolean;
   isPublic: boolean;
   isMissionEnabled: boolean;
   category?: string | null;
@@ -238,6 +245,25 @@ export function updateInvitationStatus(id: string, status: "active" | "closed"):
 
 export function deleteInvitation(id: string): Promise<void> {
   return apiDelete(`/invitations/${id}`);
+}
+
+/** 입장 비밀번호 검증 */
+export function verifyInvitationAccess(
+  id: string,
+  password: string,
+): Promise<{ valid: boolean }> {
+  return apiPost<{ valid: boolean }>(`/invitations/${id}/access/verify`, {
+    password,
+  });
+}
+
+/** 초대장 복제 → 새 초대장 반환 */
+export function cloneInvitation(id: string): Promise<CreatedInvitation> {
+  return apiPost<CreatedInvitation>(
+    `/invitations/${id}/clone`,
+    undefined,
+    { idempotencyKey: crypto.randomUUID() },
+  );
 }
 
 export function applyAiToMainImage(

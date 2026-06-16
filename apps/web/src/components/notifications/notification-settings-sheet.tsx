@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from '@/components/molecules/BottomSheet';
+import { BottomSheet } from '@wara/ui';
 
 interface Props {
   open: boolean;
@@ -50,8 +47,9 @@ export function NotificationSettingsSheet({ open, onClose, children }: Props) {
       onOpenChange={(isOpen) => {
         if (!isOpen) onClose();
       }}
+      title="알림 설정"
     >
-      <BottomSheetContent title="알림 설정">{children}</BottomSheetContent>
+      {children}
     </BottomSheet>
   );
 }

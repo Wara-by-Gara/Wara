@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Login, type LoginState } from '@/screens/Login';
 import type { SocialProvider } from '@/components/primitives/SocialLoginButton/providers';
-import { toast } from '@/components/molecules/Toast';
+import { toast } from '@wara/ui';
 import { API_BASE } from '@/lib/env';
 
 const AUTH_ERROR_STATE: Record<string, LoginState> = {

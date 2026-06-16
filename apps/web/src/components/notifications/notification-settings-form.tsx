@@ -1,7 +1,7 @@
 'use client';
 
 import { SettingsToggleListSkeleton } from '@/components/organisms/Skeleton';
-import { Switch } from '@/components/primitives/Switch';
+import { Switch } from "@wara/ui";
 import type { NotificationSettings } from '@/lib/api/notifications';
 
 export type NotificationSettingKey = keyof Pick<
@@ -10,7 +10,8 @@ export type NotificationSettingKey = keyof Pick<
   | 'isFeedback'
   | 'isInvitationDate'
   | 'isPhoto'
-  | 'isMission'
+  | 'isMessage'
+  | 'isParticipant'
   | 'isParticipantLocations'
   | 'isEventLocations'
 >;
@@ -20,15 +21,16 @@ const SETTINGS: {
   label: string;
   description: string;
 }[] = [
-  { key: 'isRemind', label: '리마인드', description: '행사 전 알림' },
+  { key: 'isRemind', label: '리마인드', description: '행사·투표 리마인드 알림' },
   { key: 'isFeedback', label: '피드백', description: '새 피드백 알림' },
+  { key: 'isParticipant', label: '참가자 참여', description: '참여·참석 여부 변경 알림' },
   {
     key: 'isInvitationDate',
     label: '날짜 변경',
     description: '행사 날짜 변경 알림',
   },
   { key: 'isPhoto', label: '사진', description: '새 사진 업로드 알림' },
-  { key: 'isMission', label: '미션', description: '미션 관련 알림' },
+  { key: 'isMessage', label: '메시지', description: '새 DM 메시지 알림' },
   {
     key: 'isParticipantLocations',
     label: '참가자 위치',

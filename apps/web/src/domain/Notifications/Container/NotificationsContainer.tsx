@@ -14,6 +14,7 @@ import {
   useUpdateNotificationSettings,
 } from '@/hooks/useNotifications';
 import { ROUTES } from '@/constants/routes';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { NotificationSettingsSheet } from '@/components/notifications/notification-settings-sheet';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
@@ -32,19 +33,43 @@ const API_TO_WEB_TYPE: Record<string, WebNotificationType> = {
   vote_reminder: 'eventReminder',
   vote_tied: 'eventReminder',
   vote_confirmed: 'eventReminder',
+  message: 'newComment',
 };
+
+// ai_complete는 content가 JSON(클라 파싱용)이라 피드 제목은 사람이 읽는 문구로 변환.
+function displayTitle(type: string, content: string): string {
+  if (type === 'ai_complete') {
+    try {
+      const parsed = JSON.parse(content) as { success?: boolean };
+      return parsed.success
+        ? 'AI 커버 이미지가 완성됐어요'
+        : 'AI 커버 이미지 생성에 실패했어요';
+    } catch {
+      return 'AI 커버 이미지 생성이 완료됐어요';
+    }
+  }
+  return content;
+}
 
 export default function NotificationsContainer() {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | null>(null);
+  const { enable: enablePush } = usePushSubscription();
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
       setPushPermission(Notification.permission);
     }
   }, []);
+
+  // 이미 권한을 허용한 사용자도 이 화면 진입 시 구독을 보장 (구독은 멱등).
+  useEffect(() => {
+    if (pushPermission === 'granted') {
+      void enablePush();
+    }
+  }, [pushPermission, enablePush]);
 
   const { data, isLoading, isError, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
@@ -60,7 +85,7 @@ export default function NotificationsContainer() {
   const mappedItems = items.map((n) => ({
     id: n.id,
     type: API_TO_WEB_TYPE[n.type] ?? 'invitationUpdated',
-    title: n.content,
+    title: displayTitle(n.type, n.content),
     time: new Date(n.createdAt).toLocaleString('ko-KR', {
       month: 'short',
       day: 'numeric',
@@ -75,6 +100,8 @@ export default function NotificationsContainer() {
     if (typeof Notification === 'undefined') return;
     const result = await Notification.requestPermission();
     setPushPermission(result);
+    // 허용 직후 바로 푸시 구독 생성 (granted effect와 별개로 즉시 반영)
+    if (result === 'granted') void enablePush();
   };
 
   const baseState: NotificationsState = isLoading
@@ -105,6 +132,12 @@ export default function NotificationsContainer() {
     }
 
     if (!notification.targetId) return;
+
+    // DM 알림 → 대화방으로 이동
+    if (notification.targetType === 'conversation') {
+      router.push(ROUTES.CHAT.ROOM(notification.targetId));
+      return;
+    }
 
     if (notification.targetType === 'invitation') {
       if (VOTE_NOTIFICATION_TYPES.has(notification.type)) {

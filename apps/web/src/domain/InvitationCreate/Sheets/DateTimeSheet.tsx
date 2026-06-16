@@ -1,8 +1,8 @@
 "use client";
 
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { Button } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
 import { DateTimeSelector } from "@/components/molecules/DateTimeSelector";
 import type { VoteDraft } from "@/screens/DateVote/DateVote";
 
@@ -40,8 +40,7 @@ export function DateTimeSheet({
   onVoteSetup,
 }: DateTimeSheetProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="모임 날짜·시간">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="모임 날짜·시간">
         <div className="flex flex-col gap-4 pt-1">
           <DateTimeSelector
             mode="date"
@@ -99,7 +98,6 @@ export function DateTimeSheet({
             완료
           </Button>
         </div>
-      </BottomSheetContent>
-    </BottomSheet>
+      </BottomSheet>
   );
 }

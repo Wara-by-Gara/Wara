@@ -1,9 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Avatar } from "@/components/primitives/Avatar";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { EmptyState } from "@/components/organisms/EmptyState";
+import { Avatar, TopAppBar, EmptyState } from "@wara/ui";
 import { mobileMainScroll, stickyMainTop } from "@/lib/mobilePageLayout";
 import { useHiddenFriends, useRestoreFriend } from "@/hooks/useFriends";
 
@@ -37,7 +35,7 @@ export const HiddenFriends = () => {
               const name = f.name ?? "이름 없음";
               return (
                 <li key={f.id} className="flex items-center gap-3 px-page py-3">
-                  <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
+                  <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} name={name} />
                   <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-text-primary">
                     {name}
                   </p>

@@ -96,7 +96,8 @@ export function useInvitationFeedback(invitationId: string) {
       const { liked } = await toggleFeedbackLike(invitationId, feedbackId);
       setLikedMap((prev) => new Map(prev).set(feedbackId, liked));
       setLikeCountMap((prev) => new Map(prev).set(feedbackId, newCount));
-      queryClient.invalidateQueries({ queryKey });
+      // 목록 전체 invalidate 제거 — 좋아요 상태는 로컬 맵으로 반영되며,
+      // refetch 시 아바타(next/image) 재요청으로 깜빡임 발생하던 문제 방지.
     } catch {
       setLikedMap((prev) => new Map(prev).set(feedbackId, currentLiked));
       setLikeCountMap((prev) => new Map(prev).set(feedbackId, currentCount));

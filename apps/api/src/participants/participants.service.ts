@@ -76,6 +76,9 @@ export class ParticipantsService {
     if (info.status === 'closed') {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
+    if (info.rsvpDeadlineAt && info.rsvpDeadlineAt.getTime() < Date.now()) {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
 
     const participant = await this.repository.create({ userId, invitationId, rsvpStatus: dto.rsvpStatus, note: dto.note });
 
@@ -116,6 +119,9 @@ export class ParticipantsService {
     // 호스트가 명시적으로 마감(status='closed')했을 때만 차단.
     // 이벤트 시작 시각 기준 자동 차단은 제거 (날짜만 정한 이벤트가 당일 종일 막히는 문제).
     if (info.status === 'closed') {
+      throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
+    }
+    if (info.rsvpDeadlineAt && info.rsvpDeadlineAt.getTime() < Date.now()) {
       throw new UnprocessableEntityException(ErrorCode.INVITATION_CLOSED);
     }
 
@@ -196,11 +202,48 @@ export class ParticipantsService {
     if (target.memberRole === 'HOST') {
       throw new BadRequestException(ErrorCode.PARTICIPANT_ALREADY_HOST);
     }
+    // 호스트는 RSVP를 변경할 수 없으므로 참석(attending) 상태인 참가자에게만 위임 가능
+    if (target.rsvpStatus !== 'attending') {
+      throw new BadRequestException(ErrorCode.PARTICIPANT_NOT_ATTENDING);
+    }
     await this.repository.transferHost(
       invitationId,
       viewer.id,
       target.id,
       target.userId,
     );
+  }
+
+  /** 공동 호스트 지정(true)/해제(false). 초대장 소유자는 해제 불가 */
+  async setCoHost(
+    invitationId: string,
+    targetParticipantId: string,
+    isCoHost: boolean,
+  ) {
+    const target = await this.repository.findById(targetParticipantId);
+    if (!target || target.invitationId !== invitationId) {
+      throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+    const info = await this.repository.findInvitationInfo(invitationId);
+    if (!info) {
+      throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+    }
+
+    if (isCoHost) {
+      if (target.memberRole === 'HOST') {
+        throw new BadRequestException(ErrorCode.PARTICIPANT_ALREADY_HOST);
+      }
+      // 호스트는 RSVP를 변경할 수 없으므로 참석(attending) 상태인 참가자만 공동 호스트 지정 가능
+      if (target.rsvpStatus !== 'attending') {
+        throw new BadRequestException(ErrorCode.PARTICIPANT_NOT_ATTENDING);
+      }
+      await this.repository.setMemberRole(target.id, 'HOST');
+    } else {
+      // 초대장 소유자(원 호스트)는 공동 호스트 해제 대상이 될 수 없음
+      if (target.userId === info.hostUserId) {
+        throw new BadRequestException(ErrorCode.OWNER_CANNOT_BE_DEMOTED);
+      }
+      await this.repository.setMemberRole(target.id, 'GUEST');
+    }
   }
 }

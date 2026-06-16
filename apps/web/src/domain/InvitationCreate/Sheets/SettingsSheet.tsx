@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { Switch } from "@/components/primitives/Switch";
-import { TextInput } from "@/components/primitives/TextInput";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { Button } from "@wara/ui";
+import { Switch } from "@wara/ui";
+import { Input } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
 import { getMissionTemplates } from "@/lib/api/missions";
 import {
   RSVP_PACKS,
@@ -128,8 +128,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
   const maxReached = selectedMissions.length >= MAX_MISSIONS;
 
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="설정">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="설정">
         <div className="flex flex-col gap-6 pt-1">
           {/* 미션 */}
           <div className="flex flex-col gap-3">
@@ -152,16 +151,16 @@ export function SettingsSheet(props: SettingsSheetProps) {
                 <section>
                   <p className="mb-2 text-[14px] font-semibold text-text-primary">직접 입력</p>
                   <div className="flex gap-2">
-                    <TextInput
+                    <Input
                       value={customInput}
                       onChange={(e) => onCustomInputChange(e.target.value)}
-                      placeholder="미션 내용을 입력하세요 (최대 200자)"
+                      placeholder="예: 단체 사진 찍기 · 건배사 하기 (최대 200자)"
                       maxLength={200}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onAddCustom(); } }}
                       className="flex-1"
                     />
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="md"
                       onClick={onAddCustom}
                       disabled={!customInput.trim() || maxReached}
@@ -280,7 +279,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
             {editingRsvp && (
               <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
                 <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
-                <TextInput
+                <Input
                   value={rsvpOptions[editingRsvp].label}
                   onChange={(e) => onRsvpOptionsChange((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}
                   placeholder={RSVP_DEFAULT_LABELS[editingRsvp]}
@@ -294,7 +293,6 @@ export function SettingsSheet(props: SettingsSheetProps) {
             완료
           </Button>
         </div>
-      </BottomSheetContent>
-    </BottomSheet>
+      </BottomSheet>
   );
 }

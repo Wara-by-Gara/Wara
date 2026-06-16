@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { BottomSheet } from "@wara/ui";
 import { DESIGN_BG_THEMES } from "@/domain/InvitationCreate/constants";
 
 export interface ThemeSheetProps {
@@ -13,9 +13,8 @@ export interface ThemeSheetProps {
 
 export function ThemeSheet({ open, onOpenChange, value, onChange }: ThemeSheetProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="배경" description="초대장 배경을 골라보세요">
-        <div className="flex flex-col gap-4 pt-1">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="배경" description="초대장 배경을 골라보세요">
+      <div className="flex flex-col gap-4 pt-1">
           <div className="grid grid-cols-5 gap-2">
             {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
               <button
@@ -38,8 +37,7 @@ export function ThemeSheet({ open, onOpenChange, value, onChange }: ThemeSheetPr
               </button>
             ))}
           </div>
-        </div>
-      </BottomSheetContent>
+      </div>
     </BottomSheet>
   );
 }

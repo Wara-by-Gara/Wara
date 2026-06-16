@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MenuItem } from '@/components/molecules/MenuItem';
-import { IconButton } from '@/components/primitives/IconButton';
+import { TopAppBar } from "@wara/ui";
+import { MenuItem } from "@wara/ui";
+import { IconButton } from "@wara/ui";
 import { Icon } from '@/components/icons';
-import { Button } from '@/components/primitives/Button';
-import { ConfirmModal } from '@/components/molecules/Modal';
+import { Button } from "@wara/ui";
+import { ConfirmDialog } from "@wara/ui";
 import { useAdminFaq, useCreateFaq, useUpdateFaq, useDeleteFaq } from '@/hooks/useFaq';
 import { ROUTES } from '@/constants/routes';
 import { FaqListSkeleton } from '@/components/organisms/Skeleton';
@@ -84,14 +84,14 @@ export default function AdminFaqPage() {
                       <IconButton
                         icon="edit"
                         size="sm"
-                        aria-label="FAQ 수정"
+                        label="FAQ 수정"
                         onClick={(e) => { e.stopPropagation(); setEditingId(item.id); }}
                       />
                       <IconButton
                         icon="trash"
                         variant="danger"
                         size="sm"
-                        aria-label="FAQ 삭제"
+                        label="FAQ 삭제"
                         onClick={(e) => { e.stopPropagation(); setDeleteTargetId(item.id); }}
                       />
                     </div>
@@ -122,12 +122,12 @@ export default function AdminFaqPage() {
       </main>
 
       {/* 삭제 확인 모달 */}
-      <ConfirmModal
+      <ConfirmDialog
         open={!!deleteTargetId}
         onOpenChange={(open) => !open && setDeleteTargetId(null)}
         title="이 항목을 삭제하시겠습니까?"
         confirmLabel="삭제"
-        confirmVariant="danger"
+        tone="danger"
         onConfirm={() => {
           if (deleteTargetId) {
             remove(deleteTargetId);

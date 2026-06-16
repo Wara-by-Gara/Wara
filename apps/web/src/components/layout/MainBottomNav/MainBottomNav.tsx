@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BottomNavigation, type BottomNavItem } from "@/components/molecules/BottomNavigation";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { BottomSheet } from "@wara/ui";
 import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { MAIN_BOTTOM_NAV_ITEMS, type MainBottomNavKey } from "@/lib/mainBottomNav";
 import { ROUTES } from "@/constants/routes";
@@ -118,20 +118,23 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
         />
       </div>
 
-      <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작해보세요">
-          <div className="flex flex-col gap-2.5 pt-2">
-            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
-              <SocialLoginButton
-                key={provider}
-                provider={provider}
-                loading={loadingProvider === provider}
-                disabled={loadingProvider !== null}
-                onClick={() => handleSocialLogin(provider)}
-              />
-            ))}
-          </div>
-        </BottomSheetContent>
+      <BottomSheet
+        open={loginSheetOpen}
+        onOpenChange={setLoginSheetOpen}
+        title="로그인"
+        description="소셜 계정으로 간편하게 시작해보세요"
+      >
+        <div className="flex flex-col gap-2.5 pt-2">
+          {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+            <SocialLoginButton
+              key={provider}
+              provider={provider}
+              loading={loadingProvider === provider}
+              disabled={loadingProvider !== null}
+              onClick={() => handleSocialLogin(provider)}
+            />
+          ))}
+        </div>
       </BottomSheet>
     </>
   );

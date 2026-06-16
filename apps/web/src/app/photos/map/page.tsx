@@ -1,6 +1,6 @@
 import { PhotoMapPage } from "@/domain/PhotoMap/PhotoMapPage";
 
-export const metadata = { title: "Place log" };
+export const metadata = { title: "Photo log" };
 
 export default async function PhotosMapPage({
   searchParams,

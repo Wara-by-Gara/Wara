@@ -1,12 +1,14 @@
 "use client";
 
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { Button } from "@/components/primitives/Button";
-import { TextInput } from "@/components/primitives/TextInput";
-import { FormField } from "@/components/molecules/FormField";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { ConfirmModal } from "@/components/molecules/Modal";
+import {
+  Icon,
+  Avatar,
+  Button,
+  Input,
+  FormField,
+  TopAppBar,
+  ConfirmDialog,
+} from "@wara/ui";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import { useState, useRef, useEffect } from "react";
 
@@ -71,7 +73,7 @@ export const ProfileEdit = ({
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
-          <Button variant="outline" onClick={onRetry}>다시 시도</Button>
+          <Button variant="secondary" onClick={onRetry}>다시 시도</Button>
         </main>
       </div>
     );
@@ -89,7 +91,7 @@ export const ProfileEdit = ({
             </span>
           </button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="min-h-11" onClick={() => fileInputRef.current?.click()}>사진 변경</Button>
+            <Button variant="secondary" size="sm" className="min-h-11" onClick={() => fileInputRef.current?.click()}>사진 변경</Button>
             {avatarUrl ? (
               <Button variant="text" size="sm" className="min-h-11" onClick={() => setLocalModalOpen(true)}>삭제</Button>
             ) : null}
@@ -113,12 +115,12 @@ export const ProfileEdit = ({
           error={state === "nicknameDuplicateError" ? "이미 사용 중인 닉네임이에요" : undefined}
           counter={{ current: (nickname ?? '').length, max: 20 }}
         >
-          <TextInput
+          <Input
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             maxLength={20}
             autoFocus={state === "nicknameFocus"}
-            error={state === "nicknameDuplicateError" ? "dup" : undefined}
+            invalid={state === "nicknameDuplicateError"}
           />
         </FormField>
       </main>
@@ -133,13 +135,13 @@ export const ProfileEdit = ({
         />
       </div>
 
-      <ConfirmModal contained
+      <ConfirmDialog
         open={modalOpen}
         onOpenChange={(open) => { if (!open) setLocalModalOpen(false); }}
         title="사진을 삭제할까요?"
         description="기본 이미지로 바뀝니다"
         confirmLabel="삭제"
-        confirmVariant="danger"
+        tone="danger"
         onConfirm={() => { onImageDelete?.(); setLocalModalOpen(false); }}
       />
     </div>

@@ -1,9 +1,6 @@
 "use client";
 
-import { Icon } from "@/components/icons";
-import type { IconName } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { ConfirmModal } from "@/components/molecules/Modal";
+import { Icon, type IconName, Button, ConfirmDialog } from "@wara/ui";
 import { useState } from "react";
 
 export type OnboardingStep =
@@ -105,8 +102,7 @@ export const Onboarding = ({
         </Button>
       </footer>
 
-      <ConfirmModal
-        contained
+      <ConfirmDialog
         open={skipModalOpen}
         onOpenChange={setSkipModalOpen}
         title="건너뛰시겠어요?"

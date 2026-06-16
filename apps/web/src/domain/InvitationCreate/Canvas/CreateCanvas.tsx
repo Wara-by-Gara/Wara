@@ -4,8 +4,8 @@ import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/icons';
 import type { IconName } from '@/components/icons';
-import { Textarea } from '@/components/primitives/Textarea';
-import { InvitationCover } from '@/components/organisms/InvitationCover';
+import { Textarea } from "@wara/ui";
+import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
 import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
