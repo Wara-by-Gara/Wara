@@ -28,6 +28,8 @@ export interface CommentInputBarProps {
   hasPendingPhoto?: boolean;
   /** 입력값 내 @멘션 토큰에 배경 하이라이트 표시 */
   highlightMentions?: boolean;
+  /** 입력 최대 길이 (서버 검증과 일치시킬 것) */
+  maxLength?: number;
 }
 
 export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
@@ -48,6 +50,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       onPhotoButtonClick,
       hasPendingPhoto = false,
       highlightMentions = false,
+      maxLength,
     },
     ref,
   ) {
@@ -177,6 +180,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 ref={inputRef}
                 type="text"
                 value={value}
+                maxLength={maxLength}
                 disabled={disabled}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setValue(e.target.value)

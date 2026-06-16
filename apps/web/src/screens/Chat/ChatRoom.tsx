@@ -28,8 +28,8 @@ import {
 import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
-// 메시지 최대 길이 - 백엔드 send-message DTO(.max(2000))와 일치시킨다.
-const MAX_MESSAGE = 2000;
+// 메시지 최대 길이 - 백엔드 send-message DTO(.max(1000))와 일치시킨다.
+const MAX_MESSAGE = 1000;
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("ko-KR", {

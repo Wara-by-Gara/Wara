@@ -327,6 +327,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
+                maxLength={500}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
                 value={inputValue}

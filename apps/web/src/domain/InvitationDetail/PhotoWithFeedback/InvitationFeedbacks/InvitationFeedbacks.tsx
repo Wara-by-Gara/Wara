@@ -506,6 +506,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
             />
             <CommentInputBar
               variant="default"
+              maxLength={500}
               placeholder={
                 replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'
               }

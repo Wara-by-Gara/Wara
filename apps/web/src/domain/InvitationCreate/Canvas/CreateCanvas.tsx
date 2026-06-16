@@ -314,7 +314,7 @@ export function CreateCanvas({
           onChange={(e) => onDescriptionChange(e.target.value)}
           placeholder="모임 소개를 적어주세요"
           rows={3}
-          maxLength={500}
+          maxLength={2000}
           className={cn(
             "border-border/50 bg-[#dadada2b] backdrop-blur",
             bgClass.includes('aurora') || bgClass.includes('starry')
