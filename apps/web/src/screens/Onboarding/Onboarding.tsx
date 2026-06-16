@@ -57,7 +57,7 @@ export const Onboarding = ({
     return (
       <main className="flex min-h-screen w-full max-w-md mx-auto flex-col items-center justify-center gap-3 bg-background px-page">
         <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-        <p className="text-[14px] text-text-secondary">홈으로 이동 중...</p>
+        <p className="text-[14px] text-text-muted">홈으로 이동 중...</p>
       </main>
     );
   }
@@ -70,7 +70,7 @@ export const Onboarding = ({
         <button
           type="button"
           onClick={() => setSkipModalOpen(true)}
-          className="text-[14px] text-text-tertiary"
+          className="text-[14px] text-text-disabled"
         >
           Skip
         </button>
@@ -81,10 +81,10 @@ export const Onboarding = ({
           <Icon name={permission.icon} size="xl" color="primary" decorative />
         </div>
         <div className="flex flex-col gap-2">
-          <h1 className="whitespace-pre-line text-[20px] font-bold text-text-primary">
+          <h1 className="whitespace-pre-line text-[20px] font-bold text-text">
             {permission.title}
           </h1>
-          <p className="text-[14px] text-text-secondary">{permission.description}</p>
+          <p className="text-[14px] text-text-muted">{permission.description}</p>
         </div>
       </section>
 

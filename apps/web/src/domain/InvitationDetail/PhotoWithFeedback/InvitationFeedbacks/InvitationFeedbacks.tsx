@@ -171,7 +171,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
     <div ref={sectionRef} id="comments" className="mt-4">
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>
+          <h3 className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>
             댓글 {commentCount}
           </h3>
           <button
@@ -391,7 +391,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                 type="button"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="mt-2 w-full py-2 text-center text-[13px] font-medium text-brand disabled:opacity-50"
+                className="mt-2 w-full py-2 text-center text-[13px] font-medium text-accent disabled:opacity-50"
               >
                 더보기
               </button>
@@ -419,7 +419,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                 <button
                   type="button"
                   onClick={() => setReplyingTo(null)}
-                  className="text-[13px] text-text-tertiary hover:text-text-secondary"
+                  className="text-[13px] text-text-disabled hover:text-text-muted"
                 >
                   취소
                 </button>
@@ -434,7 +434,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                 <button
                   type="button"
                   onClick={clearPendingFile}
-                  className="text-[12px] text-text-tertiary hover:text-text-secondary"
+                  className="text-[12px] text-text-disabled hover:text-text-muted"
                 >
                   취소
                 </button>
@@ -445,7 +445,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                 {isParticipantsLoading ? (
                   <MentionListSkeleton count={3} />
                 ) : filteredParticipants.length === 0 && !showAllOption ? (
-                  <p className="px-4 py-3 text-[13px] text-text-tertiary">
+                  <p className="px-4 py-3 text-[13px] text-text-disabled">
                     일치하는 참가자 없음
                   </p>
                 ) : (
@@ -460,8 +460,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                           }}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
                         >
-                          <span className="text-[14px] font-medium text-text-primary">@all</span>
-                          <span className="text-[12px] text-text-tertiary">전체 참여자</span>
+                          <span className="text-[14px] font-medium text-text">@all</span>
+                          <span className="text-[12px] text-text-disabled">전체 참여자</span>
                         </button>
                       </li>
                     )}
@@ -481,7 +481,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                             size="xs"
                             name={getCommentAuthorName(p.user)[0]}
                           />
-                          <span className="text-[14px] text-text-primary">
+                          <span className="text-[14px] text-text">
                             @{getCommentAuthorName(p.user)}
                           </span>
                         </button>

@@ -27,7 +27,7 @@ export function EffectSheet({ open, onOpenChange, value, onChange }: EffectSheet
               )}
             >
               <span className="text-[24px] leading-none">{emoji}</span>
-              <span className={cn("text-[12px]", value === id ? "font-semibold text-primary" : "text-text-secondary")}>
+              <span className={cn("text-[12px]", value === id ? "font-semibold text-primary" : "text-text-muted")}>
                 {label}
               </span>
             </button>

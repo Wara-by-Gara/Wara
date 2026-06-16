@@ -69,13 +69,13 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="GIF 검색..."
-          className="flex-1 rounded-full bg-gray-100 px-4 py-2 text-[14px] text-text-primary placeholder:text-text-tertiary outline-none"
+          className="flex-1 rounded-full bg-gray-100 px-4 py-2 text-[14px] text-text placeholder:text-text-disabled outline-none"
           autoFocus
         />
         <button
           type="button"
           onClick={onClose}
-          className="text-sm text-text-secondary px-2 py-1"
+          className="text-sm text-text-muted px-2 py-1"
         >
           닫기
         </button>
@@ -120,7 +120,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
           <button
             type="button"
             onClick={() => load(currentQuery.current, page + 1, true)}
-            className="w-full text-sm text-text-secondary py-3"
+            className="w-full text-sm text-text-muted py-3"
           >
             더 보기
           </button>

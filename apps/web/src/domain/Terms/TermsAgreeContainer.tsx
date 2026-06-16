@@ -40,7 +40,7 @@ function TermItem({
         <span className="flex-1 text-sm">
           <span
             className={`mr-1 text-xs font-medium ${
-              term.isRequired ? 'text-danger' : 'text-text-tertiary'
+              term.isRequired ? 'text-danger' : 'text-text-disabled'
             }`}
           >
             {term.isRequired ? '[필수]' : '[선택]'}
@@ -53,13 +53,13 @@ function TermItem({
             e.preventDefault();
             setExpanded((v) => !v);
           }}
-          className="text-xs text-text-tertiary hover:text-text-secondary shrink-0"
+          className="text-xs text-text-disabled hover:text-text-muted shrink-0"
         >
           {expanded ? '닫기' : '보기'}
         </button>
       </label>
       {expanded && (
-        <div className="px-4 py-3 border-t border-border bg-gray-50 text-[11.5px] leading-relaxed text-text-secondary max-h-64 overflow-y-auto">
+        <div className="px-4 py-3 border-t border-border bg-gray-50 text-[11.5px] leading-relaxed text-text-muted max-h-64 overflow-y-auto">
           <TermContent content={term.content} variant="compact" />
         </div>
       )}
@@ -143,11 +143,11 @@ export function TermsAgreeContainer() {
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pt-8 pb-6">
       <div className="flex-1">
         <h1 className="text-xl font-bold mb-1">서비스 이용약관 동의</h1>
-        <p className="text-sm text-text-secondary mb-6">
+        <p className="text-sm text-text-muted mb-6">
           서비스 이용을 위해 아래 약관에 동의해주세요.
         </p>
 
-        <label className="flex items-center gap-3 p-4 border border-border rounded-xs mb-3 cursor-pointer bg-background-soft">
+        <label className="flex items-center gap-3 p-4 border border-border rounded-xs mb-3 cursor-pointer bg-surface-muted">
           <input
             type="checkbox"
             checked={allChecked}
@@ -184,7 +184,7 @@ export function TermsAgreeContainer() {
           type="button"
           onClick={handleAgree}
           disabled={!isLoggedIn || !requiredAllChecked || isPending}
-          className="w-full py-3 bg-primary text-white text-sm font-medium rounded-xs disabled:opacity-50 hover:bg-primary-hover transition-colors"
+          className="w-full py-3 bg-primary text-white text-sm font-medium rounded-xs disabled:opacity-50 hover:bg-primary-strong transition-colors"
         >
           {isPending ? '처리 중...' : '동의하고 시작하기'}
         </button>

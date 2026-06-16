@@ -55,10 +55,10 @@ export default function BestNineModal({ invitationId, onClose }: Props) {
               name={invitation?.host?.name ?? invitation?.host?.nickname ?? undefined}
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-bold text-text-primary">
+              <p className="truncate text-[15px] font-bold text-text">
                 {invitation?.title ?? ''}
               </p>
-              <p className="mt-0.5 text-[13px] text-text-secondary">{eventDate}</p>
+              <p className="mt-0.5 text-[13px] text-text-muted">{eventDate}</p>
             </div>
             <div className="flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5">
               <Icon name="retro-camera" size="sm" color="primary" decorative />
@@ -80,7 +80,7 @@ export default function BestNineModal({ invitationId, onClose }: Props) {
         {isLoading ? (
           <AlbumGridSkeleton />
         ) : !hasPhotos ? (
-          <p className="text-center text-[14px] text-text-secondary">아직 추억이 없어요</p>
+          <p className="text-center text-[14px] text-text-muted">아직 추억이 없어요</p>
         ) : (
           <PhotoGrid columns={3}>
             {photos!.map((photo, idx) => (

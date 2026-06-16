@@ -68,14 +68,14 @@ export function VotePreviewCard({ pollData, resultsData, isHost, onClick }: Prop
     >
       <div className={
         isConfirmed
-          ? "flex size-10 shrink-0 items-center justify-center rounded-sm bg-background-soft"
+          ? "flex size-10 shrink-0 items-center justify-center rounded-sm bg-surface-muted"
           : "flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/15"
       }>
         <Icon name="calendar" size="md" color={isConfirmed ? "inactive" : "primary"} decorative />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-bold text-text-primary">일정 투표</p>
-        <p className="truncate text-[12px] text-text-secondary">{subtitle}</p>
+        <p className="text-[14px] font-bold text-text">일정 투표</p>
+        <p className="truncate text-[12px] text-text-muted">{subtitle}</p>
       </div>
       <Icon name="chevron-right" size="sm" color="inactive" decorative />
     </button>

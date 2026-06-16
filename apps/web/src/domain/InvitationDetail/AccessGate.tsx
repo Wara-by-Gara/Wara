@@ -45,8 +45,8 @@ export function AccessGate({ invitationId, onUnlock }: Props) {
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-page text-center">
         <Icon name="lock" size="xl" color="default" decorative />
         <div className="flex flex-col gap-1">
-          <p className="text-[18px] font-bold text-text-primary">비밀번호가 필요해요</p>
-          <p className="text-[14px] text-text-tertiary">호스트가 설정한 입장 비밀번호를 입력해주세요</p>
+          <p className="text-[18px] font-bold text-text">비밀번호가 필요해요</p>
+          <p className="text-[14px] text-text-disabled">호스트가 설정한 입장 비밀번호를 입력해주세요</p>
         </div>
         <div className="flex w-full flex-col gap-2">
           <Input

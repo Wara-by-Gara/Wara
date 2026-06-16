@@ -87,7 +87,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
         <div
           ref={ref}
           className={cn(
-            'flex w-full items-center justify-center gap-2 px-4 py-3 text-[14px] text-text-secondary',
+            'flex w-full items-center justify-center gap-2 px-4 py-3 text-[14px] text-text-muted',
             shellClass,
             edgeBorder,
             className,
@@ -142,7 +142,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
               type="button"
               onClick={onGifClear}
               aria-label="GIF 제거"
-              className="text-text-tertiary hover:text-text-secondary"
+              className="text-text-disabled hover:text-text-muted"
             >
               <Icon name="x" size="sm" color="currentColor" decorative />
             </button>
@@ -194,7 +194,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                     handleSubmit();
                   }
                 }}
-                className="relative z-10 w-full bg-transparent py-2.5 text-[15px] text-text-primary placeholder:text-text-tertiary outline-none disabled:cursor-not-allowed"
+                className="relative z-10 w-full bg-transparent py-2.5 text-[15px] text-text placeholder:text-text-disabled outline-none disabled:cursor-not-allowed"
               />
             </div>
             {onGifButtonClick ? (
@@ -203,7 +203,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 onClick={onGifButtonClick}
                 disabled={disabled}
                 aria-label="GIF 선택"
-                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-text-tertiary ring-1 ring-border hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-text-disabled ring-1 ring-border hover:text-text-muted disabled:cursor-not-allowed disabled:opacity-40"
               >
                 GIF
               </button>
@@ -214,7 +214,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 onClick={onPhotoButtonClick}
                 disabled={disabled}
                 aria-label="사진 첨부"
-                className="shrink-0 p-1 text-text-tertiary hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="shrink-0 p-1 text-text-disabled hover:text-text-muted disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Icon name="images" size="sm" color="currentColor" decorative />
               </button>

@@ -36,8 +36,8 @@ export interface MyPageProps {
 function StatItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-1 flex-col items-center gap-0.5">
-      <span className="text-[15px] font-bold text-text-primary">{value}</span>
-      <span className="text-[11px] text-text-tertiary">{label}</span>
+      <span className="text-[15px] font-bold text-text">{value}</span>
+      <span className="text-[11px] text-text-disabled">{label}</span>
     </div>
   );
 }
@@ -80,7 +80,7 @@ export const MyPage = ({
 
   if (state === "loading") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <StickyHeader title="마이페이지" />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
           <ProfileSkeleton />
@@ -107,7 +107,7 @@ export const MyPage = ({
     : null;
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <StickyHeader
         title="마이페이지"
         rightSlot={
@@ -115,7 +115,7 @@ export const MyPage = ({
             type="button"
             aria-label="설정"
             onClick={onSettings}
-            className="inline-flex size-11 items-center justify-center text-text-secondary"
+            className="inline-flex size-11 items-center justify-center text-text-muted"
           >
             <Icon name="settings" size="lg" color="currentColor" decorative />
           </button>
@@ -145,11 +145,11 @@ export const MyPage = ({
                 </button>
               </div>
               <div className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-[18px] font-bold text-text-primary">
+                <span className="text-[18px] font-bold text-text">
                   {user.name ?? user.nickname}
                 </span>
                 {user.nickname && (
-                  <p className="text-[13px] text-text-tertiary">@{user.nickname}</p>
+                  <p className="text-[13px] text-text-disabled">@{user.nickname}</p>
                 )}
               </div>
             </div>
@@ -167,7 +167,7 @@ export const MyPage = ({
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">✨</span>
-                <span className="text-[14px] font-bold text-text-primary">랜덤 추억 모임</span>
+                <span className="text-[14px] font-bold text-text">랜덤 추억 모임</span>
               </div>
               {recentInvitations.length > 1 && (
                 <button
@@ -178,7 +178,7 @@ export const MyPage = ({
                     if (next >= cur) next += 1;
                     setMemoryIndex(next);
                   }}
-                  className="flex items-center gap-1 text-[12px] font-medium text-text-tertiary active:opacity-60"
+                  className="flex items-center gap-1 text-[12px] font-medium text-text-disabled active:opacity-60"
                 >
                   <Icon name="rotate-cw" size="xs" color="inactive" decorative />
                   다른 추억 보기
@@ -190,7 +190,7 @@ export const MyPage = ({
               <button
                 type="button"
                 onClick={() => onInvitationClick?.(memory.id)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-background-soft p-3 text-left ring-1 ring-border active:opacity-80"
+                className="flex w-full items-center gap-3 rounded-2xl bg-surface-muted p-3 text-left ring-1 ring-border active:opacity-80"
               >
                 {memory.imageUrl && (
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-xl">
@@ -204,16 +204,16 @@ export const MyPage = ({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-bold text-text-primary">{memory.title}</p>
+                  <p className="truncate text-[14px] font-bold text-text">{memory.title}</p>
                   <div className="mt-1 flex items-center gap-1">
                     <Icon name="calendar" size="xs" color="inactive" decorative />
-                    <span className="text-[11px] text-text-tertiary">{memory.date}</span>
+                    <span className="text-[11px] text-text-disabled">{memory.date}</span>
                   </div>
                 </div>
                 <Icon name="chevron-right" size="sm" color="inactive" decorative />
               </button>
             ) : (
-              <p className="py-4 text-center text-[13px] text-text-tertiary">추억 모임이 없어요</p>
+              <p className="py-4 text-center text-[13px] text-text-disabled">추억 모임이 없어요</p>
             )}
           </div>
 
@@ -222,12 +222,12 @@ export const MyPage = ({
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">📍</span>
-                <span className="text-[14px] font-bold text-text-primary">Photo log</span>
+                <span className="text-[14px] font-bold text-text">Photo log</span>
               </div>
               <button
                 type="button"
                 onClick={() => onPhotoMap?.(memory?.id)}
-                className="flex items-center gap-0.5 text-[12px] font-medium text-text-tertiary active:opacity-60"
+                className="flex items-center gap-0.5 text-[12px] font-medium text-text-disabled active:opacity-60"
               >
                 자세히 보기
                 <Icon name="external-link" size="xs" color="inactive" decorative />

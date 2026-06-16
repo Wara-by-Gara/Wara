@@ -195,10 +195,10 @@ function PlaceLogMap({ onSelect }: { onSelect: (p: PlacePhoto) => void }) {
         <div className="relative size-5 shrink-0 overflow-hidden rounded-md">
           <Image src={MEETING.imageUrl} alt={MEETING.title} fill className="object-cover" />
         </div>
-        <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text-primary">
+        <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text">
           {MEETING.title}
         </span>
-        <span className="shrink-0 text-[11px] text-text-tertiary">
+        <span className="shrink-0 text-[11px] text-text-disabled">
           사진 {PLACE_PHOTOS.length}장
         </span>
       </div>
@@ -229,7 +229,7 @@ function PlaceLogMap({ onSelect }: { onSelect: (p: PlacePhoto) => void }) {
               <Image src={photo.thumb} alt={photo.caption} fill className="object-cover" sizes="52px" />
             </div>
             <div className="h-1.5 w-0.5 bg-white/80" />
-            <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-secondary shadow-sm">
+            <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-muted shadow-sm">
               {photo.caption}
             </div>
           </button>
@@ -265,17 +265,17 @@ function PlaceLogPhotoList({ onSelect }: { onSelect: (p: PlacePhoto) => void }) 
 
           {/* 하단 정보 */}
           <div className="p-2.5">
-            <p className="truncate text-left text-[12px] font-bold text-text-primary">
+            <p className="truncate text-left text-[12px] font-bold text-text">
               {photo.caption}
             </p>
             <div className="mt-0.5 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-1">
                 <Icon name="map-pin" size="xs" color="inactive" decorative />
-                <p className="truncate text-[10px] text-text-tertiary">{photo.takenAt.split("·")[1]?.trim()}</p>
+                <p className="truncate text-[10px] text-text-disabled">{photo.takenAt.split("·")[1]?.trim()}</p>
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
                 <Icon name="heart" size="xs" color="inactive" decorative />
-                <span className="text-[10px] text-text-tertiary">{photo.likeCount}</span>
+                <span className="text-[10px] text-text-disabled">{photo.likeCount}</span>
               </div>
             </div>
           </div>
@@ -300,15 +300,15 @@ function PlaceLogView({ initialPhotoId }: PlaceLogViewProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<PlacePhoto | null>(initial);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-surface-muted">
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
         <button type="button" aria-label="뒤로가기" className="flex size-9 items-center justify-center">
           <Icon name="chevron-left" size="md" color="default" decorative />
         </button>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[16px] font-bold text-text-primary">Photo log</span>
-          <span className="text-[11px] text-text-tertiary">{MEETING.title} · {MEETING.date}</span>
+          <span className="text-[16px] font-bold text-text">Photo log</span>
+          <span className="text-[11px] text-text-disabled">{MEETING.title} · {MEETING.date}</span>
         </div>
       </div>
 
@@ -316,7 +316,7 @@ function PlaceLogView({ initialPhotoId }: PlaceLogViewProps) {
       <main className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-3 p-4 pb-8">
           {/* 안내 텍스트 */}
-          <p className="text-[12px] text-text-tertiary">
+          <p className="text-[12px] text-text-disabled">
             모임에서 찍은 사진의 GPS 메타데이터를 기반으로 촬영 위치를 지도에 표시합니다.
             사진을 탭하면 확대해서 볼 수 있어요.
           </p>
@@ -327,7 +327,7 @@ function PlaceLogView({ initialPhotoId }: PlaceLogViewProps) {
           {/* 사진 목록 */}
           <div className="flex items-center gap-1.5 px-0.5 pt-1">
             <Icon name="images" size="sm" color="inactive" decorative />
-            <span className="text-[13px] font-bold text-text-primary">사진 목록</span>
+            <span className="text-[13px] font-bold text-text">사진 목록</span>
           </div>
           <PlaceLogPhotoList onSelect={setSelectedPhoto} />
         </div>

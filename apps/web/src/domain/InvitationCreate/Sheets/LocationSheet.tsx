@@ -58,8 +58,8 @@ export function LocationSheet({
                   className="flex flex-col gap-0.5 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border"
                   onClick={() => onSelectPlace(place)}
                 >
-                  <span className="text-[14px] font-semibold text-text-primary">{place.placeName}</span>
-                  <span className="text-[12px] text-text-tertiary">{place.roadAddress || place.address}</span>
+                  <span className="text-[14px] font-semibold text-text">{place.placeName}</span>
+                  <span className="text-[12px] text-text-disabled">{place.roadAddress || place.address}</span>
                 </button>
               ))}
             </div>

@@ -175,8 +175,8 @@ export function SignupContainer() {
           />
 
           <div className="flex w-full flex-col gap-1.5 text-center">
-            <h1 className="text-[22px] font-extrabold text-text-primary">프로필 설정</h1>
-            <p className="text-[14px] text-text-secondary">
+            <h1 className="text-[22px] font-extrabold text-text">프로필 설정</h1>
+            <p className="text-[14px] text-text-muted">
               나를 소개하는 내용을 입력해주세요.
             </p>
           </div>

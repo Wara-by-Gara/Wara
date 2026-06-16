@@ -117,7 +117,7 @@ function ProfileActions({
         aria-label={liked ? "좋아요 취소" : "좋아요"}
         className={cn(
           "inline-flex items-center gap-1 text-[13px] font-semibold transition-colors disabled:opacity-60",
-          liked ? "text-brand" : "text-white/70 hover:text-brand",
+          liked ? "text-accent" : "text-white/70 hover:text-accent",
         )}
       >
         {liked ? (

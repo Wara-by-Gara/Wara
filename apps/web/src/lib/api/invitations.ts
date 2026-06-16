@@ -77,6 +77,8 @@ interface UpdateInvitationPayload {
   rsvpMaybeLabel?: string;
   rsvpDeclinedEmoji?: string;
   rsvpDeclinedLabel?: string;
+  /** 낙관적 락: 최근 조회 시점의 updatedAt을 echo. mismatch 시 서버가 409 INVITATION_VERSION_CONFLICT 반환 */
+  expectedUpdatedAt?: string;
 }
 
 export interface CreatedInvitation {

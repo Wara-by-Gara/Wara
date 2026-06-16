@@ -96,7 +96,7 @@ export const FriendsIndexBar = ({ letters, activeSet, onJump }: Props) => {
             <span
               key={letter}
               className={`text-[14px] font-bold leading-[1.7] ${
-                activeSet.has(letter) ? "text-text-secondary" : "text-text-tertiary/40"
+                activeSet.has(letter) ? "text-text-muted" : "text-text-disabled/40"
               }`}
             >
               {letter}

@@ -58,10 +58,10 @@ export default function HomeContainer() {
 
         <div className="relative z-10 flex flex-1 flex-col justify-end px-page pb-[calc(env(safe-area-inset-bottom)+32px)]">
           <div className="mb-8">
-            <h1 className="text-[34px] font-extrabold leading-tight text-text-primary">
+            <h1 className="text-[34px] font-extrabold leading-tight text-text">
               초대장을<br />더 특별하게 <span className="text-primary">✦</span>
             </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-text-secondary">
+            <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
               쉽게 만들고, 바로 공유하고,<br />함께 추억을 기록하세요
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function HomeContainer() {
             >
               로그인하기
             </Button>
-            <p className="mt-1 text-center text-[12px] text-text-tertiary">
+            <p className="mt-1 text-center text-[12px] text-text-disabled">
               계정이 있으면 더 많은 기능을 이용할 수 있어요
             </p>
           </div>
@@ -106,7 +106,7 @@ export default function HomeContainer() {
               />
             ))}
           </div>
-          <p className="mt-4 text-center text-[12px] text-text-tertiary">
+          <p className="mt-4 text-center text-[12px] text-text-disabled">
             시작 시{" "}
             <Link href={ROUTES.TERMS.SERVICE} className="underline">
               이용약관
@@ -123,7 +123,7 @@ export default function HomeContainer() {
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <HomeHeader />
 
       <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>

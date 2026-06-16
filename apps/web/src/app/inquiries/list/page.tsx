@@ -25,7 +25,7 @@ const STATUS_LABELS: Record<InquiryStatus, { label: string; className: string }>
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -37,7 +37,7 @@ export default function InquiryListPage() {
   const { data, isLoading } = usePublicInquiries();
 
   return (
-    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <TopAppBar
         className="shrink-0"
         title="전체 문의"
@@ -49,7 +49,7 @@ export default function InquiryListPage() {
           {isLoading ? (
             <InquiryListSkeleton count={5} />
           ) : !data?.items.length ? (
-            <p className="py-6 text-center text-[13px] text-text-tertiary">
+            <p className="py-6 text-center text-[13px] text-text-disabled">
               접수된 문의가 없습니다
             </p>
           ) : (
@@ -63,10 +63,10 @@ export default function InquiryListPage() {
                   className="flex w-full flex-col gap-1 px-4 py-4 text-left hover:bg-gray-50 transition-colors duration-150"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[12px] text-text-tertiary">
+                    <span className="text-[12px] text-text-disabled">
                       {INQUIRY_TYPE_LABELS[inquiry.inquiryType]}
                     </span>
-                    <span className="text-[12px] text-text-tertiary">
+                    <span className="text-[12px] text-text-disabled">
                       {inquiry.authorNickname ?? '익명'}
                     </span>
                     <span
@@ -75,15 +75,15 @@ export default function InquiryListPage() {
                       {status.label}
                     </span>
                   </div>
-                  <p className="truncate text-[15px] font-semibold text-text-primary">
+                  <p className="truncate text-[15px] font-semibold text-text">
                     {inquiry.title}
                   </p>
-                  <p className="line-clamp-2 text-[13px] text-text-secondary">
+                  <p className="line-clamp-2 text-[13px] text-text-muted">
                     {inquiry.content}
                   </p>
                   <time
                     suppressHydrationWarning
-                    className="mt-1 text-[12px] text-text-tertiary"
+                    className="mt-1 text-[12px] text-text-disabled"
                   >
                     {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}
                   </time>

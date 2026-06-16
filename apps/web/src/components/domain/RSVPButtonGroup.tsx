@@ -156,7 +156,7 @@ export function RSVPButtonGroup({
         <p
           className={cn(
             "type-caption mt-3 text-center",
-            isDarkBg ? "text-white/85" : "text-text-secondary",
+            isDarkBg ? "text-white/85" : "text-text-muted",
           )}
         >
           {helperText}

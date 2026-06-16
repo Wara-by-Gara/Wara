@@ -12,7 +12,7 @@ export const HiddenFriends = () => {
   const friends = data?.friends ?? [];
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted">
       <TopAppBar
         className="absolute inset-x-0 top-0 z-30"
         title="삭제한 친구"
@@ -20,7 +20,7 @@ export const HiddenFriends = () => {
       />
       <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
         {isLoading ? (
-          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중…</p>
+          <p className="py-10 text-center text-[14px] text-text-disabled">불러오는 중…</p>
         ) : friends.length === 0 ? (
           <div className="flex min-h-[60vh] flex-col items-center justify-center px-page">
             <EmptyState
@@ -36,14 +36,14 @@ export const HiddenFriends = () => {
               return (
                 <li key={f.id} className="flex items-center gap-3 px-page py-3">
                   <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} name={name} />
-                  <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-text-primary">
+                  <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-text">
                     {name}
                   </p>
                   <button
                     type="button"
                     onClick={() => restore.mutate(f.id)}
                     disabled={restore.isPending}
-                    className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[13px] font-bold text-text-primary active:bg-background-soft disabled:opacity-50"
+                    className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[13px] font-bold text-text active:bg-surface-muted disabled:opacity-50"
                   >
                     되돌리기
                   </button>

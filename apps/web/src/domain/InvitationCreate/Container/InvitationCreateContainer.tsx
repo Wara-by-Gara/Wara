@@ -119,7 +119,7 @@ function MissionTemplateSection({
 
   return (
     <section>
-      <p className="mb-2 text-[14px] font-semibold text-text-primary">
+      <p className="mb-2 text-[14px] font-semibold text-text">
         추천 미션
       </p>
       <div
@@ -142,7 +142,7 @@ function MissionTemplateSection({
                 isSelected
                   ? 'border-primary bg-primary-soft'
                   : disabled
-                    ? 'border-border bg-background-soft opacity-50'
+                    ? 'border-border bg-surface-muted opacity-50'
                     : 'border-border bg-surface hover:bg-gray-50 transition-colors duration-150',
               )}
             >
@@ -151,7 +151,7 @@ function MissionTemplateSection({
                   'flex-1 text-[14px]',
                   isSelected
                     ? 'font-semibold text-primary'
-                    : 'text-text-primary',
+                    : 'text-text',
                 )}
               >
                 {stripMissionNumber(t.content)}
@@ -242,6 +242,7 @@ export default function InvitationCreateContainer({
   const locationResultsRef = useRef<HTMLDivElement>(null);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [publishError, setPublishError] = useState(false);
+  const [publishConflict, setPublishConflict] = useState(false);
   const [, setVotePollError] = useState(false);
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [createdInvitationId, setCreatedInvitationId] = useState<string>("");
@@ -473,6 +474,9 @@ export default function InvitationCreateContainer({
       // 수정 모드
       if (editInvitation) {
         const updated = await updateInvitation(editInvitation.id, {
+          // 낙관적 락: 조회 시점의 updatedAt을 echo. 다른 세션이 먼저 수정했으면
+          // 서버가 409 INVITATION_VERSION_CONFLICT로 막아 덮어쓰기를 방지한다.
+          expectedUpdatedAt: editInvitation.updatedAt,
           title: form.title,
           description: form.description,
           ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
@@ -607,11 +611,43 @@ export default function InvitationCreateContainer({
       }
       setPublished(true);
     },
-    onError: () => setPublishError(true),
+    onError: (e) => {
+      // 낙관적 락 충돌: 다른 세션이 먼저 수정함. 최신 데이터를 재조회해(editInvitation.updatedAt 갱신)
+      // 다음 저장이 통과되도록 하고, 사용자에게 충돌을 안내한다.
+      if (
+        editInvitation &&
+        e instanceof Error &&
+        e.message === 'INVITATION_VERSION_CONFLICT'
+      ) {
+        setPublishConflict(true);
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.invitations.detail(editInvitation.id),
+        });
+        return;
+      }
+      setPublishError(true);
+    },
   });
 
-  const set = (patch: Partial<FormData>) =>
+  // 사용자가 폼을 한 번이라도 편집했는지. 이탈 경고(beforeunload·뒤로가기) 트리거에 사용.
+  // 프로그램적 초기화(수정 모드·로그인 복원·템플릿)는 setForm을 직접 써서 여기에 잡히지 않는다.
+  const touchedRef = useRef(false);
+  const set = (patch: Partial<FormData>) => {
+    touchedRef.current = true;
     setForm((f) => ({ ...f, ...patch }));
+  };
+
+  // 작성/수정 중 새로고침·탭 닫기·앱 종료 시 입력 유실 방지 (모바일 Safari swipe-away 포함).
+  // 인앱 뒤로가기 버튼은 아래 TopAppBar onBack에서 별도로 confirm 처리한다.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!touchedRef.current || published || isPending) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [published, isPending]);
 
   const uploadCoverBlob = useCallback(async (blob: Blob) => {
     const fileName = `main-${Date.now()}.webp`;
@@ -866,10 +902,10 @@ export default function InvitationCreateContainer({
         />
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="party-popper" size="xl" color="primary" decorative />
-          <p className="text-[20px] font-bold text-text-primary">
+          <p className="text-[20px] font-bold text-text">
             초대장이 만들어졌어요!
           </p>
-          <p className="text-[14px] text-text-secondary">
+          <p className="text-[14px] text-text-muted">
             친구들에게 공유해보세요
           </p>
           <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
@@ -919,7 +955,16 @@ export default function InvitationCreateContainer({
       <TopAppBar
         className="shrink-0"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
-        onBack={() => router.back()}
+        onBack={() => {
+          if (
+            touchedRef.current &&
+            !published &&
+            !isPending &&
+            !window.confirm('작성 중인 내용이 저장되지 않았어요. 나가시겠어요?')
+          )
+            return;
+          router.back();
+        }}
       />
 
       {/* WYSIWYG 캔버스 */}
@@ -1006,7 +1051,7 @@ export default function InvitationCreateContainer({
                       'rounded-full px-3 py-1 text-[13px] font-semibold transition-colors',
                       imageTab === 'upload'
                         ? 'bg-primary text-text-inverse'
-                        : 'bg-gray-100 text-text-secondary',
+                        : 'bg-gray-100 text-text-muted',
                     )}
                   >
                     이미지 업로드
@@ -1018,7 +1063,7 @@ export default function InvitationCreateContainer({
                       'rounded-full px-3 py-1 text-[13px] font-semibold transition-colors',
                       imageTab === 'gif'
                         ? 'bg-primary text-text-inverse'
-                        : 'bg-gray-100 text-text-secondary',
+                        : 'bg-gray-100 text-text-muted',
                     )}
                   >
                     GIF
@@ -1040,7 +1085,7 @@ export default function InvitationCreateContainer({
                     />
                     {cropSrc ? (
                       <div className="flex flex-col gap-3">
-                        <p className="text-[13px] text-text-secondary">
+                        <p className="text-[13px] text-text-muted">
                           사진 비율이 표시 범위를 벗어나요. 드래그·확대로
                           맞춰주세요.
                         </p>
@@ -1094,13 +1139,13 @@ export default function InvitationCreateContainer({
                           'flex aspect-3/2 w-full items-center justify-center rounded-lg border-2 border-dashed',
                           imageError
                             ? 'border-danger bg-danger-soft'
-                            : 'border-border-strong bg-background-soft',
+                            : 'border-border-strong bg-surface-muted',
                         )}
                         onClick={() => {
                           fileInputRef.current?.click();
                         }}
                       >
-                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                        <div className="flex flex-col items-center gap-2 text-text-disabled">
                           <Icon
                             name="image"
                             size="xl"
@@ -1186,11 +1231,11 @@ export default function InvitationCreateContainer({
                           'flex aspect-3/2 w-full items-center justify-center rounded-lg border-2 border-dashed',
                           imageError
                             ? 'border-danger bg-danger-soft'
-                            : 'border-border-strong bg-background-soft',
+                            : 'border-border-strong bg-surface-muted',
                         )}
                         onClick={() => setGifPickerOpen(true)}
                       >
-                        <div className="flex flex-col items-center gap-2 text-text-tertiary">
+                        <div className="flex flex-col items-center gap-2 text-text-disabled">
                           <span
                             className={cn(
                               'text-[28px] font-bold',
@@ -1293,10 +1338,10 @@ export default function InvitationCreateContainer({
                       />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-[15px] font-bold text-text-primary">
+                      <p className="text-[15px] font-bold text-text">
                         날짜 투표로 정해볼까요?
                       </p>
-                      <p className="text-[13px] leading-relaxed text-text-secondary">
+                      <p className="text-[13px] leading-relaxed text-text-muted">
                         여러 후보 날짜를 제시하고
                         <br />
                         참여자들이 가능한 날을 투표해요
@@ -1310,7 +1355,7 @@ export default function InvitationCreateContainer({
                       color="primary"
                       decorative
                     />
-                    <span className="text-[12px] text-text-secondary">
+                    <span className="text-[12px] text-text-muted">
                       최대 30개 날짜·시간 후보 등록
                     </span>
                   </div>
@@ -1321,7 +1366,7 @@ export default function InvitationCreateContainer({
                       color="primary"
                       decorative
                     />
-                    <span className="text-[12px] text-text-secondary">
+                    <span className="text-[12px] text-text-muted">
                       👍 🤔 👎 로 간편 응답, 결과 자동 집계
                     </span>
                   </div>
@@ -1333,7 +1378,7 @@ export default function InvitationCreateContainer({
                       <button
                         type="button"
                         onClick={() => setSubScreen('dateVoteSetup')}
-                        className="text-[12px] text-text-tertiary underline"
+                        className="text-[12px] text-text-disabled underline"
                       >
                         수정
                       </button>
@@ -1362,7 +1407,7 @@ export default function InvitationCreateContainer({
           hideTitle
         >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-[16px] font-bold text-text-primary">모임 장소</h2>
+              <h2 className="text-[16px] font-bold text-text">모임 장소</h2>
               <Switch
                 checked={locationUnknown}
                 onCheckedChange={(v) => {
@@ -1431,17 +1476,17 @@ export default function InvitationCreateContainer({
                       setLocationSheetOpen(false);
                     }}
                   >
-                    <span className="text-[14px] font-semibold text-text-primary">
+                    <span className="text-[14px] font-semibold text-text">
                       {place.placeName}
                     </span>
-                    <span className="text-[12px] text-text-tertiary">
+                    <span className="text-[12px] text-text-disabled">
                       {place.roadAddress || place.address}
                     </span>
                   </button>
                 ))}
                 {!locationHasMore &&
                   locationTotalCount > locationResults.length && (
-                    <p className="border-t border-border px-4 py-3 text-center text-[12px] text-text-tertiary">
+                    <p className="border-t border-border px-4 py-3 text-center text-[12px] text-text-disabled">
                       더 많은 결과가 있어요. 키워드를 더 구체적으로 입력해보세요
                     </p>
                   )}
@@ -1450,10 +1495,10 @@ export default function InvitationCreateContainer({
             {form.placeName && locationMode === 'selected' && (
               <>
                 <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3">
-                  <p className="text-[15px] font-semibold text-text-primary">
+                  <p className="text-[15px] font-semibold text-text">
                     {form.placeName}
                   </p>
-                  <p className="text-[13px] text-text-secondary">
+                  <p className="text-[13px] text-text-muted">
                     {form.address}
                   </p>
                 </div>
@@ -1495,24 +1540,24 @@ export default function InvitationCreateContainer({
                 rows={3}
               />
               <div className="flex flex-col gap-1">
-                <label className="text-[13px] font-medium text-text-secondary">
+                <label className="text-[13px] font-medium text-text-muted">
                   RSVP 응답 마감일 (선택)
                 </label>
                 <input
                   type="datetime-local"
                   value={form.rsvpDeadline}
                   onChange={(e) => set({ rsvpDeadline: e.target.value })}
-                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
+                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text"
                 />
-                <p className="text-[12px] text-text-tertiary">
+                <p className="text-[12px] text-text-disabled">
                   지나면 참석 응답을 받지 않아요. 비우면 마감 없음.
                 </p>
               </div>
               <div className="flex flex-col gap-2 rounded-md border border-border bg-surface px-4 py-3.5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[15px] font-semibold text-text-primary">입장 비밀번호</p>
-                    <p className="text-[13px] text-text-tertiary">설정하면 링크로 들어와도 비밀번호를 입력해야 열려요</p>
+                    <p className="text-[15px] font-semibold text-text">입장 비밀번호</p>
+                    <p className="text-[13px] text-text-disabled">설정하면 링크로 들어와도 비밀번호를 입력해야 열려요</p>
                   </div>
                   <Switch
                     checked={form.passwordEnabled}
@@ -1537,10 +1582,10 @@ export default function InvitationCreateContainer({
         {/* 공개/비공개 */}
         <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3.5">
           <div>
-            <p className="text-[15px] font-semibold text-text-primary">
+            <p className="text-[15px] font-semibold text-text">
               공개 초대장
             </p>
-            <p className="text-[13px] text-text-tertiary">
+            <p className="text-[13px] text-text-disabled">
               켜면 이벤트 추천에 노출돼요. 끄면 링크로만 볼 수 있어요
             </p>
           </div>
@@ -1559,10 +1604,10 @@ export default function InvitationCreateContainer({
             onClick={() => missionEnabled && setMissionSheetOpen(true)}
             className="text-left"
           >
-            <p className="text-[15px] font-semibold text-text-primary">
+            <p className="text-[15px] font-semibold text-text">
               미션 사용하기
             </p>
-            <p className="text-[13px] text-text-tertiary">
+            <p className="text-[13px] text-text-disabled">
               {missionEnabled
                 ? selectedMissions.length > 0
                   ? `미션 ${selectedMissions.length}개 선택됨 · 탭하여 편집`
@@ -1592,7 +1637,7 @@ export default function InvitationCreateContainer({
                   />
 
                   <section>
-                    <p className="mb-2 text-[14px] font-semibold text-text-primary">
+                    <p className="mb-2 text-[14px] font-semibold text-text">
                       직접 입력
                     </p>
                     <div className="flex gap-2">
@@ -1626,7 +1671,7 @@ export default function InvitationCreateContainer({
                   {selectedMissions.length > 0 && (
                     <section>
                       <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[14px] font-semibold text-text-primary">
+                        <p className="text-[14px] font-semibold text-text">
                           선택된 미션
                         </p>
                         <span
@@ -1634,7 +1679,7 @@ export default function InvitationCreateContainer({
                             'text-[13px]',
                             selectedMissions.length >= MAX_MISSIONS
                               ? 'text-danger'
-                              : 'text-text-tertiary',
+                              : 'text-text-disabled',
                           )}
                         >
                           {selectedMissions.length}/{MAX_MISSIONS}
@@ -1652,13 +1697,13 @@ export default function InvitationCreateContainer({
                               key={key}
                               className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3"
                             >
-                              <span className="flex-1 text-[14px] text-text-primary">
+                              <span className="flex-1 text-[14px] text-text">
                                 {stripMissionNumber(m.content)}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => removeMission(key)}
-                                className="shrink-0 text-text-tertiary hover:text-danger"
+                                className="shrink-0 text-text-disabled hover:text-danger"
                               >
                                 <Icon
                                   name="x"
@@ -1716,7 +1761,7 @@ export default function InvitationCreateContainer({
                       'text-[10px]',
                       designBgColor === cls
                         ? 'font-semibold text-primary'
-                        : 'text-text-tertiary',
+                        : 'text-text-disabled',
                     )}
                   >
                     {label}
@@ -1747,7 +1792,7 @@ export default function InvitationCreateContainer({
                       'text-[12px]',
                       selectedAnimation === id
                         ? 'font-semibold text-primary'
-                        : 'text-text-secondary',
+                        : 'text-text-muted',
                     )}
                   >
                     {label}
@@ -1778,7 +1823,7 @@ export default function InvitationCreateContainer({
                       {RSVP_PACKS.find((p) => p.id === selectedPackId)
                         ?.attending ?? '🎉'}
                     </span>
-                    <span className="text-[14px] font-semibold text-text-primary">
+                    <span className="text-[14px] font-semibold text-text">
                       {RSVP_PACKS.find((p) => p.id === selectedPackId)?.name ??
                         '기본'}
                     </span>
@@ -1830,7 +1875,7 @@ export default function InvitationCreateContainer({
                         <span className="text-[20px] leading-none">
                           {pack.attending}
                         </span>
-                        <span className="flex-1 text-[15px] font-semibold text-text-primary">
+                        <span className="flex-1 text-[15px] font-semibold text-text">
                           {pack.name}
                         </span>
                         {selectedPackId === pack.id && (
@@ -1872,7 +1917,7 @@ export default function InvitationCreateContainer({
                           'text-[13px]',
                           editingRsvp === type
                             ? 'font-semibold text-primary'
-                            : 'text-text-secondary',
+                            : 'text-text-muted',
                         )}
                       >
                         {rsvpOptions[type].label}
@@ -1884,7 +1929,7 @@ export default function InvitationCreateContainer({
 
               {editingRsvp && (
                 <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
-                  <p className="text-[13px] font-semibold text-text-secondary">
+                  <p className="text-[13px] font-semibold text-text-muted">
                     버튼 문구
                   </p>
                   <Input
@@ -1928,18 +1973,21 @@ export default function InvitationCreateContainer({
         }}
         title={editInvitation ? '변경사항을 저장할까요?' : '초대장을 만들까요?'}
         description={
-          publishError
-            ? editInvitation
-              ? '변경사항 저장에 실패했어요. 다시 시도해주세요.'
-              : '초대장 생성에 실패했어요. 다시 시도해주세요.'
-            : editInvitation
-              ? '변경된 내용이 참석자에게 알림으로 전달될 수 있어요'
-              : '초대장이 만들어지면 참석자 응답을 받을 수 있어요'
+          publishConflict
+            ? '다른 기기에서 먼저 수정됐어요. 최신 내용을 불러왔으니 다시 저장해주세요.'
+            : publishError
+              ? editInvitation
+                ? '변경사항 저장에 실패했어요. 다시 시도해주세요.'
+                : '초대장 생성에 실패했어요. 다시 시도해주세요.'
+              : editInvitation
+                ? '변경된 내용이 참석자에게 알림으로 전달될 수 있어요'
+                : '초대장이 만들어지면 참석자 응답을 받을 수 있어요'
         }
         confirmLabel={editInvitation ? '저장' : '만들기'}
         loading={isPending}
         onConfirm={() => {
           setPublishError(false);
+          setPublishConflict(false);
           publish();
         }}
       />
@@ -1969,7 +2017,7 @@ export default function InvitationCreateContainer({
                 },
                 google: {
                   label: 'Google로 시작하기',
-                  cls: 'border border-border bg-white text-text-primary',
+                  cls: 'border border-border bg-white text-text',
                   path: 'google',
                 },
               }[provider];

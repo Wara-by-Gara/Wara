@@ -21,13 +21,13 @@ export const ICON_SIZE_MAP: Record<Exclude<IconSize, number>, number> = {
 };
 
 export const ICON_COLOR_MAP: Record<IconColor, string> = {
-  default: "var(--color-icon-default)",
-  primary: "var(--color-icon-primary)",
-  inactive: "var(--color-icon-inactive)",
-  tertiary: "var(--color-icon-inactive)",
-  danger: "var(--color-icon-danger)",
+  default: "var(--color-text-muted)",
+  primary: "var(--color-text)",
+  inactive: "var(--color-text-disabled)",
+  tertiary: "var(--color-text-disabled)",
+  danger: "var(--color-danger)",
   success: "var(--color-success)",
-  inverse: "var(--color-icon-inverse)",
+  inverse: "var(--color-text-inverse)",
   currentColor: "currentColor",
 };
 

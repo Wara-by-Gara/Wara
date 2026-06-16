@@ -42,7 +42,7 @@ function MissionTemplateSection({
 
   return (
     <section>
-      <p className="mb-2 text-[14px] font-semibold text-text-primary">시스템 미션</p>
+      <p className="mb-2 text-[14px] font-semibold text-text">시스템 미션</p>
       <div className="flex flex-col gap-2">
         {missionTemplates.map((t) => {
           const isSelected = selectedMissions.some(
@@ -60,11 +60,11 @@ function MissionTemplateSection({
                 isSelected
                   ? "border-primary bg-primary-soft"
                   : disabled
-                  ? "border-border bg-background-soft opacity-50"
+                  ? "border-border bg-surface-muted opacity-50"
                   : "border-border bg-surface hover:bg-gray-50 transition-colors duration-150",
               )}
             >
-              <span className={cn("flex-1 text-[14px]", isSelected ? "font-semibold text-primary" : "text-text-primary")}>
+              <span className={cn("flex-1 text-[14px]", isSelected ? "font-semibold text-primary" : "text-text")}>
                 {t.content}
               </span>
               {isSelected && <Icon name="check" size="sm" color="primary" decorative />}
@@ -134,8 +134,8 @@ export function SettingsSheet(props: SettingsSheetProps) {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3.5">
               <div>
-                <p className="text-[15px] font-semibold text-text-primary">미션 사용하기</p>
-                <p className="text-[13px] text-text-tertiary">게스트에게 미션을 부여할 수 있어요</p>
+                <p className="text-[15px] font-semibold text-text">미션 사용하기</p>
+                <p className="text-[13px] text-text-disabled">게스트에게 미션을 부여할 수 있어요</p>
               </div>
               <Switch checked={missionEnabled} onCheckedChange={onMissionEnabledChange} />
             </div>
@@ -149,7 +149,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
                 />
 
                 <section>
-                  <p className="mb-2 text-[14px] font-semibold text-text-primary">직접 입력</p>
+                  <p className="mb-2 text-[14px] font-semibold text-text">직접 입력</p>
                   <div className="flex gap-2">
                     <Input
                       value={customInput}
@@ -173,8 +173,8 @@ export function SettingsSheet(props: SettingsSheetProps) {
                 {selectedMissions.length > 0 && (
                   <section>
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-[14px] font-semibold text-text-primary">선택된 미션</p>
-                      <span className={cn("text-[13px]", maxReached ? "text-danger" : "text-text-tertiary")}>
+                      <p className="text-[14px] font-semibold text-text">선택된 미션</p>
+                      <span className={cn("text-[13px]", maxReached ? "text-danger" : "text-text-disabled")}>
                         {selectedMissions.length}/{MAX_MISSIONS}
                       </span>
                     </div>
@@ -183,8 +183,8 @@ export function SettingsSheet(props: SettingsSheetProps) {
                         const key = m.type === "template" ? m.templateId : m.localId;
                         return (
                           <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
-                            <span className="flex-1 text-[14px] text-text-primary">{m.content}</span>
-                            <button type="button" onClick={() => onRemoveMission(key)} className="shrink-0 text-text-tertiary hover:text-danger">
+                            <span className="flex-1 text-[14px] text-text">{m.content}</span>
+                            <button type="button" onClick={() => onRemoveMission(key)} className="shrink-0 text-text-disabled hover:text-danger">
                               <Icon name="x" size="sm" color="currentColor" decorative />
                             </button>
                           </div>
@@ -203,7 +203,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
 
           {/* 참석 버튼 꾸미기 */}
           <div className="flex flex-col gap-3">
-            <p className="text-[15px] font-semibold text-text-primary">참석 버튼 꾸미기</p>
+            <p className="text-[15px] font-semibold text-text">참석 버튼 꾸미기</p>
 
             <div className="relative">
               {packDropdownOpen && (
@@ -218,7 +218,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
                   <span className="text-[20px] leading-none">
                     {RSVP_PACKS.find((p) => p.id === selectedPackId)?.attending ?? "🎉"}
                   </span>
-                  <span className="text-[14px] font-semibold text-text-primary">
+                  <span className="text-[14px] font-semibold text-text">
                     {RSVP_PACKS.find((p) => p.id === selectedPackId)?.name ?? "기본"}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
                       )}
                     >
                       <span className="text-[20px] leading-none">{pack.attending}</span>
-                      <span className="flex-1 text-[15px] font-semibold text-text-primary">{pack.name}</span>
+                      <span className="flex-1 text-[15px] font-semibold text-text">{pack.name}</span>
                       {selectedPackId === pack.id && <Icon name="check" size="sm" color="primary" decorative />}
                     </button>
                   ))}
@@ -269,7 +269,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
                   )}
                 >
                   <span className="text-[32px] leading-none">{rsvpOptions[type].emoji}</span>
-                  <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-secondary")}>
+                  <span className={cn("text-[13px]", editingRsvp === type ? "font-semibold text-primary" : "text-text-muted")}>
                     {rsvpOptions[type].label}
                   </span>
                 </button>
@@ -278,7 +278,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
 
             {editingRsvp && (
               <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
-                <p className="text-[13px] font-semibold text-text-secondary">버튼 문구</p>
+                <p className="text-[13px] font-semibold text-text-muted">버튼 문구</p>
                 <Input
                   value={rsvpOptions[editingRsvp].label}
                   onChange={(e) => onRsvpOptionsChange((prev) => ({ ...prev, [editingRsvp]: { ...prev[editingRsvp], label: e.target.value } }))}

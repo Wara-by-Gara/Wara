@@ -29,7 +29,7 @@ export function InvitationDetailHero({
           <h1
             className={cn(
               'line-clamp-2 break-words text-[28px] font-bold leading-[1.15] tracking-tight',
-              isDarkBg ? 'text-white' : 'text-text-primary',
+              isDarkBg ? 'text-white' : 'text-text',
               fontClass,
             )}
           >
@@ -38,8 +38,8 @@ export function InvitationDetailHero({
           {schedule ? (
             <p
               className={cn(
-                'text-[17px] leading-[1.35] text-text-secondary',
-                isDarkBg ? 'text-white' : 'text-text-secondary',
+                'text-[17px] leading-[1.35] text-text-muted',
+                isDarkBg ? 'text-white' : 'text-text-muted',
               )}
             >
               {schedule}

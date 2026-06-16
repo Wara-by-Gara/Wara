@@ -279,25 +279,25 @@ export const MapPage = ({
                   >
                     <Icon name="map-pin" size="sm" color="inactive" decorative />
                     <div className="min-w-0">
-                      <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
-                      <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
+                      <p className="truncate text-[14px] text-text">{r.placeName}</p>
+                      <p className="truncate text-[12px] text-text-muted">{r.address}</p>
                     </div>
                   </button>
                 </li>
               ))}
               {isLoadingMoreSearch && (
-                <li className="py-3 text-center text-[12px] text-text-tertiary">
+                <li className="py-3 text-center text-[12px] text-text-disabled">
                   불러오는 중...
                 </li>
               )}
               {searchCapReached && !isLoadingMoreSearch && (
-                <li className="py-3 text-center text-[12px] text-text-tertiary">
+                <li className="py-3 text-center text-[12px] text-text-disabled">
                   더 많은 결과가 있어요. 키워드를 더 구체적으로 입력해보세요
                 </li>
               )}
             </ul>
           ) : (
-            <p className="px-3 py-6 text-center text-[13px] text-text-tertiary">
+            <p className="px-3 py-6 text-center text-[13px] text-text-disabled">
               {state === "searchInitial" ? "최근 검색 기록이 없어요" : "검색 중..."}
             </p>
           )}

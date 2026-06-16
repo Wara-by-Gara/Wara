@@ -73,7 +73,7 @@ export const ListModal: Story = {
 export const Viewer: Story = {
   name: "PhotoViewer",
   render: () => (
-    <div className="relative mx-auto flex h-[720px] w-full max-w-[440px] items-center justify-center bg-background-soft">
+    <div className="relative mx-auto flex h-[720px] w-full max-w-[440px] items-center justify-center bg-surface-muted">
       <PhotoViewer
         open
         contained

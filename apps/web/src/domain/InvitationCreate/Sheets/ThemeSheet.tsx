@@ -31,7 +31,7 @@ export function ThemeSheet({ open, onOpenChange, value, onChange }: ThemeSheetPr
                     value === cls ? "border-primary" : "border-border",
                   )}
                 />
-                <span className={cn("text-[10px]", value === cls ? "font-semibold text-primary" : "text-text-tertiary")}>
+                <span className={cn("text-[10px]", value === cls ? "font-semibold text-primary" : "text-text-disabled")}>
                   {label}
                 </span>
               </button>
