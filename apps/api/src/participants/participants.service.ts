@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { type Participant } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
-import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
 import { S3Service } from '../s3/s3.service';
 import { LocationsService } from '../locations/locations.service';
@@ -26,7 +25,6 @@ const RSVP_STATUS_LABEL: Record<UpdateRsvpDto['rsvpStatus'], string> = {
 export class ParticipantsService {
   constructor(
     private readonly repository: ParticipantsRepository,
-    private readonly blocklistRepository: BlocklistRepository,
     private readonly s3Service: S3Service,
     private readonly locationsService: LocationsService,
     private readonly notificationsService: NotificationsService,
@@ -166,7 +164,16 @@ export class ParticipantsService {
 
     const isHostKick = viewer.memberRole === 'HOST' && viewer.id !== participantId;
 
-    await this.repository.hardDelete(participantId);
+    if (isHostKick) {
+      await this.repository.kickAndBlock(
+        participantId,
+        viewer.invitationId,
+        target.userId,
+        viewer.userId,
+      );
+    } else {
+      await this.repository.hardDelete(participantId);
+    }
 
     // 떠난 participant의 Redis GPS hash + arrived lock 정리 + 다른 클라이언트 marker 제거.
     // 미정리 시 24h TTL까지 stale 좌표 노출.
@@ -174,10 +181,6 @@ export class ParticipantsService {
       viewer.invitationId,
       participantId,
     );
-
-    if (isHostKick) {
-      await this.blocklistRepository.add(viewer.invitationId, target.userId, viewer.userId);
-    }
   }
 
   /** 호스트 권한 위임 — viewer(현재 HOST)가 target 참가자에게 HOST 이전 */

@@ -3,8 +3,6 @@
 import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
 import { useShareInvitation } from "@/hooks/useShareInvitation";
-import { useInvitation } from "@/hooks/useInvitations";
-import { API_ORIGIN } from "@/lib/env";
 
 interface Props {
   invitationId: string;
@@ -13,15 +11,8 @@ interface Props {
 }
 
 export default function ShareBottomSheet({ invitationId, open, onOpenChange }: Props) {
-  const { data: invitation } = useInvitation(invitationId);
-
-  const shareImageUrl =
-    invitation?.mainCoverType === "gif"
-      ? `${API_ORIGIN}/api/og-image?id=${invitationId}`
-      : (invitation?.mainImageThumbnailUrl ?? invitation?.mainImageUrl ?? undefined);
-
   const { copyLink, shareViaKakao, shareViaSms, shareViaInstagram, copied } =
-    useShareInvitation(invitationId, invitation?.title, invitation?.description, shareImageUrl);
+    useShareInvitation(invitationId);
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>

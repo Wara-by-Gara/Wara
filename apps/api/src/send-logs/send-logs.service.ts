@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from '../common/constants/error-codes';
 import { LinkEventsRepository } from './link-events.repository';
@@ -7,6 +7,8 @@ import type { CreateSendLogDto } from './dto/create-send-log.dto';
 
 @Injectable()
 export class SendLogsService {
+  private readonly logger = new Logger(SendLogsService.name);
+
   constructor(
     private readonly sendLogsRepository: SendLogsRepository,
     private readonly linkEventsRepository: LinkEventsRepository,
@@ -45,21 +47,29 @@ export class SendLogsService {
     const log = await this.sendLogsRepository.findById(logId);
     if (!log) return;
 
-    await this.linkEventsRepository.createEvent({
-      logId,
-      eventType: 'opened',
-      userId: null,
-    });
+    try {
+      await this.linkEventsRepository.createEvent({
+        logId,
+        eventType: 'opened',
+        userId: null,
+      });
+    } catch (err) {
+      this.logger.warn(`recordOpen 실패 (logId=${logId}): ${(err as Error).message}`);
+    }
   }
 
   async recordJoin(logId: string, userId: string) {
     const log = await this.sendLogsRepository.findById(logId);
     if (!log) return;
 
-    await this.linkEventsRepository.createEvent({
-      logId,
-      eventType: 'joined',
-      userId,
-    });
+    try {
+      await this.linkEventsRepository.createEvent({
+        logId,
+        eventType: 'joined',
+        userId,
+      });
+    } catch (err) {
+      this.logger.warn(`recordJoin 실패 (logId=${logId}, userId=${userId}): ${(err as Error).message}`);
+    }
   }
 }
