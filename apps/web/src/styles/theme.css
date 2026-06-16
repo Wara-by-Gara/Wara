@@ -1,0 +1,149 @@
+/* 레거시→신 토큰 미커버 자산: 팔레트·radius(2xl~4xl)·shadow·icon-size·spacing-page·디스플레이 폰트 */
+@theme {
+  /* ---------- Primitive: White / Black ---------- */
+  --color-white: #ffffff;
+  --color-black: #131517;
+
+  /* ---------- Primitive: Gray (Luma scale, Tailwind-compatible names) ---------- */
+  --color-gray-50: #f7f8f9;
+  --color-gray-100: #ebeced;
+  --color-gray-200: #dee0e2;
+  --color-gray-300: #d2d4d7;
+  --color-gray-400: #b3b5b7;
+  --color-gray-500: #939597;
+  --color-gray-600: #737577;
+  --color-gray-700: #535557;
+  --color-gray-800: #333537;
+  --color-gray-900: #212325;
+
+  /* ---------- Primitive: Cranberry (Luma brand color — replaces pink) ---------- */
+  --color-cranberry-5: #fef4f9;
+  --color-cranberry-10: #fde2ef;
+  --color-cranberry-20: #fcc6de;
+  --color-cranberry-30: #f98dbe;
+  --color-cranberry-40: #f6539d;
+  --color-cranberry-50: #f31a7c;
+  --color-cranberry-60: #d5176d;
+  --color-cranberry-70: #b6145d;
+  --color-cranberry-80: #98104e;
+  --color-cranberry-90: #790d3e;
+
+  /* ---------- Primitive: Red ---------- */
+  --color-red-50: #fff1f2;
+  --color-red-100: #ffe1e4;
+  --color-red-200: #ffc5ca;
+  --color-red-300: #ff9aa2;
+  --color-red-400: #ff6370;
+  --color-red-500: #f63b44;
+  --color-red-600: #dd3038;
+  --color-red-700: #b82028;
+
+  /* ---------- Primitive: Green ---------- */
+  --color-green-50: #ecfdf5;
+  --color-green-100: #d1fae5;
+  --color-green-200: #a7f3d0;
+  --color-green-300: #6ee7b7;
+  --color-green-400: #34d399;
+  --color-green-500: #10b981;
+  --color-green-600: #059669;
+  --color-green-700: #047857;
+
+  /* ---------- Primitive: Blue (replaces sky) ---------- */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+
+  /* ---------- Primitive: Yellow ---------- */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+
+  /* ---------- Primitive: Orange ---------- */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+
+  /* ---------- Primitive: Barney (Luma purple — estimated from style guide) ---------- */
+  --color-barney-10: #f3f0ff;
+  --color-barney-20: #e6d9fd;
+  --color-barney-30: #c9b5fc;
+  --color-barney-40: #a88af9;
+  --color-barney-50: #8b68f7;
+  --color-barney-60: #7356e2;
+  --color-barney-70: #5c42cc;
+  --color-barney-80: #4530b5;
+  --color-barney-90: #2f1e9e;
+
+  /* ---------- Radius (angular, tight corners) ---------- */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px; /* buttons, inputs */
+  --radius-lg: 8px; /* thumbnails, small controls */
+  --radius-xl: 10px; /* cards, secondary containers */
+  --radius-2xl: 12px;
+  --radius-3xl: 14px; /* hero images, modals, bottom sheets */
+  --radius-4xl: 16px; /* large poster */
+  --radius-full: 9999px;
+
+  /* ---------- Shadow (from Luma DevTools, light mode) ---------- */
+  --shadow-xs: 0 1px 4px rgba(0, 0, 0, 0.1);
+  --shadow-sm:
+    0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 7px rgba(0, 0, 0, 0.03),
+    0 3px 14px rgba(0, 0, 0, 0.04), 0 7px 29px rgba(0, 0, 0, 0.05),
+    0 20px 80px rgba(0, 0, 0, 0.06);
+  --shadow-md:
+    0 1.6px 3px rgba(0, 0, 0, 0.02), 0 4.2px 7px rgba(0, 0, 0, 0.03),
+    0 8px 14px rgba(0, 0, 0, 0.04), 0 17.5px 29px rgba(0, 0, 0, 0.05),
+    0 48px 80px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 3px 3px rgba(0, 0, 0, 0.03), 0 8px 7px rgba(0, 0, 0, 0.04),
+    0 17px 14px rgba(0, 0, 0, 0.05), 0 35px 29px rgba(0, 0, 0, 0.06),
+    0 96px 80px rgba(0, 0, 0, 0.07);
+  --shadow-xl:
+    0 4.5px 3px rgba(0, 0, 0, 0.04), 0 11.3px 7px rgba(0, 0, 0, 0.06),
+    0 23px 14px rgba(0, 0, 0, 0.08), 0 47.5px 29px rgba(0, 0, 0, 0.1),
+    0 130px 80px rgba(0, 0, 0, 0.14);
+
+  /* ---------- Icon Size ---------- */
+  --size-icon-xs: 12px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+  --size-icon-xl: 32px;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --spacing: 4px;
+  --spacing-page: 12px;
+
+  /* ---------- Font ---------- */
+  --font-sans:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple Color Emoji', Inter,
+    Roboto, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-mono:
+    'SF Mono', Menlo, Monaco, Consolas, 'Courier New', Courier, monospace;
+  --font-pretendard:
+    'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple Color Emoji',
+    sans-serif;
+  --font-elegant-serif: 'ElegantSerif', Georgia, serif;
+  --font-jiptokki:
+    'HsHouseRabbitBlack', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-partial-sans:
+    'PartialSans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-silla: 'SillaGothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-highteen:
+    'HighTeenChoiHyoryeong', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-dos: 'DosHandwriting', cursive, sans-serif;
+  --font-moonhalo: 'MoonHalo', -apple-system, BlinkMacSystemFont, sans-serif;
+}
