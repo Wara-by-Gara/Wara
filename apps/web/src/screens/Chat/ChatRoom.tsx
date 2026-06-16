@@ -139,7 +139,11 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setMenuTarget(null);
   };
   const handleReact = (emoji: ReactionEmoji) => {
-    if (menuTarget) reactMutation.mutate({ messageId: menuTarget.id, emoji });
+    if (menuTarget)
+      reactMutation.mutate(
+        { messageId: menuTarget.id, emoji },
+        { onError: () => toast.error("리액션을 변경하지 못했어요") },
+      );
     setMenuTarget(null);
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -213,6 +217,21 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [lastMessageId]);
+
+  // 키보드 등장 등으로 viewport가 줄면 최신 메시지가 가려질 수 있다.
+  // 이미 하단 근처를 보고 있을 때만 하단 고정 — 위로 스크롤해 과거를 보는 중이면 방해하지 않는다.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      if (nearBottom) el.scrollTop = el.scrollHeight;
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -506,10 +525,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                                 reactionLongPressed.current = false;
                                 return;
                               }
-                              reactMutation.mutate({
-                                messageId: m.id,
-                                emoji: r.emoji as ReactionEmoji,
-                              });
+                              reactMutation.mutate(
+                                { messageId: m.id, emoji: r.emoji as ReactionEmoji },
+                                { onError: () => toast.error("리액션을 변경하지 못했어요") },
+                              );
                             }}
                             className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-muted shadow-sm ring-1 active:opacity-70 ${
                               m.myReaction === r.emoji ? "ring-accent" : "ring-border"
