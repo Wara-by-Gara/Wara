@@ -13,7 +13,7 @@
     "generate": "tsx scripts/generate-css.ts",
     "build": "tsx scripts/generate-css.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test \"scripts/**/*.test.ts\""
+    "test": "tsx --test scripts/*.test.ts"
   },
   "devDependencies": {
     "@wara/tsconfig": "workspace:*",
