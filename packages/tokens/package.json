@@ -10,13 +10,14 @@
     "./css/tokens.css": "./css/tokens.css"
   },
   "scripts": {
-    "generate": "node scripts/generate-css.ts",
-    "build": "node scripts/generate-css.ts",
+    "generate": "tsx scripts/generate-css.ts",
+    "build": "tsx scripts/generate-css.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"scripts/**/*.test.ts\""
+    "test": "tsx --test \"scripts/**/*.test.ts\""
   },
   "devDependencies": {
     "@wara/tsconfig": "workspace:*",
+    "tsx": "^4.22.4",
     "typescript": "^5.7.0"
   }
 }

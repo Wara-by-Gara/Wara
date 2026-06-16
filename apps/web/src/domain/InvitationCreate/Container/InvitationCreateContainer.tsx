@@ -822,7 +822,8 @@ export default function InvitationCreateContainer({
       localStorage.setItem(
         'wara_invite_pending',
         JSON.stringify({
-          form,
+          // 비밀번호는 평문으로 로컬에 저장하지 않음 (로그인 후 재입력)
+          form: { ...form, accessPassword: '' },
           designBgColor,
           designFont,
           selectedAnimation,
@@ -1490,7 +1491,7 @@ export default function InvitationCreateContainer({
               <Textarea
                 value={form.parkingInfo}
                 onChange={(e) => set({ parkingInfo: e.target.value })}
-                placeholder="주차 안내"
+                placeholder="공지 사항 (예: 주차 안내, 준비물)"
                 rows={3}
               />
               <div className="flex flex-col gap-1">
