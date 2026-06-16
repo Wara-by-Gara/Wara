@@ -169,7 +169,7 @@ export function Meetings() {
                           : undefined,
                       )}
                       title={ev.title}
-                      dateText={formatInvitationEventDate(ev.eventStartAt)}
+                      dateText={formatInvitationEventDate(ev.eventStartAt, "날짜 미정")}
                       locationText={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
                       className="flex-1 min-w-0"

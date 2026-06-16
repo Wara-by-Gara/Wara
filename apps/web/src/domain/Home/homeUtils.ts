@@ -22,13 +22,16 @@ export function getUpcomingInvitations(
   invitations: Invitation[],
   limit = 3,
 ): InvitationListItem[] {
-  const now = Date.now();
+  // 오늘 0시 기준 — 시작 시각이 지난 '당일' 모임도 종일 '다가오는'에 유지 (간헐 누락 방지)
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const threshold = startOfToday.getTime();
   return invitations
     .filter(
       (inv) =>
         inv.eventStartAt &&
         inv.status !== "closed" &&
-        new Date(inv.eventStartAt).getTime() >= now,
+        new Date(inv.eventStartAt).getTime() >= threshold,
     )
     .sort(
       (a, b) =>
@@ -48,12 +51,16 @@ export function getUpcomingInvitations(
 }
 
 export function sortInvitationsByEventDate(invitations: Invitation[]): Invitation[] {
-  return [...invitations]
-    .filter((inv) => inv.eventStartAt && inv.status !== "closed")
+  const active = invitations.filter((inv) => inv.status !== "closed");
+  // 날짜 있는 모임은 시간순, 날짜 미정 모임은 캘린더에 못 올리므로 말미에 노출
+  const dated = active
+    .filter((inv) => inv.eventStartAt)
     .sort(
       (a, b) =>
         new Date(a.eventStartAt!).getTime() - new Date(b.eventStartAt!).getTime(),
     );
+  const undated = active.filter((inv) => !inv.eventStartAt);
+  return [...dated, ...undated];
 }
 
 export { mapInvitationsToListItems };

@@ -154,7 +154,7 @@ export function SettingsSheet(props: SettingsSheetProps) {
                     <Input
                       value={customInput}
                       onChange={(e) => onCustomInputChange(e.target.value)}
-                      placeholder="미션 내용을 입력하세요 (최대 200자)"
+                      placeholder="예: 단체 사진 찍기 · 건배사 하기 (최대 200자)"
                       maxLength={200}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onAddCustom(); } }}
                       className="flex-1"

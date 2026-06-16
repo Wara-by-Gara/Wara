@@ -24,7 +24,7 @@ export function InvitationOptions({
   const rows = [
     { label: "회비", value: fee },
     { label: "드레스코드", value: dressCode },
-    { label: "주차", value: parkingInfo },
+    { label: "공지 사항", value: parkingInfo },
   ].filter((r) => r.value?.trim());
 
   if (rows.length === 0) return null;

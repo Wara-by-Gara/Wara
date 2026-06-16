@@ -29,7 +29,13 @@ export function useUpdateMe() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: UpdateMeInput) => updateMe(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users.me() });
+      // 초대장 상세/목록/탐색의 host 정보는 users join(라이브)이라,
+      // 프로필(이름/사진) 변경 시 함께 무효화해야 호스트 표시가 갱신된다.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.all() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myList() });
+    },
   });
 }
 

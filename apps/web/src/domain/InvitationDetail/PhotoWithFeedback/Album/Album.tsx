@@ -84,24 +84,43 @@ export default function Album({
   const remaining = Math.max(totalForOverflow - preview.length, 0);
   const overflowLabel = `+${remaining}`;
 
+  // React Query photos 캐시(무한쿼리 pages[].rows[])의 해당 사진 liked/likeCount를 패치.
+  // 로컬 맵만 갱신하면 컴포넌트 리마운트 시 stale 캐시값이 보이다 새로고침 때 점프하므로
+  // 캐시도 함께 갱신해 단일 출처(서버값)로 수렴시킨다.
+  const patchPhotoCache = (photoId: string, liked: boolean, likeCount: number) => {
+    queryClient.setQueryData(
+      QUERY_KEYS.invitations.photos(invitationId),
+      (old: { pages: { rows: Photo[] }[]; pageParams: unknown[] } | undefined) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((pg) => ({
+            ...pg,
+            rows: pg.rows.map((p) =>
+              p.id === photoId ? { ...p, liked, likeCount } : p,
+            ),
+          })),
+        };
+      },
+    );
+  };
+
   const handleLikeChange = (photoId: string, liked: boolean, likeCount: number) => {
     setLikedMap((prev) => new Map(prev).set(photoId, liked));
     setLikeCountMap((prev) => new Map(prev).set(photoId, likeCount));
+    patchPhotoCache(photoId, liked, likeCount);
   };
 
   const handlePhotoLike = async (photoId: string) => {
     const currentLiked = likedMap.has(photoId) ? likedMap.get(photoId)! : (photos.find((p) => p.id === photoId)?.liked ?? false);
     const currentCount = likeCountMap.get(photoId) ?? photos.find((p) => p.id === photoId)?.likeCount ?? 0;
     const newLiked = !currentLiked;
-    setLikedMap((prev) => new Map(prev).set(photoId, newLiked));
-    setLikeCountMap((prev) => new Map(prev).set(photoId, newLiked ? currentCount + 1 : currentCount - 1));
+    handleLikeChange(photoId, newLiked, newLiked ? currentCount + 1 : currentCount - 1);
     try {
       const result = await togglePhotoLike(invitationId, photoId);
-      setLikedMap((prev) => new Map(prev).set(photoId, result.liked));
-      setLikeCountMap((prev) => new Map(prev).set(photoId, result.likeCount));
+      handleLikeChange(photoId, result.liked, result.likeCount);
     } catch {
-      setLikedMap((prev) => new Map(prev).set(photoId, currentLiked));
-      setLikeCountMap((prev) => new Map(prev).set(photoId, currentCount));
+      handleLikeChange(photoId, currentLiked, currentCount);
     }
   };
 

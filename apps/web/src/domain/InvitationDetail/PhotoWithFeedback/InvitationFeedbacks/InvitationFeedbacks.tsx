@@ -246,8 +246,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           onChange={handleFileSelect}
         />
         <CommentInputBar
-          variant="glass"
-          className="border-t-0"
+          variant="default"
+          className="rounded-md border border-border"
           placeholder={
             replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'
           }

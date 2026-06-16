@@ -45,6 +45,7 @@ export interface SettingsProps {
   onHiddenFriends?: () => void;
   onHiddenInvitations?: () => void;
   onAccount?: () => void;
+  onCustomerSupport?: () => void;
 }
 
 const Section = ({
@@ -79,7 +80,7 @@ const ToggleItem = ({
   </MenuItem>
 );
 
-export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends, onHiddenInvitations, onAccount }: SettingsProps) => {
+export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends, onHiddenInvitations, onAccount, onCustomerSupport }: SettingsProps) => {
   const [inquiryDone, setInquiryDone] = useState(screen === 'inquiryComplete');
 
   if (screen === 'main') {
@@ -267,7 +268,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           <Section title="지원">
             <MenuItem
               leftIcon="help-circle"
-              onClick={() => onNavigate?.('customerSupport')}
+              onClick={onCustomerSupport}
               rightSlot={
                 <Icon name="chevron-right" size="sm" color="inactive" decorative />
               }

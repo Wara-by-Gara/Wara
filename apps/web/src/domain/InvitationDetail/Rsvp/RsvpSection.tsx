@@ -35,6 +35,7 @@ export function RsvpSection({
           closed={closed}
           loading={loading}
           helperText={helperText}
+          isDarkBg={isDarkBg}
         />
       </div>
     </section>

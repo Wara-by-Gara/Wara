@@ -73,6 +73,7 @@ export default function SettingsContainer() {
       onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
       onHiddenInvitations={() => router.push(ROUTES.INVITATIONS.HIDDEN)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
+      onCustomerSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
     />
   );
 }
