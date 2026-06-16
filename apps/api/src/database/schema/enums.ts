@@ -3,6 +3,9 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 export const genderEnum = pgEnum('gender', ['female', 'male']);
 export const userRoleEnum = pgEnum('user_role', ['member', 'admin']);
 
+// 네이티브 푸시(Expo) 기기 플랫폼 — device_tokens.platform.
+export const devicePlatformEnum = pgEnum('device_platform', ['ios', 'android']);
+
 export const SOCIAL_PROVIDERS = ['google', 'kakao', 'naver', 'apple'] as const;
 export const socialProviderEnum = pgEnum('social_provider', [
   ...SOCIAL_PROVIDERS,
@@ -58,15 +61,18 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'vote_tied',
   'mention',
   'participant_joined',
+  'text_blast',
+  'message',
 ]);
 
-export const remindTypeEnum = pgEnum('remind_type', ['D+7', 'D+30', 'D+365']);
+export const remindTypeEnum = pgEnum('remind_type', ['D-1', 'D+7', 'D+30', 'D+365']);
 export const notificationTargetTypeEnum = pgEnum('notification_target_type', [
   'photo',
   'feedback',
   'invitation',
   'mission',
   'participantLocations',
+  'conversation',
 ]);
 
 export const mainCoverTypeEnum = pgEnum('main_cover_type', ['image', 'gif']);

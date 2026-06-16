@@ -25,6 +25,10 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
 import { ErrorCode } from '../common/constants/error-codes';
+import {
+  hashAccessPassword,
+  verifyAccessPassword,
+} from '../common/utils/access-password';
 import { InvitationPresignedUrlDto } from './dto/invitation-presigned-url.dto';
 import { ListPublicInvitationsDto } from './dto/list-public-invitations.dto';
 import { ListPublicMapInvitationsDto } from './dto/list-public-map-invitations.dto';
@@ -106,8 +110,11 @@ export class InvitationsService {
     mainGifUrl: string | null;
     [key: string]: unknown;
   }) {
+    // 비밀번호 해시는 절대 응답에 노출하지 않는다 → hasPassword 불리언으로만 노출
+    const { accessPasswordHash, ...rest } = invitation;
     return {
-      ...invitation,
+      ...rest,
+      hasPassword: !!accessPasswordHash,
       mainImageUrl: invitation.mainImageKey
         ? this.s3Service.getPublicUrl(invitation.mainImageKey)
         : null,
@@ -251,11 +258,15 @@ export class InvitationsService {
     const verified = !isGif && dto.mainImageKey
       ? await this.imageProcessing.verifyUpload(dto.mainImageKey)
       : null;
+    const { accessPassword, ...rest } = dto;
     const invitation = await this.repository.create(userId, {
-      ...dto,
+      ...rest,
       mainCoverType: isGif ? 'gif' : 'image',
       mainImageKey: isGif ? undefined : dto.mainImageKey,
       mainGifUrl: isGif ? dto.mainGifUrl : undefined,
+      accessPasswordHash: accessPassword
+        ? hashAccessPassword(accessPassword)
+        : undefined,
     });
     if (verified && dto.mainImageKey) {
       await this.enqueueMainImageThumbnail(
@@ -265,6 +276,24 @@ export class InvitationsService {
         verified.contentLength,
       );
     }
+    return this.toResponse(invitation);
+  }
+
+  /** 입장 비밀번호 검증. 비밀번호 미설정이면 항상 통과 */
+  async verifyAccess(
+    invitationId: string,
+    password: string,
+  ): Promise<{ valid: boolean }> {
+    const invitation = await this.repository.findById(invitationId);
+    if (!invitation) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
+    if (!invitation.accessPasswordHash) return { valid: true };
+    return { valid: verifyAccessPassword(password, invitation.accessPasswordHash) };
+  }
+
+  /** 초대장 복제 → 새 초대장 응답 반환 */
+  async clone(sourceId: string, userId: string) {
+    const invitation = await this.repository.clone(sourceId, userId);
+    if (!invitation) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
     return this.toResponse(invitation);
   }
 
@@ -319,9 +348,21 @@ export class InvitationsService {
       coverPatch.mainImageThumbnailKey = null;
     }
 
+    // accessPassword: undefined=변경없음 / 빈값·null=제거 / 값=설정·변경
+    const { accessPassword, ...updatableRest } = updatable;
+    const accessPasswordPatch =
+      accessPassword === undefined
+        ? {}
+        : {
+            accessPasswordHash: accessPassword
+              ? hashAccessPassword(accessPassword)
+              : null,
+          };
+
     const updated = await this.repository.update(id, {
-      ...updatable,
+      ...updatableRest,
       ...coverPatch,
+      ...accessPasswordPatch,
     });
     if (!updated) throw new NotFoundException(ErrorCode.INVITATION_NOT_FOUND);
 

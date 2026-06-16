@@ -11,6 +11,7 @@ import { ListFeedbacksDto } from './dto/list-feedbacks.dto';
 import { Participant } from '../database/schema';
 import { S3Service } from '../s3/s3.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { maskUser } from '../common/utils/mask-user';
 
 const DELETED_PLACEHOLDER = '삭제된 댓글입니다.';
 
@@ -27,21 +28,33 @@ export class FeedbacksService {
     return this.s3Service.getViewPresignedUrl(url);
   }
 
+  // 탈퇴 회원 마스킹(maskUser) + profileImageUrl presigned 변환을 함께 적용.
+  // 탈퇴자는 maskUser가 profileImageUrl을 null로 지우므로 presigned도 null이 된다.
+  private async resolveUser<
+    U extends {
+      profileImageUrl: string | null;
+      deletedAt?: Date | null;
+    },
+  >(user: U) {
+    const masked = maskUser(user);
+    return {
+      ...masked,
+      profileImageUrl: await this.resolveProfileImageUrl(masked.profileImageUrl),
+    };
+  }
+
   private async attachProfileImageUrls<
     T extends {
-      participant: { user: { profileImageUrl: string | null } };
-      replies?: Array<{ participant: { user: { profileImageUrl: string | null } } }>;
+      participant: { user: { profileImageUrl: string | null; deletedAt?: Date | null } };
+      replies?: Array<{ participant: { user: { profileImageUrl: string | null; deletedAt?: Date | null } } }>;
     },
-  >(rows: T[]): Promise<T[]> {
+  >(rows: T[]) {
     return Promise.all(
       rows.map(async (f) => ({
         ...f,
         participant: {
           ...f.participant,
-          user: {
-            ...f.participant.user,
-            profileImageUrl: await this.resolveProfileImageUrl(f.participant.user.profileImageUrl),
-          },
+          user: await this.resolveUser(f.participant.user),
         },
         replies: f.replies
           ? await Promise.all(
@@ -49,10 +62,7 @@ export class FeedbacksService {
                 ...r,
                 participant: {
                   ...r.participant,
-                  user: {
-                    ...r.participant.user,
-                    profileImageUrl: await this.resolveProfileImageUrl(r.participant.user.profileImageUrl),
-                  },
+                  user: await this.resolveUser(r.participant.user),
                 },
               })),
             )

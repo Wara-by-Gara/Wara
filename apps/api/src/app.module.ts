@@ -20,6 +20,9 @@ import { MissionsModule } from './missions/missions.module';
 import { PhotosModule } from './photos/photos.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PushModule } from './push/push.module';
+import { TextBlastsModule } from './text-blasts/text-blasts.module';
+import { QuestionnaireModule } from './questionnaire/questionnaire.module';
 import { ParticipantsExampleModule } from './participants_example/participants-example.module';
 import { SendLogsModule } from './send-logs/send-logs.module';
 import { S3Module } from './s3/s3.module';
@@ -81,6 +84,9 @@ import { LoggerModule } from './logger/logger.module';
     PhotosModule,
     FeedbacksModule,
     NotificationsModule,
+    PushModule,
+    TextBlastsModule,
+    QuestionnaireModule,
     InquiriesModule,
     S3Module,
     ParticipantsExampleModule,

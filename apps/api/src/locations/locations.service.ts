@@ -59,8 +59,49 @@ export class LocationsService {
     return location;
   }
 
-  async setEventLocation(invitationId: string, dto: SetEventLocationDto) {
-    return this.repository.upsertEventLocation(invitationId, dto);
+  async setEventLocation(
+    invitationId: string,
+    dto: SetEventLocationDto,
+    actorUserId: string,
+  ) {
+    const previous = await this.repository.findEventLocation(invitationId);
+    const result = await this.repository.upsertEventLocation(invitationId, dto);
+
+    // 최초 설정은 제외하고, 기존 장소가 실제로 '변경'된 경우에만 참가자에게 알림.
+    const changed =
+      !!previous &&
+      (previous.placeName !== dto.placeName ||
+        previous.lat !== dto.lat ||
+        previous.lng !== dto.lng);
+    if (changed) {
+      void this.notifyEventLocationChanged(invitationId, actorUserId, dto.placeName);
+    }
+
+    return result;
+  }
+
+  // 호스트(actor) 제외 전 참가자에게 행사 장소 변경 알림. fire-and-forget.
+  private async notifyEventLocationChanged(
+    invitationId: string,
+    actorUserId: string,
+    placeName: string,
+  ) {
+    const userIds = await this.repository.findAllParticipantUserIds(invitationId);
+    await Promise.all(
+      userIds
+        .filter((userId) => userId !== actorUserId)
+        .map((userId) =>
+          this.notifications.notify({
+            userId,
+            actorUserId,
+            type: 'eventLocations',
+            content: `행사 장소가 '${placeName}'(으)로 변경되었어요.`,
+            targetType: 'invitation',
+            targetId: invitationId,
+            invitationId,
+          }),
+        ),
+    );
   }
 
   async deleteEventLocation(invitationId: string) {
@@ -320,7 +361,7 @@ export class LocationsService {
           this.notifications.notify({
             userId,
             type: 'invitation_date',
-            content: `[${inv.title}] 모임이 곧 시작해요. 위치 공유를 위해 GPS 권한을 허용해주세요.`,
+            content: `[${inv.title}] 15분 뒤 모임이 시작돼요. 위치 공유를 켜고 출발 상황을 함께 확인해보세요.`,
             targetType: 'invitation',
             targetId: inv.id,
             invitationId: inv.id,

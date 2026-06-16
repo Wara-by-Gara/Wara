@@ -15,6 +15,7 @@ import { JoinInvitationSchema, JoinInvitationDto } from './dto/join-invitation.d
 import { UpdateRsvpSchema, UpdateRsvpDto } from './dto/update-rsvp.dto';
 import { UpdateHiddenSchema, UpdateHiddenDto } from './dto/update-hidden.dto';
 import { UpdateHostMemoSchema, UpdateHostMemoDto } from './dto/update-host-memo.dto';
+import { SetCoHostSchema, SetCoHostDto } from './dto/set-co-host.dto';
 import { ParticipantGuard } from '../common/guards/participant.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
@@ -99,6 +100,22 @@ export class ParticipantsController {
       invitationId,
       participantId,
       viewer,
+    );
+  }
+
+  /** 공동 호스트 지정/해제 — 호스트 전용 */
+  @Patch(':participantId/co-host')
+  @UseGuards(ParticipantGuard, HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  setCoHost(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('participantId', ParseUlidPipe) participantId: string,
+    @Body(new ZodValidationPipe(SetCoHostSchema)) dto: SetCoHostDto,
+  ) {
+    return this.participantsService.setCoHost(
+      invitationId,
+      participantId,
+      dto.isCoHost,
     );
   }
 
