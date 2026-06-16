@@ -205,10 +205,22 @@ export class PhotosRepository {
     return row ?? null;
   }
 
-  //좋아요 up
+  //좋아요 up (멱등): 이미 있으면 ON CONFLICT로 무시하고 카운트 증가도 건너뜀.
+  // 동시/중복 토글에도 likeCount가 정확하고 unique 위반 500이 발생하지 않는다.
   async createLike(photoId: string, participantId: string): Promise<number> {
     return this.db.transaction(async (tx) => {
-      await tx.insert(photoLikes).values({ photoId, participantId });
+      const inserted = await tx
+        .insert(photoLikes)
+        .values({ photoId, participantId })
+        .onConflictDoNothing()
+        .returning({ photoId: photoLikes.photoId });
+      if (inserted.length === 0) {
+        const [row] = await tx
+          .select({ likeCount: photos.likeCount })
+          .from(photos)
+          .where(eq(photos.id, photoId));
+        return row?.likeCount ?? 0;
+      }
       const [updated] = await tx
         .update(photos)
         .set({ likeCount: sql`${photos.likeCount}+1` })
@@ -218,17 +230,25 @@ export class PhotosRepository {
     });
   }
 
-  //좋아요 취소(삭제)
+  //좋아요 취소(삭제, 멱등): 실제로 삭제된 행이 있을 때만 카운트 감소.
   async deleteLike(photoId: string, participantId: string): Promise<number> {
     return this.db.transaction(async (tx) => {
-      await tx
+      const deleted = await tx
         .delete(photoLikes)
         .where(
           and(
             eq(photoLikes.photoId, photoId),
             eq(photoLikes.participantId, participantId),
           ),
-        );
+        )
+        .returning({ photoId: photoLikes.photoId });
+      if (deleted.length === 0) {
+        const [row] = await tx
+          .select({ likeCount: photos.likeCount })
+          .from(photos)
+          .where(eq(photos.id, photoId));
+        return row?.likeCount ?? 0;
+      }
       const [updated] = await tx
         .update(photos)
         //likeCount가 -1된 값을 주거나, 0을 반환 (count가 0보다 이하는 되지 않게)
