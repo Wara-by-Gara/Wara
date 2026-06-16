@@ -9,8 +9,10 @@ export function ServiceWorkerRegister() {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
       return;
     }
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // 등록 실패는 치명적이지 않음 — in-app 실시간 알림은 계속 동작.
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      // 등록 실패는 치명적이지 않음(in-app 실시간 알림은 계속 동작)지만,
+      // 무음 처리하면 웹푸시가 조용히 끊긴 원인을 추적할 수 없어 진단용으로 남긴다.
+      console.warn('[sw] registration failed', err);
     });
   }, []);
 
