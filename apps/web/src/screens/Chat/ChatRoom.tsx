@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon, TopAppBar, Modal, ConfirmDialog, BottomSheet, toast } from "@wara/ui";
 import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
@@ -36,6 +36,45 @@ function formatTime(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function isSameDay(a: string, b: string): boolean {
+  const x = new Date(a);
+  const y = new Date(b);
+  return (
+    x.getFullYear() === y.getFullYear() &&
+    x.getMonth() === y.getMonth() &&
+    x.getDate() === y.getDate()
+  );
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+}
+
+// 메시지 본문 내 URL을 클릭 가능한 링크로 변환
+function linkify(text: string): ReactNode {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="break-all underline underline-offset-2"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  );
 }
 
 export interface ChatRoomProps {
@@ -347,14 +386,27 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         ) : (
           <ul className="flex flex-col gap-2 py-3">
             {messages.map((m, i) => {
+              // 날짜가 바뀌는 첫 메시지 앞에 날짜 구분선 표시
+              const prev = messages[i - 1];
+              const dateDivider =
+                !prev || !isSameDay(prev.createdAt, m.createdAt) ? (
+                  <li className="my-2 flex justify-center">
+                    <span className="rounded-full bg-surface-muted px-3 py-1 text-[12px] text-text-disabled">
+                      {formatDate(m.createdAt)}
+                    </span>
+                  </li>
+                ) : null;
               // 시스템 메시지(입장/퇴장 안내) — 말풍선 없이 가운데 표시
               if (m.type === "system") {
                 return (
-                  <li key={m.id} className="my-1 flex justify-center">
-                    <span className="rounded-full bg-surface-muted px-3 py-1 text-[12px] text-text-disabled">
-                      {m.content}
-                    </span>
-                  </li>
+                  <Fragment key={m.id}>
+                    {dateDivider}
+                    <li className="my-1 flex justify-center">
+                      <span className="rounded-full bg-surface-muted px-3 py-1 text-[12px] text-text-disabled">
+                        {m.content}
+                      </span>
+                    </li>
+                  </Fragment>
                 );
               }
               const mine = m.senderId === myId;
@@ -377,8 +429,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   ? "rounded-tl-sm bg-surface text-text before:absolute before:-left-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-r-[7px] before:border-y-transparent before:border-r-surface before:content-['']"
                   : "rounded-bl-sm bg-surface text-text";
               return (
+                <Fragment key={m.id}>
+                {dateDivider}
                 <li
-                  key={m.id}
                   data-testid="chat-message"
                   data-message-id={m.id}
                   className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : "flex-row"}`}
@@ -485,7 +538,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                             </p>
                           </div>
                         )}
-                        {m.content}
+                        {linkify(m.content)}
                       </div>
                     )}
                       <div
@@ -542,6 +595,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     )}
                   </div>
                 </li>
+                </Fragment>
               );
             })}
           </ul>

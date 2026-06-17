@@ -67,9 +67,9 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "connectedSocial" || screen === "connectAdditional" || screen === "disconnectModal") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
         <section className="py-2">
           <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">연결된 소셜 계정</h2>
           <div className="divide-y divide-border bg-surface">

@@ -140,7 +140,7 @@ export function TermsAgreeContainer() {
   if (pendingRequired.length === 0) return null;
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pt-8 pb-6">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pt-8 pb-6 lg:max-w-2xl">
       <div className="flex-1">
         <h1 className="text-xl font-bold mb-1">서비스 이용약관 동의</h1>
         <p className="text-sm text-text-muted mb-6">

@@ -85,14 +85,14 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'main') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar
           className="shrink-0"
           title="설정"
           onBack={onBack}
           variant="solid"
         />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <Section title="알림">
             <MenuItem
               leftIcon="bell"
@@ -288,9 +288,9 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
     screen === 'marketingToggle'
   ) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <Section title="기본 알림">
             <ToggleItem
               icon="bell"
@@ -453,9 +453,9 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'customerSupport') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="고객센터" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <Section title="자주 묻는 질문">
             <MenuItem
               rightSlot={

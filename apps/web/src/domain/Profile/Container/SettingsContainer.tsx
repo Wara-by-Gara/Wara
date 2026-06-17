@@ -34,9 +34,9 @@ export default function SettingsContainer() {
     const term = terms?.find((t) => t.termType === termType && t.isActive);
 
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title={title} onBack={handleBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted whitespace-pre-wrap">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted whitespace-pre-wrap lg:mx-auto lg:w-full lg:max-w-2xl">
           {isTermsLoading ? (
             <TextContentSkeleton />
           ) : term ? (
@@ -51,9 +51,9 @@ export default function SettingsContainer() {
 
   if (screen === 'notification') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={handleBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <NotificationSettingsForm
             settings={notifSettings}
             isLoading={isLoading}

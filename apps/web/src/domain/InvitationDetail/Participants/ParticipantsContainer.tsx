@@ -169,7 +169,7 @@ export default function ParticipantsContainer() {
 
   return (
     <>
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <TopAppBar
         title="참석자"
         onBack={() => router.back()}
@@ -378,7 +378,7 @@ export default function ParticipantsContainer() {
           </button>
         </BottomSheet>
 
-      <div className="flex flex-col gap-4 px-page py-5">
+      <div className="flex flex-col gap-4 px-page py-5 lg:mx-auto lg:w-full lg:max-w-5xl">
         <ParticipantSummaryCard
           summary={{
             total: summary?.totalCount ?? 0,

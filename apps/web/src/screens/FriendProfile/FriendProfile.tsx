@@ -32,10 +32,10 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
 
   if (isLoading) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
         <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
-        <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
+        <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
           <FriendProfilePageSkeleton />
         </main>
       </div>
@@ -44,10 +44,10 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
 
   if (isError || !friend) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
         <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
-        <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
+        <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
           <p className="py-10 text-center text-text-disabled">친구 정보를 불러오지 못했어요</p>
         </main>
       </div>
@@ -57,14 +57,14 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
   const name = friend.name ?? "이름 없음";
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <HeaderGradient fixed />
       <TopAppBar
         variant="transparent"
         className="absolute inset-x-0 top-0 z-30 min-h-0 pt-2"
         onBack={() => router.back()}
       />
-      <main className={`relative z-10 ${mobileMainScroll}`}>
+      <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl`}>
         {/* 프로필 헤더 - 배경 투명으로 두어 상단 aura 그라데이션(HeaderGradient)이 비치게, 위 여백 축소 */}
         <section className="flex flex-col items-center gap-3 px-page pb-7 pt-14">
           <Avatar

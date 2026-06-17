@@ -24,9 +24,9 @@ export function TermDetailContainer({ termType }: TermDetailContainerProps) {
   const term = terms?.find((t) => t.termType === termType && t.isActive);
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar className="shrink-0" title={TITLES[termType]} onBack={() => router.back()} />
-      <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted">
+      <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted lg:mx-auto lg:w-full lg:max-w-2xl">
         {isLoading ? (
           <TextContentSkeleton />
         ) : isError ? (

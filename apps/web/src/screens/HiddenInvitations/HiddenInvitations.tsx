@@ -17,13 +17,13 @@ export const HiddenInvitations = () => {
   const invitations = data ?? [];
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
       <TopAppBar
         className="absolute inset-x-0 top-0 z-30"
         title="숨긴 초대장"
         onBack={() => router.back()}
       />
-      <main className={`relative z-10 ${mobileMainScroll} ${stickyMainTop}`}>
+      <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
         {isLoading ? (
           <p className="py-10 text-center text-[14px] text-text-disabled">불러오는 중…</p>
         ) : invitations.length === 0 ? (

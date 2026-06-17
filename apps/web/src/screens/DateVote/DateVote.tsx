@@ -567,9 +567,9 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
   if (step === "settings") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title="투표 설정" onBack={() => setStep("date")} />
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl">
           {/* Summary */}
           <div className="rounded-md border border-border bg-surface p-4">
             <p className="mb-2 text-[13px] font-bold text-text">선택된 후보 ({slots.length}개)</p>
@@ -673,10 +673,10 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar className="shrink-0" title="일정 투표 만들기" onBack={onBack ?? (() => {})} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl">
         {/* Step indicator */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
