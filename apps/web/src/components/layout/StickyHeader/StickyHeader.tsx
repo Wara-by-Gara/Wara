@@ -21,7 +21,7 @@ export function StickyHeader({ className, ...props }: TopAppBarProps) {
       <div
         className={cn(
           "fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md transition-opacity duration-300",
-          "lg:static lg:opacity-100 lg:pointer-events-auto",
+          "lg:static lg:max-w-5xl lg:opacity-100 lg:pointer-events-auto",
           hidden ? "pointer-events-none opacity-0" : "opacity-100",
         )}
       >

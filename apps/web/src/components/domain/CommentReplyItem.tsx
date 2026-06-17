@@ -151,7 +151,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
                 <button
                   type="button"
                   onClick={handleImageClick}
-                  className="relative size-[56px] shrink-0 overflow-hidden rounded-sm ring-1 ring-border"
+                  className="relative size-[56px] shrink-0 overflow-hidden ring-1 ring-border"
                   aria-label="첨부 사진 확대 보기"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -185,7 +185,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             ) : null}
             {!editingSlot && gifUrl ? (
               <div
-                className="relative mt-1 w-[200px] overflow-hidden rounded-sm bg-surface-muted"
+                className="relative mt-1 w-[200px] overflow-hidden bg-surface-muted"
                 style={{ aspectRatio: "4/3" }}
               >
                 <Image
@@ -266,7 +266,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             <img
               src={imageUrl}
               alt="첨부 사진"
-              className="w-full rounded-sm object-contain"
+              className="w-full object-contain"
             />
           </Modal>
         ) : null}

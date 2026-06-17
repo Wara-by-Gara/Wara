@@ -68,9 +68,9 @@ export const Notifications = ({
 
   if (state === 'settings') {
     return (
-      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl">
           <section className="py-2">
             <div className="divide-y divide-border bg-surface">
               <MenuItem leftIcon="bell" rightSlot={<Switch defaultChecked />}>
@@ -106,7 +106,7 @@ export const Notifications = ({
 
   if (state === 'pushPermissionGuide' || state === 'pushDisabledGuide') {
     return (
-      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title="알림" onBack={onBack} />
         <main className={mobileMainCenter}>
           <EmptyState
@@ -153,7 +153,7 @@ export const Notifications = ({
           </button>
         }
       />
-      <div className="flex items-center justify-between gap-2 px-page py-2">
+      <div className="flex items-center justify-between gap-2 px-page py-2 lg:mx-auto lg:w-full lg:max-w-5xl">
         <div className="flex gap-1.5">
           <Chip            selected={state !== 'unreadOnly'}
             onClick={() => onFilterChange?.('all')}
@@ -191,6 +191,7 @@ export const Notifications = ({
           state === 'error' || state === 'empty'
             ? mobileMainCenter
             : mobileMainScroll,
+          "lg:mx-auto lg:w-full lg:max-w-5xl",
         )}
       >
         {state === 'loading' ? (

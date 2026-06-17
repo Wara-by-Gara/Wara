@@ -25,7 +25,7 @@ import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedb
 import { InvitationFeedSkeleton } from "@/components/domain/Skeleton";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
-import { InvitationDetailHero } from "@/domain/InvitationDetail/InvitationDetailHero";
+import { InvitationDetailPanes } from "@/domain/InvitationDetail/Container/InvitationDetailPanes";
 import { InvitationDescriptionBox } from "@/domain/InvitationDetail/InvitationDescriptionBox";
 import { InvitationOptions } from "@/domain/InvitationDetail/InvitationOptions/InvitationOptions";
 import { ImmersiveTopBarButton } from "@/domain/InvitationDetail/ImmersiveTopBarButton";
@@ -114,6 +114,7 @@ const canViewFeed = !!myParticipant;
     <div
       className={cn(
         "relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard",
+        "lg:h-auto lg:max-w-none lg:overflow-visible",
         isDarkBg ? "text-white" : "text-text",
         pageBgClass,
       )}
@@ -126,7 +127,7 @@ const canViewFeed = !!myParticipant;
       />
       <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
-        className="shrink-0"
+        className="shrink-0 lg:hidden"
         variant="transparent"
         leftSlot={
           <ImmersiveTopBarButton aria-label="뒤로가기" onClick={() => router.back()}>
@@ -142,79 +143,111 @@ const canViewFeed = !!myParticipant;
         }
       />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6">
-        <div className="flex flex-col gap-2">
-          <InvitationDetailHero
-            title={invitation.title}
-            schedule={schedule}
-            fontClass={fontClass}
-            isDarkBg={isDarkBg}
-            cover={
-              <InvitationCover
-                variant={cover.variant}
-                imageUrl={cover.imageUrl}
-                gifUrl={cover.gifUrl}
-                backgroundClass={invitation.bgColor}
-                hideBottomGradient
-                detailMode
-              />
-            }
-          />
-
-          {invitation.description ? (
-            <InvitationDescriptionBox fontClass={fontClass} bgColor={invitation.bgColor}>
-              {invitation.description}
-            </InvitationDescriptionBox>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col gap-8">
-          {hasPoll && pollData?.poll.status !== 'confirmed' && (
-            <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost={false} onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
-          )}
-
-          <InformationsContainer
-            invitation={invitation}
-            isHost={false}
-            invitationId={invitationId}
-            voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
-            showWeather={isLoggedIn}
-            hideDateInHeader
-            immersive
-            bgColor={invitation.bgColor}
-          />
-
-          <InvitationOptions
-            fee={invitation.fee}
-            dressCode={invitation.dressCode}
-            parkingInfo={invitation.parkingInfo}
-            fontClass={fontClass}
-            bgColor={invitation.bgColor}
-          />
-
-          {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text")}>
-                  참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
-                </h3>
-                <button
-                  type="button"
-                  className="text-[13px] text-accent"
-                  onClick={() => router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))}
+      <InvitationDetailPanes
+        cover={
+          <>
+            <InvitationCover
+              variant={cover.variant}
+              imageUrl={cover.imageUrl}
+              gifUrl={cover.gifUrl}
+              backgroundClass={invitation.bgColor}
+              hideBottomGradient
+              detailMode
+            />
+            {(isLoggedIn && invitation.isPublic) || !!myParticipant ? (
+              <button
+                type="button"
+                onClick={() => setShareSheetOpen(true)}
+                className="mt-3 hidden w-full items-center justify-center gap-2 rounded-full bg-surface/80 py-2.5 text-[14px] font-semibold text-text ring-1 ring-border transition-colors hover:bg-surface lg:inline-flex"
+              >
+                <Icon name="share" size="sm" color="currentColor" decorative />
+                공유하기
+              </button>
+            ) : null}
+          </>
+        }
+        left={
+          <>
+            <div className="flex flex-col gap-2">
+              <header className="flex flex-col gap-2 text-left">
+                <h1
+                  className={cn(
+                    "line-clamp-2 break-words text-[28px] font-bold leading-[1.15] tracking-tight lg:text-[34px]",
+                    isDarkBg ? "text-white" : "text-text",
+                    fontClass,
+                  )}
                 >
-                  전체보기
-                </button>
-              </div>
-              <ParticipantAvatarRow
-                participants={attendingParticipants}
-                currentUserId={me?.id ?? null}
-                currentUserProfileImageUrl={me?.profileImageUrl ?? null}
-              />
-            </section>
-          )}
+                  {invitation.title}
+                </h1>
+                {schedule ? (
+                  <p
+                    className={cn(
+                      "text-[17px] leading-[1.35] lg:text-[19px]",
+                      isDarkBg ? "text-white" : "text-text-muted",
+                    )}
+                  >
+                    {schedule}
+                  </p>
+                ) : null}
+              </header>
 
-          {isLoggedIn && (
+              {invitation.description ? (
+                <InvitationDescriptionBox fontClass={fontClass} bgColor={invitation.bgColor}>
+                  {invitation.description}
+                </InvitationDescriptionBox>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-8">
+              {hasPoll && pollData?.poll.status !== 'confirmed' && (
+                <VotePreviewCard pollData={pollData} resultsData={resultsData} isHost={false} onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))} />
+              )}
+
+              <InformationsContainer
+                invitation={invitation}
+                isHost={false}
+                invitationId={invitationId}
+                voteResultsHref={hasPoll && pollData?.poll.status === 'confirmed' ? ROUTES.INVITATIONS.VOTE(invitationId) : undefined}
+                showWeather={isLoggedIn}
+                hideDateInHeader
+                immersive
+                bgColor={invitation.bgColor}
+              />
+
+              <InvitationOptions
+                fee={invitation.fee}
+                dressCode={invitation.dressCode}
+                parkingInfo={invitation.parkingInfo}
+                fontClass={fontClass}
+                bgColor={invitation.bgColor}
+              />
+
+              {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
+                <section>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text")}>
+                      참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
+                    </h3>
+                    <button
+                      type="button"
+                      className="text-[13px] text-accent"
+                      onClick={() => router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))}
+                    >
+                      전체보기
+                    </button>
+                  </div>
+                  <ParticipantAvatarRow
+                    participants={attendingParticipants}
+                    currentUserId={me?.id ?? null}
+                    currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+                  />
+                </section>
+              )}
+            </div>
+          </>
+        }
+        rsvp={
+          isLoggedIn ? (
             <RsvpSection
               value={myParticipant?.rsvpStatus}
               onValueChange={handleRsvp}
@@ -229,9 +262,10 @@ const canViewFeed = !!myParticipant;
                   : undefined)
               }
             />
-          )}
-
-          {!isLoggedIn ? (
+          ) : null
+        }
+        feed={
+          !isLoggedIn ? (
           <div className="relative overflow-hidden rounded-sm">
             <div className="pointer-events-none select-none blur-sm">
               <div className="mb-3">
@@ -275,15 +309,9 @@ const canViewFeed = !!myParticipant;
             <p className={cn("text-[14px] font-medium", isDarkBg ? "text-white" : "text-text")}>참석 여부를 선택하면</p>
             <p className={cn("mt-1 text-[13px]", isDarkBg ? "text-white/70" : "text-text-muted")}>앨범과 댓글을 볼 수 있어요</p>
           </div>
-          )}
-        </div>
-      </main>
-
-      {!isLoggedIn && (
-        <div className={cn("shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] backdrop-blur-md", isDarkBg ? "text-white/70" : "text-text-muted")}>
-          로그인하면 댓글·앨범 사진을 남길 수 있어요
-        </div>
-      )}
+          )
+        }
+      />
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
 

@@ -121,11 +121,11 @@ export function Meetings() {
   const markedKeys = useMemo(() => new Set(eventsByDay.keys()), [eventsByDay]);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <StickyHeader title="나의 모임" onBack={() => router.back()} />
 
       {!isLoading && !hasAnyEvent ? (
-        <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-page">
+        <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-page lg:mx-auto lg:w-full lg:max-w-5xl">
           <EmptyState
             icon="calendar"
             title="아직 일정이 없어요"
@@ -133,7 +133,7 @@ export function Meetings() {
           />
         </main>
       ) : (
-        <main className={`relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-4 ${stickyMainTopSpacious}`}>
+        <main className={`relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-4 lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTopSpacious}`}>
           <MonthCalendar
             year={year}
             month={month}

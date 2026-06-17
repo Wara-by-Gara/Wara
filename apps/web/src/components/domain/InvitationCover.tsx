@@ -72,7 +72,9 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
       <div
         ref={ref}
         className={cn(
-          fit
+          detailMode
+            ? "relative w-full overflow-hidden rounded-lg"
+            : fit
             ? cn("relative w-full overflow-hidden rounded-lg aspect-[3/2]")
             : containerBase,
           !fit && variant === "color" && (backgroundClass ?? "bg-white"),
@@ -83,7 +85,11 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         )}
         {...props}
       >
-        {fit && mediaUrl ? (
+        {detailMode && mediaUrl ? (
+          // 상세 커버 — 원본 비율 유지(크롭 없음). 사진 정책: 원본 비율 가변
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mediaUrl} alt="" className="block h-auto w-full" />
+        ) : fit && mediaUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={mediaUrl}

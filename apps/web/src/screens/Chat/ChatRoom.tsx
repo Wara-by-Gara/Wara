@@ -417,7 +417,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     )}
                     {/* 말풍선 + 메타(시간/안읽음)를 한 줄에 — 리액션이 생겨도 메타가 안 밀리게 */}
                     <div
-                      className={`flex items-end gap-1.5 ${
+                      className={`flex min-w-0 items-end gap-1.5 ${
                         mine ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
@@ -459,7 +459,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         onContextMenu={(e) => e.preventDefault()}
                         // 답장(인용) 말풍선은 짧으면 콘텐츠 폭에 맞춰 좁아지므로 최소 너비를 줘
                         // 우측으로 더 길게 + 인용문이 좌측정렬로 보이게 한다.
-                        className={`relative max-w-full cursor-pointer select-none whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
+                        className={`relative max-w-full cursor-pointer select-none whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2 text-[15px] ${
                           m.replyTo ? "min-w-[120px] text-left" : ""
                         } ${bubbleClass}`}
                       >

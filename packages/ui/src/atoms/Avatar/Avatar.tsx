@@ -44,12 +44,12 @@ function initialsOf(name?: string): string {
   if (!trimmed) return "";
   if (trimmed.startsWith("+")) return trimmed;
 
-  const parts = trimmed.split(/\s+/);
-  if (parts.length >= 2) {
-    // 공백 구분(영문 등): 첫 토큰을 성으로 보고 제외, 나머지 앞 2글자
-    return parts.slice(1).join("").slice(0, 2);
+  // 영문 등 라틴 이름: 첫 토큰(이름)을 앞 3글자까지 표시.
+  //  "Zoe" → "Zoe", "Minsung Kim" → "Min", "Bob" → "Bob"
+  if (/^[A-Za-z]/.test(trimmed)) {
+    return (trimmed.split(/\s+/)[0] ?? trimmed).slice(0, 3);
   }
-  // 공백 없음(한글 등): 성 1글자 제외, 이름 2글자
+  // 한글: 성 1글자 제외, 이름 2글자 ("김와라"→"와라", "박민"→"민")
   return trimmed.slice(1, 3) || trimmed.slice(0, 1);
 }
 

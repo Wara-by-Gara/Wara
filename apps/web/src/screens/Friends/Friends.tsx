@@ -26,7 +26,7 @@ export const Friends = () => {
   const ghost = useScrolled();
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당.
           데스크톱(lg)은 전역 TopNavigation이 상단을 차지하므로 빈 헤더는 숨긴다(2단 헤더·빈 공간 방지). */}
       <div className="lg:hidden">
@@ -35,7 +35,7 @@ export const Friends = () => {
 
       {/* 친구 | 채팅 세그먼트 — 모바일은 상단 고정 글래스 알약(window 스크롤이라 sticky 대신 fixed).
           데스크톱은 전역 헤더(fixed h-[--header-height]) 아래로 내려, 겹쳐 가려지지 않게 static 인라인으로 강등한다. */}
-      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page lg:static lg:top-auto lg:mt-2">
+      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page lg:static lg:top-auto lg:mt-2 lg:max-w-5xl">
         <div
           className={cn(
             "flex gap-1 rounded-full p-1 transition-all duration-300",
@@ -60,7 +60,7 @@ export const Friends = () => {
         </div>
       </div>
 
-      <main className={`relative z-10 ${mobileMainScroll} pt-[80px] lg:pt-2`}>
+      <main className={`relative z-10 ${mobileMainScroll} pt-[80px] lg:mx-auto lg:w-full lg:max-w-5xl lg:pt-2`}>
         {tab === "friends" ? <FriendsList /> : <ChatList />}
       </main>
     </div>

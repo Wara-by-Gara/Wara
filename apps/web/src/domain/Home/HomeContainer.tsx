@@ -123,10 +123,10 @@ export default function HomeContainer() {
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <HomeHeader />
 
-      <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>
+      <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
         <div className="home-page-sections px-page pb-6 pt-4">
           <UpcomingMeetingsSection
             items={upcoming}
