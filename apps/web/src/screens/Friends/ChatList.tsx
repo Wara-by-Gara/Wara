@@ -19,7 +19,9 @@ export const ChatList = () => {
 
   const keyword = query.trim();
   const filtered = keyword
-    ? conversations.filter((c) => matchName(c.title, keyword))
+    ? conversations.filter((c) =>
+        matchName(c.title || c.partner?.name || "", keyword),
+      )
     : conversations;
 
   const goRoom = (id: string) => router.push(ROUTES.CHAT.ROOM(id));
@@ -96,7 +98,8 @@ export const ChatList = () => {
       ) : (
         <ul className="divide-y divide-border bg-surface">
           {filtered.map((c) => {
-            const name = c.title || "이름 없음";
+            const name = c.title || c.partner?.name || "상대";
+            const avatarUrl = c.avatarUrl ?? c.partner?.avatarUrl ?? undefined;
             return (
               <li key={c.id}>
                 <div
@@ -116,7 +119,7 @@ export const ChatList = () => {
                   onContextMenu={(e) => e.preventDefault()}
                   className="flex cursor-pointer items-center gap-3 px-page py-3 active:bg-surface-muted"
                 >
-                  <Avatar size="md" src={c.avatarUrl ?? undefined} alt={name} name={name} />
+                  <Avatar size="md" src={avatarUrl} alt={name} name={name} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold text-text">
                       {name}

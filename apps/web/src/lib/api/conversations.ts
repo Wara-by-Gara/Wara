@@ -13,6 +13,8 @@ export type ConversationListItem = {
   title: string;
   /** 표시용 이미지 (group은 null=기본 아이콘) */
   avatarUrl: string | null;
+  /** 1:1 상대 정보 — title이 비어도 이름/아바타 폴백용 (group=null) */
+  partner: ConversationPartner | null;
   memberCount: number;
   lastMessageText: string | null;
   lastMessageAt: string | null;

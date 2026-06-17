@@ -19,6 +19,8 @@ export interface ConversationListItem {
   // 표시용 이름/이미지 (direct=상대, group=그룹명/기본). 멤버에서 계산해 내려준다.
   title: string;
   avatarUrl: string | null;
+  // 1:1 상대 정보 — 클라이언트가 title이 비어도 이름/아바타를 폴백할 수 있게 함 (group=null)
+  partner: { id: string; name: string | null; avatarUrl: string | null } | null;
   memberCount: number;
   lastMessageText: string | null;
   lastMessageAt: Date | null;
@@ -354,12 +356,21 @@ export class ConversationsService {
         leftAt: r.myLeftAt,
       });
       const hasVisible = !!r.lastMessageAt && r.lastMessageAt > anchor;
+      const partnerMember = isGroup ? null : (others[0] ?? null);
       return {
         id: r.id,
         type: isGroup ? ('group' as const) : ('direct' as const),
         // 우선순위: 내 별명 > (그룹) 공유 이름/자동 · (1:1) 상대 이름
-        title: r.alias ?? base,
+        // alias가 빈 문자열("")이어도 base로 폴백되도록 ?? 대신 truthy 검사.
+        title: r.alias?.trim() || base,
         avatarUrl: isGroup ? null : (others[0]?.avatarUrl ?? null),
+        partner: partnerMember
+          ? {
+              id: partnerMember.userId,
+              name: resolveName(partnerMember),
+              avatarUrl: partnerMember.avatarUrl,
+            }
+          : null,
         memberCount: isGroup
           ? members.filter((m) => !m.leftAt).length
           : members.length,
