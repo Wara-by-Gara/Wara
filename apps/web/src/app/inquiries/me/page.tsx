@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@wara/ui";
 import { IconButton } from "@wara/ui";
 import { useMyInquiries, useDeleteInquiry } from '@/hooks/useInquiries';
 import { useAuthStore } from '@/stores/authStore';
-import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryListSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { Inquiry, InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 

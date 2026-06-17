@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { TopAppBar, Button, Icon, EmptyState } from "@wara/ui";
 import { GalleryGrid, type GalleryPhoto } from "@/components/domain";
-import { PhotoListModal, type PhotoListModalPhoto } from "@/components/organisms/PhotoListModal";
-import { PhotoViewer } from "@/components/organisms/PhotoViewer";
+import { PhotoListModal, type PhotoListModalPhoto } from "@/components/domain/PhotoListModal";
+import { PhotoViewer } from "@/components/domain/PhotoViewer";
 
 const meta: Meta = {
   title: "Pages/Album",

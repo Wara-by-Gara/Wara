@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Avatar, EmptyState, SearchBar, Modal, ConfirmDialog } from "@wara/ui";
 import { ROUTES } from "@/constants/routes";
-import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
+import { FriendsPageSkeleton } from "@/components/domain/Skeleton";
 import { useFriends, useHideFriend } from "@/hooks/useFriends";
 import type { Friend } from "@/lib/api/friends";
 import { FriendsIndexBar } from "./FriendsIndexBar";

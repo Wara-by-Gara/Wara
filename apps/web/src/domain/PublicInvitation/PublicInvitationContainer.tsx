@@ -18,7 +18,7 @@ import { RSVPButtonGroup, type RSVPValue, InvitationInfoCard } from "@/component
 import { useQuestions, useSubmitAnswers } from "@/hooks/useQuestionnaire";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import type { Invitation } from "@/lib/api/invitations";
-import { RsvpPageSkeleton } from "@/components/organisms/Skeleton";
+import { RsvpPageSkeleton } from "@/components/domain/Skeleton";
 
 const schema = z.object({
   note: z.string().max(200).optional(),

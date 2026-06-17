@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Icon, Avatar, Button, EmptyState, ErrorState } from "@wara/ui";
-import { ProfileSkeleton } from "@/components/organisms/Skeleton";
+import { ProfileSkeleton } from "@/components/domain/Skeleton";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { mobileMainCenter } from "@/lib/mobilePageLayout";
 import { PlaceLogPreview } from "./PlaceLogPreview";

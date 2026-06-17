@@ -22,7 +22,7 @@ import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
-import { InvitationFeedSkeleton } from "@/components/organisms/Skeleton";
+import { InvitationFeedSkeleton } from "@/components/domain/Skeleton";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 import { InvitationDetailHero } from "@/domain/InvitationDetail/InvitationDetailHero";

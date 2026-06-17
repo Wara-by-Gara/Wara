@@ -2,9 +2,9 @@
 
 import { useState, useEffect, type ReactNode, type ChangeEvent } from 'react';
 import { Photo, getPhoto, togglePhotoLike, getDownloadUrls } from '@/lib/api/photos';
-import { PhotoViewer } from '@/components/organisms/PhotoViewer';
-import { GifPicker } from '@/components/organisms/GifPicker';
-import { MentionListSkeleton } from '@/components/organisms/Skeleton';
+import { PhotoViewer } from '@/components/domain/PhotoViewer';
+import { GifPicker } from '@/components/domain/GifPicker';
+import { MentionListSkeleton } from '@/components/domain/Skeleton';
 import { usePhotoFeedback } from '@/hooks/usePhotoFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useMyParticipant, useParticipants } from '@/hooks/useParticipants';

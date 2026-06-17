@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { LoadMoreSkeleton, NotificationListSkeleton } from '@/components/organisms/Skeleton';
+import { LoadMoreSkeleton, NotificationListSkeleton } from '@/components/domain/Skeleton';
 import { NotificationItem } from './notification-item';
 import type { Notification } from '@/lib/api/notifications';
 

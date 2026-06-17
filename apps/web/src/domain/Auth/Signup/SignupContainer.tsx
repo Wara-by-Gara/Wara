@@ -10,8 +10,8 @@ import { Icon, Avatar, FormField, Input, Button } from "@wara/ui";
 import { useMe, useUpdateMe } from "@/hooks/useUsers";
 import { getProfileImagePresignedUrl } from "@/lib/api/users";
 import { getCroppedImageBlob } from "@/utils/cropImage";
-import { SignupFormSkeleton } from "@/components/organisms/Skeleton";
-import { ProfileImageCropScreen } from "@/components/organisms/ProfileImageCropScreen";
+import { SignupFormSkeleton } from "@/components/domain/Skeleton";
+import { ProfileImageCropScreen } from "@/components/domain/ProfileImageCropScreen";
 import { ROUTES } from "@/constants/routes";
 
 const currentYear = new Date().getFullYear();

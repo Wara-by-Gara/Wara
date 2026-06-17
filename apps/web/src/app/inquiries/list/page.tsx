@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from "@wara/ui";
 import { usePublicInquiries } from '@/hooks/useInquiries';
-import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryListSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { InquiryType, InquiryStatus, PublicInquiry } from '@/lib/api/inquiries';
 

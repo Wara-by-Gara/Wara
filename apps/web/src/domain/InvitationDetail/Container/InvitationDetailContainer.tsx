@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Button } from "@wara/ui";
 import { TopAppBar } from "@wara/ui";
-import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
+import { InvitationDetailSkeleton } from "@/components/domain/Skeleton";
 import { useAuthStore } from "@/stores/authStore";
 
 import HostView from "./HostView";

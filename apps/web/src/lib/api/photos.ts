@@ -118,6 +118,9 @@ export function togglePhotoLike(
   return apiPost<{ liked: boolean; likeCount: number }>(
     `/invitations/${invitationId}/photos/${photoId}/likes`,
     {},
+    // 새로고침/페이지 이탈 중에도 요청이 끝까지 전송되도록 — 비행 중 abort로
+    // 좋아요가 유실(새로고침 후 일부만 남음)되는 것을 막는다.
+    { keepalive: true },
   );
 }
 

@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@wara/ui";
 import { Button } from "@wara/ui";
 import { Icon } from "@/components/icons";
 import { ParticipantSummaryCard, ParticipantRow as ParticipantRowItem } from "@/components/domain";
-import { ParticipantListSkeleton } from "@/components/organisms/Skeleton";
+import { ParticipantListSkeleton } from "@/components/domain/Skeleton";
 import { EmptyState } from "@wara/ui";
 import { ErrorState } from "@wara/ui";
 import { useParticipants, useMyParticipant, useTransferHost } from "@/hooks/useParticipants";

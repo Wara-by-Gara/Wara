@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
-import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
+import { MapLoadingSkeleton } from "@/components/domain/Skeleton";
 import { KakaoMap, type PhotoMarker, type KakaoMapHandle } from "@/components/molecules/KakaoMap/KakaoMap";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";

@@ -8,7 +8,7 @@ import { Icon } from '@/components/icons';
 import { Divider } from "@wara/ui";
 import { ROUTES } from '@/constants/routes';
 import { useActiveFaq } from '@/hooks/useFaq';
-import { FaqListSkeleton } from '@/components/organisms/Skeleton';
+import { FaqListSkeleton } from '@/components/domain/Skeleton';
 import { getUserRole } from '@/lib/jwt';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (

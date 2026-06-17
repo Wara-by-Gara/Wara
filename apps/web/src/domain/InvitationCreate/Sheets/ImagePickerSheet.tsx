@@ -9,7 +9,7 @@ import { BottomSheet } from "@wara/ui";
 import { Chip } from "@wara/ui";
 import { TemplateCard } from "@/components/domain";
 import { InvitationCover } from "@/components/domain";
-import { GifPicker } from "@/components/organisms/GifPicker";
+import { GifPicker } from "@/components/domain/GifPicker";
 import ImageCropEditor from "@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor";
 import { DEFAULT_COVER_KEY } from "@/domain/InvitationCreate/constants";
 import type { Template } from "@/lib/api/templates";

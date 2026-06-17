@@ -4,7 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { TopAppBar, ConfirmDialog, EmptyState, ErrorState } from "@wara/ui";
 import { CommentBox, CommentItem } from "@/components/domain";
-import { CommentListSkeleton } from "@/components/organisms/Skeleton";
+import { CommentListSkeleton } from "@/components/domain/Skeleton";
 import { mobileMainScroll, mobileMainCenter } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 import { useInvitationFeedback } from "@/hooks/useInvitationFeedbacks";

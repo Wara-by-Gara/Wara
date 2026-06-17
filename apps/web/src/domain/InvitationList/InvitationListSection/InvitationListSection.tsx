@@ -2,7 +2,7 @@
 
 import { Chip, Button, EmptyState, ErrorState } from "@wara/ui";
 import { InviteCard, statusChipToBadge } from "@/components/domain";
-import { InvitationCardSkeleton } from "@/components/organisms/Skeleton";
+import { InvitationCardSkeleton } from "@/components/domain/Skeleton";
 import {
   INVITATION_LIST_TAB_LABELS,
   type InvitationListItem,

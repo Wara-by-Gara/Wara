@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAgreeTerms, useMyAgreements, useTerms } from '@/hooks/useTerms';
 import { useAuthStore } from '@/stores/authStore';
-import { TermsAgreeSkeleton } from '@/components/organisms/Skeleton';
+import { TermsAgreeSkeleton } from '@/components/domain/Skeleton';
 import { TermContent } from '@/domain/Terms/TermContent';
 import type { ServiceTerm, TermType } from '@/lib/api/terms';
 

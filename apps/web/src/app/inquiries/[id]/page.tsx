@@ -7,7 +7,7 @@ import { Divider } from "@wara/ui";
 import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
 import { getUserRole } from '@/lib/jwt';
-import { InquiryDetailSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryDetailSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {

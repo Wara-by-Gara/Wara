@@ -8,7 +8,7 @@ import { Settings, type SettingsScreen } from '@/screens/Settings';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 import { useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/useNotifications';
-import { TextContentSkeleton } from '@/components/organisms/Skeleton';
+import { TextContentSkeleton } from '@/components/domain/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 
 export default function SettingsContainer() {

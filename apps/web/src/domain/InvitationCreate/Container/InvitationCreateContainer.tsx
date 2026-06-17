@@ -28,7 +28,7 @@ import {
   getInvitationImagePresignedUrl,
   type Invitation,
 } from '@/lib/api/invitations';
-import { GifPicker } from '@/components/organisms/GifPicker';
+import { GifPicker } from '@/components/domain/GifPicker';
 import { setEventLocation, deleteEventLocation } from '@/lib/api/locations';
 import { getMissionTemplates, createMission } from '@/lib/api/missions';
 import { getTemplates } from '@/lib/api/templates';
@@ -655,11 +655,17 @@ export default function InvitationCreateContainer({
       fileName,
       COVER_CONTENT_TYPE,
     );
-    await fetch(presignedUrl, {
+    const res = await fetch(presignedUrl, {
       method: 'PUT',
       body: blob,
       headers: { 'Content-Type': COVER_CONTENT_TYPE },
     });
+    // fetch는 4xx/5xx에 throw하지 않음 — presigned 만료(403)·S3오류에도 진행하면
+    // S3 객체 없는 깨진 커버 key로 초대장이 생성됨. 실패 처리 후 중단한다.
+    if (!res.ok) {
+      setImageUploadError(true);
+      throw new Error('COVER_UPLOAD_FAILED');
+    }
     setLocalPreviewUrl((prev) => {
       if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev);
       return URL.createObjectURL(blob);
