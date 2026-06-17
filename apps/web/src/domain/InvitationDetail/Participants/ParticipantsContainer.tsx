@@ -65,9 +65,11 @@ function applySort(list: ParticipantRow[], sort: SortKey): ParticipantRow[] {
   return copy;
 }
 
-export default function ParticipantsContainer() {
+export default function ParticipantsContainer({ onClose }: { onClose?: () => void } = {}) {
   const { invitationId } = useParams<{ invitationId: string }>();
   const router = useRouter();
+  // 모달(state 기반)로 띄운 경우 onClose로 닫고, 전체 페이지 라우트면 뒤로가기
+  const handleClose = onClose ?? (() => router.back());
   const queryClient = useQueryClient();
 
   const [tab, setTab] = useState<Tab>("all");
@@ -174,7 +176,7 @@ export default function ParticipantsContainer() {
       <div className="relative flex h-full w-full flex-col overflow-hidden bg-surface-muted lg:h-[88vh] lg:max-w-2xl lg:rounded-2xl lg:shadow-2xl">
       <TopAppBar
         title="참석자"
-        onBack={() => router.back()}
+        onBack={handleClose}
         rightSlot={
           <div className="flex">
             <IconButton icon="search" label="검색" className={showSearch ? "text-primary" : undefined} onClick={handleSearchToggle} />

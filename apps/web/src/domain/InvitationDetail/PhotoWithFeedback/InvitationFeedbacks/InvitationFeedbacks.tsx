@@ -118,6 +118,19 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, [composerOpen]);
+  // 데스크톱에서만 입력창을 댓글 컬럼 폭에 맞춘다 (모바일은 좌우 풀폭)
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  // 댓글 작성창이 열리면 하단 탭(MainBottomNav)을 숨겨 입력창만 보이게 한다
+  useEffect(() => {
+    setCommentInputFocused(composerOpen);
+  }, [composerOpen, setCommentInputFocused]);
 
   const { data: participantsData, isLoading: isParticipantsLoading } =
     useParticipants(invitationId);
@@ -491,10 +504,10 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           <div
             className={cn(
               "fixed bottom-0 z-50 bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]",
-              // 측정 전(첫 프레임) 폴백: 모바일과 동일하게 중앙 max-w-md
-              !composerBox && "inset-x-0 mx-auto w-full max-w-md",
+              // 모바일: 좌우 풀폭 / 데스크톱: 댓글 컬럼 폭에 맞춤(측정 전엔 풀폭 폴백)
+              (!isDesktop || !composerBox) && "inset-x-0",
             )}
-            style={composerBox ? { left: composerBox.left, width: composerBox.width } : undefined}
+            style={isDesktop && composerBox ? { left: composerBox.left, width: composerBox.width } : undefined}
           >
             {replyingTo ? (
               <div className="flex items-center justify-between border-b border-border bg-primary-soft px-4 py-1.5">
@@ -591,7 +604,6 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
             />
             <CommentInputBar
               variant="glass"
-              onFocusChange={setCommentInputFocused}
               maxLength={500}
               placeholder={
                 replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'

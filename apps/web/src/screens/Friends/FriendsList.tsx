@@ -247,7 +247,7 @@ export const FriendsList = () => {
               setConfirmTarget(actionTarget);
               setActionTarget(null);
             }}
-            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-surface-muted"
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-danger active:bg-surface-muted"
           >
             삭제
           </button>

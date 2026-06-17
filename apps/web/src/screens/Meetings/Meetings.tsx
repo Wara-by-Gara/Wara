@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { motion, useReducedMotion } from "framer-motion";
 import { StickyHeader } from "@/components/layout/StickyHeader";
 import { Icon, IconButton, BottomSheet, EmptyState } from "@wara/ui";
 import { InviteCard, MonthCalendar } from "@/components/domain";
+import { pageStagger, pageItem } from "@/lib/motion";
 import { useHideInvitation } from "@/hooks/useParticipants";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
@@ -43,6 +45,7 @@ type ListMode = "all" | "date";
 
 export function Meetings() {
   const router = useRouter();
+  const reduce = useReducedMotion();
   const { data: invitations, isLoading } = useMyInvitations();
   const { data: templates = [] } = useQuery({
     queryKey: QUERY_KEYS.templates.all(),
@@ -161,7 +164,7 @@ export function Meetings() {
             />
           </div>
 
-          <section className="rounded-md border border-border bg-surface p-4">
+          <section className="rounded-md border border-border bg-surface p-4 shadow-card">
             <h2 className="mb-3 text-[15px] font-bold text-text">
               {listMode === "date" && selectedKey
                 ? formatDayHeader(selectedKey)
@@ -173,9 +176,14 @@ export function Meetings() {
                 {listMode === "date" ? "이 날 일정이 없어요" : "표시할 모임이 없어요"}
               </p>
             ) : (
-              <div className="flex flex-col divide-y divide-border">
+              <motion.div
+                className="flex flex-col divide-y divide-border"
+                variants={pageStagger}
+                initial={reduce ? false : "hidden"}
+                animate="show"
+              >
                 {listEvents.map((ev) => (
-                  <div key={ev.id} className="flex items-center">
+                  <motion.div key={ev.id} variants={pageItem} className="flex items-center">
                     <InviteCard
                       layout="horizontal"
                       imageUrl={getInvitationCoverImageUrl(ev) || undefined}
@@ -200,9 +208,9 @@ export function Meetings() {
                         onClick={() => setMoreMenuInvId(ev.id)}
                       />
                     )}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </section>
         </main>
@@ -216,7 +224,7 @@ export function Meetings() {
         <div className="flex flex-col">
           <button
             type="button"
-            className="flex w-full items-center gap-3 py-4 text-left text-[15px] text-text active:bg-gray-50"
+            className="flex w-full items-center gap-3 py-4 text-left text-[15px] text-text active:bg-surface-muted"
             disabled={hideInvitation.isPending}
             onClick={() => {
               if (moreMenuInvId) hideInvitation.mutate({ invitationId: moreMenuInvId, isHidden: true });

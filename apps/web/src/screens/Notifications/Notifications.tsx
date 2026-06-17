@@ -1,12 +1,14 @@
 'use client';
 
 import { Icon, Chip, Button, TopAppBar, ConfirmDialog, EmptyState, ErrorState, Switch, MenuItem } from '@wara/ui';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   NotificationItem,
   type NotificationType,
 } from '@/components/domain';
 import { NotificationListSkeleton } from '@/components/domain/Skeleton';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
+import { pageStagger, pageItem } from '@/lib/motion';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';
 
@@ -65,6 +67,7 @@ export const Notifications = ({
     state === 'markAllReadModal',
   );
   const [deleteAllModalOpen, setDeleteAllModalOpen] = useState(false);
+  const reduce = useReducedMotion();
 
   if (state === 'settings') {
     return (
@@ -179,7 +182,7 @@ export const Notifications = ({
             type="button"
             onClick={() => setDeleteAllModalOpen(true)}
             disabled={isDeletingAll}
-            className="text-[13px] text-red-500 disabled:opacity-40"
+            className="text-[13px] text-danger disabled:opacity-40"
           >
             전체 삭제
           </button>
@@ -206,7 +209,7 @@ export const Notifications = ({
           />
         ) : state === 'dateGrouped' ? (
           <div className="px-2">
-            <h3 className="px-3 py-2 text-[12px] font-medium text-text-disabled">
+            <h3 className="px-3 py-2 text-[12px] font-medium text-text-subtle">
               오늘
             </h3>
             <div className="flex flex-col gap-3">
@@ -223,7 +226,7 @@ export const Notifications = ({
                 />
               ))}
             </div>
-            <h3 className="px-3 pt-3 pb-1 text-[12px] font-medium text-text-disabled">
+            <h3 className="px-3 pt-3 pb-1 text-[12px] font-medium text-text-subtle">
               이전
             </h3>
             <div className="flex flex-col gap-3">
@@ -241,23 +244,29 @@ export const Notifications = ({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 px-2 py-2">
+          <motion.div
+            className="flex flex-col gap-3 px-2 py-2"
+            variants={pageStagger}
+            initial={reduce ? false : 'hidden'}
+            animate="show"
+          >
             {(state === 'unreadOnly'
               ? items.filter((n) => n.unread)
               : items
             ).map((n) => (
-              <NotificationItem
-                key={n.id}
-                type={n.type as NotificationType}
-                title={n.title}
-                description={n.description}
-                time={n.time}
-                unread={n.unread}
-                onDelete={n.onDelete}
-                onClick={() => onMarkAsRead?.(n.id)}
-              />
+              <motion.div key={n.id} variants={pageItem}>
+                <NotificationItem
+                  type={n.type as NotificationType}
+                  title={n.title}
+                  description={n.description}
+                  time={n.time}
+                  unread={n.unread}
+                  onDelete={n.onDelete}
+                  onClick={() => onMarkAsRead?.(n.id)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </main>
 

@@ -1,8 +1,10 @@
 "use client";
 
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Icon, IconButton, type IconName } from "@wara/ui";
 import { cn } from "@/lib/cn";
+import { pulse } from "@/lib/motion";
 import type { BadgeTone } from "./InviteCard";
 
 export type NotificationType =
@@ -52,6 +54,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
     ref,
   ) {
     const meta = TYPE_META[type];
+    const reduce = useReducedMotion();
     return (
       <div className={cn("relative flex items-center", unread && "bg-accent-soft/40")}>
         <button
@@ -72,9 +75,12 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
           >
             <Icon name={meta.icon} size="md" color="currentColor" decorative />
             {unread ? (
-              <span
+              <motion.span
                 aria-hidden
                 className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-surface"
+                variants={pulse}
+                initial="idle"
+                animate={reduce ? "idle" : "pulse"}
               />
             ) : null}
           </span>
@@ -83,7 +89,7 @@ export const NotificationItem = forwardRef<HTMLButtonElement, NotificationItemPr
             {description ? (
               <p className="line-clamp-1 type-bodySmall text-text-muted">{description}</p>
             ) : null}
-            <p className="type-caption text-text-muted">{time}</p>
+            <p className="type-caption text-text-subtle">{time}</p>
           </div>
         </button>
         {onDelete ? (

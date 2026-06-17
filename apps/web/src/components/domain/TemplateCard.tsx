@@ -46,7 +46,7 @@ export const TemplateCard = forwardRef<HTMLButtonElement, TemplateCardProps>(
       >
         <div
           className={cn(
-            "relative w-full overflow-hidden rounded-lg bg-gray-100",
+            "relative w-full overflow-hidden rounded-lg bg-surface-muted",
             imageAspect === "square" ? "aspect-square" : "aspect-[3/4]",
             isSelected ? "ring-4 ring-primary" : "ring-1 ring-border",
           )}

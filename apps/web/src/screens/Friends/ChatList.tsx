@@ -138,7 +138,7 @@ export const ChatList = () => {
                       {c.lastMessageAt ? timeAgo(c.lastMessageAt) : ""}
                     </span>
                     {c.unreadCount > 0 && (
-                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white">
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">
                         {c.unreadCount > 99 ? "99+" : c.unreadCount}
                       </span>
                     )}
@@ -165,7 +165,7 @@ export const ChatList = () => {
               setConfirmTarget(actionTarget);
               setActionTarget(null);
             }}
-            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-surface-muted"
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-danger active:bg-surface-muted"
           >
             나가기
           </button>

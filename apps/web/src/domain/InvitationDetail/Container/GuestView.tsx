@@ -21,6 +21,7 @@ import type { getMe } from "@/lib/api/users";
 import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
+import ParticipantsContainer from "@/domain/InvitationDetail/Participants/ParticipantsContainer";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
 import { InvitationFeedSkeleton } from "@/components/domain/Skeleton";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
@@ -52,6 +53,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [profileTarget, setProfileTarget] = useState<{ userId: string; name?: string; avatarUrl?: string } | null>(null);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
 const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
@@ -249,7 +251,7 @@ const canViewFeed = !!myParticipant;
                     <button
                       type="button"
                       className="text-[13px] text-accent"
-                      onClick={() => router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))}
+                      onClick={() => setParticipantsOpen(true)}
                     >
                       전체보기
                     </button>
@@ -341,6 +343,10 @@ const canViewFeed = !!myParticipant;
         name={profileTarget?.name}
         avatarUrl={profileTarget?.avatarUrl}
       />
+
+      {participantsOpen ? (
+        <ParticipantsContainer onClose={() => setParticipantsOpen(false)} />
+      ) : null}
 
 
 <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">

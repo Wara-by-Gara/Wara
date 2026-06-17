@@ -18,7 +18,7 @@ export function Toaster({ className, toastOptions, ...props }: SonnerProps) {
         unstyled: true,
         classNames: {
           toast:
-            "flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-text shadow-lg type-bodySmall",
+            "flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-text shadow-modal type-bodySmall",
           title: "font-semibold text-text",
           description: "type-caption text-text-muted",
           actionButton:

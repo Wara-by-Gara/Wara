@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, type KeyboardEvent } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/cn";
+import { glowPulse } from "@/lib/motion";
 
 /** WARA RSVP 상태 (백엔드: attending/undecided/absent) */
 export type RSVPValue = "attending" | "undecided" | "absent";
@@ -86,6 +88,7 @@ export function RSVPButtonGroup({
 }: RSVPButtonGroupProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const groupDisabled = Boolean(closed || loading);
+  const reduce = useReducedMotion();
 
   const resolve = (v: RSVPValue): RSVPOption => ({
     ...DEFAULTS[v],
@@ -137,6 +140,15 @@ export function RSVPButtonGroup({
                 "disabled:cursor-not-allowed",
               )}
             >
+              {v === "attending" ? (
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-full"
+                  variants={glowPulse}
+                  initial="idle"
+                  animate={selected && !reduce ? "glow" : "idle"}
+                />
+              ) : null}
               <span className={cn(emojiSize, "leading-none")} aria-hidden>
                 {opt.emoji}
               </span>

@@ -168,7 +168,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 <div
                   ref={mirrorRef}
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 select-none overflow-x-hidden whitespace-pre py-2.5 text-[15px]"
+                  className="pointer-events-none absolute inset-0 select-none overflow-x-hidden whitespace-pre py-3.5 text-[15px]"
                 >
                   {value.split(/(@\S+)/).map((part, i) =>
                     /^@\S+/.test(part) ? (
@@ -203,7 +203,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                     handleSubmit();
                   }
                 }}
-                className="relative z-10 w-full bg-transparent py-2.5 text-[15px] text-text placeholder:text-text-disabled outline-none disabled:cursor-not-allowed"
+                className="relative z-10 w-full bg-transparent py-3.5 text-[15px] text-text placeholder:text-text-disabled outline-none disabled:cursor-not-allowed"
               />
             </div>
             {onGifButtonClick ? (

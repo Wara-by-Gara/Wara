@@ -1,4 +1,11 @@
-import { forwardRef, type HTMLAttributes } from "react";
+"use client";
+
+import {
+  forwardRef,
+  useEffect,
+  useState,
+  type HTMLAttributes,
+} from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/cn.ts";
 import { Spinner } from "../../atoms/index.ts";
@@ -6,10 +13,26 @@ import { Spinner } from "../../atoms/index.ts";
 export interface LoadingStateProps extends HTMLAttributes<HTMLDivElement> {
   /** 스피너 아래 안내 문구 */
   label?: string;
+  /** 표시 전 지연(ms) — 짧은 로딩의 스피너 깜빡임 방지 (StyleSeed: 300ms 권장). 기본 0 */
+  delay?: number;
 }
 
 /** 중앙 스피너 + 안내 문구 (영역 로딩) */
-export function LoadingState({ className, label, ...props }: LoadingStateProps) {
+export function LoadingState({
+  className,
+  label,
+  delay = 0,
+  ...props
+}: LoadingStateProps) {
+  const [shown, setShown] = useState(delay === 0);
+  useEffect(() => {
+    if (delay === 0) return;
+    const t = setTimeout(() => setShown(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  if (!shown) return null;
+
   return (
     <div
       className={cn(

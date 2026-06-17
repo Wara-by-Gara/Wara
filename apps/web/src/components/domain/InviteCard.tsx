@@ -142,7 +142,7 @@ export const InviteCard = forwardRef<HTMLButtonElement, InviteCardProps>(
           "group w-full text-left focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]",
           horizontal
             ? "flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-surface-muted"
-            : "flex flex-col gap-3 overflow-hidden rounded-xl border border-border bg-surface p-3 shadow-sm transition-shadow hover:shadow-md",
+            : "flex flex-col gap-3 overflow-hidden rounded-xl border border-border bg-surface p-3 shadow-card transition-shadow hover:shadow-hover",
           className,
         )}
         {...props}

@@ -63,7 +63,9 @@ export const semanticColors: Record<ThemeMode, Record<string, string>> = {
     "surface-inverse": "#16131F",
 
     text: "#14121A",
+    "text-secondary": "#4A4556",
     "text-muted": "#6B6577",
+    "text-subtle": "#807A8C",
     "text-disabled": "#A8A3B3",
     "text-inverse": "#FFFFFF",
     "text-on-primary": "#FFFFFF",
@@ -101,7 +103,9 @@ export const semanticColors: Record<ThemeMode, Record<string, string>> = {
     "surface-inverse": "#F4F1FA",
 
     text: "#F4F1FA",
+    "text-secondary": "#CFC9DC",
     "text-muted": "#ADA6BD",
+    "text-subtle": "#8B85A0",
     "text-disabled": "#6E6880",
     "text-inverse": "#14121A",
     "text-on-primary": "#FFFFFF",

@@ -27,6 +27,7 @@ import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
 import ParticipantAvatarRow from '@/domain/InvitationDetail/Participants/ParticipantAvatarRow';
+import ParticipantsContainer from '@/domain/InvitationDetail/Participants/ParticipantsContainer';
 import {
   updateInvitationStatus,
   deleteInvitation,
@@ -77,6 +78,7 @@ export default function HostView({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [profileTarget, setProfileTarget] = useState<{ userId: string; name?: string; avatarUrl?: string } | null>(null);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
   const { mutate: cloneInvitation, isPending: isCloning } = useCloneInvitation();
 
   const handleClone = () => {
@@ -318,9 +320,7 @@ export default function HostView({
                           'text-[13px]',
                           isDarkBg ? 'text-white' : 'text-accent',
                         )}
-                        onClick={() =>
-                          router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))
-                        }
+                        onClick={() => setParticipantsOpen(true)}
                       >
                         전체보기
                       </button>
@@ -351,9 +351,7 @@ export default function HostView({
           rail={
             <HostActionRail
               goingCount={participantsData?.summary.attendingCount ?? 0}
-              onParticipants={() =>
-                router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))
-              }
+              onParticipants={() => setParticipantsOpen(true)}
               edit={{
                 icon: 'edit',
                 label: '수정',
@@ -385,6 +383,10 @@ export default function HostView({
           name={profileTarget?.name}
           avatarUrl={profileTarget?.avatarUrl}
         />
+
+        {participantsOpen ? (
+          <ParticipantsContainer onClose={() => setParticipantsOpen(false)} />
+        ) : null}
 
         <ShareBottomSheet
           invitationId={invitationId}
