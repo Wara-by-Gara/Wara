@@ -169,7 +169,7 @@ export default function ParticipantsContainer() {
 
   return (
     <>
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <TopAppBar
         title="참석자"
         onBack={() => router.back()}

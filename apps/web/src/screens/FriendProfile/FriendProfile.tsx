@@ -32,7 +32,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
 
   if (isLoading) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
         <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
         <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
@@ -44,7 +44,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
 
   if (isError || !friend) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
         <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
         <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
@@ -57,7 +57,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
   const name = friend.name ?? "이름 없음";
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <HeaderGradient fixed />
       <TopAppBar
         variant="transparent"
@@ -93,7 +93,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
         {/* 함께 아는 친구 */}
         <section className="py-4">
           <h2 className="px-page pb-2 text-[14px] font-bold text-text">
-            함께 아는 친구 {friend.mutualFriends.length}
+            함께 아는 친구 · <span className="text-text-muted">{friend.mutualFriends.length}명</span>
           </h2>
           <div className="flex gap-3 overflow-x-auto px-page">
             {friend.mutualFriends.map((m) => {
@@ -132,6 +132,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
                   badge={statusChipToBadge(chip)}
                   title={inv.title}
                   dateText={formatInvitationEventDate(inv.eventStartAt, "")}
+                  locationText={inv.location ?? undefined}
                   imageUrl={inv.imageUrl ?? undefined}
                   onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(inv.id))}
                 />

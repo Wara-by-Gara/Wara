@@ -69,7 +69,7 @@ export const Notifications = ({
   if (state === 'settings') {
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
-        <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
+        <TopAppBar className="shrink-0 lg:mx-auto lg:w-full lg:max-w-5xl" title="알림 설정" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl">
           <section className="py-2">
             <div className="divide-y divide-border bg-surface">
@@ -107,7 +107,7 @@ export const Notifications = ({
   if (state === 'pushPermissionGuide' || state === 'pushDisabledGuide') {
     return (
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
-        <TopAppBar className="shrink-0" title="알림" onBack={onBack} />
+        <TopAppBar className="shrink-0 lg:mx-auto lg:w-full lg:max-w-5xl" title="알림" onBack={onBack} />
         <main className={mobileMainCenter}>
           <EmptyState
             icon="bell"
@@ -137,9 +137,9 @@ export const Notifications = ({
   }
 
   return (
-    <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar
-        className="shrink-0"
+        className="shrink-0 lg:mx-auto lg:w-full lg:max-w-5xl"
         title="알림"
         onBack={onBack}
         rightSlot={

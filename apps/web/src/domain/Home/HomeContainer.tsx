@@ -123,7 +123,7 @@ export default function HomeContainer() {
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       {/* 데스크톱은 전역 TopNavigation이 +/알림을 제공 → 홈 상단 헤더(+/알림 pill) 숨김 */}
       <div className="lg:hidden">
         <HomeHeader />

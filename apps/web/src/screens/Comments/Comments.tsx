@@ -65,7 +65,7 @@ export const Comments = ({ invitationId }: Props) => {
   const mainCentered = isError || (!isLoading && feedbacks.length === 0);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar
         className="shrink-0"
         title={`댓글 ${totalCount}`}

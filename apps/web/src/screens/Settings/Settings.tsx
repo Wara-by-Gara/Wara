@@ -85,7 +85,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'main') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar
           className="shrink-0"
           title="설정"
@@ -288,7 +288,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
     screen === 'marketingToggle'
   ) {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <Section title="기본 알림">
@@ -339,7 +339,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
     } as const;
     const { title, description } = map[screen];
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-page py-6">
           <p className="text-[14px] text-text-muted">{description}</p>
@@ -366,7 +366,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           ? 'dark'
           : 'system';
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="테마" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-page py-4">
           <RadioGroup defaultValue={value}>
@@ -393,7 +393,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'language') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="언어" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-page py-4">
           <RadioGroup defaultValue="ko">
@@ -429,7 +429,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           ? '개인정보처리방침'
           : '오픈소스 라이선스';
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted">
           (본문 발췌) 본 약관은 …
@@ -440,7 +440,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'appVersion') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="앱 버전" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-y-auto">
           <Icon name="send" size="xl" color="primary" decorative />
@@ -453,7 +453,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   if (screen === 'customerSupport') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="고객센터" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
           <Section title="자주 묻는 질문">
@@ -516,7 +516,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
 
   // inquiryForm / inquiryComplete
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="문의하기" onBack={onBack} />
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page py-6">
         <FormField label="이메일" required>

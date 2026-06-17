@@ -9,7 +9,7 @@ import { ROUTES } from "@/constants/routes";
 
 export default function ExploreContainer() {
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <StickyHeader
         title="탐색"
         rightSlot={

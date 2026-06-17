@@ -26,7 +26,7 @@ export const Friends = () => {
   const ghost = useScrolled();
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당.
           데스크톱(lg)은 전역 TopNavigation이 상단을 차지하므로 빈 헤더는 숨긴다(2단 헤더·빈 공간 방지). */}
       <div className="lg:hidden">

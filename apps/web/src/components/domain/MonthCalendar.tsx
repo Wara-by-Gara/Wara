@@ -116,17 +116,22 @@ export function MonthCalendar({
                     ),
               )}
             >
-              {day}
+              {images.length === 0 ? day : null}
               {images.length > 0 ? (
-                <span className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 -space-x-1.5">
+                <span className="absolute inset-1">
+                  {/* 여러 개면 살짝 어긋나게 겹쳐 쌓인 카드 형태 (직사각형, 숫자 덮음) */}
                   {images.slice(0, 3).map((url, idx) => (
-                    <span
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       key={idx}
-                      className="size-3.5 overflow-hidden rounded-full bg-surface-muted ring-1 ring-surface"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt="" className="size-full object-cover" />
-                    </span>
+                      src={url}
+                      alt=""
+                      className="absolute inset-0 size-full rounded-md object-cover ring-1 ring-surface"
+                      style={{
+                        transform: `translate(${idx * 2}px, ${idx * 2}px)`,
+                        zIndex: 20 - idx,
+                      }}
+                    />
                   ))}
                 </span>
               ) : marked ? (

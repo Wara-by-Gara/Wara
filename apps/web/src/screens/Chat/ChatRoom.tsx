@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Icon, TopAppBar, Modal, ConfirmDialog, BottomSheet, toast } from "@wara/ui";
 import { ChatDrawer } from "@/screens/Chat/ChatDrawer";
+import { ChatList } from "@/screens/Friends/ChatList";
 import { PhotoViewer, type ViewerPhoto } from "@/screens/Chat/PhotoViewer";
 import { useMe } from "@/hooks/useUsers";
 import {
@@ -85,7 +86,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
   const router = useRouter();
   const { data: me } = useMe();
   const myId = me?.id;
-  const { data: conversation } = useConversation(id);
+  const { data: conversation, isLoading: isConversationLoading } = useConversation(id);
   const { messages, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } =
     useChatMessages(id);
   const sendMutation = useSendMessage(id);
@@ -322,13 +323,28 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     router.push(ROUTES.FRIENDS.DETAIL(userId));
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-2xl">
+    <div className="lg:mx-auto lg:flex lg:h-dvh lg:w-full lg:max-w-6xl">
+      {/* 데스크톱 좌측 대화 목록 (고정) */}
+      <aside className="hidden w-[340px] shrink-0 flex-col border-r border-border bg-surface lg:flex">
+        <div className="border-b border-border px-4 py-4 text-[18px] font-bold text-text">채팅</div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ChatList />
+        </div>
+      </aside>
+
+      {/* 대화방 — 모바일: 단독 화면 / 데스크톱: 우측 패널 */}
+      <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-surface-muted lg:mx-0 lg:h-full lg:max-w-none lg:flex-1">
       <TopAppBar
         onBack={() => router.back()}
         largeTitle
         className="min-h-0 pt-2"
         title={
-          isGroup ? (
+          isConversationLoading && !conversation ? (
+            <span
+              aria-hidden
+              className="inline-block h-5 w-28 animate-pulse rounded-md bg-black/10 align-middle"
+            />
+          ) : isGroup ? (
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
@@ -953,6 +969,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         startIndex={viewer?.index ?? 0}
         onClose={() => setViewer(null)}
       />
+      </div>
     </div>
   );
 };

@@ -25,6 +25,7 @@ export type SharedInvitation = {
   status: 'active' | 'closed';
   isHostedByMe: boolean;
   imageUrl: string | null;
+  location: string | null;
 };
 
 export type FriendProfile = {

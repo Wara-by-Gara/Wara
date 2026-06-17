@@ -567,7 +567,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
   if (step === "settings") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title="투표 설정" onBack={() => setStep("date")} />
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl">
           {/* Summary */}
@@ -673,7 +673,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar className="shrink-0" title="일정 투표 만들기" onBack={onBack ?? (() => {})} />
 
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl">
@@ -876,10 +876,16 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   const showNames = state === "resultsPublic" || (state === "confirmed" && !poll?.isAnonymous);
   const isConfirmedView = state === "confirmed";
 
-  const maxCircle = displaySlots.length > 0 ? Math.max(...displaySlots.map((s) => s.votes.circle)) : 0;
-  const topSlotIds = maxCircle > 0
-    ? new Set(displaySlots.filter((s) => s.votes.circle === maxCircle).map((s) => s.id))
-    : new Set<string>();
+  // 현재 최다: 좋아요(good) 최다 슬롯 "1개"만. 동점이면 안 됨(bad) 적은 순 → 먼저 나온 슬롯 순으로
+  // 단일 결정해 배지가 여러 슬롯에 중복으로 뜨지 않게 한다.
+  const topSlotId = displaySlots.reduce<DateSlot | null>((best, s) => {
+    if (s.votes.circle === 0) return best;
+    if (!best) return s;
+    if (s.votes.circle !== best.votes.circle) return s.votes.circle > best.votes.circle ? s : best;
+    if (s.votes.cross !== best.votes.cross) return s.votes.cross < best.votes.cross ? s : best;
+    return best; // 완전 동률이면 먼저 나온 슬롯 유지
+  }, null)?.id ?? null;
+  const topSlotIds = topSlotId ? new Set([topSlotId]) : new Set<string>();
 
   // 마감 시간 표시 — 서버는 "마감 없음"을 2099-12-31로 저장 (date-vote.service.ts:52)
   const isNoDeadline = poll?.closesAt && new Date(poll.closesAt).getFullYear() >= 2099;
@@ -900,7 +906,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   const nonVoterCount = Math.max(0, totalCount - totalVoters);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar className="shrink-0 lg:hidden" title="일정 투표" onBack={goBack} />
 
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start lg:gap-x-6 lg:pt-8">
@@ -908,17 +914,23 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
         <div className="flex flex-col gap-4 lg:sticky lg:top-2 lg:self-start">
         {/* 초대장 정보 */}
         {invitationId && invitation && (
-          <div className="flex items-center gap-3 rounded-md border border-border bg-surface p-3.5">
+          <button
+            type="button"
+            onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(invitationId))}
+            aria-label={`${invitation.title} 초대장으로 이동`}
+            className="flex w-full items-center gap-3 rounded-md border border-border bg-surface p-3.5 text-left transition-colors hover:bg-surface-muted active:bg-surface-muted"
+          >
             <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-primary/10">
               <Icon name="ticket" size="md" color="primary" decorative />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] font-bold text-text">{invitation.title}</p>
               <p className="text-[12px] text-text-disabled">
-                호스트 · {invitation.host?.nickname ?? invitation.host?.name ?? '알 수 없음'}
+                호스트 · {invitation.host?.name ?? invitation.host?.nickname ?? '알 수 없음'}
               </p>
             </div>
-          </div>
+            <Icon name="chevron-right" size="sm" color="inactive" decorative className="shrink-0" />
+          </button>
         )}
 
         {/* 상태 배너 */}

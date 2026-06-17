@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { and, desc, eq, inArray, isNull, ne, notInArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { invitations, participants, users, friendHides } from '../database/schema';
+import { invitations, participants, users, friendHides, eventLocations } from '../database/schema';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 
 @Injectable()
@@ -141,6 +141,7 @@ export class FriendsRepository {
         mainCoverType: invitations.mainCoverType,
         mainImageKey: invitations.mainImageKey,
         mainGifUrl: invitations.mainGifUrl,
+        placeName: eventLocations.placeName,
       })
       .from(invitations)
       .innerJoin(
@@ -150,6 +151,13 @@ export class FriendsRepository {
       .innerJoin(
         p2,
         and(eq(p2.invitationId, invitations.id), eq(p2.userId, targetUserId)),
+      )
+      .leftJoin(
+        eventLocations,
+        and(
+          eq(eventLocations.invitationId, invitations.id),
+          isNull(eventLocations.deletedAt),
+        ),
       )
       .where(isNull(invitations.deletedAt))
       .orderBy(desc(invitations.eventStartAt));

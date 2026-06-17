@@ -56,7 +56,7 @@ export const ProfileEdit = ({
 
   if (state === "saveComplete") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="badge-check" size="xl" color="success" decorative />
@@ -68,7 +68,7 @@ export const ProfileEdit = ({
 
   if (state === "saveFailed") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
@@ -80,7 +80,7 @@ export const ProfileEdit = ({
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
       <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-page py-6 lg:mx-auto lg:w-full lg:max-w-2xl">
         <section className="flex flex-col items-center gap-3">

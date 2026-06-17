@@ -64,7 +64,7 @@ export const MyPage = ({
 
   if (state === "loggedOut") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <StickyHeader title="마이페이지" />
         <main className={`relative z-10 ${mobileMainCenter}`}>
           <EmptyState
@@ -80,7 +80,7 @@ export const MyPage = ({
 
   if (state === "loading") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <StickyHeader title="마이페이지" />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl">
           <ProfileSkeleton />
@@ -91,7 +91,7 @@ export const MyPage = ({
 
   if (state === "error") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
         <StickyHeader title="마이페이지" />
         <main className={`relative z-10 ${mobileMainCenter}`}>
           <ErrorState title="프로필을 불러오지 못했어요" onRetry={() => {}} />
@@ -107,7 +107,7 @@ export const MyPage = ({
     : null;
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <StickyHeader
         title="마이페이지"
         rightSlot={

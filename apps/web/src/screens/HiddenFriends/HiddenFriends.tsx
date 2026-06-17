@@ -12,7 +12,7 @@ export const HiddenFriends = () => {
   const friends = data?.friends ?? [];
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
       <TopAppBar
         className="absolute inset-x-0 top-0 z-30"
         title="삭제한 친구"

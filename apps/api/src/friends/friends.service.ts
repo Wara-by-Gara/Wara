@@ -25,6 +25,7 @@ export interface FriendProfile {
     status: 'active' | 'closed';
     isHostedByMe: boolean;
     imageUrl: string | null;
+    location: string | null;
   }[];
 }
 
@@ -186,6 +187,7 @@ export class FriendsService {
           status: inv.status,
           isHostedByMe: inv.hostUserId === myUserId,
           imageUrl: await this.resolveInvitationCoverUrl(inv),
+          location: inv.placeName ?? null,
         })),
       ),
     ]);

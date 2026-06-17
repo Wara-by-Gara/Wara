@@ -67,7 +67,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "connectedSocial" || screen === "connectAdditional" || screen === "disconnectModal") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
         <section className="py-2">
@@ -133,7 +133,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "logoutComplete") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="계정 관리" />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="log-out" size="xl" color="primary" decorative />
@@ -146,7 +146,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "withdrawGuide") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="회원 탈퇴 안내" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
           <h1 className="text-[20px] font-bold text-text">탈퇴 전 확인해주세요</h1>
@@ -165,7 +165,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "withdrawReason") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+      <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="떠나시는 이유를 알려주세요" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <RadioGroup
@@ -214,7 +214,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   // withdrawComplete
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="회원 탈퇴" />
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
         <Icon name="user-x" size="xl" color="inactive" decorative />
@@ -239,7 +239,7 @@ function WithdrawFinalConfirm({ onBack, onWithdrawCancel, onWithdrawConfirm, isW
   const canConfirm = phrase.trim() === WITHDRAW_CONFIRM_PHRASE;
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
+    <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
       <main className="min-h-0 flex-1 overflow-y-auto px-6 py-8">
         <h1 className="text-[20px] font-bold text-text">정말 탈퇴할까요?</h1>
