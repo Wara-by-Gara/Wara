@@ -119,7 +119,7 @@ export function MonthCalendar({
               {images.length === 0 ? day : null}
               {images.length > 0 ? (
                 <span className="absolute inset-1">
-                  {/* 여러 개면 살짝 어긋나게 겹쳐 쌓인 카드 형태 (직사각형, 숫자 덮음) */}
+                  {/* 1개=단일, 2개=2겹, 3개 이상=3겹 동일. 직사각형으로 숫자 덮음 */}
                   {images.slice(0, 3).map((url, idx) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -133,6 +133,12 @@ export function MonthCalendar({
                       }}
                     />
                   ))}
+                  {/* 2개 이상이면 실제 개수를 우측 아래 배지로 */}
+                  {images.length >= 2 ? (
+                    <span className="absolute -bottom-0.5 -right-0.5 z-30 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-black/70 px-1 text-[9px] font-bold leading-none text-white ring-1 ring-surface">
+                      {images.length}
+                    </span>
+                  ) : null}
                 </span>
               ) : marked ? (
                 <span
