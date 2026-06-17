@@ -900,10 +900,12 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   const nonVoterCount = Math.max(0, totalCount - totalVoters);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
-      <TopAppBar className="shrink-0" title="일정 투표" onBack={goBack} />
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
+      <TopAppBar className="shrink-0 lg:hidden" title="일정 투표" onBack={goBack} />
 
-      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4 lg:mx-auto lg:w-full lg:max-w-5xl lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start lg:gap-x-6 lg:pt-8">
+        {/* 좌측: 정보·상태·참여현황 (데스크톱 고정) */}
+        <div className="flex flex-col gap-4 lg:sticky lg:top-2 lg:self-start">
         {/* 초대장 정보 */}
         {invitationId && invitation && (
           <div className="flex items-center gap-3 rounded-md border border-border bg-surface p-3.5">
@@ -977,8 +979,8 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
                       key={participant.id}
                       size="xs"
                       src={user.profileImageUrl ?? undefined}
-                      alt={user.nickname ?? user.name ?? undefined}
-                      name={user.nickname ?? user.name ?? undefined}
+                      alt={user.name ?? user.nickname ?? undefined}
+                      name={user.name ?? user.nickname ?? undefined}
                       className="ring-2 ring-surface"
                     />
                   ))}
@@ -1009,7 +1011,10 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             <span className="text-[12px] text-text-disabled">미투표 2명</span>
           </div>
         )}
+        </div>
 
+        {/* 우측: 투표/결과 (데스크톱 스크롤) */}
+        <div className="flex flex-col gap-4">
         {canVote && (
           <>
             <VoteTable
@@ -1040,6 +1045,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             ))}
           </div>
         )}
+        </div>
       </main>
 
       <ConfirmDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}

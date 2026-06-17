@@ -7,6 +7,7 @@ import { TermsComplianceRedirect } from '@/components/auth/terms-compliance-redi
 import { NotificationSocketMount } from '@/components/notifications/notification-socket-mount';
 import { DmSocketMount } from '@/components/chat/dm-socket-mount';
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
+import { PushSubscriptionMount } from '@/components/pwa/push-subscription-mount';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { Toaster } from "@wara/ui";
@@ -43,6 +44,7 @@ export default function RootLayout({
           <NotificationSocketMount />
           <DmSocketMount />
           <ServiceWorkerRegister />
+          <PushSubscriptionMount />
           <Suspense fallback={null}>
             <TopNavigation />
           </Suspense>
