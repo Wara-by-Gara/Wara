@@ -20,8 +20,10 @@ export interface MonthCalendarProps {
   onNextMonth: () => void;
   /** 있으면 헤더에 '오늘' 이동 버튼 표시 */
   onToday?: () => void;
-  /** 이벤트가 있는 'YYYY-MM-DD' — 날짜 아래 점으로 표시 */
+  /** 이벤트가 있는 'YYYY-MM-DD' — 날짜 아래 점으로 표시 (imagesByKey 없을 때 폴백) */
   markedKeys?: Set<string>;
+  /** 날짜별 초대장 커버 이미지 — 날짜 아래 썸네일로 표시 (여러 개면 겹침) */
+  imagesByKey?: Map<string, string[]>;
   /** 오늘 이전 비활성 */
   disablePast?: boolean;
   className?: string;
@@ -36,6 +38,7 @@ export function MonthCalendar({
   onNextMonth,
   onToday,
   markedKeys,
+  imagesByKey,
   disablePast,
   className,
 }: MonthCalendarProps) {
@@ -90,6 +93,7 @@ export function MonthCalendar({
           const key = dateKey(year, month, day);
           const selected = selectedKeys.has(key);
           const isToday = key === todayKey;
+          const images = imagesByKey?.get(key)?.filter(Boolean) ?? [];
           const marked = markedKeys?.has(key);
           const past = disablePast && new Date(year, month - 1, day).getTime() < todayMidnight;
           return (
@@ -113,7 +117,19 @@ export function MonthCalendar({
               )}
             >
               {day}
-              {marked ? (
+              {images.length > 0 ? (
+                <span className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 -space-x-1.5">
+                  {images.slice(0, 3).map((url, idx) => (
+                    <span
+                      key={idx}
+                      className="size-3.5 overflow-hidden rounded-full bg-surface-muted ring-1 ring-surface"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="" className="size-full object-cover" />
+                    </span>
+                  ))}
+                </span>
+              ) : marked ? (
                 <span
                   className={cn(
                     "absolute bottom-1 size-1 rounded-full",

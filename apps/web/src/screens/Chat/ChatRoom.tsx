@@ -470,7 +470,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                     )}
                     {/* 말풍선 + 메타(시간/안읽음)를 한 줄에 — 리액션이 생겨도 메타가 안 밀리게 */}
                     <div
-                      className={`flex min-w-0 items-end gap-1.5 ${
+                      className={`group/msg flex min-w-0 items-end gap-1.5 ${
                         mine ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
@@ -561,6 +561,17 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                           {formatTime(m.createdAt)}
                         </span>
                       </div>
+                      {/* PC(정밀 포인터)에서 hover 시 리액션 버튼 노출 — 좋아요 가능함을 알림 */}
+                      {!m.deleted && (
+                        <button
+                          type="button"
+                          onClick={() => setMenuTarget(m)}
+                          aria-label="리액션 남기기"
+                          className="hidden shrink-0 self-center rounded-full p-1 text-text-disabled opacity-0 transition-opacity hover:bg-surface-muted hover:text-text [@media(pointer:fine)]:inline-flex group-hover/msg:opacity-100"
+                        >
+                          <Icon name="smile" size="sm" color="currentColor" decorative />
+                        </button>
+                      )}
                     </div>
                     {/* 리액션 배지 — 말풍선 외부 아래, 페이지 배경 위 칩 */}
                     {!m.deleted && m.reactions.length > 0 && (

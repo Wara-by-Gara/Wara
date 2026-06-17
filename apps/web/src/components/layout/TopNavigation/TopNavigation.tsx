@@ -7,6 +7,7 @@ import { LoginSheet } from "@/components/auth/login-sheet";
 import { NAV_ROUTES, type MainBottomNavKey } from "@/lib/mainBottomNav";
 import { ROUTES } from "@/constants/routes";
 import { useMainNav } from "@/hooks/useMainNav";
+import { useUnreadCount } from "@/hooks/useNotifications";
 import { cn } from "@/lib/cn";
 
 interface TopNavLink {
@@ -37,6 +38,8 @@ export function TopNavigation() {
     loginSheetOpen,
     setLoginSheetOpen,
   } = useMainNav();
+  const { data: unreadData } = useUnreadCount();
+  const hasUnreadNotification = (unreadData?.count ?? 0) > 0;
 
   if (hidden) return null;
 
@@ -109,12 +112,24 @@ export function TopNavigation() {
           </nav>
         </div>
 
-        <Button asChild variant="primary" size="sm">
-          <Link href={ROUTES.INVITATIONS.CREATE}>
-            <Icon name="plus" size="sm" color="currentColor" decorative />
-            만들기
+        <div className="flex items-center gap-2">
+          <Link
+            href={ROUTES.NOTIFICATIONS.LIST}
+            aria-label={hasUnreadNotification ? "알림, 읽지 않은 알림 있음" : "알림"}
+            className="relative inline-flex size-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-gray-50 hover:text-text"
+          >
+            <Icon name="bell" size="md" color="currentColor" decorative />
+            {hasUnreadNotification && (
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500" />
+            )}
           </Link>
-        </Button>
+          <Button asChild variant="primary" size="sm">
+            <Link href={ROUTES.INVITATIONS.CREATE}>
+              <Icon name="plus" size="sm" color="currentColor" decorative />
+              만들기
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
     {/* 본문을 고정 헤더 아래로 밀어주는 spacer — 헤더가 렌더될 때만 존재(숨김 경로엔 여백 없음) */}

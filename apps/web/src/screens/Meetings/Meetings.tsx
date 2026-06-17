@@ -121,6 +121,17 @@ export function Meetings() {
   };
 
   const markedKeys = useMemo(() => new Set(eventsByDay.keys()), [eventsByDay]);
+  // 날짜별 초대장 커버 이미지 — 달력에 점 대신 썸네일(여러 개면 겹침)로 표시
+  const imagesByDay = useMemo(() => {
+    const map = new Map<string, string[]>();
+    eventsByDay.forEach((invs, key) => {
+      map.set(
+        key,
+        invs.map((inv) => getInvitationCoverImageUrl(inv)).filter((u): u is string => !!u),
+      );
+    });
+    return map;
+  }, [eventsByDay]);
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
@@ -135,17 +146,20 @@ export function Meetings() {
           />
         </main>
       ) : (
-        <main className={`relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-4 lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTopSpacious}`}>
-          <MonthCalendar
-            year={year}
-            month={month}
-            selectedKeys={selectedKey ? new Set([selectedKey]) : new Set()}
-            onDayClick={handleDayClick}
-            onPrevMonth={prevMonth}
-            onNextMonth={nextMonth}
-            onToday={goToday}
-            markedKeys={markedKeys}
-          />
+        <main className={`relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-4 lg:mx-auto lg:w-full lg:max-w-5xl lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-x-6 ${stickyMainTopSpacious}`}>
+          <div className="lg:sticky lg:top-2 lg:self-start">
+            <MonthCalendar
+              year={year}
+              month={month}
+              selectedKeys={selectedKey ? new Set([selectedKey]) : new Set()}
+              onDayClick={handleDayClick}
+              onPrevMonth={prevMonth}
+              onNextMonth={nextMonth}
+              onToday={goToday}
+              markedKeys={markedKeys}
+              imagesByKey={imagesByDay}
+            />
+          </div>
 
           <section className="rounded-md border border-border bg-surface p-4">
             <h2 className="mb-3 text-[15px] font-bold text-text">

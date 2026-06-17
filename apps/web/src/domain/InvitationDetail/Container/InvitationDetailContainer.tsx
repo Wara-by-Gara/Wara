@@ -27,9 +27,9 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   if (!hydrated || isLoading) {
     return (
-      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" onBack={() => router.back()} />
-        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2">
+      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:h-auto lg:min-h-0 lg:max-w-none">
+        <TopAppBar className="shrink-0 lg:hidden" onBack={() => router.back()} />
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2 lg:mx-auto lg:w-full lg:max-w-2xl lg:pt-8">
           <InvitationDetailSkeleton />
         </main>
       </div>
@@ -38,8 +38,8 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   if (isError || !invitation) {
     return (
-      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
-        <TopAppBar className="shrink-0" onBack={() => router.back()} />
+      <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:h-auto lg:min-h-0 lg:max-w-none">
+        <TopAppBar className="shrink-0 lg:hidden" onBack={() => router.back()} />
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text">초대장을 불러오지 못했어요</p>
