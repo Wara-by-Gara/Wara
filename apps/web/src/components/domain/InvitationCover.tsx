@@ -73,7 +73,7 @@ export const InvitationCover = forwardRef<HTMLDivElement, InvitationCoverProps>(
         ref={ref}
         className={cn(
           detailMode
-            ? "relative w-full overflow-hidden rounded-lg"
+            ? "relative w-full overflow-hidden rounded-[6px]"
             : fit
             ? cn("relative w-full overflow-hidden rounded-lg aspect-[3/2]")
             : containerBase,

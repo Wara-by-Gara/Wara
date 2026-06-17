@@ -18,7 +18,7 @@ export function InvitationDescriptionBox({ children, bgColor, footer }: Invitati
           <div className={cn("border-t", isDarkBg ? "border-white/25" : "border-black/10")} />
         </>
       ) : null}
-      <p className={cn("whitespace-pre-line text-left text-[15px] leading-[1.6]", isDarkBg ? "text-white" : "text-text")}>
+      <p className={cn("whitespace-pre-line text-left text-[17px] leading-[1.6]", isDarkBg ? "text-white" : "text-text")}>
         {children}
       </p>
     </div>

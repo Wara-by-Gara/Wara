@@ -38,7 +38,7 @@ export function InvitationDetailPanes({ cover, left, rsvp, feed, rail }: Props) 
     >
       {/* 좌측: 커버 + RSVP (sticky 고정) */}
       <div className="contents lg:sticky lg:top-[calc(var(--header-height)+24px)] lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:gap-4 lg:self-start">
-        <div className="pt-4 max-lg:order-1 lg:pt-0">{cover}</div>
+        <div className="pt-4 max-lg:order-1 max-lg:-mx-0.5 lg:pt-0">{cover}</div>
         {rsvp ? <div className="max-lg:order-3 max-lg:mt-3">{rsvp}</div> : null}
       </div>
 

@@ -103,18 +103,29 @@ export default function LocationWithDate({
             onViewMap={() => router.push(ROUTES.INVITATIONS.LOCATION(invitationId))}
           />
         ) : (
-          <>
-            <LocationCard variant="unknown" immersive={immersive} isDarkBg={isDarkBg} />
+          <div className="flex flex-col gap-2.5 rounded-md border border-white/40 bg-white/20 px-4 py-3 shadow-xs backdrop-blur-md backdrop-saturate-150">
+            <div className="flex gap-3">
+              <span
+                className={`shrink-0 text-[16px] font-semibold ${isDarkBg ? "text-white/70" : "text-text-disabled"}`}
+              >
+                장소
+              </span>
+              <span
+                className={`min-w-0 flex-1 text-left text-[17px] leading-[1.6] ${isDarkBg ? "text-white" : "text-text"}`}
+              >
+                미정
+              </span>
+            </div>
             {isHost && (
               <button
                 type="button"
                 onClick={() => setLocationModalOpen(true)}
-                className="mt-2 block w-full text-center text-[13px] text-primary"
+                className="block w-full text-center text-[13px] text-primary"
               >
                 장소 설정하기 →
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
 

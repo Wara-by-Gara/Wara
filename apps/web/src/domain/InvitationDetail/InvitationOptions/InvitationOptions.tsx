@@ -42,7 +42,7 @@ export function InvitationOptions({
         <div key={row.label} className="flex gap-3">
           <span
             className={cn(
-              "shrink-0 text-[14px] font-semibold",
+              "shrink-0 text-[16px] font-semibold",
               isDarkBg ? "text-white/70" : "text-text-disabled",
             )}
           >
@@ -50,7 +50,7 @@ export function InvitationOptions({
           </span>
           <span
             className={cn(
-              "min-w-0 flex-1 whitespace-pre-line text-left text-[15px] leading-[1.6]",
+              "min-w-0 flex-1 whitespace-pre-line text-left text-[17px] leading-[1.6]",
               isDarkBg ? "text-white" : "text-text",
             )}
           >

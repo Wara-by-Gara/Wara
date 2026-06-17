@@ -176,11 +176,11 @@ const canViewFeed = !!myParticipant;
         }
         left={
           <>
-            <div className="flex flex-col gap-2">
-              <header className="flex flex-col gap-2 text-left">
+            <div className="flex flex-col gap-3">
+              <header className="flex flex-col gap-1.5 text-left">
                 <h1
                   className={cn(
-                    "line-clamp-2 break-words pb-0.5 text-[28px] font-bold leading-[1.35] tracking-tight lg:text-[34px]",
+                    "line-clamp-2 break-words pb-0.5 text-[30px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]",
                     isDarkBg ? "text-white" : "text-text",
                     fontClass,
                   )}
@@ -190,7 +190,7 @@ const canViewFeed = !!myParticipant;
                 {schedule ? (
                   <p
                     className={cn(
-                      "text-[17px] leading-[1.35] lg:text-[19px]",
+                      "text-[19px] leading-[1.35] lg:text-[21px]",
                       isDarkBg ? "text-white" : "text-text-muted",
                     )}
                   >
