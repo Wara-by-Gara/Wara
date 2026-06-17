@@ -27,13 +27,15 @@ export const Friends = () => {
 
   return (
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
-      {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당 */}
-      <StickyHeader />
+      {/* 타이틀은 아래 세그먼트 탭(친구/채팅)과 중복돼 생략 — 헤더는 상단 aura·여백만 담당.
+          데스크톱(lg)은 전역 TopNavigation이 상단을 차지하므로 빈 헤더는 숨긴다(2단 헤더·빈 공간 방지). */}
+      <div className="lg:hidden">
+        <StickyHeader />
+      </div>
 
-      {/* 친구 | 채팅 세그먼트 — 상단 고정 글래스 알약.
-          이 셸은 main이 아닌 window가 스크롤되므로 sticky가 안 먹어 fixed로 고정한다.
-          z-40: 빈 헤더(z-30)보다 위에 둬야 헤더가 알약 상단 클릭을 가로채지 않는다. */}
-      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page">
+      {/* 친구 | 채팅 세그먼트 — 모바일은 상단 고정 글래스 알약(window 스크롤이라 sticky 대신 fixed).
+          데스크톱은 전역 헤더(fixed h-[--header-height]) 아래로 내려, 겹쳐 가려지지 않게 static 인라인으로 강등한다. */}
+      <div className="fixed inset-x-0 top-[28px] z-40 mx-auto w-full max-w-md px-page lg:static lg:top-auto lg:mt-2">
         <div
           className={cn(
             "flex gap-1 rounded-full p-1 transition-all duration-300",
@@ -58,7 +60,7 @@ export const Friends = () => {
         </div>
       </div>
 
-      <main className={`relative z-10 ${mobileMainScroll} pt-[80px]`}>
+      <main className={`relative z-10 ${mobileMainScroll} pt-[80px] lg:pt-2`}>
         {tab === "friends" ? <FriendsList /> : <ChatList />}
       </main>
     </div>
