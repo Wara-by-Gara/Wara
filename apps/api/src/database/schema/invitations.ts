@@ -11,6 +11,9 @@ export const invitationTemplates = pgTable('invitation_templates', {
   theme: varchar('theme', { length: 50 }).notNull(),
   font: varchar('font', { length: 50 }).notNull(),
   effect: varchar('effect', { length: 50 }),
+  /** 생성 폼에 바로 적용할 배경 cls(`bg-invite-*`)·애니메이션 id. 인기 초대장 클릭 시 WYSIWYG 프리필용 */
+  bgColor: varchar('bg_color', { length: 50 }),
+  animation: varchar('animation', { length: 50 }),
   prompt: text('prompt').default(
     '왼쪽 이미지의 인물을 오른쪽 이미지의 초대장 배경 디자인에 자연스럽게 합성해 주세요. 배경 디자인과 분위기를 최대한 유지하면서 인물을 배경에 어울리게 배치해 주세요.',
   ),

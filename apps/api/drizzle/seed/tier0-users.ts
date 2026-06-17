@@ -36,6 +36,8 @@ export async function seedEssential(db: DrizzleDB) {
         theme: sql`excluded.theme`,
         font: sql`excluded.font`,
         effect: sql`excluded.effect`,
+        bgColor: sql`excluded.bg_color`,
+        animation: sql`excluded.animation`,
         isActive: sql`excluded.is_active`,
         prompt: sql`excluded.prompt`,
         updatedAt: new Date(),

@@ -490,6 +490,9 @@ export default function InvitationCreateContainer({
       templateId: t.id,
       mainImageKey: t.previewImageKey ?? prev.mainImageKey,
     }));
+    // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·애니메이션도 템플릿 값으로 프리필
+    if (t.bgColor) setDesignBgColor(t.bgColor as DesignBgColor);
+    if (t.animation) setSelectedAnimation(t.animation as AnimationId);
     window.history.replaceState({}, '', ROUTES.INVITATIONS.CREATE);
   }, [templates, editInvitation]);
 
@@ -981,7 +984,7 @@ export default function InvitationCreateContainer({
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background">
+    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-5xl">
       <TopAppBar
         className="shrink-0"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
@@ -997,8 +1000,11 @@ export default function InvitationCreateContainer({
         }}
       />
 
-      {/* WYSIWYG 캔버스 */}
-      <CreateCanvas
+      {/* PC: 좌측 고정 WYSIWYG 캔버스(실제 초대장 크기) / 우측 편집 패널. 모바일은 캔버스만 */}
+      <div className="lg:grid lg:grid-cols-[28rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-6 lg:py-6">
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          {/* WYSIWYG 캔버스 */}
+          <CreateCanvas
         title={form.title}
         onTitleChange={(v) => {
           set({ title: v });
@@ -1047,11 +1053,49 @@ export default function InvitationCreateContainer({
         animation={selectedAnimation}
         onEditBgColor={() => setBgColorSheetOpen(true)}
         onEditAnimation={() => setAnimationSheetOpen(true)}
-      />
+          />
+        </div>
+
+        {/* 우측 편집 패널 (PC 전용). 각 항목은 모바일과 동일한 시트를 연다 */}
+        <aside className="hidden lg:flex lg:flex-col lg:gap-2">
+          <p className="px-1 pb-1 text-[13px] font-bold text-text-muted">편집</p>
+          {[
+            { label: '대표 이미지', onClick: () => setImageSheetOpen(true) },
+            { label: '날짜·시간', onClick: () => setDateSheetOpen(true) },
+            { label: '장소', onClick: () => setLocationSheetOpen(true) },
+            { label: '배경', onClick: () => setBgColorSheetOpen(true) },
+            { label: '효과', onClick: () => setAnimationSheetOpen(true) },
+            { label: '모임 옵션', onClick: () => setOptionsSheetOpen(true) },
+            { label: '참석 응답', onClick: () => setRsvpSheetOpen(true) },
+          ].map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              onClick={it.onClick}
+              className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3 text-left text-[14px] font-medium text-text transition-colors hover:bg-surface-muted"
+            >
+              {it.label}
+              <span aria-hidden className="text-text-disabled">›</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="mt-2 w-full rounded-full bg-surface-inverse px-4 py-3 text-[15px] font-bold text-text-inverse transition-opacity disabled:opacity-50"
+          >
+            {editInvitation
+              ? '저장'
+              : isLoggedIn
+                ? '초대장 만들기'
+                : '로그인하고 공유하기'}
+          </button>
+        </aside>
+      </div>
 
       <main
         ref={contentScrollRef}
-        className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5"
+        className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5 lg:flex-none lg:overflow-visible lg:p-0"
       >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
@@ -1982,7 +2026,7 @@ export default function InvitationCreateContainer({
           </BottomSheet>
       </main>
 
-      <div className="relative z-10 shrink-0">
+      <div className="relative z-10 shrink-0 lg:hidden">
         <StickyCTA
           primary={{
             label: editInvitation
