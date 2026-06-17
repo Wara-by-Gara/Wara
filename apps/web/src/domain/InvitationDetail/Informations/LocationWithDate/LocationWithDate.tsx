@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LocationCard, InvitationInfoCard, LocationWeatherInline } from "@/components/domain";
+import { LocationSetModal } from "./LocationSetModal";
 import { useWeather } from "@/hooks/useWeather";
 import { toWeatherCardCondition } from "@/lib/api/weather";
 import { ROUTES } from "@/constants/routes";
@@ -35,6 +37,7 @@ export default function LocationWithDate({
 }: Props) {
   const isDarkBg = bgColor?.includes('aurora') || bgColor?.includes('starry');
   const router = useRouter();
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const eventLocation = invitation.eventLocation ?? null;
   const { data: weather, within3Days, isFuture } = useWeather(
     invitationId,
@@ -103,16 +106,25 @@ export default function LocationWithDate({
           <>
             <LocationCard variant="unknown" immersive={immersive} isDarkBg={isDarkBg} />
             {isHost && (
-              <Link
-                href={ROUTES.INVITATIONS.LOCATION(invitationId)}
-                className="mt-2 block text-center text-[13px] text-primary"
+              <button
+                type="button"
+                onClick={() => setLocationModalOpen(true)}
+                className="mt-2 block w-full text-center text-[13px] text-primary"
               >
                 장소 설정하기 →
-              </Link>
+              </button>
             )}
           </>
         )}
       </div>
+
+      {isHost && (
+        <LocationSetModal
+          invitationId={invitationId}
+          open={locationModalOpen}
+          onOpenChange={setLocationModalOpen}
+        />
+      )}
     </div>
   );
 }

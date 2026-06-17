@@ -87,7 +87,7 @@ export const ChatList = () => {
     <div className="flex flex-col pb-6 pt-3">
       <div className="px-page pb-3">
         <SearchBar
-          placeholder="이름으로 대화 검색"
+          placeholder="이름 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onClear={() => setQuery("")}
