@@ -2,7 +2,7 @@
 
 import * as RAvatar from "@radix-ui/react-avatar";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { forwardRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { pickAvatarGradient } from "@wara/tokens";
 import { cn } from "../../lib/cn.ts";
 import { Icon, type IconName, type IconSize } from "../../icons/index.ts";
@@ -79,6 +79,10 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   const imageSrc =
     src && /^(https?:|data:|blob:)/i.test(src) ? src : undefined;
 
+  // 이미지가 있으면 로드 완료 전까지 이니셜 대신 스켈레톤을 보여 깜빡임을 방지한다.
+  const [imageStatus, setImageStatus] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const showSkeleton = !!imageSrc && imageStatus !== "loaded" && imageStatus !== "error";
+
   return (
     <RAvatar.Root
       ref={ref}
@@ -95,19 +99,24 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
           src={imageSrc}
           alt={alt ?? name ?? ""}
           className="size-full object-cover"
+          onLoadingStatusChange={setImageStatus}
         />
       ) : null}
       <RAvatar.Fallback
-        delayMs={imageSrc ? 200 : 0}
+        delayMs={0}
         className="flex size-full items-center justify-center"
       >
-        {initials || (
-          <Icon
-            name={fallbackIcon}
-            size={FALLBACK_ICON_SIZE[size ?? "md"]}
-            color="currentColor"
-            decorative
-          />
+        {showSkeleton ? (
+          <span className="size-full animate-pulse bg-black/10" aria-hidden />
+        ) : (
+          initials || (
+            <Icon
+              name={fallbackIcon}
+              size={FALLBACK_ICON_SIZE[size ?? "md"]}
+              color="currentColor"
+              decorative
+            />
+          )
         )}
       </RAvatar.Fallback>
     </RAvatar.Root>

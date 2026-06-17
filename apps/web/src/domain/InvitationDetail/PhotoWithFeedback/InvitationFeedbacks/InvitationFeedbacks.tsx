@@ -106,6 +106,18 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   // 댓글 입력창은 항상 보이지 않고, "댓글 쓰기"/"답글" 버튼을 눌렀을 때만 하단 고정으로 노출
   const [composerOpen, setComposerOpen] = useState(false);
+  // 하단 고정 입력창을 댓글 섹션과 동일한 좌표·너비로 맞추기 위해 섹션 위치를 측정
+  const [composerBox, setComposerBox] = useState<{ left: number; width: number } | null>(null);
+  useEffect(() => {
+    if (!composerOpen) return;
+    const measure = () => {
+      const r = sectionRef.current?.getBoundingClientRect();
+      if (r) setComposerBox({ left: r.left, width: r.width });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [composerOpen]);
 
   const { data: participantsData, isLoading: isParticipantsLoading } =
     useParticipants(invitationId);
@@ -362,6 +374,14 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                       r.participant.userId === currentUserId
                         ? (currentUserProfileImageUrl ?? undefined)
                         : (r.participant.user?.profileImageUrl ?? undefined),
+                    onAvatarClick: !isReplyDeleted
+                      ? () =>
+                          setProfileModal({
+                            userId: r.participant.userId,
+                            isHost: r.participant.memberRole === 'HOST',
+                            isWithdrawn: r.participant.user?.isWithdrawn,
+                          })
+                      : undefined,
                     content: r.deletedAt ? '' : (r.content ?? ''),
                     gifUrl: !r.deletedAt ? (r.gifUrl ?? undefined) : undefined,
                     createdAt: timeAgo(r.createdAt),
@@ -468,7 +488,14 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
             className="fixed inset-0 z-40 bg-black/20"
             onClick={closeComposer}
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
+          <div
+            className={cn(
+              "fixed bottom-0 z-50 bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]",
+              // 측정 전(첫 프레임) 폴백: 모바일과 동일하게 중앙 max-w-md
+              !composerBox && "inset-x-0 mx-auto w-full max-w-md",
+            )}
+            style={composerBox ? { left: composerBox.left, width: composerBox.width } : undefined}
+          >
             {replyingTo ? (
               <div className="flex items-center justify-between border-b border-border bg-primary-soft px-4 py-1.5">
                 <span className="text-[13px] text-primary">

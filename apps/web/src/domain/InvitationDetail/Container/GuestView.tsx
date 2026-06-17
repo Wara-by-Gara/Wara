@@ -198,7 +198,6 @@ const canViewFeed = !!myParticipant;
 
               {invitation.description ? (
                 <InvitationDescriptionBox
-                  fontClass={fontClass}
                   bgColor={invitation.bgColor}
                   footer={
                     hasInvitationOptions ? (
@@ -207,7 +206,6 @@ const canViewFeed = !!myParticipant;
                         fee={invitation.fee}
                         dressCode={invitation.dressCode}
                         parkingInfo={invitation.parkingInfo}
-                        fontClass={fontClass}
                         bgColor={invitation.bgColor}
                       />
                     ) : undefined
@@ -220,7 +218,6 @@ const canViewFeed = !!myParticipant;
                   fee={invitation.fee}
                   dressCode={invitation.dressCode}
                   parkingInfo={invitation.parkingInfo}
-                  fontClass={fontClass}
                   bgColor={invitation.bgColor}
                 />
               )}

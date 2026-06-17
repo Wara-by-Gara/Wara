@@ -4,7 +4,6 @@ interface InvitationOptionsProps {
   fee?: string | null;
   dressCode?: string | null;
   parkingInfo?: string | null;
-  fontClass?: string;
   bgColor?: string;
   /** true면 바깥 글래스 박스 없이 행만 렌더 (소개글 박스 안에 합쳐 쓸 때) */
   embedded?: boolean;
@@ -19,7 +18,6 @@ export function InvitationOptions({
   fee,
   dressCode,
   parkingInfo,
-  fontClass,
   bgColor,
   embedded = false,
 }: InvitationOptionsProps) {
@@ -54,7 +52,6 @@ export function InvitationOptions({
             className={cn(
               "min-w-0 flex-1 whitespace-pre-line text-left text-[15px] leading-[1.6]",
               isDarkBg ? "text-white" : "text-text",
-              fontClass,
             )}
           >
             {row.value}

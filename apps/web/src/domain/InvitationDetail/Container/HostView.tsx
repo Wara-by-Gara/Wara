@@ -248,7 +248,6 @@ export default function HostView({
 
                 {invitation.description ? (
                   <InvitationDescriptionBox
-                    fontClass={fontClass}
                     bgColor={invitation.bgColor}
                     footer={
                       hasInvitationOptions ? (
@@ -257,7 +256,6 @@ export default function HostView({
                           fee={invitation.fee}
                           dressCode={invitation.dressCode}
                           parkingInfo={invitation.parkingInfo}
-                          fontClass={fontClass}
                           bgColor={invitation.bgColor}
                         />
                       ) : undefined
@@ -270,7 +268,6 @@ export default function HostView({
                     fee={invitation.fee}
                     dressCode={invitation.dressCode}
                     parkingInfo={invitation.parkingInfo}
-                    fontClass={fontClass}
                     bgColor={invitation.bgColor}
                   />
                 )}
@@ -357,17 +354,17 @@ export default function HostView({
               }
               edit={{
                 icon: 'edit',
-                label: 'EDIT',
+                label: '수정',
                 onClick: () => router.push(ROUTES.INVITATIONS.EDIT(invitationId)),
               }}
               textBlast={{
                 icon: 'megaphone',
-                label: 'TEXT BLAST',
+                label: '공지하기',
                 onClick: () => setTextBlastOpen(true),
               }}
               invite={{
                 icon: 'user-plus',
-                label: 'INVITE',
+                label: '초대',
                 onClick: () => setShareSheetOpen(true),
               }}
               more={{
