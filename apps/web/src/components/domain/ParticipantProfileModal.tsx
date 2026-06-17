@@ -85,10 +85,9 @@ export function ParticipantProfileModal({
         userId && !isWithdrawn ? (
           <div className="flex gap-2">
             <Button
-              fullWidth
               size="lg"
               variant="secondary"
-              className="gap-2"
+              className="flex-1 gap-2"
               onClick={() => {
                 onOpenChange(false);
                 router.push(ROUTES.FRIENDS.DETAIL(userId));
@@ -98,9 +97,8 @@ export function ParticipantProfileModal({
               프로필 보기
             </Button>
             <Button
-              fullWidth
               size="lg"
-              className="gap-2"
+              className="flex-1 gap-2"
               disabled={startChat.isPending}
               onClick={() => startChat.mutate(userId)}
             >
@@ -120,12 +118,10 @@ export function ParticipantProfileModal({
       <div className="flex flex-col items-center gap-3 text-center">
         <Avatar src={avatarUrl} name={name} size="2xl" />
         <div className="flex flex-col items-center gap-1.5">
-          <p className="type-sectionTitle text-text">
-            {name}
-            {handle ? (
-              <span className="ml-1.5 type-bodySmall font-normal text-text-muted">@{handle}</span>
-            ) : null}
-          </p>
+          <p className="type-sectionTitle text-text">{name}</p>
+          {handle ? (
+            <p className="type-bodySmall font-normal text-text-muted">@{handle}</p>
+          ) : null}
           <div className="flex items-center gap-1.5">
             {isHost ? <Badge tone="warning" size="sm">호스트</Badge> : null}
             {rsvp ? <Badge tone={rsvp.tone} size="sm">{rsvp.label}</Badge> : null}
