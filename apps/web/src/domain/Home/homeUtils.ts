@@ -31,6 +31,7 @@ export function getUpcomingInvitations(
       (inv) =>
         inv.eventStartAt &&
         inv.status !== "closed" &&
+        inv.myRsvpStatus !== "absent" &&
         new Date(inv.eventStartAt).getTime() >= threshold,
     )
     .sort(

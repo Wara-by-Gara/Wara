@@ -66,6 +66,8 @@ export function Meetings() {
     const map = new Map<string, Invitation[]>();
     (invitations ?? []).forEach((inv) => {
       if (!inv.eventStartAt) return;
+      // 불참(absent) 응답한 모임은 달력 일정에서 제외
+      if (inv.myRsvpStatus === "absent") return;
       const key = dateKeyOf(inv.eventStartAt);
       const arr = map.get(key) ?? [];
       arr.push(inv);

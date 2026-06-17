@@ -160,6 +160,7 @@ export class InvitationsRepository {
       .select({
         invitation: invitations,
         myRole: participants.memberRole,
+        myRsvpStatus: participants.rsvpStatus,
       })
       .from(participants)
       .innerJoin(invitations, eq(participants.invitationId, invitations.id))
@@ -191,6 +192,7 @@ export class InvitationsRepository {
     return rows.map((r) => ({
       ...r.invitation,
       myRole: r.myRole,
+      myRsvpStatus: r.myRsvpStatus,
       eventLocation: locationByInvitationId.get(r.invitation.id) ?? null,
     }));
   }

@@ -120,6 +120,8 @@ export interface Invitation {
   rsvpDeclinedEmoji: string;
   rsvpDeclinedLabel: string;
   myRole?: 'HOST' | 'GUEST';
+  /** 내 참석 응답 상태 — 불참(absent) 모임은 다가오는 모임·달력에서 제외 */
+  myRsvpStatus?: 'attending' | 'undecided' | 'absent' | null;
   host?: { name: string | null; nickname: string | null; profileImageUrl: string | null } | null;
   participantAvatars?: InvitationParticipantAvatar[];
   participantTotal?: number;
