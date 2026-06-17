@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon, Avatar, Button, TopAppBar } from "@wara/ui";
 import { InviteCard, statusChipToBadge } from "@/components/domain";
-import { HeaderGradient } from "@/components/layout/StickyHeader";
 import { ParticipantProfileModal } from "@/components/domain";
 import { useMutation } from "@tanstack/react-query";
 import { createConversation } from "@/lib/api/conversations";
@@ -33,7 +32,6 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
   if (isLoading) {
     return (
       <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
-        <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
         <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
           <FriendProfilePageSkeleton />
@@ -45,7 +43,6 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
   if (isError || !friend) {
     return (
       <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-none">
-        <HeaderGradient fixed />
         <TopAppBar className="absolute inset-x-0 top-0 z-30" title="친구" onBack={() => router.back()} />
         <main className={`relative z-10 ${mobileMainScroll} lg:mx-auto lg:w-full lg:max-w-5xl ${stickyMainTop}`}>
           <p className="py-10 text-center text-text-disabled">친구 정보를 불러오지 못했어요</p>
@@ -58,7 +55,6 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
 
   return (
     <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
-      <HeaderGradient fixed />
       <TopAppBar
         variant="transparent"
         className="absolute inset-x-0 top-0 z-30 min-h-0 pt-2"
@@ -80,10 +76,9 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
           </div>
           <Button
             variant="secondary"
-            fullWidth
             onClick={() => startChat.mutate(id)}
             disabled={startChat.isPending}
-            className="mt-1 rounded-lg border border-border-strong bg-surface/40 backdrop-blur-sm hover:bg-surface/60 active:bg-surface/70"
+            className="mt-1 w-1/2 rounded-lg border border-border-strong bg-surface/40 backdrop-blur-sm hover:bg-surface/60 active:bg-surface/70"
           >
             <Icon name="message-circle" size="sm" color="currentColor" decorative />
             1:1 채팅
@@ -118,7 +113,7 @@ export const FriendProfile = ({ id }: FriendProfileProps) => {
         {/* 함께한 초대 */}
         <section className="py-2 pb-8">
           <h2 className="px-page pb-2 text-[14px] font-bold text-text">함께한 초대</h2>
-          <div className="grid grid-cols-2 gap-3 px-page">
+          <div className="grid grid-cols-2 gap-3 px-page lg:grid-cols-4">
             {friend.sharedInvitations.map((inv) => {
               const chip = resolveInvitationCardStatus({
                 eventStartAt: inv.eventStartAt,

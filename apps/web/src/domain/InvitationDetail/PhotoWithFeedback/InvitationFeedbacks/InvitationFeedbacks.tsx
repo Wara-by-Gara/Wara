@@ -220,12 +220,15 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   };
 
   return (
-    <div ref={sectionRef} id="comments" className="mt-2">
+    <div ref={sectionRef} id="comments" className="mt-3">
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>
-            댓글 {commentCount}
-          </h3>
+          <div className="min-w-0">
+            <h3 className={cn('text-[18px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>댓글</h3>
+            <p className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-muted')}>
+              {commentCount}개의 댓글
+            </p>
+          </div>
           <button
             type="button"
             onClick={openComposer}

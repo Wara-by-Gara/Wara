@@ -83,7 +83,7 @@ export function ParticipantProfileModal({
       hideTitle
       footer={
         userId && !isWithdrawn ? (
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2">
             <Button
               size="lg"
               variant="secondary"

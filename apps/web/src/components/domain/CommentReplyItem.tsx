@@ -169,7 +169,7 @@ export const CommentReplyItem = forwardRef<HTMLDivElement, CommentReplyItemProps
             ) : content ? (
               <p
                 className={cn(
-                  "mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-snug",
+                  "mt-0.5 whitespace-pre-wrap break-words text-[15px] leading-snug",
                   isDarkBg ? "text-white" : "text-text",
                 )}
               >
