@@ -25,7 +25,7 @@ export default function ParticipantAvatarRow({
   });
 
   return (
-    <div className="-mx-4 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] max-lg:[scrollbar-width:none] max-lg:[&::-webkit-scrollbar]:hidden">
       <div className="flex w-max items-center gap-2 px-4 py-1">
         {sorted.map(({ participant, user }) => {
           const isHost = participant.memberRole === "HOST";

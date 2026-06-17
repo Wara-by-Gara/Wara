@@ -23,7 +23,8 @@ type SeedDeps = {
   hostKeys: string[];
   guestKeys: string[];
   templateCoverUrl: (folder: string, seedKey: string) => string;
-  templatePhotoUrl: (folder: string, seedKey: string) => string;
+  shuffledPhotoPoolForInv: (invKey: string) => string[];
+  templateImageUrlFromRel: (rel: string) => string;
   realEventLocations: ReadonlyArray<{
     readonly placeName: string;
     readonly address: string;
@@ -312,6 +313,9 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
 
       const photoCount = 10 + (globalIdx % 11);
       photoIdsByInv[invKey] = [];
+      // 초대장별 셔플 풀에서 distinct하게 뽑아 한 초대장 내 사진 중복 방지
+      // (카테고리 폴더는 이미지가 1장뿐이라 폴더 풀을 쓰면 전부 동일해짐)
+      const invPhotoPool = deps.shuffledPhotoPoolForInv(invKey);
       for (let pi = 0; pi < photoCount; pi++) {
         const photoId = deps.id(`photo:${invKey}:${pi}`);
         photoIdsByInv[invKey]!.push(photoId);
@@ -324,7 +328,10 @@ export function buildPublicInvitationSeeds(deps: SeedDeps): PublicInvitationSeed
           id: photoId,
           participantId: uploaderId,
           invitationId: invId,
-          imageKey: deps.templatePhotoUrl(cat.folder, `${invKey}-${pi}`),
+          imageKey:
+            invPhotoPool.length > 0
+              ? deps.templateImageUrlFromRel(invPhotoPool[pi % invPhotoPool.length]!)
+              : deps.templateCoverUrl(cat.folder, `${invKey}-${pi}`),
           // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산 — 사진 지도 표시용.
           exifMetadata: {
             width: 1280,

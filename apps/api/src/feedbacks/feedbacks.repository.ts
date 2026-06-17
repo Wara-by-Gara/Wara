@@ -270,10 +270,13 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
 
   //댓글 수정
   async update(id: string, payload: { content?: string; gifUrl?: string }) {
-    // 상호 배타: gifUrl 있으면 content null, content 있으면 gifUrl null
-    const set = payload.gifUrl
-      ? { gifUrl: payload.gifUrl, content: null as string | null, updatedAt: new Date() }
-      : { content: payload.content!, gifUrl: null as string | null, updatedAt: new Date() };
+    // 제공된 필드만 부분 갱신한다. content만 수정할 때 기존 gif가 사라지지 않도록
+    // (생성 시 content+gif 동시 허용이므로 수정도 이를 보존).
+    const set: { content?: string; gifUrl?: string; updatedAt: Date } = {
+      updatedAt: new Date(),
+    };
+    if (payload.content !== undefined) set.content = payload.content;
+    if (payload.gifUrl !== undefined) set.gifUrl = payload.gifUrl;
     const [result] = await this.db
       .update(feedbacks)
       .set(set)

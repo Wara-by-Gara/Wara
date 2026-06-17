@@ -36,7 +36,7 @@ export default function RootLayout({
       // 트리의 실제 hydration 버그는 그대로 노출된다.
       suppressHydrationWarning
     >
-      <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full bg-background lg:pt-[var(--header-height)]">
+      <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full bg-background">
         <OAuthCallbackHandler />
         <Providers>
           <TermsComplianceRedirect />
@@ -46,7 +46,11 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <TopNavigation />
           </Suspense>
-          {children}
+          {/* 데스크톱: 본문 영역이 헤더 아래 남은 높이를 채워 페이지 배경이 끝까지 차도록.
+              모바일은 contents로 펼쳐져 기존 동작 그대로. */}
+          <div className="contents lg:flex lg:w-full lg:flex-1 lg:flex-col">
+            {children}
+          </div>
           <Suspense fallback={null}>
             <MainBottomNav />
           </Suspense>

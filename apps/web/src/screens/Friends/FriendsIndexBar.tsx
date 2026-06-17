@@ -78,7 +78,7 @@ export const FriendsIndexBar = ({ letters, activeSet, onJump }: Props) => {
   return (
     <>
       {/* viewport 고정 + 앱 컬럼(max-w-md) 우측 정렬 레이어 */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 mx-auto h-full max-w-md">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 mx-auto h-full max-w-md lg:max-w-5xl">
         <div
           ref={barRef}
           aria-hidden

@@ -283,7 +283,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     router.push(ROUTES.FRIENDS.DETAIL(userId));
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-surface-muted">
+    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-surface-muted lg:max-w-2xl">
       <TopAppBar
         onBack={() => router.back()}
         largeTitle

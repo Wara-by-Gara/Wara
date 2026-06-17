@@ -76,9 +76,6 @@ const templateImageUrlFromPool = (pool: string[], namespace: string, seedKey: st
 const templateCoverUrl = (folder: string, seedKey: string) =>
   templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-cover:${folder}`, seedKey);
 
-const templatePhotoUrl = (folder: string, seedKey: string) =>
-  templateImageUrlFromPool(TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder] ?? TEMPLATE_IMAGE_PATHS, `template-photo:${folder}`, seedKey);
-
 /** template_images 풀에서 namespace+seedKey 기반 결정적 선택 (재시드 시 동일 URL) */
 const templateImageUrl = (namespace: string, seedKey: string) => {
   if (TEMPLATE_IMAGE_PATHS.length === 0) {
@@ -93,6 +90,20 @@ const templateImageUrl = (namespace: string, seedKey: string) => {
 };
 const invitationCoverUrl = (seedKey: string) => templateImageUrl('template-cover', seedKey);
 const photoUrl = (seedKey: string) => templateImageUrl('template-photo', seedKey);
+
+/**
+ * 초대장별 사진 풀을 결정적으로 셔플한 순서.
+ * 같은 초대장 내에서 사진을 풀의 앞에서부터 distinct하게 뽑아 중복을 방지한다.
+ * (재시드 시 동일 순서 — invKey+rel 해시 기반 정렬)
+ */
+const shuffledPhotoPoolForInv = (invKey: string): string[] =>
+  [...TEMPLATE_IMAGE_PATHS]
+    .map((rel) => ({
+      rel,
+      sort: createHash('sha256').update(`template-photo:${invKey}:${rel}`).digest('hex'),
+    }))
+    .sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0))
+    .map((x) => x.rel);
 const templatePreviewUrl = (seedKey: string) => templateImageUrl('template-preview', seedKey);
 
 const templateImageUrlFromRel = (rel: string) => {
@@ -790,6 +801,8 @@ function buildSeeds() {
 
     const invIdx = INV_DEFS.findIndex((d) => d.key === invKey);
     const photoCount = PHOTO_COUNT_VARIANTS[invIdx % PHOTO_COUNT_VARIANTS.length]!;
+    // 초대장별 셔플 풀에서 앞에서부터 distinct하게 뽑아 한 초대장 내 사진 중복 방지
+    const invPhotoPool = shuffledPhotoPoolForInv(invKey);
 
     for (let i = 0; i < photoCount; i++) {
       const photoId = id(`photo:${invKey}:${i}`);
@@ -806,7 +819,10 @@ function buildSeeds() {
         id: photoId,
         participantId: uploaderId,
         invitationId: invIdByKey[invKey]!,
-        imageKey: photoUrl(`${invKey}-${i}`),
+        imageKey:
+          invPhotoPool.length > 0
+            ? templateImageUrlFromRel(invPhotoPool[i % invPhotoPool.length]!)
+            : photoUrl(`${invKey}-${i}`),
         // GPS 좌표는 서울 시청(37.5665, 126.978) 기준 ±0.025° 분산.
         // 사진 지도에서 마커 클러스터링 동작을 보기 위해 사진별 deterministic 변동.
         exifMetadata: {
@@ -1094,7 +1110,8 @@ function buildSeeds() {
     hostKeys: HOST_KEYS,
     guestKeys: GUEST_KEYS,
     templateCoverUrl,
-    templatePhotoUrl,
+    shuffledPhotoPoolForInv,
+    templateImageUrlFromRel,
     realEventLocations: REAL_EVENT_LOCATIONS,
     feedbackInvTemplates: FEEDBACK_INV_TEMPLATES,
     feedbackPhotoTemplates: FEEDBACK_PHOTO_TEMPLATES,

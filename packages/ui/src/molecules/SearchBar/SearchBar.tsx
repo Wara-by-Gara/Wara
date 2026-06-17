@@ -25,7 +25,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
       <div className="flex items-center gap-2">
         <div
           className={cn(
-            "flex h-11 flex-1 items-center gap-2 rounded-full bg-surface-muted px-4",
+            "flex h-11 flex-1 items-center gap-2 rounded-full border border-border-strong bg-surface px-4",
             disabled && "opacity-40",
             className,
           )}
@@ -44,7 +44,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
               type="button"
               aria-label="지우기"
               onClick={onClear}
-              className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-surface text-text-muted hover:text-text"
+              className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text-muted hover:text-text"
             >
               <Icon name="close" size="xs" decorative />
             </button>

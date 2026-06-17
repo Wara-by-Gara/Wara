@@ -6,6 +6,8 @@ interface InvitationOptionsProps {
   parkingInfo?: string | null;
   fontClass?: string;
   bgColor?: string;
+  /** true면 바깥 글래스 박스 없이 행만 렌더 (소개글 박스 안에 합쳐 쓸 때) */
+  embedded?: boolean;
 }
 
 /**
@@ -19,6 +21,7 @@ export function InvitationOptions({
   parkingInfo,
   fontClass,
   bgColor,
+  embedded = false,
 }: InvitationOptionsProps) {
   const isDarkBg = bgColor?.includes("aurora") || bgColor?.includes("starry");
   const rows = [
@@ -30,7 +33,13 @@ export function InvitationOptions({
   if (rows.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-md border border-white/40 bg-white/20 px-4 py-3 shadow-xs backdrop-blur-md backdrop-saturate-150">
+    <div
+      className={cn(
+        "flex flex-col gap-2.5",
+        !embedded &&
+          "rounded-md border border-white/40 bg-white/20 px-4 py-3 shadow-xs backdrop-blur-md backdrop-saturate-150",
+      )}
+    >
       {rows.map((row) => (
         <div key={row.label} className="flex gap-3">
           <span

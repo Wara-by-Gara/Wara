@@ -41,7 +41,8 @@ export function TopNavigation() {
   if (hidden) return null;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 hidden h-[var(--header-height)] border-b border-border bg-surface/80 backdrop-blur-xl lg:flex">
+    <>
+    <header className="fixed inset-x-0 top-0 z-30 hidden h-[var(--header-height)] border-b border-border bg-surface lg:flex">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
           <Link
@@ -115,8 +116,11 @@ export function TopNavigation() {
           </Link>
         </Button>
       </div>
-
-      <LoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
     </header>
+    {/* 본문을 고정 헤더 아래로 밀어주는 spacer — 헤더가 렌더될 때만 존재(숨김 경로엔 여백 없음) */}
+    <div aria-hidden className="hidden h-[var(--header-height)] shrink-0 lg:block" />
+
+    <LoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
+    </>
   );
 }

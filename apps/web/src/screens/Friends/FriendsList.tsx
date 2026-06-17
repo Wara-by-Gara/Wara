@@ -118,7 +118,7 @@ export const FriendsList = () => {
         {/* 최근 함께한 친구 — 스토리 형태 (그라데이션 링) */}
         <section className="pt-3">
           <h2 className="px-page pb-2 text-[14px] font-bold text-text">최근 함께한 친구</h2>
-          <div className="flex gap-5 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-5 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] max-lg:[scrollbar-width:none] max-lg:[&::-webkit-scrollbar]:hidden">
             {recentFriends.map((f) => {
               const name = f.name ?? "이름 없음";
               return (

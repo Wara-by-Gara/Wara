@@ -43,7 +43,7 @@ export function PopularTemplatesSection() {
         {isLoading ? (
           <TemplateRowSkeleton count={10} />
         ) : (
-          <div className="-mx-page flex gap-3 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-page flex gap-3 overflow-x-auto overscroll-x-contain px-page pb-1 [-ms-overflow-style:none] max-lg:[scrollbar-width:none] max-lg:[&::-webkit-scrollbar]:hidden">
             {items.map((t) => (
               <TemplateCard
                 key={t.id}

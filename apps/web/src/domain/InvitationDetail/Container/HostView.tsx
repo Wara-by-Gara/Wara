@@ -90,6 +90,11 @@ export default function HostView({
   };
 
   const fontClass = FONT_CLASS[invitation.font] ?? 'font-sans';
+  const hasInvitationOptions = !!(
+    invitation.fee?.trim() ||
+    invitation.dressCode?.trim() ||
+    invitation.parkingInfo?.trim()
+  );
   const cover = getInvitationDetailCover(invitation);
   const schedule = formatInvitationDetailSchedule(invitation.eventStartAt);
 
@@ -245,10 +250,30 @@ export default function HostView({
                   <InvitationDescriptionBox
                     fontClass={fontClass}
                     bgColor={invitation.bgColor}
+                    footer={
+                      hasInvitationOptions ? (
+                        <InvitationOptions
+                          embedded
+                          fee={invitation.fee}
+                          dressCode={invitation.dressCode}
+                          parkingInfo={invitation.parkingInfo}
+                          fontClass={fontClass}
+                          bgColor={invitation.bgColor}
+                        />
+                      ) : undefined
+                    }
                   >
                     {invitation.description}
                   </InvitationDescriptionBox>
-                ) : null}
+                ) : (
+                  <InvitationOptions
+                    fee={invitation.fee}
+                    dressCode={invitation.dressCode}
+                    parkingInfo={invitation.parkingInfo}
+                    fontClass={fontClass}
+                    bgColor={invitation.bgColor}
+                  />
+                )}
               </div>
 
               <div className="flex flex-col gap-8">
@@ -273,14 +298,6 @@ export default function HostView({
                   showWeather
                   hideDateInHeader
                   immersive
-                  bgColor={invitation.bgColor}
-                />
-
-                <InvitationOptions
-                  fee={invitation.fee}
-                  dressCode={invitation.dressCode}
-                  parkingInfo={invitation.parkingInfo}
-                  fontClass={fontClass}
                   bgColor={invitation.bgColor}
                 />
 
