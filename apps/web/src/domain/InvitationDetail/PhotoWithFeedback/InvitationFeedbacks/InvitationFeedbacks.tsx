@@ -17,6 +17,7 @@ import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
 import { ParticipantProfileModal } from '@/components/domain';
 import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
+import { useUiStore } from '@/stores/uiStore';
 
 interface Props {
   invitationId: string;
@@ -28,6 +29,10 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const currentUserId = me?.id ?? null;
   const currentUserProfileImageUrl = me?.profileImageUrl ?? null;
   const currentUserDisplayName = me?.name ?? null;
+
+  const setCommentInputFocused = useUiStore((s) => s.setCommentInputFocused);
+  // 페이지 이탈 시 하단 탭 숨김 상태가 남지 않도록 정리
+  useEffect(() => () => setCommentInputFocused(false), [setCommentInputFocused]);
 
   const searchParams = useSearchParams();
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -287,18 +292,29 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                   editingId === f.id ? (
                     <div className="flex gap-2">
                       <input
-                        className="flex-1 border rounded px-2 py-1 text-sm"
+                        autoFocus
+                        className="flex-1 rounded border border-border bg-white px-2 py-1 text-sm outline-none"
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                            e.preventDefault();
+                            if (!editContent.trim()) return;
+                            await editComment(f.id, editContent, f.photo?.id);
+                            setEditingId(null);
+                          }
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
                       />
                       <button
                         className="text-xs text-blue-500"
                         onClick={async () => {
+                          if (!editContent.trim()) return;
                           await editComment(f.id, editContent, f.photo?.id);
                           setEditingId(null);
                         }}
                       >
-                        저장
+                        수정
                       </button>
                       <button
                         className="text-xs text-gray-400"
@@ -363,18 +379,29 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                     editingSlot: isReplyEditing ? (
                       <div className="flex gap-2">
                         <input
-                          className="flex-1 border rounded px-2 py-1 text-sm"
+                          autoFocus
+                          className="flex-1 rounded border border-border bg-white px-2 py-1 text-sm outline-none"
                           value={editContent}
                           onChange={(e) => setEditContent(e.target.value)}
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                              e.preventDefault();
+                              if (!editContent.trim()) return;
+                              await editComment(r.id, editContent, f.photo?.id);
+                              setEditingId(null);
+                            }
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
                         />
                         <button
                           className="text-xs text-blue-500"
                           onClick={async () => {
+                            if (!editContent.trim()) return;
                             await editComment(r.id, editContent, f.photo?.id);
                             setEditingId(null);
                           }}
                         >
-                          저장
+                          수정
                         </button>
                         <button
                           className="text-xs text-gray-400"
@@ -511,7 +538,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
               onChange={handleFileSelect}
             />
             <CommentInputBar
-              variant="default"
+              variant="glass"
+              onFocusChange={setCommentInputFocused}
               maxLength={500}
               placeholder={
                 replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'

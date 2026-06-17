@@ -8,7 +8,7 @@ const inputVariants = cva(
   [
     "w-full rounded-md border bg-surface text-text placeholder:text-text-disabled",
     "transition-colors outline-none",
-    "focus:[box-shadow:var(--focus-ring)] focus:border-text",
+    "focus:border-text",
     "disabled:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60",
   ],
   {

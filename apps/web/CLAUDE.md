@@ -200,25 +200,34 @@ export const domainKeys = {
 
 ### 페이지 레이아웃 shell
 
-```tsx
-// 목록 페이지
-<main className="max-w-4xl mx-auto px-4 py-10">
+페이지 프레임은 `PageLayout`의 `size` prop으로 폭을 정한다. `<main>`에 `max-w-*`를 직접 박지 말 것.
+모바일/태블릿(<lg)은 항상 `max-w-md` 중앙 정렬, **데스크톱(`lg:`)에서만 확장**된다.
 
-// 상세 페이지
-<main className="max-w-2xl mx-auto px-4 py-10">
+```tsx
+<PageLayout size="sm">   {/* 폼/설정 — lg:max-w-2xl (default) */}
+<PageLayout size="md">   {/* 상세    — lg:max-w-4xl */}
+<PageLayout size="lg">   {/* 목록/그리드 — lg:max-w-7xl */}
+<PageLayout size="full"> {/* 채팅/지도/대시보드 — max-w-none */}
 ```
 
 ### 반응형
 
-모바일(카드)과 PC(테이블)를 항상 쌍으로 렌더링한다.
+데스크톱 전환점은 **`lg:`(1024px)** 기준이다. `md:`(768px)는 그리드 중간 컬럼 단계에만 쓴다.
+데스크톱 분기는 `lg:` 접두사로만 **추가**하고 모바일/태블릿 마크업은 건드리지 않는다(회귀 0).
 
 ```tsx
-{/* 모바일: 카드 */}
-<div className="block md:hidden"> ... </div>
+{/* 모바일/태블릿 전용 */}
+<div className="lg:hidden"> ... </div>
 
-{/* PC: 테이블 */}
-<div className="hidden md:block"> ... </div>
+{/* 데스크톱 전용 */}
+<div className="hidden lg:block"> ... </div>
+
+{/* 그리드: 단계적 컬럼 */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"> ... </div>
 ```
+
+> 전체 아키텍처(breakpoint·폭 체계·네비 분리·StickyHeader 규칙·데스크톱 전용 패턴·PR 순서):
+> `@docs/decisions/responsive-desktop-architecture.md`
 
 ### 로딩 / 빈 상태
 

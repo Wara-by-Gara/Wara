@@ -18,4 +18,11 @@
     word-break: keep-all;
     overflow-wrap: anywhere;
   }
+
+  /* input 포커스 시 회색 가이드(--focus-ring) 제거. 버튼·링크 a11y 링은 유지 */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: none;
+  }
 }

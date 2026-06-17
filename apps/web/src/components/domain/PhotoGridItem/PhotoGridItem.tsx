@@ -41,7 +41,7 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
         type="button"
         aria-pressed={status === "selected" || hostManageMode}
         className={cn(
-          "group relative aspect-square w-full overflow-hidden rounded-sm bg-gray-100",
+          "group relative aspect-square w-full overflow-hidden bg-gray-100",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           status === "selected" && "ring-4 ring-primary",
           className,

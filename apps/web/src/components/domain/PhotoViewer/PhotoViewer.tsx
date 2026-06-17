@@ -75,6 +75,11 @@ export interface PhotoViewerProps extends React.HTMLAttributes<HTMLDivElement> {
   gifPicker?: ReactNode;
   /** 추가 액션 슬롯 */
   rightActions?: ReactNode;
+  /** 이전/다음 사진 네비게이션 (사진 좌·우에 배치) */
+  onPrev?: () => void;
+  onNext?: () => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
   /** 입력창 @멘션 하이라이트 */
   highlightMentions?: boolean;
 }
@@ -121,9 +126,9 @@ function ProfileActions({
         )}
       >
         {liked ? (
-          <Heart className="size-3.5 shrink-0 fill-current" aria-hidden />
+          <Heart className="size-5 shrink-0 fill-current" aria-hidden />
         ) : (
-          <Heart className="size-3.5 shrink-0" aria-hidden />
+          <Heart className="size-5 shrink-0" aria-hidden />
         )}
         {formatCount(likeCount ?? 0)}
       </button>
@@ -137,7 +142,7 @@ function ProfileActions({
           commentsOpen ? "text-primary" : "text-white/90",
         )}
       >
-        <Icon name="message-circle" size="lg" color="currentColor" decorative />
+        <Icon name="message-circle" size="md" color="currentColor" decorative />
         <span className="text-[14px] font-semibold tabular-nums">
           {formatCount(commentCount ?? 0)}
         </span>
@@ -196,6 +201,10 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
       onGifButtonClick,
       gifPicker,
       rightActions,
+      onPrev,
+      onNext,
+      hasPrev,
+      hasNext,
       highlightMentions,
       currentUserAvatarUrl,
       currentUserInitialName,
@@ -274,6 +283,27 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               className="max-h-full max-w-full object-contain"
             />
           ) : null}
+
+          {hasPrev && onPrev ? (
+            <button
+              type="button"
+              onClick={onPrev}
+              aria-label="이전 사진"
+              className="absolute left-2 top-1/2 z-10 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
+            >
+              <Icon name="chevron-left" size="md" color="currentColor" decorative />
+            </button>
+          ) : null}
+          {hasNext && onNext ? (
+            <button
+              type="button"
+              onClick={onNext}
+              aria-label="다음 사진"
+              className="absolute right-2 top-1/2 z-10 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60"
+            >
+              <Icon name="chevron-right" size="md" color="currentColor" decorative />
+            </button>
+          ) : null}
         </main>
 
         <footer className="relative z-10 shrink-0 border-t border-white/10 bg-black">
@@ -327,6 +357,7 @@ const PhotoViewerBody = forwardRef<HTMLDivElement, PhotoViewerProps>(
               {mentionDropdown}
               {replyBanner}
               <CommentInputBar
+                variant="glass"
                 maxLength={500}
                 placeholder={commentPlaceholder}
                 onSubmit={onCommentSubmit}
@@ -377,7 +408,7 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
       return (
         <div
           className={cn(
-            "relative flex aspect-[9/16] w-full max-w-md flex-col overflow-hidden rounded-lg bg-black text-text-inverse",
+            "relative flex aspect-[9/16] w-full max-w-md flex-col overflow-hidden bg-black text-text-inverse",
             className,
           )}
         >
@@ -387,7 +418,7 @@ export const PhotoViewer = forwardRef<HTMLDivElement, PhotoViewerProps>(
     }
 
     const contentClass = cn(
-      "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden rounded-lg bg-black p-0 shadow-lg focus:outline-none",
+      "z-50 flex h-[min(520px,72%)] max-h-[72%] w-[calc(100%-32px)] max-w-md flex-col overflow-hidden bg-black p-0 shadow-lg focus:outline-none",
       "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
       "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
       contained ? "absolute" : "fixed",

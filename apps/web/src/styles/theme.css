@@ -127,6 +127,9 @@
   --spacing: 4px;
   --spacing-page: 12px;
 
+  /* ---------- Layout: 데스크톱 헤더 높이 (TopNavigation / 본문 offset) ---------- */
+  --header-height: 64px;
+
   /* ---------- Font ---------- */
   --font-sans:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple Color Emoji', Inter,

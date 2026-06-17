@@ -6,7 +6,7 @@ export const mobileMainCenter =
 /** 페이지 좌우 여백 — globals.css --spacing-page (12px) */
 export const PAGE_PX = "px-page";
 
-/** StickyHeader 아래 본문 상단 여백 (+20px) */
-export const stickyMainTop = "pt-[76px]";
+/** StickyHeader 아래 본문 상단 여백 (+20px). 데스크톱은 헤더가 인라인이라 offset 불필요 */
+export const stickyMainTop = "pt-[76px] lg:pt-0";
 /** StickyHeader + 추가 상단 공간이 있던 페이지용 (+20px) */
-export const stickyMainTopSpacious = "pt-[92px]";
+export const stickyMainTopSpacious = "pt-[92px] lg:pt-0";

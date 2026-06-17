@@ -314,26 +314,10 @@ export default function PhotoDetailModal({
       onLike={handleLike}
       isLiking={isLiking}
       className="[&_.bg-gray-100]:bg-white/20"
-      rightActions={
-        <div className="flex items-center gap-1">
-          {index > 0 && (
-            <button
-              onClick={() => setIndex((i) => i - 1)}
-              className="text-white text-4xl px-2"
-            >
-              ‹
-            </button>
-          )}
-          {index < photos.length - 1 && (
-            <button
-              onClick={() => setIndex((i) => i + 1)}
-              className="text-white text-4xl px-2"
-            >
-              ›
-            </button>
-          )}
-        </div>
-      }
+      hasPrev={index > 0}
+      hasNext={index < photos.length - 1}
+      onPrev={() => setIndex((i) => i - 1)}
+      onNext={() => setIndex((i) => i + 1)}
     />
     </>
   );
@@ -371,7 +355,7 @@ function InlineCommentEditor({
           className="text-[12px] text-primary font-semibold disabled:opacity-40"
           disabled={!value.trim()}
         >
-          저장
+          수정
         </button>
       </div>
     </div>

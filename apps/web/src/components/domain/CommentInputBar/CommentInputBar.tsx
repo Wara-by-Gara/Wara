@@ -30,6 +30,8 @@ export interface CommentInputBarProps {
   highlightMentions?: boolean;
   /** 입력 최대 길이 (서버 검증과 일치시킬 것) */
   maxLength?: number;
+  /** 입력창 포커스/블러 알림 (하단 탭 숨김 등에 사용) */
+  onFocusChange?: (focused: boolean) => void;
 }
 
 export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
@@ -51,6 +53,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       hasPendingPhoto = false,
       highlightMentions = false,
       maxLength,
+      onFocusChange,
     },
     ref,
   ) {
@@ -82,8 +85,8 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
       ? 'bg-transparent backdrop-blur-md'
       : 'bg-surface';
     const fieldClass = isGlass
-      ? 'rounded-sm border border-white/50 bg-white/45 shadow-xs backdrop-blur-md'
-      : 'rounded-sm bg-border';
+      ? 'rounded-sm border border-white/50 bg-white shadow-xs'
+      : 'rounded-sm bg-white';
 
     if (state === 'loginRequired') {
       return (
@@ -185,6 +188,8 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setValue(e.target.value)
                 }
+                onFocus={() => onFocusChange?.(true)}
+                onBlur={() => onFocusChange?.(false)}
                 onScroll={syncScroll}
                 placeholder={placeholder}
                 onKeyDown={(e) => {

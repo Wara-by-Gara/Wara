@@ -8,6 +8,7 @@ import { NotificationSocketMount } from '@/components/notifications/notification
 import { DmSocketMount } from '@/components/chat/dm-socket-mount';
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register';
 import { MainBottomNav } from '@/components/layout/MainBottomNav';
+import { TopNavigation } from '@/components/layout/TopNavigation';
 import { Toaster } from "@wara/ui";
 import './globals.css';
 
@@ -35,13 +36,16 @@ export default function RootLayout({
       // 트리의 실제 hydration 버그는 그대로 노출된다.
       suppressHydrationWarning
     >
-      <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full">
+      <body className="w-full max-w-[100vw] mx-auto flex flex-col min-h-full bg-background lg:pt-[var(--header-height)]">
         <OAuthCallbackHandler />
         <Providers>
           <TermsComplianceRedirect />
           <NotificationSocketMount />
           <DmSocketMount />
           <ServiceWorkerRegister />
+          <Suspense fallback={null}>
+            <TopNavigation />
+          </Suspense>
           {children}
           <Suspense fallback={null}>
             <MainBottomNav />

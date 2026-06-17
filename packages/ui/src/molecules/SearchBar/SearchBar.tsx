@@ -26,7 +26,6 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         <div
           className={cn(
             "flex h-11 flex-1 items-center gap-2 rounded-full bg-surface-muted px-4",
-            "focus-within:[box-shadow:var(--focus-ring)]",
             disabled && "opacity-40",
             className,
           )}
