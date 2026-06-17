@@ -36,6 +36,7 @@ import { ROUTES } from '@/constants/routes';
 import { HostCreatingView, type VoteDraft } from '@/screens/DateVote/DateVote';
 import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
 import { createPoll } from '@/lib/api/dateVote';
+import { usePoll } from '@/hooks/useDateVote';
 import ImageCropEditor from '@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor';
 import { getCroppedImageBlob } from '@/utils/cropImage';
 import {
@@ -380,6 +381,29 @@ export default function InvitationCreateContainer({
     setVoteDraft(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editInvitation?.id]);
+
+  // 수정 모드: 기존 날짜 투표를 폼(voteDraft)으로 불러온다.
+  // 백엔드 update는 poll을 건드리지 않으므로, 안 불러오면 편집 화면에서 투표가
+  // 사라진 것처럼 보이고 검증(hasDateVoteErr)에 막혀 저장이 안 된다.
+  const editHasPoll =
+    !!editInvitation &&
+    (editInvitation.dateVotePollStatus === 'open' ||
+      editInvitation.dateVotePollStatus === 'closed');
+  const { data: editPollData } = usePoll(editInvitation?.id ?? '', {
+    enabled: editHasPoll,
+  });
+  useEffect(() => {
+    if (!editHasPoll || !editPollData?.poll) return;
+    setVoteDraft({
+      slots: editPollData.slots.map((s) => ({
+        date: s.date,
+        startTime: s.startTime ?? '',
+        sortOrder: s.sortOrder,
+      })),
+      isAnonymous: editPollData.poll.isAnonymous,
+      closesAt: editPollData.poll.closesAt ?? undefined,
+    });
+  }, [editHasPoll, editPollData]);
 
   // 로그인 리다이렉트 후 복귀 처리
   useEffect(() => {
