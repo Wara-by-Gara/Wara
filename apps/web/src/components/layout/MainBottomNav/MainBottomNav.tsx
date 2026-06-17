@@ -71,7 +71,7 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
         aria-hidden="true"
         className="shrink-0 h-[calc(4rem+env(safe-area-inset-bottom))]"
       />
-      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto w-full max-w-md pb-[env(safe-area-inset-bottom)]">
+      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto w-full max-w-md transform-gpu pb-[env(safe-area-inset-bottom)] will-change-transform [backface-visibility:hidden]">
         <BottomNavigation
           items={items}
           activeKey={activeKey}

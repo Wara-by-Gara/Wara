@@ -31,7 +31,7 @@ export function InvitationDetailPanes({ cover, left, rsvp, feed, rail }: Props) 
     <main
       className={cn(
         "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6",
-        "lg:mx-auto lg:grid lg:min-h-0 lg:max-w-5xl lg:flex-none lg:items-start lg:gap-x-10 lg:overflow-visible lg:px-6 lg:pb-16 lg:pt-10",
+        "lg:mx-auto lg:grid lg:min-h-0 lg:w-full lg:max-w-5xl lg:flex-none lg:items-start lg:gap-x-10 lg:overflow-visible lg:px-6 lg:pb-16 lg:pt-10",
         "lg:grid-cols-[360px_minmax(0,1fr)]",
         rail && "lg:pr-24",
       )}

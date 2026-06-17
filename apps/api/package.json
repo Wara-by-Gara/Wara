@@ -21,7 +21,8 @@
     "db:seed:test": "dotenv -e .env.test -- ts-node -r tsconfig-paths/register drizzle/seed/index.ts",
     "db:cleanup-account-seed": "dotenv -e .env.development -- ts-node -r tsconfig-paths/register scripts/cleanup-account-seed-data.ts",
     "db:sync-esther-invitations": "dotenv -e .env.development -- ts-node -r tsconfig-paths/register scripts/sync-esther-invitations.ts",
-    "db:seed:esther": "dotenv -e .env.development -- ts-node -r tsconfig-paths/register drizzle/seed/esther-cases.ts"
+    "db:seed:esther": "dotenv -e .env.development -- ts-node -r tsconfig-paths/register drizzle/seed/esther-cases.ts",
+    "db:issue-token": "dotenv -e .env.development -- ts-node -r tsconfig-paths/register scripts/issue-token.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1047.0",

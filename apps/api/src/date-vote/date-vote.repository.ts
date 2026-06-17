@@ -230,6 +230,7 @@ export class DateVoteRepository {
         participantId: schema.dateVoteResponses.participantId,
         response: schema.dateVoteResponses.response,
         userId: schema.participants.userId,
+        name: schema.users.name,
         nickname: schema.users.nickname,
       })
       .from(schema.dateVoteResponses)
