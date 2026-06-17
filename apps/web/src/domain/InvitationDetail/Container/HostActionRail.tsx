@@ -43,7 +43,7 @@ export function HostActionRail({
         <span className="flex size-9 items-center justify-center rounded-full text-[17px] font-bold text-primary ring-1 ring-border">
           {goingCount}
         </span>
-        <span className="text-[11px] font-medium text-text-muted">Going</span>
+        <span className="text-[11px] font-medium text-text-muted">참석</span>
       </button>
       <Divider />
       <RailTile {...invite} />
