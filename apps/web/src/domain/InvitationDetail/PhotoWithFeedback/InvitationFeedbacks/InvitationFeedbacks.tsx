@@ -220,7 +220,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   };
 
   return (
-    <div ref={sectionRef} id="comments" className="mt-3">
+    <div ref={sectionRef} id="comments" className="mt-8">
       <div>
         <div className="mb-3 flex items-center justify-between">
           <div className="min-w-0">

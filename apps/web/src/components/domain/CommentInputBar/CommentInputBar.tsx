@@ -158,7 +158,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
         <div className="flex items-center gap-2">
           <div
             className={cn(
-              'flex flex-1 items-center gap-1 px-3',
+              'flex min-w-0 flex-1 items-center gap-1 px-3',
               fieldClass,
               state === 'error' && 'ring-2 ring-danger',
             )}
@@ -237,7 +237,7 @@ export const CommentInputBar = forwardRef<HTMLDivElement, CommentInputBarProps>(
             }
             aria-label="댓글 등록"
             className={cn(
-              'inline-flex size-10 items-center justify-center rounded-full bg-primary text-text-inverse transition-opacity',
+              'inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-text-inverse transition-opacity',
               'disabled:opacity-40 disabled:cursor-not-allowed',
             )}
           >

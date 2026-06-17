@@ -116,8 +116,15 @@ async function bootstrap() {
     }
     const origin = req.headers.origin;
     const referer = req.headers.referer;
+    // 개발 환경에선 web dev 서버 포트가 가변(3000/3002 등)이므로 localhost는 포트 무관 허용.
+    const isLocalDev =
+      process.env.NODE_ENV !== 'production' &&
+      (origin?.startsWith('http://localhost:') === true ||
+        referer?.startsWith('http://localhost:') === true);
     const isAllowed =
-      origin === allowedOrigin || referer?.startsWith(allowedOrigin) === true;
+      origin === allowedOrigin ||
+      referer?.startsWith(allowedOrigin) === true ||
+      isLocalDev;
     if (!isAllowed) {
       return next(
         new ForbiddenException({

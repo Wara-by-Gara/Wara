@@ -42,7 +42,7 @@ export default function BestNineModal({ invitationId, onClose }: Props) {
   const hasPhotos = !isLoading && !isError && !!photos && photos.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md flex-col bg-background">
+    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md flex-col bg-background lg:inset-y-0 lg:top-[var(--header-height)] lg:max-w-lg lg:border-x lg:border-border">
       <TopAppBar className="shrink-0" title="리마인드 앨범" onBack={onClose} />
 
       {hasPhotos && (
