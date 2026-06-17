@@ -36,6 +36,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
 
   const searchParams = useSearchParams();
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const {
     data,
@@ -54,15 +55,32 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const allRows = data?.pages.flatMap((p) => p.rows) ?? [];
   const commentCount = total ?? allRows.length;
 
-  // 댓글 알림 클릭으로 진입(?focus=comments) 시 댓글 섹션으로 스크롤.
+  // 댓글 알림 클릭으로 진입(?focus=comments) 시 스크롤.
+  // commentId가 있으면 해당 댓글로, 없으면 댓글 섹션 상단으로.
   // 위쪽 Album 이미지가 비동기 로드되며 레이아웃 높이가 변하므로 한 틱 미뤄서 스크롤한다.
   useEffect(() => {
     if (searchParams.get('focus') !== 'comments') return;
+    const commentId = searchParams.get('commentId');
     const timer = setTimeout(() => {
+      if (commentId) {
+        const el = document.getElementById(`comment-${commentId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightedId(commentId);
+          return;
+        }
+      }
       sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 300);
     return () => clearTimeout(timer);
   }, [searchParams]);
+
+  // 강조 표시는 잠시 후 자동 해제
+  useEffect(() => {
+    if (!highlightedId) return;
+    const t = setTimeout(() => setHighlightedId(null), 2200);
+    return () => clearTimeout(t);
+  }, [highlightedId]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{
@@ -199,7 +217,14 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
 
         <div className="mt-2 flex flex-col">
           {allRows.map((f) => (
-            <div key={f.id}>
+            <div
+              key={f.id}
+              id={`comment-${f.id}`}
+              className={cn(
+                "scroll-mt-20 rounded-lg transition-colors",
+                highlightedId === f.id && "bg-primary-soft ring-2 ring-primary",
+              )}
+            >
               <CommentItem
                 isDarkBg={isDarkBg}
                 authorName={

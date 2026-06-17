@@ -135,7 +135,7 @@ export function Meetings() {
 
   return (
     <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
-      <StickyHeader title="나의 모임" onBack={() => router.back()} />
+      <StickyHeader />
 
       {!isLoading && !hasAnyEvent ? (
         <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-page lg:mx-auto lg:w-full lg:max-w-5xl">
@@ -185,8 +185,8 @@ export function Meetings() {
                           : undefined,
                       )}
                       title={ev.title}
-                      dateText={formatInvitationEventDate(ev.eventStartAt, "날짜 미정")}
-                      locationText={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
+                      dateText={formatInvitationEventDate(ev.eventStartAt, "미정")}
+                      locationText={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? "미정"}
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
                       className="flex-1 min-w-0"
                     />

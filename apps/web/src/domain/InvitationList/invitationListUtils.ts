@@ -41,7 +41,7 @@ export function mapInvitationsToListItems(invitations: Invitation[]): MappedInvi
     title: inv.title,
     description: "",
     date: formatInvitationEventDate(inv.eventStartAt),
-    location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? "",
+    location: inv.eventLocation?.placeName ?? inv.eventLocation?.address ?? "미정",
     coverImageUrl: getInvitationCoverImageUrl(inv),
     host: { name: "" },
     _status: inv.status,

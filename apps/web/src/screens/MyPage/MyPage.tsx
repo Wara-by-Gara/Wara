@@ -65,7 +65,7 @@ export const MyPage = ({
   if (state === "loggedOut") {
     return (
       <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
-        <StickyHeader title="마이페이지" />
+        <StickyHeader />
         <main className={`relative z-10 ${mobileMainCenter}`}>
           <EmptyState
             icon="user-round-cog"
@@ -81,7 +81,7 @@ export const MyPage = ({
   if (state === "loading") {
     return (
       <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
-        <StickyHeader title="마이페이지" />
+        <StickyHeader />
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl">
           <ProfileSkeleton />
         </main>
@@ -92,7 +92,7 @@ export const MyPage = ({
   if (state === "error") {
     return (
       <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-background lg:max-w-none">
-        <StickyHeader title="마이페이지" />
+        <StickyHeader />
         <main className={`relative z-10 ${mobileMainCenter}`}>
           <ErrorState title="프로필을 불러오지 못했어요" onRetry={() => {}} />
         </main>
@@ -109,7 +109,6 @@ export const MyPage = ({
   return (
     <div className="relative mx-auto flex h-full min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
       <StickyHeader
-        title="마이페이지"
         rightSlot={
           <button
             type="button"
@@ -125,7 +124,7 @@ export const MyPage = ({
         <div className="flex flex-col gap-3 pb-6">
 
           {/* ── 프로필 — 투명 배경, 상단 aura 그라데이션이 비치게 ── */}
-          <section className="px-page pb-5 pt-[85px]">
+          <section className="px-page pb-5 pt-12">
             <div className="flex flex-col items-center gap-3">
               <div className="relative shrink-0">
                 <Avatar
@@ -133,7 +132,7 @@ export const MyPage = ({
                   src={state === "noProfile" ? undefined : user.avatarUrl}
                   alt={user.name ?? user.nickname}
                   name={user.name ?? user.nickname}
-                  className="ring-4 ring-surface shadow-md"
+                  className="size-32 ring-4 ring-surface shadow-md"
                 />
                 <button
                   type="button"

@@ -155,7 +155,9 @@ export default function NotificationsContainer() {
     } else if (notification.targetType === 'mission') {
       router.push(ROUTES.INVITATIONS.DETAIL(invId));
     } else if (notification.targetType === 'feedback') {
-      router.push(`${ROUTES.INVITATIONS.DETAIL(invId)}?focus=comments`);
+      // 댓글 알림 → 초대장 상세의 해당 댓글로 스크롤 (commentId = feedback id)
+      const base = `${ROUTES.INVITATIONS.DETAIL(invId)}?focus=comments`;
+      router.push(notification.targetId ? `${base}&commentId=${notification.targetId}` : base);
     }
   };
 
