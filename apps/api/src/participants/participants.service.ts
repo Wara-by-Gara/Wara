@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { type Participant } from '../database/schema';
 import { ErrorCode } from '../common/constants/error-codes';
-import { BlocklistRepository } from '../common/repositories/blocklist.repository';
 import { ParticipantsRepository } from './participants.repository';
 import { S3Service } from '../s3/s3.service';
 import { LocationsService } from '../locations/locations.service';
@@ -26,7 +25,6 @@ const RSVP_STATUS_LABEL: Record<UpdateRsvpDto['rsvpStatus'], string> = {
 export class ParticipantsService {
   constructor(
     private readonly repository: ParticipantsRepository,
-    private readonly blocklistRepository: BlocklistRepository,
     private readonly s3Service: S3Service,
     private readonly locationsService: LocationsService,
     private readonly notificationsService: NotificationsService,
@@ -172,7 +170,16 @@ export class ParticipantsService {
 
     const isHostKick = viewer.memberRole === 'HOST' && viewer.id !== participantId;
 
-    await this.repository.hardDelete(participantId);
+    if (isHostKick) {
+      await this.repository.kickAndBlock(
+        participantId,
+        viewer.invitationId,
+        target.userId,
+        viewer.userId,
+      );
+    } else {
+      await this.repository.hardDelete(participantId);
+    }
 
     // 떠난 participant의 Redis GPS hash + arrived lock 정리 + 다른 클라이언트 marker 제거.
     // 미정리 시 24h TTL까지 stale 좌표 노출.
@@ -180,10 +187,6 @@ export class ParticipantsService {
       viewer.invitationId,
       participantId,
     );
-
-    if (isHostKick) {
-      await this.blocklistRepository.add(viewer.invitationId, target.userId, viewer.userId);
-    }
   }
 
   /** 호스트 권한 위임 — viewer(현재 HOST)가 target 참가자에게 HOST 이전 */
@@ -198,6 +201,10 @@ export class ParticipantsService {
     }
     if (target.memberRole === 'HOST') {
       throw new BadRequestException(ErrorCode.PARTICIPANT_ALREADY_HOST);
+    }
+    // 호스트는 RSVP를 변경할 수 없으므로 참석(attending) 상태인 참가자에게만 위임 가능
+    if (target.rsvpStatus !== 'attending') {
+      throw new BadRequestException(ErrorCode.PARTICIPANT_NOT_ATTENDING);
     }
     await this.repository.transferHost(
       invitationId,
@@ -225,6 +232,10 @@ export class ParticipantsService {
     if (isCoHost) {
       if (target.memberRole === 'HOST') {
         throw new BadRequestException(ErrorCode.PARTICIPANT_ALREADY_HOST);
+      }
+      // 호스트는 RSVP를 변경할 수 없으므로 참석(attending) 상태인 참가자만 공동 호스트 지정 가능
+      if (target.rsvpStatus !== 'attending') {
+        throw new BadRequestException(ErrorCode.PARTICIPANT_NOT_ATTENDING);
       }
       await this.repository.setMemberRole(target.id, 'HOST');
     } else {

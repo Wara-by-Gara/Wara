@@ -25,7 +25,7 @@ export const PhotoGrid = forwardRef<HTMLDivElement, PhotoGridProps>(
         {...props}
       >
         {groupLabel ? (
-          <h4 className="px-1 text-[15px] font-bold text-text-primary">{groupLabel}</h4>
+          <h4 className="px-1 text-[15px] font-bold text-text">{groupLabel}</h4>
         ) : null}
         <div
           className={cn(

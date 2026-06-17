@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@wara/ui";
 import { IconButton } from "@wara/ui";
 import { useMyInquiries, useDeleteInquiry } from '@/hooks/useInquiries';
 import { useAuthStore } from '@/stores/authStore';
-import { InquiryListSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryListSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 import type { Inquiry, InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 
@@ -29,7 +29,7 @@ const STATUS_LABELS: Record<InquiryStatus, { label: string; className: string }>
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -52,7 +52,7 @@ export default function MyInquiriesPage() {
   }, [hydrated, isLoggedIn, router]);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-surface-muted">
       <TopAppBar
         className="shrink-0"
         title="나의 문의"
@@ -64,7 +64,7 @@ export default function MyInquiriesPage() {
           {isLoading ? (
             <InquiryListSkeleton count={5} />
           ) : !data?.items.length ? (
-            <p className="py-6 text-center text-[13px] text-text-tertiary">
+            <p className="py-6 text-center text-[13px] text-text-disabled">
               문의 내역이 없습니다
             </p>
           ) : (
@@ -119,7 +119,7 @@ function InquiryCard({
         <div className="flex flex-col gap-1">
           {/* 유형 + 상태 */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-text-tertiary">{typeLabel}</span>
+            <span className="text-[11px] text-text-disabled">{typeLabel}</span>
             <span
               className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${status.className}`}
             >
@@ -127,12 +127,12 @@ function InquiryCard({
             </span>
           </div>
           {/* 제목 */}
-          <p className="line-clamp-1 text-[15px] font-semibold text-text-primary">
+          <p className="line-clamp-1 text-[15px] font-semibold text-text">
             {inquiry.title}
           </p>
           {/* 날짜 */}
           <time
-            className="text-[12px] text-text-tertiary"
+            className="text-[12px] text-text-disabled"
             suppressHydrationWarning
           >
             {new Date(inquiry.createdAt).toLocaleDateString('ko-KR')}

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { TopAppBar } from '@wara/ui';
-import { TextContentSkeleton } from '@/components/organisms/Skeleton';
+import { TextContentSkeleton } from '@/components/domain/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 import { TermContent } from './TermContent';
 
@@ -26,22 +26,22 @@ export function TermDetailContainer({ termType }: TermDetailContainerProps) {
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title={TITLES[termType]} onBack={() => router.back()} />
-      <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-secondary">
+      <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted">
         {isLoading ? (
           <TextContentSkeleton />
         ) : isError ? (
           <div className="flex flex-col items-center gap-3 py-10">
-            <p className="text-text-tertiary">약관을 불러올 수 없어요</p>
+            <p className="text-text-disabled">약관을 불러올 수 없어요</p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="text-xs underline text-text-secondary"
+              className="text-xs underline text-text-muted"
             >
               다시 시도
             </button>
           </div>
         ) : !term ? (
-          <p className="text-center text-text-tertiary py-10">
+          <p className="text-center text-text-disabled py-10">
             등록된 약관이 없어요
           </p>
         ) : (

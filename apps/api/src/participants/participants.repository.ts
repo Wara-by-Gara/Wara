@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
 import {
   invitations,
+  invitationBlocklists,
   participants,
   users,
   rsvpStatusEnum,
@@ -163,5 +164,20 @@ export class ParticipantsRepository {
 
   async hardDelete(id: string): Promise<void> {
     await this.db.delete(participants).where(eq(participants.id, id));
+  }
+
+  async kickAndBlock(
+    participantId: string,
+    invitationId: string,
+    blockedUserId: string,
+    blockedByUserId: string,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(participants).where(eq(participants.id, participantId));
+      await tx
+        .insert(invitationBlocklists)
+        .values({ invitationId, blockedUserId, blockedByUserId })
+        .onConflictDoNothing();
+    });
   }
 }

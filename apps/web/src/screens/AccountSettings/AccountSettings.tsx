@@ -67,11 +67,11 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
 
   if (screen === "connectedSocial" || screen === "connectAdditional" || screen === "disconnectModal") {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar className="shrink-0" title="계정 관리" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
         <section className="py-2">
-          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">연결된 소셜 계정</h2>
+          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">연결된 소셜 계정</h2>
           <div className="divide-y divide-border bg-surface">
             {(["kakao", "naver", "google"] as const).map((provider) => {
               const isConnected = connectedProviders?.includes(provider);
@@ -96,7 +96,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
                     </span>
                   }
                   onClick={handleClick}
-                  rightSlot={<span className="text-[13px] text-text-tertiary">{rightText}</span>}
+                  rightSlot={<span className="text-[13px] text-text-disabled">{rightText}</span>}
                 >
                   {label}
                 </MenuItem>
@@ -105,7 +105,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
           </div>
         </section>
         <section className="py-2">
-          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">계정</h2>
+          <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">계정</h2>
           <div className="divide-y divide-border bg-surface">
             <MenuItem leftIcon="log-out" variant="danger" onClick={() => setModalOpen(true)}>로그아웃</MenuItem>
             <MenuItem leftIcon="trash" variant="danger" onClick={onWithdrawStart}>회원 탈퇴</MenuItem>
@@ -137,7 +137,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
         <TopAppBar className="shrink-0" title="계정 관리" />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="log-out" size="xl" color="primary" decorative />
-          <p className="text-[18px] font-bold text-text-primary">로그아웃 됐어요</p>
+          <p className="text-[18px] font-bold text-text">로그아웃 됐어요</p>
           <Button variant="primary" size="md" onClick={onLoginAgain}>다시 로그인하기</Button>
         </main>
       </div>
@@ -149,8 +149,8 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="회원 탈퇴 안내" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          <h1 className="text-[20px] font-bold text-text-primary">탈퇴 전 확인해주세요</h1>
-          <ul className="mt-4 flex flex-col gap-3 text-[14px] text-text-secondary">
+          <h1 className="text-[20px] font-bold text-text">탈퇴 전 확인해주세요</h1>
+          <ul className="mt-4 flex flex-col gap-3 text-[14px] text-text-muted">
             <li>• 내가 만든 초대장과 참석자 데이터가 모두 삭제돼요</li>
             <li>• 함께 올린 사진·댓글이 사라져요</li>
             <li>• 탈퇴 후 가입했던 데이터는 복구할 수 없어요</li>
@@ -181,7 +181,7 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
             ].map((opt) => (
               <label key={opt.value} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
                 <Radio value={opt.value} />
-                <span className="text-[15px] text-text-primary">{opt.label}</span>
+                <span className="text-[15px] text-text">{opt.label}</span>
               </label>
             ))}
           </RadioGroup>
@@ -218,8 +218,8 @@ export const AccountSettings = ({ screen = "connectedSocial", onBack, onLogout, 
       <TopAppBar className="shrink-0" title="회원 탈퇴" />
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto px-6 text-center">
         <Icon name="user-x" size="xl" color="inactive" decorative />
-        <p className="text-[18px] font-bold text-text-primary">탈퇴가 완료됐어요</p>
-        <p className="text-[14px] text-text-secondary">언젠가 다시 만나길 바라요</p>
+        <p className="text-[18px] font-bold text-text">탈퇴가 완료됐어요</p>
+        <p className="text-[14px] text-text-muted">언젠가 다시 만나길 바라요</p>
         <Button variant="secondary" size="md" onClick={onWithdrawComplete}>홈으로</Button>
       </main>
     </div>
@@ -242,8 +242,8 @@ function WithdrawFinalConfirm({ onBack, onWithdrawCancel, onWithdrawConfirm, isW
     <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
       <TopAppBar className="shrink-0" title="회원 탈퇴" onBack={onBack} />
       <main className="min-h-0 flex-1 overflow-y-auto px-6 py-8">
-        <h1 className="text-[20px] font-bold text-text-primary">정말 탈퇴할까요?</h1>
-        <p className="mt-2 text-[14px] text-text-secondary">
+        <h1 className="text-[20px] font-bold text-text">정말 탈퇴할까요?</h1>
+        <p className="mt-2 text-[14px] text-text-muted">
           탈퇴하면 모든 데이터가 즉시 삭제되고 복구할 수 없어요.
           확인을 위해 아래에 <span className="font-bold">‘{WITHDRAW_CONFIRM_PHRASE}’</span> 을(를) 입력해주세요.
         </p>

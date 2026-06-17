@@ -3,13 +3,13 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/icons';
 import { Button } from "@wara/ui";
-import { PhotoGrid } from '@/components/organisms/PhotoGrid';
-import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
-import { PhotoViewer } from '@/components/organisms/PhotoViewer';
+import { PhotoGrid } from '@/components/domain/PhotoGrid';
+import { PhotoGridItem } from '@/components/domain/PhotoGridItem';
+import { PhotoViewer } from '@/components/domain/PhotoViewer';
 import * as Dialog from '@radix-ui/react-dialog';
-import { AlbumGridSkeleton } from '@/components/organisms/Skeleton';
+import { AlbumGridSkeleton } from '@/components/domain/Skeleton';
 import { cn } from '@/lib/cn';
-import type { PhotoViewerComment } from '@/components/organisms/PhotoViewer';
+import type { PhotoViewerComment } from '@/components/domain/PhotoViewer';
 
 export interface PhotoListModalPhoto {
   id: string;
@@ -131,7 +131,7 @@ export const PhotoListModal = ({
       >
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-page py-4">
-          <Dialog.Title className="text-[17px] font-bold text-text-primary">
+          <Dialog.Title className="text-[17px] font-bold text-text">
             {selectMode
               ? selectedIds.size > 0
                 ? `${selectedIds.size}장 선택됨`
@@ -149,7 +149,7 @@ export const PhotoListModal = ({
               }
             }}
             aria-label={selectMode ? '선택 취소' : '닫기'}
-            className="inline-flex size-8 items-center justify-center rounded-full text-text-secondary hover:bg-gray-50 transition-colors duration-150"
+            className="inline-flex size-8 items-center justify-center rounded-full text-text-muted hover:bg-gray-50 transition-colors duration-150"
           >
             <Icon name="x" size="md" color="currentColor" decorative />
           </button>
@@ -158,7 +158,7 @@ export const PhotoListModal = ({
         {/* 사진 그리드 — min-h-0 없으면 flex 자식이 줄어들지 않아 스크롤 불가 */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
           {flatPhotos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-text-tertiary">
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-text-disabled">
               <Icon name="camera" size="xl" color="inactive" decorative />
               <p className="text-[14px]">사진이 없어요</p>
             </div>

@@ -58,8 +58,7 @@ export function usePhotoFeedback(
       const { liked } = await toggleFeedbackLike(invitationId, feedbackId);
       setLikedMap((prev) => new Map(prev).set(feedbackId, liked));
       setLikeCountMap((prev) => new Map(prev).set(feedbackId, newCount));
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: invitationFeedbackKey });
+      // 목록 invalidate 제거 — 좋아요는 로컬 맵으로 반영(아바타 깜빡임 방지).
     } catch {
       setLikedMap((prev) => new Map(prev).set(feedbackId, currentLiked));
       setLikeCountMap((prev) => new Map(prev).set(feedbackId, currentCount));

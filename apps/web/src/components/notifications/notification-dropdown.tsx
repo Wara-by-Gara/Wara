@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { LoadMoreSkeleton, NotificationListSkeleton } from '@/components/organisms/Skeleton';
+import { LoadMoreSkeleton, NotificationListSkeleton } from '@/components/domain/Skeleton';
 import { NotificationItem } from './notification-item';
 import type { Notification } from '@/lib/api/notifications';
 
@@ -52,7 +52,7 @@ export function NotificationDropdown({
   return (
     <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-md shadow-lg border border-border overflow-hidden z-50">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-sm font-semibold text-text-primary">알림</span>
+        <span className="text-sm font-semibold text-text">알림</span>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -65,7 +65,7 @@ export function NotificationDropdown({
           <button
             type="button"
             onClick={onOpenSettings}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-disabled hover:text-text-muted transition-colors"
           >
             설정
           </button>
@@ -75,7 +75,7 @@ export function NotificationDropdown({
       <div className="max-h-96 overflow-y-auto divide-y divide-border">
         {isLoading && <NotificationListSkeleton count={5} />}
         {!isLoading && notifications.length === 0 && (
-          <div className="py-8 text-center text-sm text-text-tertiary">
+          <div className="py-8 text-center text-sm text-text-disabled">
             알림이 없어요
           </div>
         )}
@@ -94,7 +94,7 @@ export function NotificationDropdown({
               type="button"
               onClick={onLoadMore}
               disabled={isFetchingNextPage}
-              className="w-full py-3 text-sm text-text-tertiary hover:text-text-secondary disabled:opacity-50 transition-colors"
+              className="w-full py-3 text-sm text-text-disabled hover:text-text-muted disabled:opacity-50 transition-colors"
             >
               더 보기
             </button>

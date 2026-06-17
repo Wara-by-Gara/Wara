@@ -18,7 +18,7 @@ import { RSVPButtonGroup, type RSVPValue, InvitationInfoCard } from "@/component
 import { useQuestions, useSubmitAnswers } from "@/hooks/useQuestionnaire";
 import { StickyCTA } from "@/components/layout/StickyCTA";
 import type { Invitation } from "@/lib/api/invitations";
-import { RsvpPageSkeleton } from "@/components/organisms/Skeleton";
+import { RsvpPageSkeleton } from "@/components/domain/Skeleton";
 
 const schema = z.object({
   note: z.string().max(200).optional(),
@@ -65,8 +65,8 @@ export default function PublicInvitationContainer({ invitationId }: { invitation
         <TopAppBar title="응답하기" />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
-          <p className="text-[18px] font-bold text-text-primary">초대장을 찾을 수 없어요</p>
-          <p className="text-[14px] text-text-tertiary">링크가 올바른지 확인해주세요</p>
+          <p className="text-[18px] font-bold text-text">초대장을 찾을 수 없어요</p>
+          <p className="text-[14px] text-text-disabled">링크가 올바른지 확인해주세요</p>
         </div>
       </div>
     );
@@ -262,9 +262,9 @@ function PublicInvitationForm({ invitation }: { invitation: Invitation }) {
         )}
 
         <div className="flex flex-col gap-2">
-          <p className="text-[14px] font-medium text-text-primary">참석 여부</p>
+          <p className="text-[14px] font-medium text-text">참석 여부</p>
           {deadlineText ? (
-            <p className={`text-[13px] ${isRsvpClosed ? "text-danger" : "text-text-tertiary"}`}>
+            <p className={`text-[13px] ${isRsvpClosed ? "text-danger" : "text-text-disabled"}`}>
               {isRsvpClosed ? "응답이 마감됐어요" : `응답 마감 · ${deadlineText}`}
             </p>
           ) : null}

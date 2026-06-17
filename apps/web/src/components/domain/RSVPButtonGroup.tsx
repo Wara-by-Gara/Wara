@@ -68,6 +68,8 @@ export interface RSVPButtonGroupProps {
   /** 제출 중 */
   loading?: boolean;
   helperText?: string;
+  /** 어두운/컬러 배경 위에서 helperText 대비 확보용 */
+  isDarkBg?: boolean;
   className?: string;
 }
 
@@ -79,6 +81,7 @@ export function RSVPButtonGroup({
   closed,
   loading,
   helperText,
+  isDarkBg,
   className,
 }: RSVPButtonGroupProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -150,7 +153,14 @@ export function RSVPButtonGroup({
         })}
       </div>
       {helperText ? (
-        <p className="type-caption mt-3 text-center text-text-muted">{helperText}</p>
+        <p
+          className={cn(
+            "type-caption mt-3 text-center",
+            isDarkBg ? "text-white/85" : "text-text-muted",
+          )}
+        >
+          {helperText}
+        </p>
       ) : null}
     </div>
   );

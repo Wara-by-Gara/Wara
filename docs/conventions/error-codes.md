@@ -63,6 +63,7 @@
 | `PARTICIPANT_ALREADY_EXISTS` | 409 | 이미 참가한 초대장에 재참가 시도 |
 | `HOST_CANNOT_LEAVE` | 400 | HOST 본인 탈퇴 시도 |
 | `PARTICIPANT_ALREADY_HOST` | 400 | 이미 HOST인 참가자에게 호스트 권한 위임/공동 호스트 지정 시도 |
+| `PARTICIPANT_NOT_ATTENDING` | 400 | 참석(attending) 상태가 아닌 참가자에게 호스트 위임/공동 호스트 지정 시도 (호스트는 RSVP 변경 불가) |
 | `OWNER_CANNOT_BE_DEMOTED` | 400 | 초대장 소유자(원 호스트)를 공동 호스트에서 해제 시도 |
 | `INVITATION_CLOSED` | 422 | 마감된 초대장 참가/RSVP 변경 시도 |
 | `RSVP_PERMISSION_DENIED` | 403 | absent 상태 열람 시도 또는 HOST RSVP 변경 시도 |

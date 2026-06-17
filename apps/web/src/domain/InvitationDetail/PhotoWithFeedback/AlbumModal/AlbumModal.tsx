@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Photo, getDownloadUrls, getAllDownloadUrls, PhotoDownloadItem, togglePhotoLike } from '@/lib/api/photos';
-import { PhotoListModal } from '@/components/organisms/PhotoListModal';
+import { PhotoListModal } from '@/components/domain/PhotoListModal';
 import PhotoDetailModal from '@/domain/InvitationDetail/PhotoWithFeedback/PhotoDetailModal/PhotoDetailModal';
 
 interface Props {

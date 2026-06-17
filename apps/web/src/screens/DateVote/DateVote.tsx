@@ -190,36 +190,36 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
   const groups = groupByDate(slots);
   return (
     <div className="overflow-hidden rounded-md border border-border bg-surface">
-      <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-background-soft px-4 py-3">
-        <span className="text-[12px] font-bold text-text-tertiary">날짜 · 시간</span>
+      <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 border-b-2 border-border bg-surface-muted px-4 py-3">
+        <span className="text-[12px] font-bold text-text-disabled">날짜 · 시간</span>
         {TYPES.map((t) => (
           <div key={t} className="flex flex-col items-center gap-0.5">
             <span className={cn("text-[22px] font-black leading-none", VOTE_CFG[t].col)}>{VOTE_CFG[t].symbol}</span>
-            <span className="text-[10px] font-medium text-text-tertiary">{VOTE_CFG[t].label}</span>
+            <span className="text-[10px] font-medium text-text-disabled">{VOTE_CFG[t].label}</span>
           </div>
         ))}
       </div>
       {Array.from(groups.entries()).map(([date, slots], gi) => (
         <div key={date}>
-          <div className={cn("border-b border-border bg-background-soft px-4 py-2", gi > 0 && "border-t-2 border-t-border")}>
-            <span className="text-[12px] font-extrabold text-text-secondary">{date}</span>
+          <div className={cn("border-b border-border bg-surface-muted px-4 py-2", gi > 0 && "border-t-2 border-t-border")}>
+            <span className="text-[12px] font-extrabold text-text-muted">{date}</span>
           </div>
           {slots.map((slot) => {
             const total = slot.votes.circle + slot.votes.triangle + slot.votes.cross;
             const myV = myVotes[slot.id];
             const isTop = topSlotIds?.has(slot.id) ?? false;
             return (
-              <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-background-soft" : "bg-surface")}>
+              <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-surface-muted" : "bg-surface")}>
                 <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 px-4 py-3">
                   <div className="flex flex-col gap-0.5">
                     {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ 현재 최다</span>}
-                    <span className={cn("text-[15px] font-bold", isTop ? "text-emerald-700" : "text-text-primary")}>{slot.time}</span>
-                    <span className={cn("text-[11px]", isTop ? "text-emerald-700/80" : "text-text-tertiary")}>응답 {total}명</span>
+                    <span className={cn("text-[15px] font-bold", isTop ? "text-emerald-700" : "text-text")}>{slot.time}</span>
+                    <span className={cn("text-[11px]", isTop ? "text-emerald-700/80" : "text-text-disabled")}>응답 {total}명</span>
                   </div>
                   {TYPES.map((t) => (
                     <div key={t} className="flex flex-col items-center gap-1">
                       <VoteBtn type={t} active={myV === t} onClick={() => onVote(slot.id, t)} />
-                      <span className={cn("text-[11px] font-semibold", myV === t ? VOTE_CFG[t].col : "text-text-tertiary")}>{slot.votes[t]}</span>
+                      <span className={cn("text-[11px] font-semibold", myV === t ? VOTE_CFG[t].col : "text-text-disabled")}>{slot.votes[t]}</span>
                     </div>
                   ))}
                 </div>
@@ -246,11 +246,11 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: 
         <div>
           {isConfirmed && <span className="text-[11px] font-extrabold uppercase tracking-widest text-primary">✓ 확정</span>}
           {isTop && !isConfirmed && <span className="text-[11px] font-bold text-emerald-600">✦ 최다 응답</span>}
-          <p className="text-[15px] font-bold text-text-primary">{slot.date}</p>
-          <p className="text-[13px] text-text-secondary">{slot.time}</p>
+          <p className="text-[15px] font-bold text-text">{slot.date}</p>
+          <p className="text-[13px] text-text-muted">{slot.time}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <span className="text-[12px] text-text-tertiary">총 {total}명</span>
+          <span className="text-[12px] text-text-disabled">총 {total}명</span>
           {onConfirm && (
             <button
               type="button"
@@ -270,7 +270,7 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: 
             <div key={t} className="flex flex-1 flex-col items-center gap-1.5">
               <div className="flex items-baseline gap-1">
                 <span className={cn("text-[18px] font-black leading-none", cfg.col)}>{cfg.symbol}</span>
-                <span className="text-[13px] font-bold text-text-primary">{slot.votes[t]}</span>
+                <span className="text-[13px] font-bold text-text">{slot.votes[t]}</span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div className={cn("h-full rounded-full", cfg.bar)} style={{ width: `${pct}%` }} />
@@ -387,8 +387,8 @@ function WheelColumn({
                   dist === 0
                     ? "text-[20px] font-extrabold text-primary"
                     : dist === 1
-                      ? "text-[16px] font-semibold text-text-secondary opacity-60"
-                      : "text-[14px] font-medium text-text-tertiary opacity-30",
+                      ? "text-[16px] font-semibold text-text-muted opacity-60"
+                      : "text-[14px] font-medium text-text-disabled opacity-30",
                 )}
               >
                 {item}
@@ -422,23 +422,23 @@ function TimePicker({ onAdd, disabled }: TimePickerProps) {
       <button
         type="button"
         onClick={() => setAmpm((p) => (p === "오전" ? "오후" : "오전"))}
-        className="flex w-full items-center overflow-hidden rounded-xs border border-border bg-background-soft"
+        className="flex w-full items-center overflow-hidden rounded-xs border border-border bg-surface-muted"
       >
         {(["오전", "오후"] as const).map((v) => (
           <span
             key={v}
             className={cn(
               "flex flex-1 items-center justify-center py-1.5 text-[13px] font-extrabold transition-all duration-150",
-              ampm === v ? "bg-primary text-white" : "text-text-tertiary",
+              ampm === v ? "bg-primary text-white" : "text-text-disabled",
             )}
           >{v}</span>
         ))}
       </button>
 
       {/* 시 · 분 휠 */}
-      <div className="flex items-center gap-0 rounded-sm border border-border bg-background-soft px-2" style={{ height: 120, overflow: "hidden" }}>
+      <div className="flex items-center gap-0 rounded-sm border border-border bg-surface-muted px-2" style={{ height: 120, overflow: "hidden" }}>
         <WheelColumn items={HOURS} value={hour} onChange={setHour} />
-        <div className="text-[20px] font-extrabold text-text-tertiary">:</div>
+        <div className="text-[20px] font-extrabold text-text-disabled">:</div>
         <WheelColumn items={MINUTES} value={minute} onChange={setMinute} />
       </div>
 
@@ -572,13 +572,13 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
         <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
           {/* Summary */}
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="mb-2 text-[13px] font-bold text-text-primary">선택된 후보 ({slots.length}개)</p>
+            <p className="mb-2 text-[13px] font-bold text-text">선택된 후보 ({slots.length}개)</p>
             <div className="flex flex-col gap-1">
               {Array.from(slotsByDate.entries()).map(([, daySlots]) =>
                 daySlots.map((s) => (
                   <div key={`${s.dateKey}-${s.time}`} className="flex items-center gap-2">
-                    <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
-                    <span className="text-[13px] text-text-secondary">{s.date} {s.time}</span>
+                    <span className="w-5 text-[12px] font-bold text-text-disabled">{slots.indexOf(s) + 1}.</span>
+                    <span className="text-[13px] text-text-muted">{s.date} {s.time}</span>
                   </div>
                 ))
               )}
@@ -587,7 +587,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
           {/* Deadline */}
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="mb-3 text-[13px] font-bold text-text-primary">투표 마감 시간</p>
+            <p className="mb-3 text-[13px] font-bold text-text">투표 마감 시간</p>
             <div className="flex gap-3">
               {([
                 { mode: "none" as const, label: "없음", desc: "마감일 없이 진행" },
@@ -602,13 +602,13 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                     deadlineMode === mode ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
-                  <span className={cn("text-[14px] font-bold", deadlineMode === mode ? "text-primary" : "text-text-primary")}>{label}</span>
-                  <span className="text-[11px] text-text-secondary">{desc}</span>
+                  <span className={cn("text-[14px] font-bold", deadlineMode === mode ? "text-primary" : "text-text")}>{label}</span>
+                  <span className="text-[11px] text-text-muted">{desc}</span>
                 </button>
               ))}
             </div>
             {deadlineMode === "custom" && (
-              <div className="mt-3 flex gap-2 rounded-sm border border-border bg-background-soft p-3">
+              <div className="mt-3 flex gap-2 rounded-sm border border-border bg-surface-muted p-3">
                 <input
                   type="date"
                   value={customDeadlineDate}
@@ -628,7 +628,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
 
           {/* Public/private */}
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="mb-3 text-[13px] font-bold text-text-primary">투표자 공개 설정</p>
+            <p className="mb-3 text-[13px] font-bold text-text">투표자 공개 설정</p>
             <div className="flex gap-3">
               {[{ v: true, label: "공개", desc: "누가 어떤 응답인지 표시" }, { v: false, label: "비공개", desc: "통계만 표시, 이름 숨김" }].map(({ v, label, desc }) => (
                 <button
@@ -640,8 +640,8 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                     isPublic === v ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
-                  <span className={cn("text-[14px] font-bold", isPublic === v ? "text-primary" : "text-text-primary")}>{label}</span>
-                  <span className="text-[11px] text-text-secondary">{desc}</span>
+                  <span className={cn("text-[14px] font-bold", isPublic === v ? "text-primary" : "text-text")}>{label}</span>
+                  <span className="text-[11px] text-text-muted">{desc}</span>
                 </button>
               ))}
             </div>
@@ -686,7 +686,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
           <Icon name="chevron-right" size="xs" color="inactive" decorative />
           <div className="flex items-center gap-1.5">
             <span className="flex size-5 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">2</span>
-            <span className="text-[13px] text-text-tertiary">투표 설정</span>
+            <span className="text-[13px] text-text-disabled">투표 설정</span>
           </div>
         </div>
 
@@ -714,7 +714,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                     "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all",
                     focusedDate === key
                       ? "border-primary bg-primary text-white"
-                      : "border-border bg-surface text-text-secondary",
+                      : "border-border bg-surface text-text-muted",
                   )}
                 >
                   {new Date(key).getMonth() + 1}월 {new Date(key).getDate()}일
@@ -727,7 +727,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
         {/* Time picker for focused date */}
         {focusedDate && (
           <div className="flex flex-col gap-2">
-            <p className="px-1 text-[13px] font-bold text-text-secondary">
+            <p className="px-1 text-[13px] font-bold text-text-muted">
               {formatDateLabel(focusedDate)} — 시간 추가
             </p>
             <TimePicker
@@ -748,7 +748,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
         {slots.length > 0 && (
           <div className="overflow-hidden rounded-md border border-border bg-surface">
             <div className="sticky top-0 z-10 bg-surface px-4 pb-2 pt-4">
-              <p className="text-[13px] font-bold text-text-primary">추가된 후보 ({slots.length}개)</p>
+              <p className="text-[13px] font-bold text-text">추가된 후보 ({slots.length}개)</p>
               {slots.length >= 30 && (
                 <p className="mt-1 text-[12px] text-rose-500">30개 이상은 추가할 수 없습니다.</p>
               )}
@@ -759,17 +759,17 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                 daySlots.map((s) => (
                   <div key={`${s.dateKey}-${s.time}`} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <span className="w-5 text-[12px] font-bold text-text-tertiary">{slots.indexOf(s) + 1}.</span>
+                      <span className="w-5 text-[12px] font-bold text-text-disabled">{slots.indexOf(s) + 1}.</span>
                       <div>
-                        <p className="text-[13px] font-semibold text-text-primary">{s.date}</p>
-                        <p className="text-[12px] text-text-secondary">{s.time}</p>
+                        <p className="text-[13px] font-semibold text-text">{s.date}</p>
+                        <p className="text-[12px] text-text-muted">{s.time}</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeSlot(slots.indexOf(s))}
                       aria-label="삭제"
-                      className="flex size-7 items-center justify-center rounded-full text-text-tertiary hover:bg-gray-50 transition-colors duration-150"
+                      className="flex size-7 items-center justify-center rounded-full text-text-disabled hover:bg-gray-50 transition-colors duration-150"
                     >
                       <Icon name="x" size="xs" color="currentColor" decorative />
                     </button>
@@ -911,8 +911,8 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
               <Icon name="ticket" size="md" color="primary" decorative />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-bold text-text-primary">{invitation.title}</p>
-              <p className="text-[12px] text-text-tertiary">
+              <p className="truncate text-[14px] font-bold text-text">{invitation.title}</p>
+              <p className="text-[12px] text-text-disabled">
                 호스트 · {invitation.host?.nickname ?? invitation.host?.name ?? '알 수 없음'}
               </p>
             </div>
@@ -929,7 +929,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
           ) : (
             <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
               <Icon name="calendar" size="sm" color="inactive" decorative className="shrink-0" />
-              <span className="text-[13px] text-text-secondary">투표 진행 중 · 마감일 없음</span>
+              <span className="text-[13px] text-text-muted">투표 진행 중 · 마감일 없음</span>
             </div>
           )
         ) : isConfirmedView ? (
@@ -938,21 +938,21 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
             <div>
               <p className="text-[13px] font-bold text-primary">날짜가 확정됐어요!</p>
               {confirmedSlot && (
-                <p className="text-[12px] text-text-secondary">{confirmedSlot.date} {confirmedSlot.time}</p>
+                <p className="text-[12px] text-text-muted">{confirmedSlot.date} {confirmedSlot.time}</p>
               )}
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-3">
             <Icon name="lock" size="sm" color="inactive" decorative className="shrink-0" />
-            <p className="text-[13px] text-text-secondary">투표가 마감되었어요 · 최종 결과</p>
+            <p className="text-[13px] text-text-muted">투표가 마감되었어요 · 최종 결과</p>
           </div>
         )}
 
         {/* 호스트 관리 패널 */}
         {state === "hostView" && (
           <div className="rounded-md border border-border bg-surface p-4">
-            <p className="mb-2.5 text-[13px] font-bold text-text-primary">호스트 관리</p>
+            <p className="mb-2.5 text-[13px] font-bold text-text">호스트 관리</p>
             <div className="mt-2.5 flex gap-2">
               <Button variant="secondary" size="sm"
                 className="flex-1 gap-1.5 border-rose-200 text-rose-500"
@@ -983,13 +983,13 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
                     />
                   ))}
                 </div>
-                <span className="text-[13px] text-text-secondary">
-                  <span className="font-bold text-text-primary">{totalCount}명</span> 중{" "}
-                  <span className="font-bold text-text-primary">{totalVoters}명</span> 참여
+                <span className="text-[13px] text-text-muted">
+                  <span className="font-bold text-text">{totalCount}명</span> 중{" "}
+                  <span className="font-bold text-text">{totalVoters}명</span> 참여
                 </span>
               </div>
               {nonVoterCount > 0 && (
-                <span className="text-[12px] text-text-tertiary">미투표 {nonVoterCount}명</span>
+                <span className="text-[12px] text-text-disabled">미투표 {nonVoterCount}명</span>
               )}
             </div>
           )
@@ -1001,12 +1001,12 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
                   <Avatar key={i} size="xs" name={initial} className="ring-2 ring-surface" />
                 ))}
               </div>
-              <span className="text-[13px] text-text-secondary">
-                <span className="font-bold text-text-primary">10명</span> 중{" "}
-                <span className="font-bold text-text-primary">8명</span> 참여
+              <span className="text-[13px] text-text-muted">
+                <span className="font-bold text-text">10명</span> 중{" "}
+                <span className="font-bold text-text">8명</span> 참여
               </span>
             </div>
-            <span className="text-[12px] text-text-tertiary">미투표 2명</span>
+            <span className="text-[12px] text-text-disabled">미투표 2명</span>
           </div>
         )}
 
@@ -1019,7 +1019,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
               topSlotIds={topSlotIds}
               showVoters={!poll?.isAnonymous}
             />
-            <p className="text-center text-[12px] text-text-tertiary">
+            <p className="text-center text-[12px] text-text-disabled">
               {submitMutation.isPending
                 ? "저장 중..."
                 : "응답이 자동 저장됩니다 · 같은 날짜의 여러 시간대에 동시에 응답할 수 있어요"}

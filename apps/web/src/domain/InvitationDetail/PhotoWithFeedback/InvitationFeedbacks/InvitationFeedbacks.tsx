@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { CommentItem } from '@/components/domain';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useParticipants } from '@/hooks/useParticipants';
-import { CommentInputBar, GifPicker } from '@/components/organisms';
-import { CommentListSkeleton, MentionListSkeleton } from '@/components/organisms/Skeleton';
+import { CommentInputBar } from '@/components/domain/CommentInputBar';
+import { GifPicker } from '@/components/domain/GifPicker';
+import { CommentListSkeleton, MentionListSkeleton } from '@/components/domain/Skeleton';
 import { Avatar } from "@wara/ui";
 import { timeAgo } from '@/utils/timeAge';
 import { cn } from '@/lib/cn';
@@ -66,6 +68,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const [profileModal, setProfileModal] = useState<{
     userId: string;
     isHost: boolean;
+    isWithdrawn?: boolean;
   } | null>(null);
   const [likedMap, setLikedMap] = useState<Map<string, boolean>>(new Map());
   const [likeCountMap, setLikeCountMap] = useState<Map<string, number>>(
@@ -78,6 +81,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  // 댓글 입력창은 항상 보이지 않고, "댓글 쓰기"/"답글" 버튼을 눌렀을 때만 하단 고정으로 노출
+  const [composerOpen, setComposerOpen] = useState(false);
 
   const { data: participantsData, isLoading: isParticipantsLoading } =
     useParticipants(invitationId);
@@ -85,7 +90,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
 
   // 마지막 @ 이후 텍스트 추출
   const mentionQuery = (() => {
-    const match = inputValue.match(/@(\S*)$/);
+    // 토큰 경계를 공백/@ 까지로 한정 (\S* 는 닉네임 내 @ 를 삼켜 멘션 매칭이 깨짐)
+    const match = inputValue.match(/@([^\s@]*)$/);
     return match ? match[1] : null;
   })();
 
@@ -98,7 +104,8 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
         )
       : [];
 
-  const showAllOption = mentionQuery != null && 'all'.includes(mentionQuery.toLowerCase());
+  // @ 입력 직후(빈 쿼리)엔 숨김 — 'all'.includes('') === true 라서 @가 뜨자마자 @all이 노출되던 버그 방지
+  const showAllOption = mentionQuery != null && mentionQuery.length > 0 && 'all'.includes(mentionQuery.toLowerCase());
 
   const handleSelectMention = (userId: string, nickname: string) => {
     if (userId === '__all__') {
@@ -106,9 +113,9 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
         .map((p) => p.user.id)
         .filter((id) => id !== currentUserId);
       setMentionedUserIds([...new Set(allUserIds)]);
-      setInputValue(inputValue.replace(/@\S*$/, '@all '));
+      setInputValue(inputValue.replace(/@[^\s@]*$/, '@all '));
     } else {
-      const newValue = inputValue.replace(/@\S*$/, `@${nickname} `);
+      const newValue = inputValue.replace(/@[^\s@]*$/, `@${nickname} `);
       setInputValue(newValue);
       setMentionedUserIds((prev) => [...new Set([...prev, userId])]);
     }
@@ -138,6 +145,27 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
 
   const clearPendingGif = () => setPendingGif(null);
 
+  // 새 댓글 작성 시작 (답글 대상 초기화)
+  const openComposer = () => {
+    setReplyingTo(null);
+    setComposerOpen(true);
+  };
+  // 특정 댓글에 답글 작성 시작
+  const openReply = (id: string, authorName: string) => {
+    setReplyingTo({ id, authorName });
+    setComposerOpen(true);
+  };
+  // 입력창 닫기 + 입력 상태 초기화 (제출 성공/취소 공통)
+  const closeComposer = () => {
+    setComposerOpen(false);
+    setReplyingTo(null);
+    clearPendingFile();
+    clearPendingGif();
+    setGifPickerOpen(false);
+    setInputValue('');
+    setMentionedUserIds([]);
+  };
+
   const handlePhotoClick = async (photoId: string) => {
     const photo = await getPhoto(invitationId, photoId);
     setSelectedPhoto(photo);
@@ -146,141 +174,23 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   return (
     <div ref={sectionRef} id="comments" className="mt-4">
       <div>
-        <h3 className={cn('mb-3 text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text-primary')}>
-          댓글 {commentCount}
-        </h3>
-
-        {replyingTo ? (
-          <div className="mt-2 flex items-center justify-between rounded-md border border-border bg-primary-soft px-4 py-1.5">
-            <span className="text-[13px] text-primary">
-              @{replyingTo.authorName}에게 답글
-            </span>
-            <button
-              type="button"
-              onClick={() => setReplyingTo(null)}
-              className="text-[13px] text-text-tertiary hover:text-text-secondary"
-            >
-              취소
-            </button>
-          </div>
-        ) : null}
-        {pendingPreview && (
-          <div className="flex items-center gap-2 border-t border-border bg-surface px-4 py-2">
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={pendingPreview}
-                alt=""
-                className="size-full object-cover"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={clearPendingFile}
-              className="text-[12px] text-text-tertiary hover:text-text-secondary"
-            >
-              취소
-            </button>
-          </div>
-        )}
-        {mentionQuery !== null && (
-          <div className="mx-3 mb-1 rounded-md border border-border bg-surface shadow-sm overflow-y-auto max-h-[220px]">
-            {isParticipantsLoading ? (
-              <MentionListSkeleton count={3} />
-            ) : filteredParticipants.length === 0 && !showAllOption ? (
-              <p className="px-4 py-3 text-[13px] text-text-tertiary">
-                일치하는 참가자 없음
-              </p>
-            ) : (
-              <ul>
-                {showAllOption && (
-                  <li>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelectMention('__all__', 'all');
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <span className="text-[14px] font-medium text-text-primary">@all</span>
-                      <span className="text-[12px] text-text-tertiary">전체 참여자</span>
-                    </button>
-                  </li>
-                )}
-                {filteredParticipants.map((p) => (
-                  <li key={p.user.id}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault(); // input blur 방지
-                        handleSelectMention(
-                          p.user.id,
-                          getCommentAuthorName(p.user),
-                        );
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <Avatar
-                        src={p.user.profileImageUrl ?? undefined}
-                        alt={getCommentAuthorName(p.user)}
-                        size="xs"
-                        name={getCommentAuthorName(p.user)[0]}
-                      />
-                      <span className="text-[14px] text-text-primary">
-                        @{getCommentAuthorName(p.user)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>
+            댓글 {commentCount}
+          </h3>
+          <button
+            type="button"
+            onClick={openComposer}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-semibold',
+              isDarkBg
+                ? 'bg-white/15 text-white hover:bg-white/25'
+                : 'bg-primary text-text-inverse hover:opacity-90',
             )}
-          </div>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        <CommentInputBar
-          variant="glass"
-          className="border-t-0"
-          placeholder={
-            replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'
-          }
-          value={inputValue}
-          onValueChange={setInputValue}
-          pendingGif={pendingGif}
-          onGifClear={clearPendingGif}
-          onGifButtonClick={() => setGifPickerOpen((v) => !v)}
-          onPhotoButtonClick={() => fileInputRef.current?.click()}
-          hasPendingPhoto={!!pendingFile}
-          highlightMentions
-          onSubmit={async (text) => {
-            await submitComment(
-              text,
-              replyingTo?.id,
-              pendingFile ?? undefined,
-              mentionedUserIds.length ? mentionedUserIds : undefined,
-              pendingGif ?? undefined,
-            );
-            setReplyingTo(null);
-            clearPendingFile();
-            clearPendingGif();
-            setGifPickerOpen(false);
-            setInputValue('');
-            setMentionedUserIds([]);
-          }}
-          state={isSubmitting ? 'submitting' : 'default'}
-        />
-        {gifPickerOpen ? (
-          <GifPicker
-            onSelect={handleGifSelect}
-            onClose={() => setGifPickerOpen(false)}
-          />
-        ) : null}
+          >
+            댓글 쓰기
+          </button>
+        </div>
 
         <div className="mt-2 flex flex-col">
           {allRows.map((f) => (
@@ -331,18 +241,18 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                         setProfileModal({
                           userId: f.participant.userId,
                           isHost: f.participant.memberRole === 'HOST',
+                          isWithdrawn: f.participant.user?.isWithdrawn,
                         })
                     : undefined
                 }
                 onReply={
                   !f.deletedAt
                     ? () =>
-                        setReplyingTo({
-                          id: f.id,
-                          authorName:
-                            f.participant.user?.nickname ??
+                        openReply(
+                          f.id,
+                          f.participant.user?.nickname ??
                             f.participant.userId,
-                        })
+                        )
                     : undefined
                 }
                 variant={
@@ -485,7 +395,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                 type="button"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="mt-2 w-full py-2 text-center text-[13px] font-medium text-brand disabled:opacity-50"
+                className="mt-2 w-full py-2 text-center text-[13px] font-medium text-accent disabled:opacity-50"
               >
                 더보기
               </button>
@@ -494,6 +404,142 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           ) : null}
         </div>
       </div>
+
+      {/* 하단 고정 댓글 입력창 — "댓글 쓰기"/"답글" 트리거 시에만 노출.
+          body로 portal: GuestView의 `relative z-10`가 만든 stacking context에 갇히면
+          MainBottomNav(z-10)가 위로 덮어 입력창이 가려지므로 root 레벨로 빼낸다. */}
+      {composerOpen && typeof document !== 'undefined' && createPortal(
+        <>
+          <button
+            type="button"
+            aria-label="댓글 입력 닫기"
+            className="fixed inset-0 z-40 bg-black/20"
+            onClick={closeComposer}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
+            {replyingTo ? (
+              <div className="flex items-center justify-between border-b border-border bg-primary-soft px-4 py-1.5">
+                <span className="text-[13px] text-primary">
+                  @{replyingTo.authorName}에게 답글
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setReplyingTo(null)}
+                  className="text-[13px] text-text-disabled hover:text-text-muted"
+                >
+                  취소
+                </button>
+              </div>
+            ) : null}
+            {pendingPreview && (
+              <div className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2">
+                <div className="relative size-12 shrink-0 overflow-hidden rounded-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={pendingPreview} alt="" className="size-full object-cover" />
+                </div>
+                <button
+                  type="button"
+                  onClick={clearPendingFile}
+                  className="text-[12px] text-text-disabled hover:text-text-muted"
+                >
+                  취소
+                </button>
+              </div>
+            )}
+            {mentionQuery !== null && (
+              <div className="mx-3 mb-1 max-h-[220px] overflow-y-auto rounded-md border border-border bg-surface shadow-sm">
+                {isParticipantsLoading ? (
+                  <MentionListSkeleton count={3} />
+                ) : filteredParticipants.length === 0 && !showAllOption ? (
+                  <p className="px-4 py-3 text-[13px] text-text-disabled">
+                    일치하는 참가자 없음
+                  </p>
+                ) : (
+                  <ul>
+                    {showAllOption && (
+                      <li>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectMention('__all__', 'all');
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          <span className="text-[14px] font-medium text-text">@all</span>
+                          <span className="text-[12px] text-text-disabled">전체 참여자</span>
+                        </button>
+                      </li>
+                    )}
+                    {filteredParticipants.map((p) => (
+                      <li key={p.user.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectMention(p.user.id, getCommentAuthorName(p.user));
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          <Avatar
+                            src={p.user.profileImageUrl ?? undefined}
+                            alt={getCommentAuthorName(p.user)}
+                            size="xs"
+                            name={getCommentAuthorName(p.user)[0]}
+                          />
+                          <span className="text-[14px] text-text">
+                            @{getCommentAuthorName(p.user)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+            {gifPickerOpen ? (
+              <GifPicker
+                onSelect={handleGifSelect}
+                onClose={() => setGifPickerOpen(false)}
+              />
+            ) : null}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <CommentInputBar
+              variant="default"
+              maxLength={500}
+              placeholder={
+                replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'
+              }
+              value={inputValue}
+              onValueChange={setInputValue}
+              pendingGif={pendingGif}
+              onGifClear={clearPendingGif}
+              onGifButtonClick={() => setGifPickerOpen((v) => !v)}
+              onPhotoButtonClick={() => fileInputRef.current?.click()}
+              hasPendingPhoto={!!pendingFile}
+              highlightMentions
+              onSubmit={async (text) => {
+                await submitComment(
+                  text,
+                  replyingTo?.id,
+                  pendingFile ?? undefined,
+                  mentionedUserIds.length ? mentionedUserIds : undefined,
+                  pendingGif ?? undefined,
+                );
+                closeComposer();
+              }}
+              state={isSubmitting ? 'submitting' : 'default'}
+            />
+          </div>
+        </>,
+        document.body,
+      )}
 
       {selectedPhoto ? (
         <PhotoDetailModal
@@ -516,6 +562,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
           }}
           userId={profileModal.userId}
           isHost={profileModal.isHost}
+          isWithdrawn={profileModal.isWithdrawn}
         />
       )}
     </div>

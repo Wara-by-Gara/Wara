@@ -16,22 +16,22 @@ export function TermContent({ content, variant = 'detail' }: TermContentProps) {
   const styles =
     variant === 'compact'
       ? {
-          h1: 'text-[12px] font-bold text-text-primary mt-1 mb-1.5',
-          h2: 'text-[11.5px] font-semibold text-text-primary mt-2.5 mb-1',
+          h1: 'text-[12px] font-bold text-text mt-1 mb-1.5',
+          h2: 'text-[11.5px] font-semibold text-text mt-2.5 mb-1',
           p: 'mb-1.5',
           ul: 'list-disc pl-4 mb-1.5 space-y-0.5',
           ol: 'list-decimal pl-4 mb-1.5 space-y-0.5',
           blockquote:
-            'border-l-2 border-border pl-2 text-text-tertiary italic mb-1.5',
+            'border-l-2 border-border pl-2 text-text-disabled italic mb-1.5',
         }
       : {
-          h1: 'text-base font-bold text-text-primary mt-2 mb-3',
-          h2: 'text-sm font-semibold text-text-primary mt-5 mb-2',
+          h1: 'text-base font-bold text-text mt-2 mb-3',
+          h2: 'text-sm font-semibold text-text mt-5 mb-2',
           p: 'mb-3',
           ul: 'list-disc pl-5 mb-3 space-y-1',
           ol: 'list-decimal pl-5 mb-3 space-y-1',
           blockquote:
-            'border-l-2 border-border pl-3 text-text-tertiary italic mb-3',
+            'border-l-2 border-border pl-3 text-text-disabled italic mb-3',
         };
 
   return (

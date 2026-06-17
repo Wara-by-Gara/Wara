@@ -7,7 +7,7 @@ import { Button } from "@wara/ui";
 import type { InvitationListItem } from "@/domain/InvitationList/invitationListUtils";
 import { ROUTES } from "@/constants/routes";
 import type { Invitation } from "@/lib/api/invitations";
-import { HorizontalInvitationListSkeleton } from "@/components/organisms/Skeleton";
+import { HorizontalInvitationListSkeleton } from "@/components/domain/Skeleton";
 import { resolveInvitationCardStatus } from "@/utils/resolveInvitationCardStatus";
 
 interface UpcomingMeetingsSectionProps {

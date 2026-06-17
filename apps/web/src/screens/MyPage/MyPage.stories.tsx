@@ -207,10 +207,10 @@ function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) =
               className="object-cover"
             />
           </div>
-          <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text-primary">
+          <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text">
             {MOCK_MEMORY.title}
           </span>
-          <span className="shrink-0 text-[11px] text-text-tertiary">
+          <span className="shrink-0 text-[11px] text-text-disabled">
             사진 {MEETING_PHOTOS.length}장
           </span>
         </div>
@@ -255,7 +255,7 @@ function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) =
               </div>
               {/* 핀 꼬리 */}
               <div className="h-1.5 w-0.5 bg-white/80" />
-              <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-secondary shadow-sm">
+              <div className="whitespace-nowrap rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-medium text-text-muted shadow-sm">
                 {photo.caption}
               </div>
             </button>
@@ -270,7 +270,7 @@ function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) =
             key={photo.id}
             type="button"
             onClick={() => onSelectPhoto(photo)}
-            className="flex items-center gap-3 px-3 py-3 text-left active:bg-background-soft"
+            className="flex items-center gap-3 px-3 py-3 text-left active:bg-surface-muted"
           >
             {/* 썸네일 */}
             <div className="relative size-[56px] shrink-0 overflow-hidden rounded-xl">
@@ -285,21 +285,21 @@ function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) =
 
             {/* 정보 */}
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-text-primary">{photo.caption}</p>
+              <p className="text-[13px] font-bold text-text">{photo.caption}</p>
               <div className="mt-0.5 flex items-center gap-1">
                 <Icon name="map-pin" size="xs" color="inactive" decorative />
-                <p className="truncate text-[11px] text-text-tertiary">{photo.address}</p>
+                <p className="truncate text-[11px] text-text-disabled">{photo.address}</p>
               </div>
               <div className="mt-0.5 flex items-center gap-1">
                 <Icon name="clock" size="xs" color="inactive" decorative />
-                <p className="text-[11px] text-text-tertiary">{photo.takenAt}</p>
+                <p className="text-[11px] text-text-disabled">{photo.takenAt}</p>
               </div>
             </div>
 
             {/* 좋아요 */}
             <div className="flex shrink-0 flex-col items-center gap-0.5">
               <Icon name="heart" size="sm" color="inactive" decorative />
-              <span className="text-[11px] text-text-tertiary">{photo.likeCount}</span>
+              <span className="text-[11px] text-text-disabled">{photo.likeCount}</span>
             </div>
           </button>
         ))}
@@ -314,8 +314,8 @@ function PlaceLogSection({ onSelectPhoto }: { onSelectPhoto: (p: MeetingPhoto) =
 function StatItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-1 flex-col items-center gap-0.5">
-      <span className="text-[15px] font-bold text-text-primary">{value}</span>
-      <span className="text-[11px] text-text-tertiary">{label}</span>
+      <span className="text-[15px] font-bold text-text">{value}</span>
+      <span className="text-[11px] text-text-disabled">{label}</span>
     </div>
   );
 }
@@ -340,7 +340,7 @@ function BottomNav({ active = "profile" }: { active?: string }) {
         if ("isFab" in item && item.isFab) {
           return (
             <div key={item.key} className="flex flex-1 items-center justify-center py-2">
-              <div className="flex size-12 items-center justify-center rounded-full bg-brand shadow-md">
+              <div className="flex size-12 items-center justify-center rounded-full bg-accent shadow-md">
                 <Icon name="plus" size="lg" color="inverse" decorative />
               </div>
             </div>
@@ -349,7 +349,7 @@ function BottomNav({ active = "profile" }: { active?: string }) {
         return (
           <div key={item.key} className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5">
             {"badge" in item && item.badge && (
-              <span className="absolute right-[calc(50%-8px)] top-1.5 size-2 rounded-full bg-brand" />
+              <span className="absolute right-[calc(50%-8px)] top-1.5 size-2 rounded-full bg-accent" />
             )}
             <Icon
               name={item.icon as Parameters<typeof Icon>[0]["name"]}
@@ -357,7 +357,7 @@ function BottomNav({ active = "profile" }: { active?: string }) {
               color={isActive ? "primary" : "inactive"}
               decorative
             />
-            <span className={`text-[10px] font-medium ${isActive ? "text-brand" : "text-text-tertiary"}`}>
+            <span className={`text-[10px] font-medium ${isActive ? "text-accent" : "text-text-disabled"}`}>
               {item.label}
             </span>
           </div>
@@ -380,10 +380,10 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<MeetingPhoto | null>(null);
 
   const wrap = (children: React.ReactNode) => (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-hidden bg-surface-muted">
       {/* Header */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-4">
-        <span className="text-[17px] font-bold text-text-primary">마이페이지</span>
+        <span className="text-[17px] font-bold text-text">마이페이지</span>
         <button type="button" aria-label="설정" className="inline-flex size-9 items-center justify-center">
           <Icon name="settings" size="md" color="default" decorative />
         </button>
@@ -406,13 +406,13 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
         <div className="flex size-16 items-center justify-center rounded-full bg-cranberry-5">
           <Icon name="user-round-cog" size="xl" color="primary" decorative />
         </div>
-        <p className="text-[16px] font-bold text-text-primary">로그인이 필요해요</p>
-        <p className="text-[13px] text-text-tertiary">
+        <p className="text-[16px] font-bold text-text">로그인이 필요해요</p>
+        <p className="text-[13px] text-text-disabled">
           로그인하면 내 초대장과 추억을 한곳에서 볼 수 있어요
         </p>
         <button
           type="button"
-          className="mt-2 rounded-full bg-brand px-8 py-3 text-[15px] font-bold text-white shadow-sm"
+          className="mt-2 rounded-full bg-accent px-8 py-3 text-[15px] font-bold text-white shadow-sm"
         >
           로그인
         </button>
@@ -449,10 +449,10 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
     return wrap(
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
         <Icon name="alert-circle" size="xl" color="danger" decorative />
-        <p className="text-[16px] font-bold text-text-primary">프로필을 불러오지 못했어요</p>
+        <p className="text-[16px] font-bold text-text">프로필을 불러오지 못했어요</p>
         <button
           type="button"
-          className="rounded-full border border-border px-6 py-2 text-[14px] text-text-secondary"
+          className="rounded-full border border-border px-6 py-2 text-[14px] text-text-muted"
         >
           다시 시도
         </button>
@@ -485,9 +485,9 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
             </button>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-1">
-            <p className="text-[10px] font-medium text-text-tertiary">내 프로필</p>
+            <p className="text-[10px] font-medium text-text-disabled">내 프로필</p>
             <div className="flex items-center gap-1.5">
-              <span className="text-[18px] font-bold text-text-primary">{name}</span>
+              <span className="text-[18px] font-bold text-text">{name}</span>
               {verified && (
                 <span className="flex size-[18px] items-center justify-center rounded-full bg-blue-500">
                   <Icon name="check" size="xs" color="inverse" decorative />
@@ -495,12 +495,12 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
               )}
               <Icon name="chevron-right" size="sm" color="inactive" decorative />
             </div>
-            <p className="text-[13px] text-text-tertiary">@{handle}</p>
+            <p className="text-[13px] text-text-disabled">@{handle}</p>
           </div>
         </div>
 
         {/* 통계 */}
-        <div className="mt-4 flex divide-x divide-border rounded-2xl bg-background-soft px-2 py-3">
+        <div className="mt-4 flex divide-x divide-border rounded-2xl bg-surface-muted px-2 py-3">
           <StatItem label="모임 참여" value={stats.joined} />
           <StatItem label="모임 개최" value={stats.hosted} />
           <StatItem label="좋아요" value={stats.likes} />
@@ -512,11 +512,11 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-[15px]">✨</span>
-            <span className="text-[14px] font-bold text-text-primary">랜덤 추억 모임</span>
+            <span className="text-[14px] font-bold text-text">랜덤 추억 모임</span>
           </div>
           <button
             type="button"
-            className="flex items-center gap-1 text-[12px] font-medium text-text-tertiary active:opacity-60"
+            className="flex items-center gap-1 text-[12px] font-medium text-text-disabled active:opacity-60"
           >
             <Icon name="rotate-cw" size="xs" color="inactive" decorative />
             다른 추억 보기
@@ -525,7 +525,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
 
         <button
           type="button"
-          className="flex w-full items-center gap-3 rounded-2xl bg-background-soft p-3 text-left ring-1 ring-border active:opacity-80"
+          className="flex w-full items-center gap-3 rounded-2xl bg-surface-muted p-3 text-left ring-1 ring-border active:opacity-80"
         >
           <div className="relative size-[80px] shrink-0 overflow-hidden rounded-xl">
             <Image
@@ -537,12 +537,12 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-bold text-text-primary">{MOCK_MEMORY.title}</p>
+            <p className="truncate text-[14px] font-bold text-text">{MOCK_MEMORY.title}</p>
             <div className="mt-1 flex items-center gap-1">
               <Icon name="calendar" size="xs" color="inactive" decorative />
-              <span className="text-[11px] text-text-tertiary">{MOCK_MEMORY.date}</span>
+              <span className="text-[11px] text-text-disabled">{MOCK_MEMORY.date}</span>
             </div>
-            <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-text-secondary">
+            <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-text-muted">
               {MOCK_MEMORY.excerpt}
             </p>
           </div>
@@ -555,11 +555,11 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-[15px]">📍</span>
-            <span className="text-[14px] font-bold text-text-primary">Photo log</span>
+            <span className="text-[14px] font-bold text-text">Photo log</span>
           </div>
           <button
             type="button"
-            className="flex items-center gap-0.5 text-[12px] font-medium text-text-tertiary active:opacity-60"
+            className="flex items-center gap-0.5 text-[12px] font-medium text-text-disabled active:opacity-60"
           >
             자세히 보기
             <Icon name="external-link" size="xs" color="inactive" decorative />

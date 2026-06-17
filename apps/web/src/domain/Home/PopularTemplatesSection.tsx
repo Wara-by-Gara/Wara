@@ -7,7 +7,7 @@ import { TemplateCard } from "@/components/domain";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { getTemplates } from "@/lib/api/templates";
 import { POPULAR_TEMPLATE_CATALOG } from "@/lib/popularTemplates";
-import { TemplateRowSkeleton } from "@/components/organisms/Skeleton";
+import { TemplateRowSkeleton } from "@/components/domain/Skeleton";
 import { ROUTES } from "@/constants/routes";
 
 export function PopularTemplatesSection() {

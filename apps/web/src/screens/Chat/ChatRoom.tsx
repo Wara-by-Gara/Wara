@@ -28,8 +28,8 @@ import {
 import { ROUTES } from "@/constants/routes";
 
 const LONG_PRESS_MS = 500;
-// 메시지 최대 길이 - 백엔드 send-message DTO(.max(2000))와 일치시킨다.
-const MAX_MESSAGE = 2000;
+// 메시지 최대 길이 - 백엔드 send-message DTO(.max(1000))와 일치시킨다.
+const MAX_MESSAGE = 1000;
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("ko-KR", {
@@ -139,7 +139,11 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     setMenuTarget(null);
   };
   const handleReact = (emoji: ReactionEmoji) => {
-    if (menuTarget) reactMutation.mutate({ messageId: menuTarget.id, emoji });
+    if (menuTarget)
+      reactMutation.mutate(
+        { messageId: menuTarget.id, emoji },
+        { onError: () => toast.error("리액션을 변경하지 못했어요") },
+      );
     setMenuTarget(null);
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -214,6 +218,21 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lastMessageId]);
 
+  // 키보드 등장 등으로 viewport가 줄면 최신 메시지가 가려질 수 있다.
+  // 이미 하단 근처를 보고 있을 때만 하단 고정 — 위로 스크롤해 과거를 보는 중이면 방해하지 않는다.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      if (nearBottom) el.scrollTop = el.scrollHeight;
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const content = text.trim();
@@ -264,7 +283,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     router.push(ROUTES.FRIENDS.DETAIL(userId));
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-background-soft">
+    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-surface-muted">
       <TopAppBar
         onBack={() => router.back()}
         largeTitle
@@ -274,10 +293,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70"
+              className="block w-full truncate text-left text-[16px] font-bold text-text active:opacity-70"
             >
               {headerTitle}
-              <span className="ml-1 text-[14px] font-normal text-text-tertiary">
+              <span className="ml-1 text-[14px] font-normal text-text-disabled">
                 {conversation?.memberCount}
               </span>
             </button>
@@ -287,7 +306,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               onClick={goProfile}
               disabled={!partnerId}
               aria-label={`${partnerName} 프로필 보기`}
-              className="block w-full truncate text-left text-[16px] font-bold text-text-primary active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
+              className="block w-full truncate text-left text-[16px] font-bold text-text active:opacity-70 disabled:cursor-default disabled:active:opacity-100"
             >
               {partnerName}
             </button>
@@ -298,7 +317,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="대화방 메뉴"
-            className="flex size-9 items-center justify-center rounded-full text-text-secondary active:opacity-70"
+            className="flex size-9 items-center justify-center rounded-full text-text-muted active:opacity-70"
           >
             <Icon name="menu" size="lg" color="currentColor" decorative />
           </button>
@@ -312,7 +331,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               type="button"
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
-              className="text-[13px] text-text-tertiary active:opacity-70"
+              className="text-[13px] text-text-disabled active:opacity-70"
             >
               {isFetchingNextPage ? "불러오는 중..." : "이전 메시지 보기"}
             </button>
@@ -320,9 +339,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         )}
 
         {isLoading ? (
-          <p className="py-10 text-center text-[14px] text-text-tertiary">불러오는 중...</p>
+          <p className="py-10 text-center text-[14px] text-text-disabled">불러오는 중...</p>
         ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-[14px] text-text-tertiary">
+          <p className="py-10 text-center text-[14px] text-text-disabled">
             첫 메시지를 보내보세요
           </p>
         ) : (
@@ -332,7 +351,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               if (m.type === "system") {
                 return (
                   <li key={m.id} className="my-1 flex justify-center">
-                    <span className="rounded-full bg-background-soft px-3 py-1 text-[12px] text-text-tertiary">
+                    <span className="rounded-full bg-surface-muted px-3 py-1 text-[12px] text-text-disabled">
                       {m.content}
                     </span>
                   </li>
@@ -355,8 +374,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   ? "rounded-tr-sm bg-primary text-text-inverse before:absolute before:-right-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-l-[7px] before:border-y-transparent before:border-l-primary before:content-['']"
                   : "rounded-br-sm bg-primary text-text-inverse"
                 : showAvatar
-                  ? "rounded-tl-sm bg-surface text-text-primary before:absolute before:-left-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-r-[7px] before:border-y-transparent before:border-r-surface before:content-['']"
-                  : "rounded-bl-sm bg-surface text-text-primary";
+                  ? "rounded-tl-sm bg-surface text-text before:absolute before:-left-[5px] before:top-2.5 before:size-0 before:border-y-[6px] before:border-r-[7px] before:border-y-transparent before:border-r-surface before:content-['']"
+                  : "rounded-bl-sm bg-surface text-text";
               return (
                 <li
                   key={m.id}
@@ -392,7 +411,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   >
                     {/* 그룹: 상대 메시지 묶음 첫 줄에 발신자 이름 */}
                     {isGroup && !mine && firstOfGroup && (
-                      <span className="px-1 text-[12px] text-text-tertiary">
+                      <span className="px-1 text-[12px] text-text-disabled">
                         {senderName}
                       </span>
                     )}
@@ -403,7 +422,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                       }`}
                     >
                     {m.deleted ? (
-                      <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-tertiary">
+                      <div className="rounded-2xl border border-border bg-surface px-3.5 py-2 text-[14px] text-text-disabled">
                         삭제된 메시지입니다
                       </div>
                     ) : m.imageUrl ? (
@@ -447,19 +466,19 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                         {m.replyTo && (
                           <div
                             className={`mb-2 border-b pb-2 ${
-                              mine ? "border-text-inverse/30" : "border-text-tertiary/30"
+                              mine ? "border-text-inverse/30" : "border-text-disabled/30"
                             }`}
                           >
                             <p
                               className={`text-[11px] font-bold ${
-                                mine ? "text-text-inverse/90" : "text-text-secondary"
+                                mine ? "text-text-inverse/90" : "text-text-muted"
                               }`}
                             >
                               {m.replyTo.senderId === myId ? "나" : partnerName}
                             </p>
                             <p
                               className={`truncate text-[12px] ${
-                                mine ? "text-text-inverse/70" : "text-text-tertiary"
+                                mine ? "text-text-inverse/70" : "text-text-disabled"
                               }`}
                             >
                               {m.replyTo.deleted ? "삭제된 메시지" : m.replyTo.content}
@@ -483,9 +502,9 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                           </span>
                         )}
                         {m.edited && !m.deleted && (
-                          <span className="text-[10px] text-text-tertiary">수정됨</span>
+                          <span className="text-[10px] text-text-disabled">수정됨</span>
                         )}
-                        <span className="text-[10px] text-text-tertiary">
+                        <span className="text-[10px] text-text-disabled">
                           {formatTime(m.createdAt)}
                         </span>
                       </div>
@@ -506,13 +525,13 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                                 reactionLongPressed.current = false;
                                 return;
                               }
-                              reactMutation.mutate({
-                                messageId: m.id,
-                                emoji: r.emoji as ReactionEmoji,
-                              });
+                              reactMutation.mutate(
+                                { messageId: m.id, emoji: r.emoji as ReactionEmoji },
+                                { onError: () => toast.error("리액션을 변경하지 못했어요") },
+                              );
                             }}
-                            className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-secondary shadow-sm ring-1 active:opacity-70 ${
-                              m.myReaction === r.emoji ? "ring-brand" : "ring-border"
+                            className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2 py-0.5 text-[11px] text-text-muted shadow-sm ring-1 active:opacity-70 ${
+                              m.myReaction === r.emoji ? "ring-accent" : "ring-border"
                             }`}
                           >
                             <span>{REACTION_EMOJI_CHAR[r.emoji as ReactionEmoji] ?? r.emoji}</span>
@@ -535,7 +554,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
       >
         {editing && (
           <div className="mb-2 flex items-center gap-2.5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-secondary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-muted">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
                   d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3z"
@@ -547,14 +566,14 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               </svg>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-text-primary">메시지 수정</p>
-              <p className="truncate text-[13px] text-text-tertiary">{editing.content}</p>
+              <p className="text-[14px] font-bold text-text">메시지 수정</p>
+              <p className="truncate text-[13px] text-text-disabled">{editing.content}</p>
             </div>
             <button
               type="button"
               onClick={cancelEdit}
               aria-label="수정 취소"
-              className="shrink-0 p-1 text-text-tertiary active:opacity-70"
+              className="shrink-0 p-1 text-text-disabled active:opacity-70"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
@@ -569,7 +588,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         )}
         {replyTarget && (
           <div className="mb-2 flex items-center gap-2.5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-secondary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-text-muted">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
                   d="M9 17l-5-5 5-5M4 12h9a5 5 0 0 1 5 5v2"
@@ -581,10 +600,10 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               </svg>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-text-primary">
+              <p className="text-[14px] font-bold text-text">
                 {replyTarget.senderId === myId ? "나" : partnerName}에게 답장
               </p>
-              <p className="truncate text-[13px] text-text-tertiary">
+              <p className="truncate text-[13px] text-text-disabled">
                 {replyTarget.deleted ? "삭제된 메시지" : replyTarget.content}
               </p>
             </div>
@@ -592,7 +611,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               type="button"
               onClick={cancelReply}
               aria-label="답장 취소"
-              className="shrink-0 p-1 text-text-tertiary active:opacity-70"
+              className="shrink-0 p-1 text-text-disabled active:opacity-70"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -604,7 +623,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
         {text.length >= MAX_MESSAGE - 100 && (
           <p
             className={`mb-1 pr-1 text-right text-[11px] ${
-              text.length >= MAX_MESSAGE ? "text-danger" : "text-text-tertiary"
+              text.length >= MAX_MESSAGE ? "text-danger" : "text-text-disabled"
             }`}
           >
             {text.length}/{MAX_MESSAGE}
@@ -624,7 +643,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           aria-label="사진 보내기"
           onClick={() => fileInputRef.current?.click()}
           disabled={imageMutation.isPending || !!editing}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-text-secondary active:opacity-70 disabled:opacity-40"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-text-muted active:opacity-70 disabled:opacity-40"
         >
           <Icon name="image" size="lg" color="currentColor" decorative />
         </button>
@@ -639,7 +658,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
           }}
           placeholder={editing ? "수정 메시지 입력" : "메시지를 입력하세요"}
-          className="h-10 flex-1 rounded-full bg-background-soft px-4 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+          className="h-10 flex-1 rounded-full bg-surface-muted px-4 text-[15px] text-text outline-none placeholder:text-text-disabled"
         />
         <button
           type="submit"
@@ -689,8 +708,8 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   type="button"
                   aria-label={`${key} 리액션`}
                   onClick={() => handleReact(key)}
-                  className={`flex size-7 items-center justify-center rounded-full text-[16px] active:bg-background-soft ${
-                    menuTarget?.myReaction === key ? "bg-background-soft" : ""
+                  className={`flex size-7 items-center justify-center rounded-full text-[16px] active:bg-surface-muted ${
+                    menuTarget?.myReaction === key ? "bg-surface-muted" : ""
                   }`}
                 >
                   {REACTION_EMOJI_CHAR[key]}
@@ -701,7 +720,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+                className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text active:bg-surface-muted"
               >
                 복사
               </button>
@@ -709,7 +728,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
             <button
               type="button"
               onClick={startReply}
-              className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+              className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text active:bg-surface-muted"
             >
               답장
             </button>
@@ -719,7 +738,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                   <button
                     type="button"
                     onClick={startEdit}
-                    className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text-primary active:bg-background-soft"
+                    className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-text active:bg-surface-muted"
                   >
                     수정
                   </button>
@@ -727,7 +746,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
                 <button
                   type="button"
                   onClick={openDelete}
-                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+                  className="w-full rounded-lg py-3 text-left text-[15px] font-bold text-red-500 active:bg-surface-muted"
                 >
                   삭제
                 </button>
@@ -787,7 +806,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
           <img
             src={previewUrl}
             alt="보낼 사진 미리보기"
-            className="max-h-80 w-full rounded-lg bg-background-soft object-contain"
+            className="max-h-80 w-full rounded-lg bg-surface-muted object-contain"
           />
         )}
       </Modal>
@@ -812,7 +831,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               className={`rounded-full px-3 py-1 text-[14px] font-bold ring-1 active:opacity-70 ${
                 reactionFilter === null
                   ? "bg-primary text-text-inverse ring-primary"
-                  : "text-text-secondary ring-border"
+                  : "text-text-muted ring-border"
               }`}
             >
               전체 {reactors.length}
@@ -842,7 +861,7 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
               .map((rc) => (
                 <li key={rc.userId} className="flex h-13 items-center gap-3">
                   <Avatar size="sm" src={rc.avatarUrl ?? undefined} name={rc.name ?? undefined} />
-                  <span className="flex-1 text-[15px] text-text-primary">
+                  <span className="flex-1 text-[15px] text-text">
                     {rc.name ?? "사용자"}
                   </span>
                   <span className="text-[20px]">

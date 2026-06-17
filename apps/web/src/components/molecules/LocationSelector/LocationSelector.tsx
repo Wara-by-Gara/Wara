@@ -68,7 +68,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
     return (
       <div ref={ref} className={cn("flex flex-col gap-2", className)}>
         {/* <div className="flex items-center justify-between">
-          <span className="text-[14px] font-medium text-text-primary">{label}</span>
+          <span className="text-[14px] font-medium text-text">{label}</span>
           <div className="flex gap-1.5">
             <button
               type="button"
@@ -79,7 +79,7 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               }}
               className={cn(
                 "rounded-full px-2.5 py-1 text-[12px]",
-                mode === "search" ? "bg-primary-soft text-primary" : "text-text-tertiary",
+                mode === "search" ? "bg-primary-soft text-primary" : "text-text-disabled",
               )}
             >
               검색
@@ -101,10 +101,10 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               />
             </div>
             {state === "loading" && (
-              <p className="text-[13px] text-text-tertiary">검색 중…</p>
+              <p className="text-[13px] text-text-disabled">검색 중…</p>
             )}
             {state === "no-result" && (
-              <p className="text-[13px] text-text-tertiary">검색 결과가 없어요</p>
+              <p className="text-[13px] text-text-disabled">검색 결과가 없어요</p>
             )}
             {state === "error" && (
               <p className="text-[13px] text-danger">
@@ -112,8 +112,8 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
               </p>
             )}
             {state === "permission-required" && (
-              <div className="flex items-center justify-between gap-3 rounded-md bg-background-soft p-3">
-                <p className="text-[14px] text-text-primary">위치 권한이 필요해요</p>
+              <div className="flex items-center justify-between gap-3 rounded-md bg-surface-muted p-3">
+                <p className="text-[14px] text-text">위치 권한이 필요해요</p>
                 <Button size="sm" variant="text" className="shrink-0">
                   권한 허용
                 </Button>
@@ -126,8 +126,8 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
           <div className="flex items-start gap-2 rounded-md border border-border bg-surface p-3">
             <Icon name="map-pin" size="md" color="primary" decorative className="mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-[15px] font-semibold text-text-primary">{selected.name}</p>
-              <p className="text-[13px] text-text-secondary">{selected.address}</p>
+              <p className="text-[15px] font-semibold text-text">{selected.name}</p>
+              <p className="text-[13px] text-text-muted">{selected.address}</p>
             </div>
           </div>
         )}
@@ -147,8 +147,8 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
         )}
 
         {!hideToggle && (
-          <label className="flex items-center justify-between gap-3 rounded-md bg-background-soft px-4 py-2.5">
-            <span className="text-[14px] text-text-secondary">아직 정해지지 않았어요</span>
+          <label className="flex items-center justify-between gap-3 rounded-md bg-surface-muted px-4 py-2.5">
+            <span className="text-[14px] text-text-muted">아직 정해지지 않았어요</span>
             <Switch
               checked={effectiveUnknown}
               onCheckedChange={(v) => {

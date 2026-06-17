@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@wara/ui";
 import { Button } from "@wara/ui";
 import { Icon } from "@/components/icons";
 import { ParticipantSummaryCard, ParticipantRow as ParticipantRowItem } from "@/components/domain";
-import { ParticipantListSkeleton } from "@/components/organisms/Skeleton";
+import { ParticipantListSkeleton } from "@/components/domain/Skeleton";
 import { EmptyState } from "@wara/ui";
 import { ErrorState } from "@wara/ui";
 import { useParticipants, useMyParticipant, useTransferHost } from "@/hooks/useParticipants";
@@ -128,7 +128,14 @@ export default function ParticipantsContainer() {
     mutationFn: ({ participantId, isCoHost }: { participantId: string; isCoHost: boolean }) =>
       setCoHost(invitationId, participantId, isCoHost),
     onSuccess: () => { invalidateParticipants(); setSelectedRow(null); setSheetMode(null); },
-    onError: () => toast.error("공동 호스트 변경에 실패했어요"),
+    onError: (e) => {
+      const code = e instanceof Error ? e.message : "";
+      toast.error(
+        code === "PARTICIPANT_NOT_ATTENDING"
+          ? "참석 상태인 참가자에게만 공동 호스트를 지정할 수 있어요"
+          : "공동 호스트 변경에 실패했어요",
+      );
+    },
   });
 
   const filtered = applySort(
@@ -162,7 +169,7 @@ export default function ParticipantsContainer() {
 
   return (
     <>
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <TopAppBar
         title="참석자"
         onBack={() => router.back()}
@@ -198,19 +205,19 @@ export default function ParticipantsContainer() {
         description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
       >
           {selectedRow?.participant.note && (
-            <p className="mb-4 text-sm text-text-secondary">
+            <p className="mb-4 text-sm text-text-muted">
               &ldquo;{selectedRow.participant.note}&rdquo;
             </p>
           )}
           <div className="flex gap-2">
             <button
-              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
+              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text"
               onClick={() => { setMemoInput(selectedRow?.participant.hostMemo ?? ""); setSheetMode("memo"); }}
             >
               메모
             </button>
             <button
-              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
+              className="flex-1 rounded-xs border border-border py-3 text-sm font-semibold text-text"
               onClick={() => setSheetMode("rsvp")}
             >
               상태 변경
@@ -222,16 +229,18 @@ export default function ParticipantsContainer() {
               내보내기
             </button>
           </div>
+          {/* 호스트는 RSVP를 못 바꾸므로 참석(attending) 상태인 참가자에게만 위임/공동호스트 지정 가능 */}
           <button
-            className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary"
+            className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text disabled:opacity-50"
+            disabled={selectedRow?.participant.rsvpStatus !== "attending"}
             onClick={() => setSheetMode("transfer")}
           >
             호스트 위임
           </button>
           {selectedRow && selectedRow.participant.memberRole === "GUEST" ? (
             <button
-              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary disabled:opacity-50"
-              disabled={coHostMutation.isPending}
+              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text disabled:opacity-50"
+              disabled={coHostMutation.isPending || selectedRow.participant.rsvpStatus !== "attending"}
               onClick={() => coHostMutation.mutate({ participantId: selectedRow.participant.id, isCoHost: true })}
             >
               공동 호스트 지정
@@ -240,12 +249,17 @@ export default function ParticipantsContainer() {
             selectedRow.participant.memberRole === "HOST" &&
             selectedRow.user.id !== invitation?.userId ? (
             <button
-              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text-primary disabled:opacity-50"
+              className="mt-2 w-full rounded-xs border border-border py-3 text-sm font-semibold text-text disabled:opacity-50"
               disabled={coHostMutation.isPending}
               onClick={() => coHostMutation.mutate({ participantId: selectedRow.participant.id, isCoHost: false })}
             >
               공동 호스트 해제
             </button>
+          ) : null}
+          {selectedRow && selectedRow.participant.rsvpStatus !== "attending" ? (
+            <p className="mt-2 text-center text-xs text-text-disabled">
+              참석 상태인 참가자에게만 호스트를 위임할 수 있어요
+            </p>
           ) : null}
         </BottomSheet>
 
@@ -257,7 +271,7 @@ export default function ParticipantsContainer() {
         description={selectedRow ? rsvpStatusToLabel(selectedRow.participant.rsvpStatus) : ""}
       >
           <textarea
-            className="w-full resize-none rounded-md border border-border bg-surface p-4 text-sm text-text-primary outline-none"
+            className="w-full resize-none rounded-md border border-border bg-surface p-4 text-sm text-text outline-none"
             rows={4}
             placeholder="메모를 입력하세요"
             maxLength={500}
@@ -320,6 +334,14 @@ export default function ParticipantsContainer() {
         onConfirm={() =>
           transferMutation.mutate(selectedRow!.participant.id, {
             onSuccess: () => { setSheetMode(null); setSelectedRow(null); },
+            onError: (e) => {
+              const code = e instanceof Error ? e.message : "";
+              toast.error(
+                code === "PARTICIPANT_NOT_ATTENDING"
+                  ? "참석 상태인 참가자에게만 호스트를 위임할 수 있어요"
+                  : "호스트 위임에 실패했어요",
+              );
+            },
           })
         }
       />

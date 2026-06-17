@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
-import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
+import { MapLoadingSkeleton } from "@/components/domain/Skeleton";
 import { KakaoMap, type PhotoMarker } from "@/components/molecules/KakaoMap/KakaoMap";
 import { getPhotos, type PhotoLocation } from "@/lib/api/photos";
 import { clusterPhotos } from "@/domain/PhotoMap/photoMapUtils";
@@ -62,8 +62,8 @@ export function PlaceLogPreview({ invitationId, eventLat, eventLng, onViewAll }:
       />
       {(isLoading || !mapSdkReady) && <MapLoadingSkeleton />}
       {isEmpty && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background-soft">
-          <p className="text-[13px] text-text-tertiary">위치 정보가 있는 사진이 없어요</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
+          <p className="text-[13px] text-text-disabled">위치 정보가 있는 사진이 없어요</p>
         </div>
       )}
     </div>

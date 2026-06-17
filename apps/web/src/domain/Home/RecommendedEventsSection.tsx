@@ -8,7 +8,7 @@ import { InviteCard, statusChipToBadge } from "@/components/domain";
 import { ROUTES } from "@/constants/routes";
 import { usePublicInvitations } from "@/hooks/usePublicInvitations";
 import type { ExploreSort, PublicInvitationExplore } from "@/lib/api/invitations";
-import { EventListSkeleton } from "@/components/organisms/Skeleton";
+import { EventListSkeleton } from "@/components/domain/Skeleton";
 import {
   EVENT_CATEGORIES,
   EVENT_CATEGORY_LABELS,
@@ -129,7 +129,7 @@ export function RecommendedEventsSection({
             value={category}
             onChange={(e) => setCategory(e.target.value as EventCategory)}
             aria-label="카테고리"
-            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
+            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text"
           >
             {EVENT_CATEGORIES.map((key) => (
               <option key={key} value={key}>
@@ -141,7 +141,7 @@ export function RecommendedEventsSection({
             value={sort}
             onChange={(e) => setSort(e.target.value as ExploreSort)}
             aria-label="정렬"
-            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
+            className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text"
           >
             {SORT_OPTIONS.map(({ key, label }) => (
               <option key={key} value={key}>

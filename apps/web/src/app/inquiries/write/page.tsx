@@ -112,7 +112,7 @@ export default function InquiryWritePage() {
             onCheckedChange={(v) => setForm((f) => ({ ...f, isPublic: v }))}
             disabled={isCreating}
           />
-          <span className="text-[15px] text-text-primary">
+          <span className="text-[15px] text-text">
             {form.isPublic ? '공개' : '비공개'}
           </span>
         </label>

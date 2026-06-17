@@ -50,7 +50,7 @@ export function ChatDrawer({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/48" />
         <Drawer.Content className="fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-[360px] flex-col bg-surface focus:outline-none">
-          <Drawer.Title className="px-page py-4 text-[18px] font-bold text-text-primary">
+          <Drawer.Title className="px-page py-4 text-[18px] font-bold text-text">
             메뉴
           </Drawer.Title>
           <div className="flex-1 overflow-y-auto px-page pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
@@ -58,15 +58,15 @@ export function ChatDrawer({
             {!isDirect && (
               <section className="mb-4 flex items-center gap-2 border-b border-border pb-4">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] text-text-tertiary">채팅방 이름</p>
-                  <p className="truncate text-[15px] font-bold text-text-primary">
+                  <p className="text-[12px] text-text-disabled">채팅방 이름</p>
+                  <p className="truncate text-[15px] font-bold text-text">
                     {roomTitle}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAliasOpen(true)}
-                  className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[13px] font-bold text-text-secondary active:opacity-70"
+                  className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[13px] font-bold text-text-muted active:opacity-70"
                 >
                   변경
                 </button>
@@ -75,11 +75,11 @@ export function ChatDrawer({
 
             {/* 사진 갤러리 */}
             <section className="pb-6">
-              <h3 className="mb-2 text-[14px] font-bold text-text-secondary">
+              <h3 className="mb-2 text-[14px] font-bold text-text-muted">
                 사진
               </h3>
               {photos.length === 0 ? (
-                <p className="py-6 text-center text-[13px] text-text-tertiary">
+                <p className="py-6 text-center text-[13px] text-text-disabled">
                   주고받은 사진이 없어요
                 </p>
               ) : (
@@ -116,7 +116,7 @@ export function ChatDrawer({
 
             {/* 대화상대 */}
             <section>
-              <h3 className="mb-2 text-[14px] font-bold text-text-secondary">
+              <h3 className="mb-2 text-[14px] font-bold text-text-muted">
                 대화상대 {participants.length}
               </h3>
               <ul className="flex flex-col">
@@ -127,7 +127,7 @@ export function ChatDrawer({
                       src={p.avatarUrl ?? undefined}
                       name={p.name ?? undefined}
                     />
-                    <span className="text-[15px] text-text-primary">
+                    <span className="text-[15px] text-text">
                       {p.name ?? "사용자"}
                       {p.userId === me?.id ? " (나)" : ""}
                     </span>
@@ -137,7 +137,7 @@ export function ChatDrawer({
               <button
                 type="button"
                 onClick={() => setPickerOpen(true)}
-                className="mt-3 w-full rounded-lg border border-border py-2.5 text-[14px] font-bold text-text-secondary active:opacity-70"
+                className="mt-3 w-full rounded-lg border border-border py-2.5 text-[14px] font-bold text-text-muted active:opacity-70"
               >
                 초대하기
               </button>
@@ -229,9 +229,9 @@ function AliasEditContent({
         onChange={(e) => setValue(e.target.value)}
         maxLength={50}
         placeholder="나만 보이는 방 이름"
-        className="w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+        className="w-full rounded-lg bg-surface-muted px-4 py-3 text-[15px] text-text outline-none placeholder:text-text-disabled"
       />
-      <p className="mt-1 px-1 text-[12px] text-text-tertiary">
+      <p className="mt-1 px-1 text-[12px] text-text-disabled">
         이 이름은 나에게만 보여요. 비우면 기본 이름으로 돌아갑니다.
       </p>
       <button
@@ -313,7 +313,7 @@ function InvitePickerContent({
         />
       </div>
       {candidates.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-text-tertiary">
+        <p className="py-6 text-center text-[13px] text-text-disabled">
           {keyword ? "검색 결과가 없어요" : "초대할 수 있는 친구가 없어요"}
         </p>
       ) : (
@@ -329,7 +329,7 @@ function InvitePickerContent({
                   className="flex w-full items-center gap-3 py-2 active:opacity-70"
                 >
                   <Avatar size="sm" src={f.avatarUrl ?? undefined} name={name} />
-                  <span className="flex-1 text-left text-[15px] text-text-primary">
+                  <span className="flex-1 text-left text-[15px] text-text">
                     {name}
                   </span>
                   <span
@@ -382,7 +382,7 @@ function InvitePickerContent({
           maxLength={50}
           placeholder="예: 주말 모임"
           autoFocus
-          className="w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+          className="w-full rounded-lg bg-surface-muted px-4 py-3 text-[15px] text-text outline-none placeholder:text-text-disabled"
         />
       </Modal>
     </div>

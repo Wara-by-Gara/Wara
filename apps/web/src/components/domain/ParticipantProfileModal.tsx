@@ -33,6 +33,8 @@ export interface ParticipantProfileModalProps {
   requestPreview?: string;
   /** 자기소개 / 한 줄 메모 */
   bio?: string;
+  /** 탈퇴(soft-deleted) 회원 — true면 정보/액션 숨기고 "탈퇴한 회원입니다"만 표시 */
+  isWithdrawn?: boolean;
 }
 
 export function ParticipantProfileModal({
@@ -47,9 +49,11 @@ export function ParticipantProfileModal({
   companionCount,
   requestPreview,
   bio,
+  isWithdrawn = false,
 }: ParticipantProfileModalProps) {
   const router = useRouter();
-  const { data: fetched } = useUserProfile(userId);
+  // 탈퇴 회원은 프로필 조회 자체를 막아 잔여 정보 노출 방지
+  const { data: fetched } = useUserProfile(isWithdrawn ? undefined : userId);
   const name = fetched ? getCommentAuthorName(fetched) : (nameProp ?? "");
   const handle = fetched?.nickname ?? handleProp;
   const avatarUrl = fetched?.profileImageUrl ?? avatarUrlProp;
@@ -78,7 +82,7 @@ export function ParticipantProfileModal({
       }
       hideTitle
       footer={
-        userId ? (
+        userId && !isWithdrawn ? (
           <div className="flex gap-2">
             <Button
               fullWidth
@@ -107,6 +111,12 @@ export function ParticipantProfileModal({
         ) : undefined
       }
     >
+      {isWithdrawn ? (
+        <div className="flex flex-col items-center gap-3 py-2 text-center">
+          <Avatar name="?" size="2xl" className="opacity-60 grayscale" />
+          <p className="type-sectionTitle text-text-muted">탈퇴한 회원입니다</p>
+        </div>
+      ) : (
       <div className="flex flex-col items-center gap-3 text-center">
         <Avatar src={avatarUrl} name={name} size="2xl" />
         <div className="flex flex-col items-center gap-1.5">
@@ -123,7 +133,7 @@ export function ParticipantProfileModal({
         </div>
 
         {bio ? (
-          <div className="w-full rounded-lg bg-background-soft px-4 py-3 text-left">
+          <div className="w-full rounded-lg bg-surface-muted px-4 py-3 text-left">
             <p className="type-bodySmall text-text-muted">{bio}</p>
           </div>
         ) : null}
@@ -142,6 +152,7 @@ export function ParticipantProfileModal({
           </div>
         ) : null}
       </div>
+      )}
     </Modal>
   );
 }

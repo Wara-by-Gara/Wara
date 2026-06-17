@@ -7,7 +7,7 @@ import { Divider } from "@wara/ui";
 import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
 import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
 import { getUserRole } from '@/lib/jwt';
-import { InquiryDetailSkeleton } from '@/components/organisms/Skeleton';
+import { InquiryDetailSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 
 const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
@@ -50,7 +50,7 @@ export default function InquiryDetailPage() {
         {isLoading ? (
           <InquiryDetailSkeleton />
         ) : !inquiry ? (
-          <p className="py-10 text-center text-[13px] text-text-tertiary">
+          <p className="py-10 text-center text-[13px] text-text-disabled">
             문의를 찾을 수 없습니다
           </p>
         ) : (
@@ -70,13 +70,13 @@ export default function InquiryDetailPage() {
               </div>
 
               {/* 제목 */}
-              <h1 className="text-[18px] font-bold leading-snug text-text-primary">
+              <h1 className="text-[18px] font-bold leading-snug text-text">
                 {inquiry.title}
               </h1>
 
               {/* 등록일 */}
               <time
-                className="mt-2 block text-[12px] text-text-tertiary"
+                className="mt-2 block text-[12px] text-text-disabled"
                 suppressHydrationWarning
               >
                 {new Date(inquiry.createdAt).toLocaleDateString('ko-KR', {
@@ -93,7 +93,7 @@ export default function InquiryDetailPage() {
 
             {/* ── 본문 ── */}
             <div className="px-page py-5">
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-secondary">
+              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-muted">
                 {inquiry.content}
               </p>
             </div>
@@ -114,7 +114,7 @@ export default function InquiryDetailPage() {
                       </time>
                     )}
                   </div>
-                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-secondary">
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-muted">
                     {inquiry.answer}
                   </p>
                 </div>
@@ -173,7 +173,7 @@ function AnswerForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <p className="text-[14px] font-medium text-text-primary">
+      <p className="text-[14px] font-medium text-text">
         {inquiry.answer ? '답변 수정' : '답변 작성'}
       </p>
       <textarea
@@ -183,7 +183,7 @@ function AnswerForm({
         rows={5}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-surface px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-surface px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-2">
         <select
@@ -208,7 +208,7 @@ function AnswerForm({
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="text-[14px] text-text-tertiary hover:text-text-secondary disabled:opacity-50"
+          className="text-[14px] text-text-disabled hover:text-text-muted disabled:opacity-50"
         >
           취소
         </button>

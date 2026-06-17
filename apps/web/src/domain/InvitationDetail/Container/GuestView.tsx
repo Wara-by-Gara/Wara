@@ -22,7 +22,7 @@ import { ROUTES } from "@/constants/routes";
 import { FONT_CLASS } from "@/domain/InvitationDetail/types";
 import ParticipantAvatarRow from "@/domain/InvitationDetail/Participants/ParticipantAvatarRow";
 import PhotoWithFeedbackContainer from "@/domain/InvitationDetail/PhotoWithFeedback/Container/PhotoWithFeedbackContainer";
-import { InvitationFeedSkeleton } from "@/components/organisms/Skeleton";
+import { InvitationFeedSkeleton } from "@/components/domain/Skeleton";
 import { usePoll, useVoteResults } from "@/hooks/useDateVote";
 import { VotePreviewCard } from "@/domain/InvitationDetail/Container/VotePreviewCard";
 import { InvitationDetailHero } from "@/domain/InvitationDetail/InvitationDetailHero";
@@ -51,6 +51,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
 const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   function handleSocialLogin(provider: SocialProvider) {
@@ -82,11 +83,18 @@ const canViewFeed = !!myParticipant;
   };
 
   const handleRsvp = (next: RSVPValue) => {
+    setRsvpError(null);
     // domain RSVPValue == RsvpStatus (attending/undecided/absent)
     if (myParticipant) {
       updateRsvp.mutate({ participantId: myParticipant.id, rsvpStatus: next });
     } else {
-      joinInvitation.mutate({ rsvpStatus: next });
+      joinInvitation.mutate({ rsvpStatus: next }, {
+        onError: (err) => {
+          if (err instanceof Error && err.message === 'INVITATION_ACCESS_REVOKED') {
+            setRsvpError('참가가 제한된 초대장입니다.');
+          }
+        },
+      });
     }
   };
   const fontClass = FONT_CLASS[invitation.font] ?? "font-sans";
@@ -106,7 +114,7 @@ const canViewFeed = !!myParticipant;
     <div
       className={cn(
         "relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard",
-        isDarkBg ? "text-white" : "text-text-primary",
+        isDarkBg ? "text-white" : "text-text",
         pageBgClass,
       )}
     >
@@ -187,12 +195,12 @@ const canViewFeed = !!myParticipant;
           {isLoggedIn && participantsData && participantsData.summary.attendingCount > 0 && (
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text-primary")}>
+                <h3 className={cn("text-[15px] font-bold", isDarkBg ? "text-white" : "text-text")}>
                   참석 {participantsData.summary.attendingCount}명/{participantsData.summary.totalCount}명
                 </h3>
                 <button
                   type="button"
-                  className="text-[13px] text-brand"
+                  className="text-[13px] text-accent"
                   onClick={() => router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))}
                 >
                   전체보기
@@ -215,9 +223,10 @@ const canViewFeed = !!myParticipant;
               loading={updateRsvp.isPending || joinInvitation.isPending}
               isDarkBg={isDarkBg}
               helperText={
-                invitation.status === "closed"
+                rsvpError ??
+                (invitation.status === "closed"
                   ? "호스트가 참석 응답을 마감했어요"
-                  : undefined
+                  : undefined)
               }
             />
           )}
@@ -247,7 +256,7 @@ const canViewFeed = !!myParticipant;
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/70 backdrop-blur-sm">
-              <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text-primary")}>로그인하면 앨범과 댓글을 볼 수 있어요</p>
+              <p className={cn("text-[15px] font-semibold", isDarkBg ? "text-white" : "text-text")}>로그인하면 앨범과 댓글을 볼 수 있어요</p>
               <button
                 type="button"
                 onClick={() => setLoginSheetOpen(true)}
@@ -263,15 +272,15 @@ const canViewFeed = !!myParticipant;
           <PhotoWithFeedbackContainer invitationId={invitationId} />
         ) : (
           <div className="rounded-md border border-dashed border-border bg-surface px-4 py-8 text-center">
-            <p className={cn("text-[14px] font-medium", isDarkBg ? "text-white" : "text-text-primary")}>참석 여부를 선택하면</p>
-            <p className={cn("mt-1 text-[13px]", isDarkBg ? "text-white/70" : "text-text-secondary")}>앨범과 댓글을 볼 수 있어요</p>
+            <p className={cn("text-[14px] font-medium", isDarkBg ? "text-white" : "text-text")}>참석 여부를 선택하면</p>
+            <p className={cn("mt-1 text-[13px]", isDarkBg ? "text-white/70" : "text-text-muted")}>앨범과 댓글을 볼 수 있어요</p>
           </div>
           )}
         </div>
       </main>
 
       {!isLoggedIn && (
-        <div className={cn("shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] backdrop-blur-md", isDarkBg ? "text-white/70" : "text-text-secondary")}>
+        <div className={cn("shrink-0 border-t border-border bg-surface/90 px-page py-3 text-center text-[13px] backdrop-blur-md", isDarkBg ? "text-white/70" : "text-text-muted")}>
           로그인하면 댓글·앨범 사진을 남길 수 있어요
         </div>
       )}

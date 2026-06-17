@@ -121,7 +121,7 @@ export function Meetings() {
   const markedKeys = useMemo(() => new Set(eventsByDay.keys()), [eventsByDay]);
 
   return (
-    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <StickyHeader title="나의 모임" onBack={() => router.back()} />
 
       {!isLoading && !hasAnyEvent ? (
@@ -146,14 +146,14 @@ export function Meetings() {
           />
 
           <section className="rounded-md border border-border bg-surface p-4">
-            <h2 className="mb-3 text-[15px] font-bold text-text-primary">
+            <h2 className="mb-3 text-[15px] font-bold text-text">
               {listMode === "date" && selectedKey
                 ? formatDayHeader(selectedKey)
                 : "전체 모임"}
             </h2>
 
             {listEvents.length === 0 ? (
-              <p className="py-6 text-center text-[14px] text-text-tertiary">
+              <p className="py-6 text-center text-[14px] text-text-disabled">
                 {listMode === "date" ? "이 날 일정이 없어요" : "표시할 모임이 없어요"}
               </p>
             ) : (
@@ -169,7 +169,7 @@ export function Meetings() {
                           : undefined,
                       )}
                       title={ev.title}
-                      dateText={formatInvitationEventDate(ev.eventStartAt)}
+                      dateText={formatInvitationEventDate(ev.eventStartAt, "날짜 미정")}
                       locationText={ev.eventLocation?.placeName ?? ev.eventLocation?.address ?? ""}
                       onClick={() => router.push(ROUTES.INVITATIONS.DETAIL(ev.id))}
                       className="flex-1 min-w-0"
@@ -200,7 +200,7 @@ export function Meetings() {
         <div className="flex flex-col">
           <button
             type="button"
-            className="flex w-full items-center gap-3 py-4 text-left text-[15px] text-text-primary active:bg-gray-50"
+            className="flex w-full items-center gap-3 py-4 text-left text-[15px] text-text active:bg-gray-50"
             disabled={hideInvitation.isPending}
             onClick={() => {
               if (moreMenuInvId) hideInvitation.mutate({ invitationId: moreMenuInvId, isHidden: true });

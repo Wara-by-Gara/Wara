@@ -60,7 +60,7 @@ export const ProfileEdit = ({
         <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="badge-check" size="xl" color="success" decorative />
-          <p className="text-[18px] font-bold text-text-primary">프로필이 저장됐어요</p>
+          <p className="text-[18px] font-bold text-text">프로필이 저장됐어요</p>
         </main>
       </div>
     );
@@ -72,7 +72,7 @@ export const ProfileEdit = ({
         <TopAppBar className="shrink-0" title="프로필 수정" onBack={onBack} />
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
-          <p className="text-[18px] font-bold text-text-primary">저장에 실패했어요</p>
+          <p className="text-[18px] font-bold text-text">저장에 실패했어요</p>
           <Button variant="secondary" onClick={onRetry}>다시 시도</Button>
         </main>
       </div>
@@ -129,8 +129,8 @@ export const ProfileEdit = ({
           primary={{
             label: "저장",
             loading: state === "saveLoading",
-            disabled: state === "nicknameDuplicateError" || !nickname,
-            onClick: () => onSave?.(nickname ?? ''),
+            disabled: state === "nicknameDuplicateError" || !(nickname ?? "").trim(),
+            onClick: () => onSave?.((nickname ?? "").trim()),
           }}
         />
       </div>

@@ -9,7 +9,7 @@ import {
   type MapBbox,
   type PhotoMarker,
 } from "@/components/molecules/KakaoMap/KakaoMap";
-import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
+import { MapLoadingSkeleton } from "@/components/domain/Skeleton";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
 import { getPublicMapInvitations } from "@/lib/api/invitations";
 import { ROUTES } from "@/constants/routes";

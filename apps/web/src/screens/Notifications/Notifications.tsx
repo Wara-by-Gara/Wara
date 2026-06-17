@@ -5,7 +5,7 @@ import {
   NotificationItem,
   type NotificationType,
 } from '@/components/domain';
-import { NotificationListSkeleton } from '@/components/organisms/Skeleton';
+import { NotificationListSkeleton } from '@/components/domain/Skeleton';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';
@@ -68,7 +68,7 @@ export const Notifications = ({
 
   if (state === 'settings') {
     return (
-      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={onBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <section className="py-2">
@@ -147,7 +147,7 @@ export const Notifications = ({
             type="button"
             aria-label="설정"
             onClick={onSettings}
-            className="inline-flex size-11 items-center justify-center text-text-secondary"
+            className="inline-flex size-11 items-center justify-center text-text-muted"
           >
             <Icon name="settings" size="lg" color="currentColor" decorative />
           </button>
@@ -205,7 +205,7 @@ export const Notifications = ({
           />
         ) : state === 'dateGrouped' ? (
           <div className="px-2">
-            <h3 className="px-3 py-2 text-[12px] font-medium text-text-tertiary">
+            <h3 className="px-3 py-2 text-[12px] font-medium text-text-disabled">
               오늘
             </h3>
             <div className="flex flex-col gap-3">
@@ -222,7 +222,7 @@ export const Notifications = ({
                 />
               ))}
             </div>
-            <h3 className="px-3 pt-3 pb-1 text-[12px] font-medium text-text-tertiary">
+            <h3 className="px-3 pt-3 pb-1 text-[12px] font-medium text-text-disabled">
               이전
             </h3>
             <div className="flex flex-col gap-3">

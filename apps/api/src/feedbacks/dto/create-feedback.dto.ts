@@ -9,7 +9,7 @@ import { z } from 'zod';
  */
 export const CreateFeedbackSchema = z
   .object({
-    content: z.string().min(1).optional(),
+    content: z.string().min(1).max(500).optional(),
     gifUrl: z
       .string()
       .url()

@@ -154,7 +154,7 @@ export default function HostView({
     <div
       className={cn(
         'relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard',
-        isDarkBg ? 'text-white' : 'text-text-primary',
+        isDarkBg ? 'text-white' : 'text-text',
         pageBgClass,
       )}
     >
@@ -272,7 +272,7 @@ export default function HostView({
                   <h3
                     className={cn(
                       'text-[15px] font-bold',
-                      isDarkBg ? 'text-white' : 'text-text-primary',
+                      isDarkBg ? 'text-white' : 'text-text',
                     )}
                   >
                     참석 {participantsData.summary.attendingCount}명/
@@ -282,7 +282,7 @@ export default function HostView({
                     type="button"
                     className={cn(
                       'text-[13px]',
-                      isDarkBg ? 'text-white' : 'text-brand',
+                      isDarkBg ? 'text-white' : 'text-accent',
                     )}
                     onClick={() =>
                       router.push(ROUTES.INVITATIONS.PARTICIPANTS(invitationId))
@@ -345,7 +345,7 @@ export default function HostView({
                   setMoreSheetOpen(false);
                   router.push(ROUTES.INVITATIONS.EDIT(invitationId));
                 }}
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+                className="flex h-14 items-center px-2 text-[16px] text-text"
               >
                 수정
               </button>
@@ -355,7 +355,7 @@ export default function HostView({
                   setMoreSheetOpen(false);
                   setTextBlastOpen(true);
                 }}
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+                className="flex h-14 items-center px-2 text-[16px] text-text"
               >
                 단체 공지 보내기
               </button>
@@ -365,7 +365,7 @@ export default function HostView({
                   setMoreSheetOpen(false);
                   setQuestionnaireOpen(true);
                 }}
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+                className="flex h-14 items-center px-2 text-[16px] text-text"
               >
                 맞춤 질문 관리
               </button>
@@ -375,7 +375,7 @@ export default function HostView({
                   setMoreSheetOpen(false);
                   setFlyerOpen(true);
                 }}
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary"
+                className="flex h-14 items-center px-2 text-[16px] text-text"
               >
                 플라이어 만들기
               </button>
@@ -383,7 +383,7 @@ export default function HostView({
                 type="button"
                 disabled={isCloning}
                 onClick={handleClone}
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary disabled:opacity-50"
+                className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
               >
                 {isCloning ? '복제 중...' : '초대장 복제'}
               </button>
@@ -395,7 +395,7 @@ export default function HostView({
                     invitation.status === 'closed' ? 'active' : 'closed',
                   )
                 }
-                className="flex h-14 items-center px-2 text-[16px] text-text-primary disabled:opacity-50"
+                className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
               >
                 {invitation.status === 'closed' ? '참석 응답 다시 받기' : '참석 응답 마감'}
               </button>

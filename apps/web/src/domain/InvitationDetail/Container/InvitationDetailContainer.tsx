@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Button } from "@wara/ui";
 import { TopAppBar } from "@wara/ui";
-import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
+import { InvitationDetailSkeleton } from "@/components/domain/Skeleton";
 import { useAuthStore } from "@/stores/authStore";
 
 import HostView from "./HostView";
@@ -42,7 +42,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         <TopAppBar className="shrink-0" onBack={() => router.back()} />
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
-          <p className="text-[18px] font-bold text-text-primary">초대장을 불러오지 못했어요</p>
+          <p className="text-[18px] font-bold text-text">초대장을 불러오지 못했어요</p>
           <Button variant="secondary" onClick={() => router.back()}>돌아가기</Button>
         </main>
       </div>

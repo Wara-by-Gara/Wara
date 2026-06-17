@@ -24,7 +24,7 @@ export function InvitationOptions({
   const rows = [
     { label: "회비", value: fee },
     { label: "드레스코드", value: dressCode },
-    { label: "주차", value: parkingInfo },
+    { label: "공지 사항", value: parkingInfo },
   ].filter((r) => r.value?.trim());
 
   if (rows.length === 0) return null;
@@ -36,7 +36,7 @@ export function InvitationOptions({
           <span
             className={cn(
               "shrink-0 text-[14px] font-semibold",
-              isDarkBg ? "text-white/70" : "text-text-tertiary",
+              isDarkBg ? "text-white/70" : "text-text-disabled",
             )}
           >
             {row.label}
@@ -44,7 +44,7 @@ export function InvitationOptions({
           <span
             className={cn(
               "min-w-0 flex-1 whitespace-pre-line text-left text-[15px] leading-[1.6]",
-              isDarkBg ? "text-white" : "text-text-primary",
+              isDarkBg ? "text-white" : "text-text",
               fontClass,
             )}
           >

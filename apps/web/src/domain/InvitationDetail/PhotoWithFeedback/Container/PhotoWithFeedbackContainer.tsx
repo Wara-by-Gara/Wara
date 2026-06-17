@@ -8,7 +8,7 @@ import { InvitationDetailProps } from '../../types';
 import Album from '../Album/Album';
 import InvitationFeedbacks from '../InvitationFeedbacks/InvitationFeedbacks';
 import BestNineModal from '../../BestNine/BestNineModal';
-import { InvitationFeedSkeleton } from '@/components/organisms/Skeleton';
+import { InvitationFeedSkeleton } from '@/components/domain/Skeleton';
 
 function isMomentLogVisible(eventStartAt: string | null): boolean {
   if (!eventStartAt) return false;

@@ -103,6 +103,9 @@ export function OnboardingContainer() {
             disableLocationNotifications();
             resolve();
           },
+          // timeout 없으면 권한 허용 + GPS 미수신(실내·약신호) 시 두 콜백 모두 안 와
+          // Promise가 영영 resolve되지 않아 온보딩이 멈춘다. 10초 후 error 콜백으로 진행.
+          { timeout: 10000 },
         );
       });
       complete();

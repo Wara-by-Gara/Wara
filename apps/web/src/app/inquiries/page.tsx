@@ -8,12 +8,12 @@ import { Icon } from '@/components/icons';
 import { Divider } from "@wara/ui";
 import { ROUTES } from '@/constants/routes';
 import { useActiveFaq } from '@/hooks/useFaq';
-import { FaqListSkeleton } from '@/components/organisms/Skeleton';
+import { FaqListSkeleton } from '@/components/domain/Skeleton';
 import { getUserRole } from '@/lib/jwt';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -39,7 +39,7 @@ export default function CustomerSupportPage() {
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <TopAppBar className="shrink-0" title="고객센터" onBack={() => router.push(ROUTES.PROFILE.ME)} />
 
       <main className="min-h-0 flex-1 overflow-y-auto pb-24">
@@ -47,7 +47,7 @@ export default function CustomerSupportPage() {
         <Section title="자주 묻는 질문">
           {isLoading && <FaqListSkeleton count={5} />}
           {!isLoading && faqItems?.length === 0 && (
-            <p className="px-4 py-3 text-[14px] text-text-tertiary">
+            <p className="px-4 py-3 text-[14px] text-text-disabled">
               등록된 질문이 없어요
             </p>
           )}
@@ -68,8 +68,8 @@ export default function CustomerSupportPage() {
                   {item.question}
                 </MenuItem>
                 {isOpen && (
-                  <div className="bg-background-soft px-4 py-3">
-                    <p className="text-[14px] leading-relaxed text-text-secondary">
+                  <div className="bg-surface-muted px-4 py-3">
+                    <p className="text-[14px] leading-relaxed text-text-muted">
                       {item.answer}
                     </p>
                   </div>

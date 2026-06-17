@@ -95,6 +95,9 @@ export interface ApiPostOptions {
   // 멱등성 보장이 필요한 변경 작업에 전달. 서버는 같은 키로 들어온 직전 요청이
   // 진행 중이면 409 IDEMPOTENCY_IN_PROGRESS, 완료된 응답은 그대로 replay.
   idempotencyKey?: string;
+  // 페이지 이탈/새로고침 중에도 요청이 끝까지 전송되도록 보장. 좋아요처럼
+  // 짧고(≤64KB) 결과를 기다리지 않는 변경에 사용 — 중단(abort)으로 유실되는 것을 방지.
+  keepalive?: boolean;
 }
 
 export function apiPost<T>(
@@ -112,6 +115,7 @@ export function apiPost<T>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: "include",
+      keepalive: options?.keepalive,
     }),
   );
 }

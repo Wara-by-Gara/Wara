@@ -10,12 +10,12 @@ import { Button } from "@wara/ui";
 import { ConfirmDialog } from "@wara/ui";
 import { useAdminFaq, useCreateFaq, useUpdateFaq, useDeleteFaq } from '@/hooks/useFaq';
 import { ROUTES } from '@/constants/routes';
-import { FaqListSkeleton } from '@/components/organisms/Skeleton';
+import { FaqListSkeleton } from '@/components/domain/Skeleton';
 import type { FaqItem, CreateFaqPayload, UpdateFaqPayload } from '@/lib/api/faq';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col py-2">
-    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-tertiary">
+    <h2 className="px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-text-disabled">
       {title}
     </h2>
     <div className="divide-y divide-border bg-surface">{children}</div>
@@ -31,7 +31,7 @@ export default function AdminFaqPage() {
   const { mutate: remove } = useDeleteFaq();
 
   return (
-    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+    <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
       <TopAppBar
         className="shrink-0"
         title="FAQ 관리"
@@ -64,7 +64,7 @@ export default function AdminFaqPage() {
         <Section title={`자주 묻는 질문${items ? ` (${items.length})` : ''}`}>
           {isLoading && <FaqListSkeleton count={5} />}
           {!isLoading && items?.length === 0 && !isCreating && (
-            <p className="px-4 py-3 text-[14px] text-text-tertiary">등록된 항목이 없습니다</p>
+            <p className="px-4 py-3 text-[14px] text-text-disabled">등록된 항목이 없습니다</p>
           )}
           {items?.map((item) => (
             <div key={item.id} className="flex flex-col">
@@ -102,10 +102,10 @@ export default function AdminFaqPage() {
                 }}
               >
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] text-text-tertiary">정렬 {item.sortOrder}</span>
-                  <span className="text-[15px] text-text-primary">{item.question}</span>
+                  <span className="text-[11px] text-text-disabled">정렬 {item.sortOrder}</span>
+                  <span className="text-[15px] text-text">{item.question}</span>
                   {editingId !== item.id && (
-                    <span className="line-clamp-1 text-[13px] text-text-tertiary">{item.answer}</span>
+                    <span className="line-clamp-1 text-[13px] text-text-disabled">{item.answer}</span>
                   )}
                 </div>
               </MenuItem>
@@ -175,7 +175,7 @@ function CreateFaqForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="text-[14px] font-medium text-text-primary">새 항목 추가</p>
+      <p className="text-[14px] font-medium text-text">새 항목 추가</p>
       <input
         name="question"
         value={form.question}
@@ -184,7 +184,7 @@ function CreateFaqForm({
         maxLength={200}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <textarea
         name="answer"
@@ -195,10 +195,10 @@ function CreateFaqForm({
         rows={4}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-[14px] text-text-secondary">
+        <label className="flex items-center gap-2 text-[14px] text-text-muted">
           정렬 순서
           <input
             type="number"
@@ -210,7 +210,7 @@ function CreateFaqForm({
             className="w-16 rounded-xs border border-border px-2 py-1 text-[14px]"
           />
         </label>
-        <label className="flex items-center gap-2 text-[14px] text-text-secondary">
+        <label className="flex items-center gap-2 text-[14px] text-text-muted">
           <input
             type="checkbox"
             checked={form.isActive}
@@ -262,7 +262,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="text-[14px] font-medium text-text-primary">항목 수정</p>
+      <p className="text-[14px] font-medium text-text">항목 수정</p>
       <input
         name="question"
         value={form.question}
@@ -271,7 +271,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
         maxLength={200}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <textarea
         name="answer"
@@ -282,10 +282,10 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
         rows={4}
         required
         disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+        className="w-full resize-none rounded-sm border border-border bg-background px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
       />
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-[14px] text-text-secondary">
+        <label className="flex items-center gap-2 text-[14px] text-text-muted">
           정렬 순서
           <input
             type="number"
@@ -297,7 +297,7 @@ function EditFaqForm({ item, onClose }: { item: FaqItem; onClose: () => void }) 
             className="w-16 rounded-xs border border-border px-2 py-1 text-[14px]"
           />
         </label>
-        <label className="flex items-center gap-2 text-[14px] text-text-secondary">
+        <label className="flex items-center gap-2 text-[14px] text-text-muted">
           <input
             type="checkbox"
             checked={form.isActive}

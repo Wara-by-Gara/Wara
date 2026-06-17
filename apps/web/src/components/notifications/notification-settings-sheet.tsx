@@ -31,7 +31,7 @@ export function NotificationSettingsSheet({ open, onClose, children }: Props) {
         />
         <div className="relative w-full max-w-sm rounded-lg bg-surface shadow-xl overflow-hidden">
           <div className="px-page pt-5 pb-2">
-            <h2 className="text-[18px] font-bold text-text-primary">알림 설정</h2>
+            <h2 className="text-[18px] font-bold text-text">알림 설정</h2>
           </div>
           <div className="overflow-y-auto max-h-[70vh] pb-5">
             {children}

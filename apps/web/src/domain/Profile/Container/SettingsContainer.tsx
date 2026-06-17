@@ -8,7 +8,7 @@ import { Settings, type SettingsScreen } from '@/screens/Settings';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';
 import { useNotificationSettings, useUpdateNotificationSettings } from '@/hooks/useNotifications';
-import { TextContentSkeleton } from '@/components/organisms/Skeleton';
+import { TextContentSkeleton } from '@/components/domain/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 
 export default function SettingsContainer() {
@@ -36,13 +36,13 @@ export default function SettingsContainer() {
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title={title} onBack={handleBack} />
-        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-secondary whitespace-pre-wrap">
+        <main className="min-h-0 flex-1 overflow-y-auto px-page py-6 text-[13px] leading-relaxed text-text-muted whitespace-pre-wrap">
           {isTermsLoading ? (
             <TextContentSkeleton />
           ) : term ? (
             term.content
           ) : (
-            <p className="text-center text-text-tertiary">약관을 불러올 수 없어요</p>
+            <p className="text-center text-text-disabled">약관을 불러올 수 없어요</p>
           )}
         </main>
       </div>
@@ -51,7 +51,7 @@ export default function SettingsContainer() {
 
   if (screen === 'notification') {
     return (
-      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-background-soft">
+      <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted">
         <TopAppBar className="shrink-0" title="알림 설정" onBack={handleBack} />
         <main className="min-h-0 flex-1 overflow-y-auto">
           <NotificationSettingsForm
@@ -73,6 +73,7 @@ export default function SettingsContainer() {
       onHiddenFriends={() => router.push(ROUTES.FRIENDS.HIDDEN)}
       onHiddenInvitations={() => router.push(ROUTES.INVITATIONS.HIDDEN)}
       onAccount={() => router.push(ROUTES.PROFILE.ACCOUNT)}
+      onCustomerSupport={() => router.push(ROUTES.INQUIRIES.HOME)}
     />
   );
 }

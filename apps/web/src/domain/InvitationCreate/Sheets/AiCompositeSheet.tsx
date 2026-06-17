@@ -67,14 +67,14 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
   return (
     <BottomSheet open={open} onOpenChange={handleClose} title="AI로 합성하기">
         <div className="flex flex-col gap-5 pt-1">
-          <p className="text-[13px] text-text-secondary">
+          <p className="text-[13px] text-text-muted">
             업로드한 사진과 선택한 배경을 자연스럽게 합성해요. 결과는 다운로드만
             제공되며 대표 이미지에는 영향을 주지 않아요.
           </p>
 
           {/* 합성용 템플릿(배경) 선택 */}
           <section>
-            <p className="mb-2 text-[14px] font-semibold text-text-primary">합성할 배경</p>
+            <p className="mb-2 text-[14px] font-semibold text-text">합성할 배경</p>
             {categories.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-1.5">
                 <Chip selected={category === ""} onClick={() => setCategory("")}>
@@ -105,15 +105,15 @@ export function AiCompositeSheet({ open, onOpenChange, sourceImageKey }: Props) 
                 ))}
               </div>
             ) : (
-              <p className="text-[13px] text-text-tertiary">사용 가능한 템플릿이 없어요.</p>
+              <p className="text-[13px] text-text-disabled">사용 가능한 템플릿이 없어요.</p>
             )}
           </section>
 
           {/* 상태 */}
           {isProcessing ? (
-            <div className="flex items-center gap-3 rounded-lg bg-background-soft px-4 py-3">
+            <div className="flex items-center gap-3 rounded-lg bg-surface-muted px-4 py-3">
               <span className="size-5 animate-spin rounded-full border-2 border-primary border-r-transparent" />
-              <p className="text-[13px] text-text-secondary">
+              <p className="text-[13px] text-text-muted">
                 AI가 합성하는 중이에요. 1분 정도 걸려요. 이 화면을 닫아도 처리는 계속돼요.
               </p>
             </div>

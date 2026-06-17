@@ -73,8 +73,8 @@ export function DateTimeSheet({
                   <Icon name="calendar" size="md" color="primary" decorative />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-[15px] font-bold text-text-primary">날짜 투표로 정해볼까요?</p>
-                  <p className="text-[13px] leading-relaxed text-text-secondary">
+                  <p className="text-[15px] font-bold text-text">날짜 투표로 정해볼까요?</p>
+                  <p className="text-[13px] leading-relaxed text-text-muted">
                     여러 후보 날짜를 제시하고<br />참여자들이 가능한 날을 투표해요
                   </p>
                 </div>
@@ -82,7 +82,7 @@ export function DateTimeSheet({
               {voteDraft ? (
                 <div className="flex items-center justify-between rounded-sm bg-white/80 px-3 py-2.5">
                   <span className="text-[13px] font-semibold text-primary">✓ 투표 후보 {voteDraft.slots.length}개 설정됨</span>
-                  <button type="button" onClick={onVoteSetup} className="text-[12px] text-text-tertiary underline">
+                  <button type="button" onClick={onVoteSetup} className="text-[12px] text-text-disabled underline">
                     수정
                   </button>
                 </div>

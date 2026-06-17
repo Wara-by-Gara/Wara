@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useKakaoMapsSdk } from "@/hooks/useKakaoMapsSdk";
-import { MapLoadingSkeleton } from "@/components/organisms/Skeleton";
+import { MapLoadingSkeleton } from "@/components/domain/Skeleton";
 import { KakaoMap, type PhotoMarker, type KakaoMapHandle } from "@/components/molecules/KakaoMap/KakaoMap";
 import { Icon } from "@/components/icons";
 import { StickyHeader } from "@/components/layout/StickyHeader";
@@ -120,7 +120,7 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
             type="button"
             aria-label="닫기"
             onClick={() => router.push(ROUTES.PROFILE.ME)}
-            className="inline-flex size-11 items-center justify-center text-text-secondary"
+            className="inline-flex size-11 items-center justify-center text-text-muted"
           >
             <Icon name="close" size="lg" color="currentColor" decorative />
           </button>
@@ -130,8 +130,8 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
       <main className={`relative z-10 min-h-0 flex-1 overflow-y-auto ${stickyMainTop}`}>
         {/* 헤더 카드 — 전체 사진 개수 */}
         <div className="flex items-center justify-between border-b border-border bg-surface px-page py-3">
-          <span className="text-[14px] font-medium text-text-primary">{invitationId ? "모임 사진" : "내 사진"}</span>
-          <span className="text-[12px] text-text-tertiary">
+          <span className="text-[14px] font-medium text-text">{invitationId ? "모임 사진" : "내 사진"}</span>
+          <span className="text-[12px] text-text-disabled">
             사진 {photoLocations.length}장
           </span>
         </div>
@@ -153,10 +153,10 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
         {!isLoading && mapSdkReady && (
           clusters.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-page py-12 text-center">
-              <p className="text-[15px] font-bold text-text-primary">
+              <p className="text-[15px] font-bold text-text">
                 위치 정보가 있는 사진이 없어요
               </p>
-              <p className="mt-1 text-[12px] text-text-secondary">
+              <p className="mt-1 text-[12px] text-text-muted">
                 GPS 정보가 담긴 사진을 업로드하면<br />여기서 확인할 수 있어요
               </p>
             </div>
@@ -175,14 +175,14 @@ export function PhotoMapPage({ invitationId }: { invitationId?: string }) {
                           mapRef.current?.centerOn(cluster.lat, cluster.lng);
                         }
                       }}
-                      className="flex w-full items-center justify-between border-b border-border bg-surface px-page py-3 active:bg-background-soft"
+                      className="flex w-full items-center justify-between border-b border-border bg-surface px-page py-3 active:bg-surface-muted"
                     >
                       <div className="flex items-center gap-2">
                         <Icon name="map-pin" size="sm" color="inactive" decorative />
-                        <span className="text-[13px] font-semibold text-text-primary">{label}</span>
+                        <span className="text-[13px] font-semibold text-text">{label}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-text-tertiary">{cluster.count}장</span>
+                        <span className="text-[11px] text-text-disabled">{cluster.count}장</span>
                         <span className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
                           <Icon name="chevron-down" size="xs" color="inactive" decorative />
                         </span>

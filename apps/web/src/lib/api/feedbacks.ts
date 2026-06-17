@@ -14,6 +14,8 @@ export interface FeedbackParticipant {
     name: string | null;
     nickname?: string | null;
     profileImageUrl: string | null;
+    /** 탈퇴(soft-deleted) 회원 — true면 "탈퇴한 회원"으로 마스킹 표시 */
+    isWithdrawn?: boolean;
   };
 }
 
