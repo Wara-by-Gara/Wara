@@ -227,10 +227,10 @@ export default function HostView({
           left={
             <>
               <div className="flex flex-col gap-3">
-                <header className="flex flex-col gap-1.5 text-left">
+                <header className="flex flex-col gap-[3px] text-left">
                   <h1
                     className={cn(
-                      'line-clamp-2 break-words pb-0.5 text-[30px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]',
+                      'line-clamp-2 break-words pb-0.5 text-[34px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]',
                       isDarkBg ? 'text-white' : 'text-text',
                       fontClass,
                     )}
@@ -307,12 +307,11 @@ export default function HostView({
                     <div className="mb-3 flex items-center justify-between">
                       <h3
                         className={cn(
-                          'text-[15px] font-bold',
+                          'text-[18px] font-bold',
                           isDarkBg ? 'text-white' : 'text-text',
                         )}
                       >
-                        참석 {participantsData.summary.attendingCount}명/
-                        {participantsData.summary.totalCount}명
+                        참석자 · {participantsData.summary.attendingCount}명
                       </h3>
                       <button
                         type="button"

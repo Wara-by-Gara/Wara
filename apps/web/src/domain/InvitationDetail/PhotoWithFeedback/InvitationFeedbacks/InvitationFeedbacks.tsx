@@ -220,7 +220,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
   };
 
   return (
-    <div ref={sectionRef} id="comments" className="mt-4">
+    <div ref={sectionRef} id="comments" className="mt-2">
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h3 className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>
@@ -230,7 +230,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
             type="button"
             onClick={openComposer}
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-semibold',
+              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[14px] font-semibold',
               isDarkBg
                 ? 'bg-white/15 text-white hover:bg-white/25'
                 : 'bg-primary text-text-inverse hover:opacity-90',

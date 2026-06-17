@@ -230,7 +230,7 @@ export default function Album({
       <div>
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className={cn('text-[15px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>사진 앨범</span>
+            <span className={cn('text-[18px] font-bold', isDarkBg ? 'text-white' : 'text-text')}>사진 앨범</span>
             <p className={cn('text-[12px]', isDarkBg ? 'text-white/70' : 'text-text-muted')}>{totalForOverflow}개의 사진</p>
           </div>
           <button

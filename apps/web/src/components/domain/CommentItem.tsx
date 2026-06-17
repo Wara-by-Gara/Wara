@@ -125,7 +125,7 @@ export const CommentItem = forwardRef<HTMLDivElement, CommentItemProps>(
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p
                     className={cn(
-                      "text-[14px] font-semibold",
+                      "text-[15px] font-semibold",
                       isDarkBg ? "text-white" : "text-text",
                     )}
                   >
