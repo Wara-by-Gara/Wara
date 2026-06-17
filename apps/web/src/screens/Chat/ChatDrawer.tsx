@@ -3,19 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Drawer } from "vaul";
-import { Avatar } from "@/components/primitives/Avatar";
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from "@/components/molecules/BottomSheet";
-import { SearchBar } from "@/components/molecules/SearchBar";
-import {
-  Modal,
-  ModalContent,
-  ModalClose,
-  ModalPrimitive,
-} from "@/components/molecules/Modal";
-import { toast } from "@/components/molecules/Toast";
+import { Avatar, SearchBar, BottomSheet, Modal, ConfirmDialog, toast } from "@wara/ui";
 import { useMe } from "@/hooks/useUsers";
 import { useFriends } from "@/hooks/useFriends";
 import { useLeaveConversation } from "@/hooks/useConversations";
@@ -168,66 +156,48 @@ export function ChatDrawer({
       </Drawer.Portal>
 
       {/* 친구 초대 시트 — 열릴 때만 친구 조회 */}
-      <BottomSheet open={pickerOpen} onOpenChange={setPickerOpen}>
-        <BottomSheetContent title="초대할 친구">
-          <InvitePickerContent
-            conversationId={conversationId}
-            memberIds={memberIds}
-            canSetTitle={isDirect}
-            onDone={() => {
-              setPickerOpen(false);
-              onOpenChange(false);
-            }}
-          />
-        </BottomSheetContent>
+      <BottomSheet open={pickerOpen} onOpenChange={setPickerOpen} title="초대할 친구">
+        <InvitePickerContent
+          conversationId={conversationId}
+          memberIds={memberIds}
+          canSetTitle={isDirect}
+          onDone={() => {
+            setPickerOpen(false);
+            onOpenChange(false);
+          }}
+        />
       </BottomSheet>
 
       {/* 방 이름(개인 별명) 변경 시트 */}
-      <BottomSheet open={aliasOpen} onOpenChange={setAliasOpen}>
-        <BottomSheetContent title="채팅방 이름 변경">
-          <AliasEditContent
-            conversationId={conversationId}
-            current={roomTitle}
-            onDone={() => setAliasOpen(false)}
-          />
-        </BottomSheetContent>
+      <BottomSheet open={aliasOpen} onOpenChange={setAliasOpen} title="채팅방 이름 변경">
+        <AliasEditContent
+          conversationId={conversationId}
+          current={roomTitle}
+          onDone={() => setAliasOpen(false)}
+        />
       </BottomSheet>
 
       {/* 나가기 확인 */}
-      <Modal open={leaveOpen} onOpenChange={setLeaveOpen}>
-        <ModalContent className="max-w-[300px]">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            채팅방 나가기
-          </ModalPrimitive.Title>
-          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
-            나가면 대화 목록에서 사라지고, 남은 멤버에게 나갔다고 표시됩니다.
-          </ModalPrimitive.Description>
-          <div className="mt-6 flex justify-end gap-6">
-            <ModalClose asChild>
-              <button type="button" className="text-[15px] font-bold text-blue-500">
-                취소
-              </button>
-            </ModalClose>
-            <button
-              type="button"
-              disabled={leave.isPending}
-              onClick={() =>
-                leave.mutate(conversationId, {
-                  onSuccess: () => {
-                    setLeaveOpen(false);
-                    onOpenChange(false);
-                    router.push(ROUTES.FRIENDS.LIST);
-                  },
-                  onError: () => toast.error("나가지 못했어요. 다시 시도해주세요"),
-                })
-              }
-              className="text-[15px] font-bold text-red-500 disabled:opacity-50"
-            >
-              나가기
-            </button>
-          </div>
-        </ModalContent>
-      </Modal>
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        title="채팅방 나가기"
+        description="나가면 대화 목록에서 사라지고, 남은 멤버에게 나갔다고 표시됩니다."
+        confirmLabel="나가기"
+        cancelLabel="취소"
+        tone="danger"
+        loading={leave.isPending}
+        onConfirm={() =>
+          leave.mutate(conversationId, {
+            onSuccess: () => {
+              setLeaveOpen(false);
+              onOpenChange(false);
+              router.push(ROUTES.FRIENDS.LIST);
+            },
+            onError: () => toast.error("나가지 못했어요. 다시 시도해주세요"),
+          })
+        }
+      />
     </Drawer.Root>
   );
 }
@@ -389,31 +359,31 @@ function InvitePickerContent({
       </button>
 
       {/* 새 단톡방 이름 입력 창 (생성자만, 1회) */}
-      <Modal open={nameOpen} onOpenChange={(o) => !invite.isPending && setNameOpen(o)}>
-        <ModalContent className="max-w-[320px]">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            단톡방 이름
-          </ModalPrimitive.Title>
-          <ModalPrimitive.Description className="mt-1 text-[13px] text-text-secondary">
-            이름을 정하면 모든 멤버에게 보여요. 비워두면 멤버 이름으로 표시됩니다.
-          </ModalPrimitive.Description>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={50}
-            placeholder="예: 주말 모임"
-            autoFocus
-            className="mt-4 w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
-          />
+      <Modal
+        open={nameOpen}
+        onOpenChange={(o) => !invite.isPending && setNameOpen(o)}
+        size="sm"
+        title="단톡방 이름"
+        description="이름을 정하면 모든 멤버에게 보여요. 비워두면 멤버 이름으로 표시됩니다."
+        footer={
           <button
             type="button"
             onClick={handleInvite}
             disabled={invite.isPending}
-            className="mt-4 w-full rounded-lg bg-primary py-3 text-[15px] font-bold text-text-inverse disabled:opacity-40"
+            className="w-full rounded-lg bg-primary py-3 text-[15px] font-bold text-text-inverse disabled:opacity-40"
           >
             {invite.isPending ? "만드는 중..." : "단톡방 만들기"}
           </button>
-        </ModalContent>
+        }
+      >
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={50}
+          placeholder="예: 주말 모임"
+          autoFocus
+          className="w-full rounded-lg bg-background-soft px-4 py-3 text-[15px] text-text-primary outline-none placeholder:text-text-tertiary"
+        />
       </Modal>
     </div>
   );

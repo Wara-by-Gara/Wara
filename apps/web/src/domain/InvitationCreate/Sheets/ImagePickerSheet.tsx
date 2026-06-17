@@ -4,11 +4,11 @@ import type { RefObject } from "react";
 import type { Area } from "react-easy-crop";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { Chip } from "@/components/primitives/Chip";
-import { TemplateCard } from "@/components/organisms/TemplateCard";
-import { InvitationCover } from "@/components/organisms/InvitationCover";
+import { Button } from "@wara/ui";
+import { BottomSheet } from "@wara/ui";
+import { Chip } from "@wara/ui";
+import { TemplateCard } from "@/components/domain";
+import { InvitationCover } from "@/components/domain";
 import { GifPicker } from "@/components/organisms/GifPicker";
 import ImageCropEditor from "@/domain/Edit/InvitationCard/MainImageEditor/ImageCropEditor";
 import { DEFAULT_COVER_KEY } from "@/domain/InvitationCreate/constants";
@@ -85,19 +85,18 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
     : templates;
 
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="대표 이미지">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="대표 이미지">
         <div className="flex flex-col gap-5 pt-1">
           {/* 템플릿 */}
           <section>
             <p className="mb-2 text-[14px] font-semibold text-text-primary">템플릿</p>
             {categories.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-1.5">
-                <Chip variant="filter" selected={selectedCategory === ""} onClick={() => onCategoryChange("")}>
+                <Chip selected={selectedCategory === ""} onClick={() => onCategoryChange("")}>
                   전체
                 </Chip>
                 {categories.map((c) => (
-                  <Chip key={c} variant="filter" selected={selectedCategory === c} onClick={() => onCategoryChange(c)}>
+                  <Chip key={c} selected={selectedCategory === c} onClick={() => onCategoryChange(c)}>
                     {c}
                   </Chip>
                 ))}
@@ -258,7 +257,6 @@ export function ImagePickerSheet(props: ImagePickerSheetProps) {
             완료
           </Button>
         </div>
-      </BottomSheetContent>
-    </BottomSheet>
+      </BottomSheet>
   );
 }

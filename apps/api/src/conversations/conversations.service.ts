@@ -11,6 +11,7 @@ import type { MessageImagePresignedDto } from './dto/send-message.dto';
 import { FriendsRepository } from '../friends/friends.repository';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsGateway } from './conversations.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface ConversationListItem {
   id: string;
@@ -26,6 +27,14 @@ export interface ConversationListItem {
 
 // 단톡방 최대 인원 (트레이드오프 고려한 실질 상한). 늘리려면 이 값만 변경.
 const MAX_GROUP_MEMBERS = 30;
+
+// 표시 이름 우선순위: name(공백 제외) > nickname > null.
+// users.name이 빈 문자열("")일 수 있어 ?? 대신 truthy 검사로 fallback한다.
+function resolveName(
+  user: { name?: string | null; nickname?: string | null } | null | undefined,
+): string | null {
+  return user?.name?.trim() || user?.nickname?.trim() || null;
+}
 
 // 그룹명이 없을 때 멤버 이름으로 자동 생성 ("송지안, 임지아 외 1명")
 function autoGroupTitle(names: string[]): string {
@@ -116,6 +125,7 @@ export class ConversationsService {
     private readonly friendsRepository: FriendsRepository,
     private readonly gateway: ConversationsGateway,
     private readonly s3Service: S3Service,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // 이미지 업로드용 presigned URL 발급 (대화 참여자만)
@@ -284,13 +294,14 @@ export class ConversationsService {
     }
 
     const partner = await this.repository.getPartner(conversationId, userId);
+    const partnerName = resolveName(partner) ?? '상대';
     return {
       id: conversationId,
       type: 'direct' as const,
-      title: me.alias ?? partner?.name ?? '상대',
+      title: me.alias ?? partnerName,
       memberCount: 2,
       partner: partner
-        ? { id: partner.id, name: partner.name, avatarUrl: partner.avatarUrl }
+        ? { id: partner.id, name: partnerName, avatarUrl: partner.avatarUrl }
         : null,
       // 내가 보낸 메시지의 읽음 표시용 — 상대가 마지막으로 읽은 시각
       partnerLastReadAt: partner?.lastReadAt ?? null,
@@ -310,6 +321,7 @@ export class ConversationsService {
       {
         userId: string;
         name: string | null;
+        nickname: string | null;
         avatarUrl: string | null;
         leftAt: Date | null;
       }[]
@@ -319,6 +331,7 @@ export class ConversationsService {
       list.push({
         userId: p.userId,
         name: p.name,
+        nickname: p.nickname,
         avatarUrl: p.avatarUrl,
         leftAt: p.leftAt,
       });
@@ -332,8 +345,8 @@ export class ConversationsService {
       // 그룹 인원/자동이름은 나간 멤버 제외 (1:1 상대는 leftAt 무관 표시)
       const activeOthers = others.filter((m) => !m.leftAt);
       const base = isGroup
-        ? (r.title ?? autoGroupTitle(activeOthers.map((m) => m.name ?? '사용자')))
-        : (others[0]?.name ?? '상대');
+        ? (r.title ?? autoGroupTitle(activeOthers.map((m) => resolveName(m) ?? '사용자')))
+        : (resolveName(others[0]) ?? '상대');
       // 방의 마지막 메시지가 내 (재)입장 시점 이전이면 내겐 아직 볼 메시지가 없음
       // → 미리보기를 비운다 (재입장 직후 입장 전 대화가 미리보기로 새던 문제 방지).
       const anchor = this.visibilityAnchor({
@@ -493,9 +506,17 @@ export class ConversationsService {
       imageUrl,
       unreadCount,
     );
+    // 알림 피드/벨 + 백그라운드 푸시용 미리보기 (이미지 메시지는 안내 문구로 치환)
+    const notifContent = content || (imageKey ? '사진을 보냈어요' : '');
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     for (const otherId of others) {
       this.gateway.sendMessageToUser(otherId, message);
+      void this.notificationsService.notifyMessage({
+        userId: otherId,
+        actorUserId: userId,
+        conversationId,
+        content: notifContent,
+      });
     }
 
     return message;
@@ -504,6 +525,8 @@ export class ConversationsService {
   async markRead(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
     await this.repository.updateLastRead(conversationId, userId, new Date());
+    // 방을 열면 이 방의 DM 알림(벨)도 읽음 처리
+    await this.notificationsService.markConversationRead(userId, conversationId);
 
     const others = await this.repository.otherParticipantIds(conversationId, userId);
     for (const otherId of others) {

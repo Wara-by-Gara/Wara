@@ -293,7 +293,7 @@ export class InvitationsRepository {
     return rows.length;
   }
 
-  async create(userId: string, dto: CreateInvitationDto & { mainCoverType: 'image' | 'gif' }) {
+  async create(userId: string, dto: Omit<CreateInvitationDto, 'accessPassword'> & { mainCoverType: 'image' | 'gif'; accessPasswordHash?: string | null }) {
     return this.db.transaction(async (tx) => {
       const result = await tx
         .insert(invitations)
@@ -313,7 +313,61 @@ export class InvitationsRepository {
     });
   }
 
-  async update(id: string, dto: Omit<UpdateInvitationDto, 'mainImageKey' | 'mainGifUrl'> & { mainImageKey?: string | null; mainGifUrl?: string | null; mainCoverType?: 'image' | 'gif' }) {
+  /**
+   * 초대장 복제 — 디자인/문구/RSVP/옵션을 복사해 새 초대장(active) 생성.
+   * 일정(eventStartAt)·참석자·조회수·공개여부는 초기화. 호출자가 새 HOST.
+   */
+  async clone(sourceId: string, userId: string) {
+    return this.db.transaction(async (tx) => {
+      const source = await tx.query.invitations.findFirst({
+        where: (t, { eq, and, isNull }) =>
+          and(eq(t.id, sourceId), isNull(t.deletedAt)),
+      });
+      if (!source) return null;
+
+      const [invitation] = await tx
+        .insert(invitations)
+        .values({
+          userId,
+          templateId: source.templateId,
+          status: 'active',
+          title: `${source.title} (복사본)`,
+          description: source.description,
+          mainCoverType: source.mainCoverType,
+          mainImageKey: source.mainImageKey,
+          mainImageThumbnailKey: source.mainImageThumbnailKey,
+          mainGifUrl: source.mainGifUrl,
+          isMissionEnabled: source.isMissionEnabled,
+          bgColor: source.bgColor,
+          font: source.font,
+          rsvpAttendingEmoji: source.rsvpAttendingEmoji,
+          rsvpAttendingLabel: source.rsvpAttendingLabel,
+          rsvpMaybeEmoji: source.rsvpMaybeEmoji,
+          rsvpMaybeLabel: source.rsvpMaybeLabel,
+          rsvpDeclinedEmoji: source.rsvpDeclinedEmoji,
+          rsvpDeclinedLabel: source.rsvpDeclinedLabel,
+          animation: source.animation,
+          fee: source.fee,
+          dressCode: source.dressCode,
+          parkingInfo: source.parkingInfo,
+          // 일정·공개·카테고리는 초기화 (새 모임 기준)
+          isPublic: false,
+        })
+        .returning();
+      if (!invitation) throw new Error('초대장 복제 실패');
+
+      await tx.insert(participants).values({
+        userId,
+        invitationId: invitation.id,
+        memberRole: MemberRole.HOST,
+        rsvpStatus: RsvpStatus.ATTENDING,
+      });
+
+      return invitation;
+    });
+  }
+
+  async update(id: string, dto: Omit<UpdateInvitationDto, 'mainImageKey' | 'mainGifUrl' | 'accessPassword'> & { mainImageKey?: string | null; mainGifUrl?: string | null; mainCoverType?: 'image' | 'gif'; accessPasswordHash?: string | null }) {
     const [updated] = await this.db
       .update(invitations)
       .set({ ...dto, updatedAt: new Date() })

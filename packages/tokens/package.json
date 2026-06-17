@@ -1,0 +1,22 @@
+{
+  "name": "@wara/tokens",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./native": "./src/native.ts",
+    "./css/tokens.css": "./css/tokens.css"
+  },
+  "scripts": {
+    "generate": "node scripts/generate-css.ts",
+    "build": "node scripts/generate-css.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"scripts/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@wara/tsconfig": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}

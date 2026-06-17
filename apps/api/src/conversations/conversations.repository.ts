@@ -188,6 +188,7 @@ export class ConversationsRepository {
         conversationId: conversationParticipants.conversationId,
         userId: users.id,
         name: users.name,
+        nickname: users.nickname,
         avatarUrl: users.profileImageUrl,
         leftAt: conversationParticipants.leftAt,
       })
@@ -497,6 +498,7 @@ export class ConversationsRepository {
       .select({
         id: users.id,
         name: users.name,
+        nickname: users.nickname,
         avatarUrl: users.profileImageUrl,
         lastReadAt: conversationParticipants.lastReadAt,
       })

@@ -1,10 +1,27 @@
 import type { Preview } from "@storybook/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
+import React, { useEffect } from "react";
 import { MobileDeviceFrame } from "../src/components/layout/MobileDeviceFrame";
 import { getQueryClient } from "../src/lib/query-client";
 import { pageStoryParameters } from "./pageStoryParameters";
 import "../src/app/globals.css";
+
+/** 디자인 시스템 테마 토글 (data-theme) — 툴바에서 라이트/다크 전환 */
+export const globalTypes = {
+  theme: {
+    description: "디자인 시스템 테마",
+    defaultValue: "light",
+    toolbar: {
+      title: "Theme",
+      icon: "circlehollow",
+      items: [
+        { value: "light", title: "Light", icon: "sun" },
+        { value: "dark", title: "Dark", icon: "moon" },
+      ],
+      dynamicTitle: true,
+    },
+  },
+};
 
 const preview: Preview = {
   initialGlobals: {
@@ -113,6 +130,13 @@ const preview: Preview = {
     },
   },
   decorators: [
+    (Story, context) => {
+      const theme = (context.globals.theme as string) ?? "light";
+      useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+      }, [theme]);
+      return <Story />;
+    },
     (Story) => (
       <QueryClientProvider client={getQueryClient()}>
         <Story />

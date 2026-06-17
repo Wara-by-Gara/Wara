@@ -1,12 +1,14 @@
 "use client";
 
-import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { Button } from "@/components/primitives/Button";
-import { Checkbox } from "@/components/primitives/Checkbox";
-import { TextInput } from "@/components/primitives/TextInput";
-import { FormField } from "@/components/molecules/FormField";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import {
+  Icon,
+  Avatar,
+  Button,
+  Checkbox,
+  Input,
+  FormField,
+  TopAppBar,
+} from "@wara/ui";
 import { useState } from "react";
 
 export type SignupStep =
@@ -87,7 +89,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
             helper="20자 이내 한글·영문·숫자"
             counter={{ current: 3, max: 20 }}
           >
-            <TextInput defaultValue="와라" placeholder="닉네임" />
+            <Input defaultValue="와라" placeholder="닉네임" />
           </FormField>
         </section>
       );
@@ -100,9 +102,10 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
           {step === "profileImageSelect" ? (
             <button
               type="button"
+              aria-label="프로필 이미지 선택"
               className="relative inline-flex size-36 items-center justify-center rounded-full bg-gray-100"
             >
-              <Avatar size="xl" initial="와" className="size-36 text-3xl" />
+              <Avatar size="xl" name="와" className="size-36 text-3xl" />
               <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
                 <Icon name="camera" size="sm" color="currentColor" decorative />
               </span>

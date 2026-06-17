@@ -1,19 +1,11 @@
 'use client';
 
-import { Icon } from '@/components/icons';
-import { Chip } from '@/components/primitives/Chip';
-import { Button } from '@/components/primitives/Button';
-import { Switch } from '@/components/primitives/Switch';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
-import { MenuItem } from '@/components/molecules/MenuItem';
-import { ConfirmModal } from '@/components/molecules/Modal';
+import { Icon, Chip, Button, TopAppBar, ConfirmDialog, EmptyState, ErrorState, Switch, MenuItem } from '@wara/ui';
 import {
   NotificationItem,
   type NotificationType,
-} from '@/components/organisms/NotificationItem';
+} from '@/components/domain';
 import { NotificationListSkeleton } from '@/components/organisms/Skeleton';
-import { EmptyState } from '@/components/organisms/EmptyState';
-import { ErrorState } from '@/components/organisms/ErrorState';
 import { mobileMainCenter, mobileMainScroll } from '@/lib/mobilePageLayout';
 import { cn } from '@/lib/cn';
 import { useState } from 'react';
@@ -133,7 +125,7 @@ export const Notifications = ({
               state === 'pushPermissionGuide' ? (
                 <Button onClick={onRequestPushPermission}>권한 허용</Button>
               ) : (
-                <Button variant="outline">
+                <Button variant="secondary">
                   설정 {'>'} 알림에서 직접 켜주세요
                 </Button>
               )
@@ -163,16 +155,12 @@ export const Notifications = ({
       />
       <div className="flex items-center justify-between gap-2 px-page py-2">
         <div className="flex gap-1.5">
-          <Chip
-            variant="filter"
-            selected={state !== 'unreadOnly'}
+          <Chip            selected={state !== 'unreadOnly'}
             onClick={() => onFilterChange?.('all')}
           >
             전체
           </Chip>
-          <Chip
-            variant="filter"
-            selected={state === 'unreadOnly'}
+          <Chip            selected={state === 'unreadOnly'}
             onClick={() => onFilterChange?.('unread')}
           >
             안 읽음
@@ -272,8 +260,7 @@ export const Notifications = ({
         )}
       </main>
 
-      <ConfirmModal
-        contained
+      <ConfirmDialog
         open={markAllReadModalOpen}
         onOpenChange={setMarkAllReadModalOpen}
         title="모든 알림을 읽음 처리할까요?"
@@ -284,12 +271,12 @@ export const Notifications = ({
         }}
       />
 
-      <ConfirmModal
-        contained
+      <ConfirmDialog
         open={deleteAllModalOpen}
         onOpenChange={setDeleteAllModalOpen}
         title="모든 알림을 삭제할까요?"
         confirmLabel="전체 삭제"
+        tone="danger"
         onConfirm={() => {
           onDeleteAll?.();
           setDeleteAllModalOpen(false);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getInvitation, getMyInvitations, getHiddenInvitations } from "@/lib/api/invitations";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getInvitation, getMyInvitations, getHiddenInvitations, cloneInvitation } from "@/lib/api/invitations";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthStore } from "@/stores/authStore";
 import { useTermsCompliance } from "@/hooks/useTermsCompliance";
@@ -23,6 +23,16 @@ export function useMyInvitations() {
     queryKey: QUERY_KEYS.invitations.all(),
     queryFn: () => getMyInvitations(),
     enabled: hydrated && isLoggedIn && isCompliant === true,
+  });
+}
+
+export function useCloneInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => cloneInvitation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.myList() });
+    },
   });
 }
 

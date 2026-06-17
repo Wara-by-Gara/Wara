@@ -35,6 +35,10 @@ import {
 } from './dto/invitation-presigned-url.dto';
 import { ApplyAiImageDto, ApplyAiImageSchema } from './dto/apply-ai-image.dto';
 import {
+  VerifyAccessPasswordDto,
+  VerifyAccessPasswordSchema,
+} from './dto/verify-access-password.dto';
+import {
   ListPublicInvitationsDto,
   ListPublicInvitationsSchema,
 } from './dto/list-public-invitations.dto';
@@ -109,6 +113,28 @@ export class InvitationsController {
     dto: UpdateInvitationDto,
   ) {
     return this.invitationsService.update(id, dto);
+  }
+
+  /** 입장 비밀번호 검증 — 링크로 들어온 사용자가 잠긴 초대장 열람 전 호출 */
+  @HttpCode(HttpStatus.OK)
+  @Post(':invitationId/access/verify')
+  verifyAccess(
+    @Param('invitationId', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(VerifyAccessPasswordSchema))
+    dto: VerifyAccessPasswordDto,
+  ) {
+    return this.invitationsService.verifyAccess(id, dto.password);
+  }
+
+  /** 초대장 복제 — 호스트가 기존 초대장을 새 초대장으로 복사 */
+  @RequireMemberRole(MemberRole.HOST)
+  @UseGuards(HostGuard)
+  @Post(':invitationId/clone')
+  clone(
+    @Param('invitationId', ParseUlidPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.invitationsService.clone(id, user.id);
   }
 
   @RequireMemberRole(MemberRole.HOST)

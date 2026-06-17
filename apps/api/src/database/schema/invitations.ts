@@ -31,6 +31,10 @@ export const invitations = pgTable('invitations', {
   mainImageThumbnailKey: text('main_image_thumbnail_key'),
   mainGifUrl: text('main_gif_url'),
   eventStartAt: timestamp('event_start_at', { withTimezone: true }),
+  /** RSVP 응답 마감 시각 (선택). 지나면 신규 참가·응답 변경 불가 */
+  rsvpDeadlineAt: timestamp('rsvp_deadline_at', { withTimezone: true }),
+  /** 입장 비밀번호 해시 (scrypt, `salt:hash`). null이면 비밀번호 없음. 평문 저장 금지 */
+  accessPasswordHash: text('access_password_hash'),
   isMissionEnabled: boolean('is_mission_enabled').notNull().default(false),
   bgColor: varchar('bg_color', { length: 50 }).notNull().default('bg-white'),
   font: varchar('font', { length: 50 }).notNull().default('default'),

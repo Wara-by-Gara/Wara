@@ -3,10 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
-import { Avatar } from "@/components/primitives/Avatar";
-import { SearchBar } from "@/components/molecules/SearchBar";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { Modal, ModalContent, ModalClose, ModalPrimitive } from "@/components/molecules/Modal";
+import { Avatar, EmptyState, SearchBar, Modal, ConfirmDialog } from "@wara/ui";
 import { ROUTES } from "@/constants/routes";
 import { FriendsPageSkeleton } from "@/components/organisms/Skeleton";
 import { useFriends, useHideFriend } from "@/hooks/useFriends";
@@ -133,7 +130,7 @@ export const FriendsList = () => {
                 >
                   <span className="inline-flex rounded-full bg-gradient-to-tr from-primary via-pink-400 to-yellow-300 p-[2.5px]">
                     <span className="inline-flex rounded-full bg-background-soft p-[2px]">
-                      <Avatar size="xl" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
+                      <Avatar size="xl" src={f.avatarUrl ?? undefined} alt={name} name={name} />
                     </span>
                   </span>
                   <span className="w-full truncate text-center text-[12px] text-text-secondary">
@@ -172,6 +169,7 @@ export const FriendsList = () => {
               placeholder="친구 이름으로 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onClear={() => setQuery("")}
             />
           </div>
           {filtered.length === 0 ? (
@@ -209,7 +207,7 @@ export const FriendsList = () => {
                         showIndex ? "pr-8" : "pr-page"
                       }`}
                     >
-                      <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} initial={name[0]} />
+                      <Avatar size="md" src={f.avatarUrl ?? undefined} alt={name} name={name} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[15px] font-bold text-text-primary">{name}</p>
                         <p className="truncate text-[12px] text-text-tertiary">함께한 모임 {f.sharedCount}회</p>
@@ -238,61 +236,40 @@ export const FriendsList = () => {
       <Modal
         open={!!actionTarget}
         onOpenChange={(open) => !open && setActionTarget(null)}
+        size="sm"
+        showClose={false}
+        title={actionTarget?.name ?? "친구"}
       >
-        <ModalContent className="max-w-[280px]" aria-describedby={undefined}>
-          <ModalPrimitive.Title className="text-left text-[16px] font-bold text-text-primary">
-            {actionTarget?.name ?? "친구"}
-          </ModalPrimitive.Title>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setConfirmTarget(actionTarget);
-                setActionTarget(null);
-              }}
-              className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
-            >
-              삭제
-            </button>
-          </div>
-        </ModalContent>
+        <div className="mt-1">
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmTarget(actionTarget);
+              setActionTarget(null);
+            }}
+            className="w-full rounded-lg py-2 text-left text-[15px] font-bold text-red-500 active:bg-background-soft"
+          >
+            삭제
+          </button>
+        </div>
       </Modal>
 
-      {/* 삭제 확인 모달 (카카오톡식 — 텍스트 버튼 우측 하단) */}
-      <Modal
+      {/* 삭제 확인 모달 */}
+      <ConfirmDialog
         open={!!confirmTarget}
         onOpenChange={(open) => !open && setConfirmTarget(null)}
-      >
-        <ModalContent className="max-w-[300px]">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
-            친구 삭제
-          </ModalPrimitive.Title>
-          <ModalPrimitive.Description className="mt-2 text-[14px] text-text-secondary">
-            {confirmTarget?.name ?? "이 친구"}님을 친구 목록에서 삭제합니다. ‘삭제한
-            친구’에서 되돌릴 수 있어요.
-          </ModalPrimitive.Description>
-          <div className="mt-6 flex justify-end gap-6">
-            <ModalClose asChild>
-              <button type="button" className="text-[15px] font-bold text-blue-500">
-                취소
-              </button>
-            </ModalClose>
-            <button
-              type="button"
-              disabled={hideFriend.isPending}
-              onClick={() => {
-                if (!confirmTarget) return;
-                hideFriend.mutate(confirmTarget.id, {
-                  onSuccess: () => setConfirmTarget(null),
-                });
-              }}
-              className="text-[15px] font-bold text-blue-500 disabled:opacity-50"
-            >
-              삭제
-            </button>
-          </div>
-        </ModalContent>
-      </Modal>
+        title="친구 삭제"
+        description={`${confirmTarget?.name ?? "이 친구"}님을 친구 목록에서 삭제합니다. ‘삭제한 친구’에서 되돌릴 수 있어요.`}
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        loading={hideFriend.isPending}
+        onConfirm={() => {
+          if (!confirmTarget) return;
+          hideFriend.mutate(confirmTarget.id, {
+            onSuccess: () => setConfirmTarget(null),
+          });
+        }}
+      />
     </>
   );
 };

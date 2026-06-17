@@ -4,9 +4,11 @@ import { eq, and, or, isNull, isNotNull, inArray, sql } from 'drizzle-orm';
 import { invitations, participants } from '../database/schema';
 import { remindLogs } from '../database/schema';
 
-export type RemindType = 'D+7' | 'D+30' | 'D+365';
+export type RemindType = 'D-1' | 'D+7' | 'D+30' | 'D+365';
 
 const DATE_CONDITIONS = {
+  // 이벤트가 내일(KST 기준)인 초대장 — 사전 리마인드
+  'D-1': sql`DATE(${invitations.eventStartAt} AT TIME ZONE 'Asia/Seoul') = DATE((NOW() + INTERVAL '1 day') AT TIME ZONE 'Asia/Seoul')`,
   'D+7': sql`DATE(${invitations.eventStartAt} AT TIME ZONE 'Asia/Seoul') = DATE((NOW() - INTERVAL '7 days') AT TIME ZONE 'Asia/Seoul')`,
   'D+30': sql`DATE(${invitations.eventStartAt} AT TIME ZONE 'Asia/Seoul') = DATE((NOW() - INTERVAL '30 days') AT TIME ZONE 'Asia/Seoul')`,
   'D+365': sql`DATE(${invitations.eventStartAt} AT TIME ZONE 'Asia/Seoul') = DATE((NOW() - INTERVAL '365 days') AT TIME ZONE 'Asia/Seoul')`,

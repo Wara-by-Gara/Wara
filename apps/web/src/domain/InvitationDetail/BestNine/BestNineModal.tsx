@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Icon } from '@/components/icons';
-import { Avatar } from '@/components/primitives/Avatar';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { Avatar } from "@wara/ui";
+import { TopAppBar } from "@wara/ui";
 import { PhotoGrid } from '@/components/organisms/PhotoGrid';
 import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
 import { AlbumGridSkeleton } from '@/components/organisms/Skeleton';

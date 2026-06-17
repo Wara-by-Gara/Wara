@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { IoHeart, IoHeartOutline } from "react-icons/io5";
+import { Heart } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 
@@ -99,9 +99,9 @@ export const PhotoGridItem = forwardRef<HTMLButtonElement, PhotoGridItemProps>(
             aria-label={onLike ? (liked ? "좋아요 취소" : "좋아요") : undefined}
           >
             {liked ? (
-              <IoHeart className="size-3.5 shrink-0" aria-hidden />
+              <Heart className="size-3.5 shrink-0 fill-current" aria-hidden />
             ) : (
-              <IoHeartOutline className="size-3.5 shrink-0" aria-hidden />
+              <Heart className="size-3.5 shrink-0" aria-hidden />
             )}
             {likeCount ?? 0}
           </span>

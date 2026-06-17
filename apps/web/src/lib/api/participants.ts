@@ -71,6 +71,11 @@ export function transferHost(invitationId: string, participantId: string): Promi
   return apiPatch<void>(`/invitations/${invitationId}/participants/${participantId}/transfer-host`, {});
 }
 
+/** 공동 호스트 지정(true)/해제(false) */
+export function setCoHost(invitationId: string, participantId: string, isCoHost: boolean): Promise<void> {
+  return apiPatch<void>(`/invitations/${invitationId}/participants/${participantId}/co-host`, { isCoHost });
+}
+
 export function updateHidden(invitationId: string, isHidden: boolean): Promise<Participant> {
   return apiPatch<Participant>(`/invitations/${invitationId}/participants/me/hidden`, { isHidden });
 }

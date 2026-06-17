@@ -2,18 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CommentItem } from '@/components/organisms/CommentItem/CommentItem';
+import { CommentItem } from '@/components/domain';
 import { useInvitationFeedback } from '@/hooks/useInvitationFeedbacks';
 import { useMe } from '@/hooks/useUsers';
 import { useParticipants } from '@/hooks/useParticipants';
 import { CommentInputBar, GifPicker } from '@/components/organisms';
 import { CommentListSkeleton, MentionListSkeleton } from '@/components/organisms/Skeleton';
-import { Avatar } from '@/components/primitives/Avatar';
+import { Avatar } from "@wara/ui";
 import { timeAgo } from '@/utils/timeAge';
 import { cn } from '@/lib/cn';
 import { type Photo, getPhoto } from '@/lib/api/photos';
 import PhotoDetailModal from '../PhotoDetailModal/PhotoDetailModal';
-import { ParticipantProfileModal } from '@/components/organisms/ParticipantProfileModal/ParticipantProfileModal';
+import { ParticipantProfileModal } from '@/components/domain';
 import { getCommentAuthorName } from '@/domain/InvitationDetail/types';
 
 interface Props {
@@ -225,7 +225,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                         src={p.user.profileImageUrl ?? undefined}
                         alt={getCommentAuthorName(p.user)}
                         size="xs"
-                        initial={getCommentAuthorName(p.user)[0]}
+                        name={getCommentAuthorName(p.user)[0]}
                       />
                       <span className="text-[14px] text-text-primary">
                         @{getCommentAuthorName(p.user)}
@@ -412,6 +412,7 @@ export default function InvitationFeedbacks({ invitationId, isDarkBg }: Props) {
                         ? (currentUserProfileImageUrl ?? undefined)
                         : (r.participant.user?.profileImageUrl ?? undefined),
                     content: r.deletedAt ? '' : (r.content ?? ''),
+                    gifUrl: !r.deletedAt ? (r.gifUrl ?? undefined) : undefined,
                     createdAt: timeAgo(r.createdAt),
                     variant: isReplyDeleted
                       ? ('deleted' as const)

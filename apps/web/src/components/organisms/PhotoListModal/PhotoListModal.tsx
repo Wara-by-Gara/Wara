@@ -2,16 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/icons';
-import { Button } from '@/components/primitives/Button';
+import { Button } from "@wara/ui";
 import { PhotoGrid } from '@/components/organisms/PhotoGrid';
 import { PhotoGridItem } from '@/components/organisms/PhotoGridItem';
 import { PhotoViewer } from '@/components/organisms/PhotoViewer';
-import {
-  Modal,
-  ModalOverlay,
-  ModalPortal,
-  ModalPrimitive,
-} from '@/components/molecules/Modal';
+import * as Dialog from '@radix-ui/react-dialog';
 import { AlbumGridSkeleton } from '@/components/organisms/Skeleton';
 import { cn } from '@/lib/cn';
 import type { PhotoViewerComment } from '@/components/organisms/PhotoViewer';
@@ -129,20 +124,20 @@ export const PhotoListModal = ({
 
   const modalBody = (
     <>
-      <ModalOverlay className={overlayClass} />
-      <ModalPrimitive.Content
+      <Dialog.Overlay className={overlayClass} />
+      <Dialog.Content
         className={contentClass}
         aria-describedby={undefined}
       >
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-page py-4">
-          <ModalPrimitive.Title className="text-[17px] font-bold text-text-primary">
+          <Dialog.Title className="text-[17px] font-bold text-text-primary">
             {selectMode
               ? selectedIds.size > 0
                 ? `${selectedIds.size}장 선택됨`
                 : '사진을 선택하세요'
               : (title ?? `전체 사진 ${photos.length}장`)}
-          </ModalPrimitive.Title>
+          </Dialog.Title>
           <button
             type="button"
             onClick={() => {
@@ -223,7 +218,7 @@ export const PhotoListModal = ({
           <div className="shrink-0 border-t border-border px-4 py-3">
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant="secondary"
                 fullWidth
                 onClick={handleSelectDownload}
                 className={cn(
@@ -269,13 +264,13 @@ export const PhotoListModal = ({
             onCommentSubmit={(text) => onCommentSubmit?.(viewingPhoto.id, text)}
           />
         ) : null}
-      </ModalPrimitive.Content>
+      </Dialog.Content>
     </>
   );
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange}>
-      {contained ? modalBody : <ModalPortal>{modalBody}</ModalPortal>}
-    </Modal>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {contained ? modalBody : <Dialog.Portal>{modalBody}</Dialog.Portal>}
+    </Dialog.Root>
   );
 };

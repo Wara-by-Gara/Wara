@@ -1,4 +1,14 @@
-import type { InvitationCardVariant } from "@/components/organisms/InvitationCard";
+export type InvitationCardVariant =
+  | "default"
+  | "createdByMe"
+  | "hosting"
+  | "invited"
+  | "today"
+  | "upcoming"
+  | "ended"
+  | "draft"
+  | "private"
+  | "noImage";
 
 export function resolveInvitationCardStatus(params: {
   eventStartAt: string | null | undefined;

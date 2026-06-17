@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/constants/routes';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { TopAppBar } from '@wara/ui';
 import { Settings, type SettingsScreen } from '@/screens/Settings';
 import { NotificationSettingsForm } from '@/components/notifications/notification-settings-form';
 import type { NotificationSettingKey } from '@/components/notifications/notification-settings-form';

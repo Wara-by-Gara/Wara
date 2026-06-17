@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { updateNotificationSettings } from "@/lib/api/notifications";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { Onboarding, type OnboardingStep } from "./Onboarding";
 
 const NOTIFICATION_PERMISSION_OFF = {
@@ -27,6 +28,7 @@ const ONBOARDING_KEY = "wara_onboarding_done";
 export function OnboardingContainer() {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>("permissionNotification");
+  const { enable: enablePush } = usePushSubscription();
   const { mutate: disableNotifications } = useMutation({
     mutationFn: () => updateNotificationSettings(NOTIFICATION_PERMISSION_OFF),
   });
@@ -82,6 +84,8 @@ export function OnboardingContainer() {
           setStep("permissionDenied");
           return;
         }
+        // 허용됨 → 백그라운드 푸시 구독 생성 (PC·Android, iOS는 내부에서 skip)
+        if (result === "granted") void enablePush();
       }
       setStep("permissionPhoto");
     } else if (step === "permissionPhoto") {

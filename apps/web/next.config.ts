@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  // 워크스페이스 디자인 시스템 패키지를 트랜스파일 (TS 소스 직접 소비)
+  transpilePackages: ["@wara/tokens", "@wara/ui"],
   // Docker 프로덕션 빌드 시 최소 실행 파일만 추출 (standalone 폴더 생성)
   output: "standalone",
   // /api/* 를 백엔드로 프록시 → 프론트와 same-origin 으로 만들어

@@ -49,10 +49,11 @@ export class LocationsController {
   @RequireMemberRole(MemberRole.HOST)
   setEventLocation(
     @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(SetEventLocationSchema))
     dto: SetEventLocationDto,
   ) {
-    return this.locationsService.setEventLocation(invitationId, dto);
+    return this.locationsService.setEventLocation(invitationId, dto, user.id);
   }
 
   @Delete('location')

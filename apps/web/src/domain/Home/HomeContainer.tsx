@@ -4,10 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Button } from "@/components/primitives/Button";
+import { Button, TopAppBar, BottomSheet } from "@wara/ui";
 import { HeaderGradient } from "@/components/layout/StickyHeader";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
 import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import { HomeHeader } from "@/domain/Home/HomeHeader";
 import { UpcomingMeetingsSection } from "@/domain/Home/UpcomingMeetingsSection";
@@ -48,7 +46,15 @@ export default function HomeContainer() {
     return (
       <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background">
         <HeaderGradient fixed />
-        <TopAppBar className="relative z-30" variant="transparent" brandLogo brandLogoCompact />
+        <TopAppBar
+          className="relative z-30"
+          variant="transparent"
+          leftSlot={
+            <span className="ml-[4px] text-[20px] font-bold leading-none tracking-wide text-white">
+              WARA
+            </span>
+          }
+        />
 
         <div className="relative z-10 flex flex-1 flex-col justify-end px-page pb-[calc(env(safe-area-inset-bottom)+32px)]">
           <div className="mb-8">
@@ -70,7 +76,7 @@ export default function HomeContainer() {
               초대장 만들기 →
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               fullWidth
               onClick={() => setLoginSheetOpen(true)}
@@ -83,31 +89,34 @@ export default function HomeContainer() {
           </div>
         </div>
 
-        <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-          <BottomSheetContent title="로그인" description="소셜 계정으로 간편하게 시작하세요">
-            <div className="flex flex-col gap-2 pt-2">
-              {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
-                <SocialLoginButton
-                  key={provider}
-                  provider={provider}
-                  loading={loadingProvider === provider}
-                  disabled={loadingProvider !== null}
-                  onClick={() => handleSocialLogin(provider)}
-                />
-              ))}
-            </div>
-            <p className="mt-4 text-center text-[12px] text-text-tertiary">
-              시작 시{" "}
-              <Link href={ROUTES.TERMS.SERVICE} className="underline">
-                이용약관
-              </Link>
-              ·
-              <Link href={ROUTES.TERMS.PRIVACY} className="underline">
-                개인정보처리방침
-              </Link>
-              에 동의하게 됩니다
-            </p>
-          </BottomSheetContent>
+        <BottomSheet
+          open={loginSheetOpen}
+          onOpenChange={setLoginSheetOpen}
+          title="로그인"
+          description="소셜 계정으로 간편하게 시작하세요"
+        >
+          <div className="flex flex-col gap-2 pt-2">
+            {(["kakao", "naver", "google", "apple"] as const).map((provider) => (
+              <SocialLoginButton
+                key={provider}
+                provider={provider}
+                loading={loadingProvider === provider}
+                disabled={loadingProvider !== null}
+                onClick={() => handleSocialLogin(provider)}
+              />
+            ))}
+          </div>
+          <p className="mt-4 text-center text-[12px] text-text-tertiary">
+            시작 시{" "}
+            <Link href={ROUTES.TERMS.SERVICE} className="underline">
+              이용약관
+            </Link>
+            ·
+            <Link href={ROUTES.TERMS.PRIVACY} className="underline">
+              개인정보처리방침
+            </Link>
+            에 동의하게 됩니다
+          </p>
         </BottomSheet>
       </div>
     );

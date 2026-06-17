@@ -2,7 +2,7 @@
 
 import { Icon } from "@/components/icons";
 import type { IconName } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
+import { Button } from "@wara/ui";
 
 export interface CreateBottomTabBarProps {
   onBackground: () => void;

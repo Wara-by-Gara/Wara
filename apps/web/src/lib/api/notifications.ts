@@ -14,14 +14,17 @@ export type NotificationType =
   | 'vote_confirmed'
   | 'ai_complete'
   | 'mention'
-  | 'participant_joined';
+  | 'participant_joined'
+  | 'text_blast'
+  | 'message';
 
 export type NotificationTargetType =
   | 'photo'
   | 'feedback'
   | 'invitation'
   | 'mission'
-  | 'participantLocations';
+  | 'participantLocations'
+  | 'conversation';
 
 export type Notification = {
   id: string;
@@ -46,6 +49,8 @@ export type NotificationSettings = {
   isInvitationDate: boolean;
   isPhoto: boolean;
   isMission: boolean;
+  isMessage: boolean;
+  isParticipant: boolean;
   isParticipantLocations: boolean;
   isEventLocations: boolean;
   createdAt: string;
@@ -66,6 +71,8 @@ export type UpdateNotificationSettingsDto = Partial<
     | 'isInvitationDate'
     | 'isPhoto'
     | 'isMission'
+    | 'isMessage'
+    | 'isParticipant'
     | 'isParticipantLocations'
     | 'isEventLocations'
   >

@@ -16,6 +16,8 @@ export const CreateInvitationSchema = z
       .optional(),
     templateId: z.string().optional(),
   eventStartAt: z.coerce.date().optional(),
+  rsvpDeadlineAt: z.coerce.date().optional(),
+  accessPassword: z.string().min(1).max(50).optional(),
   isMissionEnabled: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   category: z.string().max(20).optional(),

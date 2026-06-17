@@ -1,19 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
+import { Button } from "@wara/ui";
+import { TopAppBar } from "@wara/ui";
 import { InvitationDetailSkeleton } from "@/components/organisms/Skeleton";
 import { useAuthStore } from "@/stores/authStore";
 
 import HostView from "./HostView";
 import GuestView from "./GuestView";
+import { AccessGate, accessGateKey } from "../AccessGate";
 import { useInvitationDetail } from "@/hooks/useInvitationDetail";
 
 export default function InvitationDetailContainer({ invitationId }: { invitationId: string }) {
   const router = useRouter();
   const { isLoggedIn, hydrated } = useAuthStore();
+  const [unlocked, setUnlocked] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(accessGateKey(invitationId)) === "1",
+  );
 
   const { invitation, isLoading, isError, me, myParticipant, participantsData } =
     useInvitationDetail(invitationId);
@@ -36,7 +43,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
         <main className="flex flex-1 flex-col items-center justify-center gap-3 px-page text-center">
           <Icon name="alert-triangle" size="xl" color="danger" decorative />
           <p className="text-[18px] font-bold text-text-primary">초대장을 불러오지 못했어요</p>
-          <Button variant="outline" onClick={() => router.back()}>돌아가기</Button>
+          <Button variant="secondary" onClick={() => router.back()}>돌아가기</Button>
         </main>
       </div>
     );
@@ -50,6 +57,11 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
 
   if (isHost) {
     return <HostView invitationId={invitationId} invitation={invitation} participantsData={participantsData} />;
+  }
+
+  // 입장 비밀번호 게이트 — 호스트·기존 참가자는 통과, 그 외엔 검증 전까지 차단
+  if (invitation.hasPassword && !myParticipant && !unlocked) {
+    return <AccessGate invitationId={invitationId} onUnlock={() => setUnlocked(true)} />;
   }
 
   return (

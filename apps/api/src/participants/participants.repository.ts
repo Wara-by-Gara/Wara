@@ -79,11 +79,12 @@ export class ParticipantsRepository {
 
   async findInvitationInfo(
     invitationId: string,
-  ): Promise<{ status: 'active' | 'closed'; eventStartAt: Date | null; hostUserId: string } | null> {
+  ): Promise<{ status: 'active' | 'closed'; eventStartAt: Date | null; rsvpDeadlineAt: Date | null; hostUserId: string } | null> {
     const rows = await this.db
       .select({
         status: invitations.status,
         eventStartAt: invitations.eventStartAt,
+        rsvpDeadlineAt: invitations.rsvpDeadlineAt,
         hostUserId: invitations.userId,
       })
       .from(invitations)
@@ -121,6 +122,19 @@ export class ParticipantsRepository {
     const rows = await this.db
       .update(participants)
       .set({ rsvpStatus, updatedAt: new Date() })
+      .where(eq(participants.id, id))
+      .returning();
+    return rows[0] ?? null;
+  }
+
+  /** 공동 호스트 지정/해제 — memberRole 단순 변경 */
+  async setMemberRole(
+    id: string,
+    memberRole: 'HOST' | 'GUEST',
+  ): Promise<Participant | null> {
+    const rows = await this.db
+      .update(participants)
+      .set({ memberRole, updatedAt: new Date() })
       .where(eq(participants.id, id))
       .returning();
     return rows[0] ?? null;

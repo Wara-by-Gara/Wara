@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { TopAppBar } from '@wara/ui';
 import { TextContentSkeleton } from '@/components/organisms/Skeleton';
 import { useTerms } from '@/hooks/useTerms';
 import { TermContent } from './TermContent';

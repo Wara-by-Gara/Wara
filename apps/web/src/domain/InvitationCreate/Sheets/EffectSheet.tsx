@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
+import { BottomSheet } from "@wara/ui";
 import { ANIMATIONS } from "@/domain/InvitationCreate/constants";
 import type { AnimationId } from "@/domain/InvitationCreate/constants";
 
@@ -14,9 +14,8 @@ export interface EffectSheetProps {
 
 export function EffectSheet({ open, onOpenChange, value, onChange }: EffectSheetProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetContent title="애니메이션 효과" description="고르면 초대장에 바로 적용돼요">
-        <div className="grid grid-cols-3 gap-2 pt-1">
+    <BottomSheet open={open} onOpenChange={onOpenChange} title="애니메이션 효과" description="고르면 초대장에 바로 적용돼요">
+      <div className="grid grid-cols-3 gap-2 pt-1">
           {ANIMATIONS.map(({ id, label, emoji }) => (
             <button
               key={id}
@@ -33,8 +32,7 @@ export function EffectSheet({ open, onOpenChange, value, onChange }: EffectSheet
               </span>
             </button>
           ))}
-        </div>
-      </BottomSheetContent>
+      </div>
     </BottomSheet>
   );
 }

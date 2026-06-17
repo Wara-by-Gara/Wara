@@ -6,24 +6,21 @@ import type { Area } from 'react-easy-crop';
 import { cn } from '@/lib/cn';
 import { searchPlaces } from '@/lib/api/locations';
 import type { Place } from '@/lib/api/locations';
-import { Switch } from '@/components/primitives/Switch';
+import { Switch } from "@wara/ui";
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon } from '@/components/icons';
-import { Button } from '@/components/primitives/Button';
-import { TextInput } from '@/components/primitives/TextInput';
-import { Textarea } from '@/components/primitives/Textarea';
-import { TopAppBar } from '@/components/molecules/TopAppBar';
+import { Button } from "@wara/ui";
+import { Input } from "@wara/ui";
+import { Textarea } from "@wara/ui";
+import { TopAppBar } from "@wara/ui";
 import { DateTimeSelector } from '@/components/molecules/DateTimeSelector';
 import { LocationSelector } from '@/components/molecules/LocationSelector';
-import { InvitationCover } from '@/components/organisms/InvitationCover';
+import { InvitationCover } from '@/components/domain';
 import { StickyCTA } from '@/components/layout/StickyCTA';
-import { ConfirmModal } from '@/components/molecules/Modal';
-import {
-  BottomSheet,
-  BottomSheetContent,
-} from '@/components/molecules/BottomSheet';
+import { ConfirmDialog } from "@wara/ui";
+import { BottomSheet } from '@wara/ui';
 import { KakaoStaticMapPreview } from '@/components/molecules/KakaoStaticMapPreview/KakaoStaticMapPreview';
 import {
   createInvitation,
@@ -83,6 +80,12 @@ interface FormData {
   fee: string;
   dressCode: string;
   parkingInfo: string;
+  /** datetime-local 입력값 (빈 문자열 = 마감 없음) */
+  rsvpDeadline: string;
+  /** 입장 비밀번호 사용 여부 */
+  passwordEnabled: boolean;
+  /** 입력된 비밀번호 (빈 문자열 = 변경 없음/미설정) */
+  accessPassword: string;
 }
 
 type MissionItem =
@@ -169,6 +172,15 @@ function toEventStartAt(date: string, time: string): string | undefined {
   const iso = date.replace(/\./g, '-');
   // 시간 미설정 시 로컬 자정으로 저장 (UTC 자정 저장 시 KST에서 오전 9시로 오인됨)
   return new Date(`${iso}T${time || '00:00'}:00`).toISOString();
+}
+
+/** ISO → datetime-local 입력값(YYYY-MM-DDTHH:mm, 로컬). null이면 빈 문자열 */
+function toDatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 function parseEventStart(iso: string | null): { date: string; time: string } {
@@ -288,6 +300,9 @@ export default function InvitationCreateContainer({
     fee: '',
     dressCode: '',
     parkingInfo: '',
+    rsvpDeadline: '',
+    passwordEnabled: false,
+    accessPassword: '',
   });
 
   useEffect(() => {
@@ -315,6 +330,9 @@ export default function InvitationCreateContainer({
       fee: editInvitation.fee ?? '',
       dressCode: editInvitation.dressCode ?? '',
       parkingInfo: editInvitation.parkingInfo ?? '',
+      rsvpDeadline: toDatetimeLocal(editInvitation.rsvpDeadlineAt),
+      passwordEnabled: editInvitation.hasPassword,
+      accessPassword: '',
     });
     setDesignBgColor(editInvitation.bgColor as DesignBgColor);
     setDesignFont(editInvitation.font as DesignFont);
@@ -461,6 +479,15 @@ export default function InvitationCreateContainer({
           templateId: form.templateId || null,
           eventStartAt:
             toEventStartAt(form.date, timeUnknown ? form.time : '') ?? null,
+          rsvpDeadlineAt: form.rsvpDeadline
+            ? new Date(form.rsvpDeadline).toISOString()
+            : null,
+          // 비밀번호 OFF → 제거(null) / ON+입력 → 변경 / ON+빈값 → 변경 없음(미전송)
+          ...(!form.passwordEnabled
+            ? { accessPassword: null }
+            : form.accessPassword
+              ? { accessPassword: form.accessPassword }
+              : {}),
           bgColor: designBgColor,
           font: designFont,
           animation: selectedAnimation,
@@ -502,6 +529,12 @@ export default function InvitationCreateContainer({
         ...(mainGifUrl ? { mainGifUrl } : { mainImageKey: form.mainImageKey }),
         templateId: form.templateId || undefined,
         eventStartAt: toEventStartAt(form.date, timeUnknown ? form.time : ''),
+        ...(form.rsvpDeadline
+          ? { rsvpDeadlineAt: new Date(form.rsvpDeadline).toISOString() }
+          : {}),
+        ...(form.passwordEnabled && form.accessPassword
+          ? { accessPassword: form.accessPassword }
+          : {}),
         bgColor: designBgColor,
         font: designFont,
         animation: selectedAnimation,
@@ -849,7 +882,7 @@ export default function InvitationCreateContainer({
             </Button>
             <Button
               size="lg"
-              variant="outline"
+              variant="secondary"
               fullWidth
               onClick={() =>
                 router.replace(
@@ -945,8 +978,7 @@ export default function InvitationCreateContainer({
         className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5"
       >
         {/* 대표 이미지 편집 시트 */}
-        <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen}>
-          <BottomSheetContent title="대표 이미지">
+        <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
             {form.templateId ? (
               <InvitationCover
                 imageUrl={
@@ -1197,12 +1229,10 @@ export default function InvitationCreateContainer({
                 )}
               </div>
             )}
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* 날짜·시간 편집 시트 */}
-        <BottomSheet open={dateSheetOpen} onOpenChange={setDateSheetOpen}>
-          <BottomSheetContent title="모임 일정">
+        <BottomSheet open={dateSheetOpen} onOpenChange={setDateSheetOpen} title="모임 일정">
             <div className="flex flex-col gap-4">
               <DateTimeSelector
                 mode="date"
@@ -1321,15 +1351,15 @@ export default function InvitationCreateContainer({
                 </div>
               )}
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* 위치 편집 시트 */}
         <BottomSheet
           open={locationSheetOpen}
           onOpenChange={setLocationSheetOpen}
+          title="모임 장소"
+          hideTitle
         >
-          <BottomSheetContent>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[16px] font-bold text-text-primary">모임 장소</h2>
               <Switch
@@ -1440,20 +1470,18 @@ export default function InvitationCreateContainer({
                 )}
               </>
             )}            
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* 모임 옵션 편집 시트 */}
-        <BottomSheet open={optionsSheetOpen} onOpenChange={setOptionsSheetOpen}>
-          <BottomSheetContent title="모임 옵션">
+        <BottomSheet open={optionsSheetOpen} onOpenChange={setOptionsSheetOpen} title="모임 옵션">
             <div className="flex flex-col gap-3">
-              <TextInput
+              <Input
                 value={form.fee}
                 onChange={(e) => set({ fee: e.target.value })}
                 placeholder="회비 (예: 3만원)"
                 maxLength={100}
               />
-              <TextInput
+              <Input
                 value={form.dressCode}
                 onChange={(e) => set({ dressCode: e.target.value })}
                 placeholder="드레스코드 (예: 캐주얼)"
@@ -1465,9 +1493,43 @@ export default function InvitationCreateContainer({
                 placeholder="주차 안내"
                 rows={3}
               />
+              <div className="flex flex-col gap-1">
+                <label className="text-[13px] font-medium text-text-secondary">
+                  RSVP 응답 마감일 (선택)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={form.rsvpDeadline}
+                  onChange={(e) => set({ rsvpDeadline: e.target.value })}
+                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-[14px] text-text-primary"
+                />
+                <p className="text-[12px] text-text-tertiary">
+                  지나면 참석 응답을 받지 않아요. 비우면 마감 없음.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 rounded-md border border-border bg-surface px-4 py-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[15px] font-semibold text-text-primary">입장 비밀번호</p>
+                    <p className="text-[13px] text-text-tertiary">설정하면 링크로 들어와도 비밀번호를 입력해야 열려요</p>
+                  </div>
+                  <Switch
+                    checked={form.passwordEnabled}
+                    onCheckedChange={(v) => set({ passwordEnabled: v, ...(v ? {} : { accessPassword: '' }) })}
+                  />
+                </div>
+                {form.passwordEnabled && (
+                  <Input
+                    type="password"
+                    value={form.accessPassword}
+                    onChange={(e) => set({ accessPassword: e.target.value })}
+                    placeholder={editInvitation?.hasPassword ? '변경하려면 새 비밀번호 입력' : '비밀번호 (최대 50자)'}
+                    maxLength={50}
+                  />
+                )}
+              </div>
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         <div className="h-px bg-border" />
 
@@ -1518,8 +1580,7 @@ export default function InvitationCreateContainer({
         </div>
 
         {/* 미션 편집 시트 */}
-        <BottomSheet open={missionSheetOpen} onOpenChange={setMissionSheetOpen}>
-          <BottomSheetContent title="미션">
+        <BottomSheet open={missionSheetOpen} onOpenChange={setMissionSheetOpen} title="미션">
             <div className="flex flex-col gap-4">
               {missionEnabled && (
                 <>
@@ -1534,7 +1595,7 @@ export default function InvitationCreateContainer({
                       직접 입력
                     </p>
                     <div className="flex gap-2">
-                      <TextInput
+                      <Input
                         value={customInput}
                         onChange={(e) => setCustomInput(e.target.value)}
                         placeholder="미션 내용을 입력하세요 (최대 200자)"
@@ -1548,7 +1609,7 @@ export default function InvitationCreateContainer({
                         className="flex-1"
                       />
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="md"
                         onClick={addCustomMission}
                         disabled={
@@ -1629,12 +1690,10 @@ export default function InvitationCreateContainer({
                 완료
               </Button>
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* 배경색 편집 시트 */}
-        <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen}>
-          <BottomSheetContent title="배경색">
+        <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen} title="배경색">
             <div className="grid grid-cols-5 gap-2">
               {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
                 <button
@@ -1664,12 +1723,10 @@ export default function InvitationCreateContainer({
                 </button>
               ))}
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* 애니메이션 효과 편집 시트 */}
-        <BottomSheet open={animationSheetOpen} onOpenChange={setAnimationSheetOpen}>
-          <BottomSheetContent title="애니메이션 효과">
+        <BottomSheet open={animationSheetOpen} onOpenChange={setAnimationSheetOpen} title="애니메이션 효과">
             <div className="grid grid-cols-3 gap-2">
               {ANIMATIONS.map(({ id, label, emoji }) => (
                 <button
@@ -1697,12 +1754,10 @@ export default function InvitationCreateContainer({
                 </button>
               ))}
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
 
         {/* RSVP 편집 시트 */}
-        <BottomSheet open={rsvpSheetOpen} onOpenChange={setRsvpSheetOpen}>
-          <BottomSheetContent title="참석 버튼 꾸미기">
+        <BottomSheet open={rsvpSheetOpen} onOpenChange={setRsvpSheetOpen} title="참석 버튼 꾸미기">
             <div className="flex flex-col gap-3">
               {/* 팩 선택 드롭다운 */}
               <div className="relative">
@@ -1831,7 +1886,7 @@ export default function InvitationCreateContainer({
                   <p className="text-[13px] font-semibold text-text-secondary">
                     버튼 문구
                   </p>
-                  <TextInput
+                  <Input
                     value={rsvpOptions[editingRsvp].label}
                     onChange={(e) =>
                       setRsvpOptions((prev) => ({
@@ -1848,8 +1903,7 @@ export default function InvitationCreateContainer({
                 </div>
               )}
             </div>
-          </BottomSheetContent>
-        </BottomSheet>
+          </BottomSheet>
       </main>
 
       <div className="relative z-10 shrink-0">
@@ -1866,7 +1920,7 @@ export default function InvitationCreateContainer({
         />
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         open={showPublishConfirm}
         onOpenChange={(v) => {
           if (!isPending) setShowPublishConfirm(v);
@@ -1897,11 +1951,8 @@ export default function InvitationCreateContainer({
         }
       />
 
-      <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen}>
-        <BottomSheetContent
-          title="로그인이 필요해요"
-          description="초대장을 만들려면 먼저 로그인해주세요"
-        >
+      <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} title="로그인이 필요해요"
+          description="초대장을 만들려면 먼저 로그인해주세요">
           <div className="flex flex-col gap-2.5 pt-2">
             {(['kakao', 'naver', 'google'] as const).map((provider) => {
               const config = {
@@ -1942,8 +1993,7 @@ export default function InvitationCreateContainer({
               );
             })}
           </div>
-        </BottomSheetContent>
-      </BottomSheet>
+        </BottomSheet>
     </div>
   );
 }

@@ -1,14 +1,7 @@
 "use client";
 
-import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { TextInput } from "@/components/primitives/TextInput";
-import { TopAppBar } from "@/components/molecules/TopAppBar";
-import { BottomSheet, BottomSheetContent } from "@/components/molecules/BottomSheet";
-import { ShareOptionItem } from "@/components/molecules/ShareOptionItem";
-import { LocationCard } from "@/components/organisms/LocationCard";
-import { EmptyState } from "@/components/organisms/EmptyState";
-import { ErrorState } from "@/components/organisms/ErrorState";
+import { Icon, Button, TopAppBar, BottomSheet, SearchBar, EmptyState, ErrorState } from "@wara/ui";
+import { ShareOptionItem, LocationCard } from "@/components/domain";
 import { mobileMainCenter, mobileMainScroll } from "@/lib/mobilePageLayout";
 import { cn } from "@/lib/cn";
 
@@ -248,12 +241,12 @@ export const MapPage = ({
       <div className="relative mx-auto flex h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
         <TopAppBar className="shrink-0" title="장소 검색" onBack={onBack} />
         <div className="px-page py-3">
-          <TextInput
-            leftIcon="search"
+          <SearchBar
             placeholder="장소를 검색해보세요"
             autoFocus={state === "searchTyping"}
             value={searchQuery}
             onChange={(e) => onSearchQueryChange?.(e.target.value)}
+            onClear={() => onSearchQueryChange?.("")}
           />
         </div>
         <main
@@ -278,16 +271,18 @@ export const MapPage = ({
           ) : state === "searchResults" ? (
             <ul className="divide-y divide-border">
               {(searchResults ?? []).map((r) => (
-                <li
-                  key={r.placeId}
-                  className="flex cursor-pointer items-center gap-3 px-3 py-3 active:bg-surface"
-                  onClick={() => onSelectPlace?.(r)}
-                >
-                  <Icon name="map-pin" size="sm" color="inactive" decorative />
-                  <div className="min-w-0">
-                    <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
-                    <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
-                  </div>
+                <li key={r.placeId}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectPlace?.(r)}
+                    className="flex w-full items-center gap-3 px-3 py-3 text-left active:bg-surface focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
+                  >
+                    <Icon name="map-pin" size="sm" color="inactive" decorative />
+                    <div className="min-w-0">
+                      <p className="truncate text-[14px] text-text-primary">{r.placeName}</p>
+                      <p className="truncate text-[12px] text-text-secondary">{r.address}</p>
+                    </div>
+                  </button>
                 </li>
               ))}
               {isLoadingMoreSearch && (
@@ -372,6 +367,8 @@ export const MapPage = ({
 
         {/* 내 위치 버튼 */}
         <button
+          type="button"
+          aria-label="내 위치로 이동"
           className="absolute right-4 top-4 z-30 inline-flex size-11 items-center justify-center rounded-full bg-surface shadow-md"
           onClick={onLocate}
         >
@@ -391,40 +388,43 @@ export const MapPage = ({
       </div>
 
       {/* 길찾기 BottomSheet */}
-      <BottomSheet open={isDirectionOpen} onOpenChange={onCloseDirections ?? (() => {})}>
-        <BottomSheetContent contained title="길찾기" description="원하는 지도 앱을 선택해주세요">
-          {state === "noMapAppGuide" ? (
-            <EmptyState
-              icon="alert-triangle"
-              title="설치된 지도 앱이 없어요"
-              description="앱스토어에서 지도 앱을 설치해주세요"
+      <BottomSheet
+        open={isDirectionOpen}
+        onOpenChange={onCloseDirections ?? (() => {})}
+        title="길찾기"
+        description="원하는 지도 앱을 선택해주세요"
+      >
+        {state === "noMapAppGuide" ? (
+          <EmptyState
+            icon="alert-triangle"
+            title="설치된 지도 앱이 없어요"
+            description="앱스토어에서 지도 앱을 설치해주세요"
+          />
+        ) : (
+          <div className="flex flex-col gap-1">
+            <ShareOptionItem
+              icon="map"
+              title="카카오맵"
+              iconBg="bg-yellow-300"
+              iconColor="text-gray-900"
+              onClick={onOpenKakaoMap}
             />
-          ) : (
-            <div className="flex flex-col gap-1">
-              <ShareOptionItem
-                icon="map"
-                title="카카오맵"
-                iconBg="bg-yellow-300"
-                iconColor="text-gray-900"
-                onClick={onOpenKakaoMap}
-              />
-              <ShareOptionItem
-                icon="map"
-                title="네이버 지도"
-                iconBg="bg-green-50"
-                iconColor="text-green-600"
-                onClick={onOpenNaverMap}
-              />
-              <ShareOptionItem
-                icon="map"
-                title="구글 지도"
-                iconBg="bg-blue-100"
-                iconColor="text-blue-500"
-                onClick={onOpenGoogleMap}
-              />
-            </div>
-          )}
-        </BottomSheetContent>
+            <ShareOptionItem
+              icon="map"
+              title="네이버 지도"
+              iconBg="bg-green-50"
+              iconColor="text-green-600"
+              onClick={onOpenNaverMap}
+            />
+            <ShareOptionItem
+              icon="map"
+              title="구글 지도"
+              iconBg="bg-blue-100"
+              iconColor="text-blue-500"
+              onClick={onOpenGoogleMap}
+            />
+          </div>
+        )}
       </BottomSheet>
     </div>
   );

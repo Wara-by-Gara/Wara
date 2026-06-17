@@ -2,9 +2,9 @@
 
 import { forwardRef, useState } from "react";
 import { Icon } from "@/components/icons";
-import { Button } from "@/components/primitives/Button";
-import { TextInput } from "@/components/primitives/TextInput";
-import { Switch } from "@/components/primitives/Switch";
+import { Button } from "@wara/ui";
+import { Input } from "@wara/ui";
+import { Switch } from "@wara/ui";
 import { cn } from "@/lib/cn";
 
 export interface SelectedPlace {
@@ -89,12 +89,17 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
 
         {mode === "search" && (
           <>
-            <TextInput
-              leftIcon="search"
-              placeholder="장소 검색"
-              value={query ?? ""}
-              onChange={(e) => onQueryChange?.(e.target.value)}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+                <Icon name="search" size="sm" color="currentColor" decorative />
+              </span>
+              <Input
+                className="pl-9"
+                placeholder="장소 검색"
+                value={query ?? ""}
+                onChange={(e) => onQueryChange?.(e.target.value)}
+              />
+            </div>
             {state === "loading" && (
               <p className="text-[13px] text-text-tertiary">검색 중…</p>
             )}
@@ -128,12 +133,17 @@ export const LocationSelector = forwardRef<HTMLDivElement, LocationSelectorProps
         )}
 
         {mode === "manual" && (
-          <TextInput
-            leftIcon="map-pin"
-            placeholder={manualPlaceholder}
-            value={manualAddress ?? ""}
-            onChange={(e) => onManualAddressChange?.(e.target.value)}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+              <Icon name="map-pin" size="sm" color="currentColor" decorative />
+            </span>
+            <Input
+              className="pl-9"
+              placeholder={manualPlaceholder}
+              value={manualAddress ?? ""}
+              onChange={(e) => onManualAddressChange?.(e.target.value)}
+            />
+          </div>
         )}
 
         {!hideToggle && (

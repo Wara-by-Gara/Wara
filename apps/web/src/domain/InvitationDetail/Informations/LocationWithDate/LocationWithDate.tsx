@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LocationCard } from "@/components/organisms/LocationCard";
-import { InvitationInfoCard } from "@/components/organisms/InvitationInfoCard/InvitationInfoCard";
-import { LocationWeatherInline } from "@/components/organisms/WeatherCard";
+import { LocationCard, InvitationInfoCard, LocationWeatherInline } from "@/components/domain";
 import { useWeather } from "@/hooks/useWeather";
 import { toWeatherCardCondition } from "@/lib/api/weather";
 import { ROUTES } from "@/constants/routes";

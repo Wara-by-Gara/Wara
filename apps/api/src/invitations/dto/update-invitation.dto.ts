@@ -16,6 +16,9 @@ export const UpdateInvitationSchema = z
       .optional(),
     templateId: z.string().optional().nullable(),
   eventStartAt: z.coerce.date().optional().nullable(),
+  rsvpDeadlineAt: z.coerce.date().optional().nullable(),
+  // 빈 문자열/null = 비밀번호 제거, 값 있으면 설정/변경 (서버에서 해시)
+  accessPassword: z.string().max(50).optional().nullable(),
   isMissionEnabled: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   category: z.string().max(20).optional(),

@@ -1,4 +1,13 @@
-# Wara 디자인 시스템 — Luma 기반
+# Wara 디자인 시스템 — Luma 기반 (DEPRECATED)
+
+> ⚠️ **이 문서는 구(舊) Luma 기반 디자인 시스템 설명으로, Partiful 기반 라이트 리디자인으로 대체되었습니다.**
+> 현재 SoT는 다음을 참고하세요:
+> - `docs/design-system/01-direction.md` — 디자인 방향
+> - `docs/design-system/02-partiful-reference.md` — Partiful 레퍼런스 (컴포넌트 상세)
+> - `docs/design-system/03-component-system.md` — 컴포넌트 인벤토리·레거시 매핑·키보드/접근성·마이그레이션 현황
+> - 토큰 SoT: `packages/tokens` (`@wara/tokens`), 컴포넌트 SoT: `packages/ui` (`@wara/ui`)
+>
+> 아래 내용은 아직 마이그레이션되지 않은 레거시 컴포넌트의 참고용으로만 남겨둡니다.
 
 > 모바일 중심 디지털 초대장 서비스 Wara의 디자인 토큰과 기본 규칙.
 > 컬러/타이포그래피 시각 확인: Storybook `Docs/Colors`, `Docs/Typography`

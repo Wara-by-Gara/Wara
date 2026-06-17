@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import Image from "next/image";
 import { pageStoryParameters } from "../../../.storybook/pageStoryParameters";
-import { Avatar } from "@/components/primitives/Avatar";
+import { Avatar } from "@wara/ui";
 import { Icon } from "@/components/icons";
 
 /* ─────────────────────────────────────────────────────────
@@ -555,7 +555,7 @@ function MyPageScreen({ state = "default" }: MyPageScreenProps) {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="text-[15px]">📍</span>
-            <span className="text-[14px] font-bold text-text-primary">Place log</span>
+            <span className="text-[14px] font-bold text-text-primary">Photo log</span>
           </div>
           <button
             type="button"

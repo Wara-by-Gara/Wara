@@ -1,4 +1,4 @@
-import { Avatar } from "@/components/primitives/Avatar";
+import { Avatar, Icon } from "@wara/ui";
 
 type Props = {
   participants: {
@@ -28,19 +28,25 @@ export default function ParticipantAvatarRow({
     <div className="-mx-4 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex w-max items-center gap-2 px-4 py-1">
         {sorted.map(({ participant, user }) => {
+          const isHost = participant.memberRole === "HOST";
           return (
-            <Avatar
-              key={participant.id}
-              src={
-                participant.userId === currentUserId
-                  ? (currentUserProfileImageUrl ?? undefined)
-                  : (user.profileImageUrl ?? undefined)
-              }
-              alt={user.name ?? user.nickname ?? ''}
-              size="lg"
-              name={user.name ?? user.nickname ?? undefined}
-              host={participant.memberRole === "HOST"}
-            />
+            <span key={participant.id} className="relative shrink-0">
+              <Avatar
+                src={
+                  participant.userId === currentUserId
+                    ? (currentUserProfileImageUrl ?? undefined)
+                    : (user.profileImageUrl ?? undefined)
+                }
+                alt={user.name ?? user.nickname ?? ''}
+                size="lg"
+                name={user.name ?? user.nickname ?? undefined}
+              />
+              {isHost ? (
+                <span className="absolute -right-0.5 -top-0.5 inline-flex size-4 items-center justify-center rounded-full bg-yellow-400 text-white ring-2 ring-surface">
+                  <Icon name="crown" size="xs" color="currentColor" decorative />
+                </span>
+              ) : null}
+            </span>
           );
         })}
       </div>
