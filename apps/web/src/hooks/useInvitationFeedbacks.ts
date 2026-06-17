@@ -53,7 +53,9 @@ export function useInvitationFeedback(invitationId: string) {
         const contentType = resolveContentType(attachedFile);
         if (contentType) {
           const { presignedUrl, key } = await getPresignedUrl(invitationId, attachedFile.name, contentType);
-          await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: attachedFile });
+          const putRes = await fetch(presignedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: attachedFile });
+          // fetch는 4xx/5xx에 throw하지 않음 — 실패해도 진행하면 S3 객체 없는 사진이 등록됨
+          if (!putRes.ok) throw new Error('PHOTO_UPLOAD_FAILED');
           const photo = await registerPhoto(invitationId, key);
           attachedPhotoId = photo.id;
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations.photos(invitationId) });

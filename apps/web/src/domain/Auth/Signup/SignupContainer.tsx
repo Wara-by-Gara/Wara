@@ -93,7 +93,9 @@ export function SignupContainer() {
       const blob = await getCroppedImageBlob(cropImageSrc, croppedAreaPixels);
       const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
       const { presignedUrl, key } = await getProfileImagePresignedUrl(file.name, "image/jpeg");
-      await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: file });
+      const putRes = await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: file });
+      // fetch는 4xx/5xx에 throw하지 않음 — 실패해도 진행하면 S3 객체 없는 key가 프로필에 저장됨
+      if (!putRes.ok) throw new Error("IMAGE_UPLOAD_FAILED");
       setProfileImageUrl(key);
       setProfileImagePreview(URL.createObjectURL(blob));
       setCropImageSrc(null);

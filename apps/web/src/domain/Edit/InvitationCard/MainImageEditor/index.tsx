@@ -242,11 +242,13 @@ export default function MainImageEditor({
 
       const { presignedUrl, key } = await getInvitationImagePresignedUrl(fileName, UPLOAD_CONTENT_TYPE);
 
-      await fetch(presignedUrl, {
+      const putRes = await fetch(presignedUrl, {
         method: 'PUT',
         body: blob,
         headers: { 'Content-Type': UPLOAD_CONTENT_TYPE },
       });
+      // fetch는 4xx/5xx에 throw하지 않음 — 실패해도 진행하면 S3 객체 없는 key가 저장됨 (catch에서 에러 표시)
+      if (!putRes.ok) throw new Error('IMAGE_UPLOAD_FAILED');
 
       localStorage.setItem(TEMP_KEY(invitationId), key);
 
