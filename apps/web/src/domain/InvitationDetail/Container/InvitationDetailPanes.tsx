@@ -44,7 +44,7 @@ export function InvitationDetailPanes({ cover, left, rsvp, feed, rail }: Props) 
 
       {/* 우측: 메타 + 피드 (스크롤) */}
       <div className="contents lg:col-start-2 lg:flex lg:flex-col lg:gap-8">
-        <div className="flex flex-col gap-5 max-lg:order-2 max-lg:mt-10">{left}</div>
+        <div className="flex flex-col gap-5 max-lg:order-2">{left}</div>
         {feed ? <div className="max-lg:order-4 max-lg:mt-3">{feed}</div> : null}
       </div>
 
