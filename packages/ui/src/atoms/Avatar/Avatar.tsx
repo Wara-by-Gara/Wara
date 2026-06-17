@@ -74,6 +74,11 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   // Partiful식: 이니셜이 있으면 사용자별 비비드 그라데이션 + 모노그램
   const grad = initials ? pickAvatarGradient(name ?? alt ?? initials) : null;
 
+  // 실제 로드 가능한 URL만 이미지로 사용한다. `dicebear:seed` 등 스킴이 아닌
+  // 문자열을 <img src>로 넘기면 로드 실패 → fallback 깜빡임/깨진 아바타가 된다.
+  const imageSrc =
+    src && /^(https?:|data:|blob:)/i.test(src) ? src : undefined;
+
   return (
     <RAvatar.Root
       ref={ref}
@@ -85,15 +90,15 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
       style={grad ? { background: `linear-gradient(135deg, ${grad.from}, ${grad.to})`, color: grad.fg } : undefined}
       {...props}
     >
-      {src ? (
+      {imageSrc ? (
         <RAvatar.Image
-          src={src}
+          src={imageSrc}
           alt={alt ?? name ?? ""}
           className="size-full object-cover"
         />
       ) : null}
       <RAvatar.Fallback
-        delayMs={src ? 200 : 0}
+        delayMs={imageSrc ? 200 : 0}
         className="flex size-full items-center justify-center"
       >
         {initials || (
