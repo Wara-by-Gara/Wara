@@ -44,58 +44,69 @@ export const InvitationCardSkeleton = () => (
 );
 
 export const InvitationDetailSkeleton = () => (
-  <div className="flex flex-col gap-6">
-    {/* 커버 — 실제 커버 비율(약 4:5)에 맞춘 적당한 크기 (전체를 덮는 거대 블록 X) */}
-    <Skeleton className="mx-auto aspect-[4/5] w-full max-w-xs" radius="xl" />
-
-    {/* 제목 + 일정 */}
-    <div className="flex flex-col gap-2.5">
-      <Skeleton className="h-8 w-2/3" />
-      <Skeleton className="h-5 w-2/5" />
-    </div>
-
-    {/* 설명 박스 */}
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-11/12" />
-      <Skeleton className="h-4 w-2/3" />
-    </div>
-
-    {/* 정보 (호스트·장소·정원·링크) — 아이콘 + 라벨/값 행 */}
-    <div className="flex flex-col gap-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3">
-          <Skeleton className="size-9 shrink-0" radius="full" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <Skeleton className="h-3 w-14" />
-            <Skeleton className={cn("h-4", i % 2 ? "w-1/2" : "w-2/3")} />
+  // 로드된 상세와 동일하게: 모바일=단일 컬럼(커버→메타→RSVP→피드),
+  // PC(lg)=좌(커버+RSVP) / 우(제목·정보·참석자·피드) 2-pane
+  <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-x-10">
+    {/* 좌(lg): 커버 + RSVP */}
+    <div className="contents lg:flex lg:flex-col lg:gap-5 lg:col-start-1">
+      <div className="max-lg:order-1">
+        <Skeleton className="aspect-[4/5] w-full" radius="xl" />
+      </div>
+      <div className="flex justify-center gap-6 max-lg:order-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <Skeleton className="size-16" radius="full" />
+            <Skeleton className="h-3 w-12" />
           </div>
-        </div>
-      ))}
-    </div>
-
-    {/* 참석자 — 제목 + 겹친 아바타 행 */}
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-4 w-28" />
-      <div className="flex -space-x-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="size-10 ring-2 ring-surface" radius="full" />
         ))}
       </div>
     </div>
 
-    {/* RSVP — 이모지 원 3개 + 라벨 */}
-    <div className="flex justify-center gap-6">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex flex-col items-center gap-2">
-          <Skeleton className="size-16" radius="full" />
-          <Skeleton className="h-3 w-12" />
+    {/* 우(lg): 제목·설명·정보·참석자 + 피드 */}
+    <div className="contents lg:flex lg:flex-col lg:gap-6 lg:col-start-2">
+      <div className="flex flex-col gap-6 max-lg:order-2">
+        {/* 제목 + 일정 */}
+        <div className="flex flex-col gap-2.5">
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-5 w-2/5" />
         </div>
-      ))}
-    </div>
 
-    {/* 사진 피드 + 댓글 */}
-    <InvitationFeedSkeleton />
+        {/* 설명 박스 */}
+        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+
+        {/* 정보 (호스트·장소·정원·링크) — 아이콘 + 라벨/값 행 */}
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="size-9 shrink-0" radius="full" />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className={cn("h-4", i % 2 ? "w-1/2" : "w-2/3")} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 참석자 — 제목 + 겹친 아바타 행 */}
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-4 w-28" />
+          <div className="flex -space-x-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="size-10 ring-2 ring-surface" radius="full" />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 사진 피드 + 댓글 */}
+      <div className="max-lg:order-4">
+        <InvitationFeedSkeleton />
+      </div>
+    </div>
   </div>
 );
 

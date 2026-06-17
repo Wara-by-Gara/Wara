@@ -303,7 +303,13 @@ export class ConversationsService {
       title: me.alias ?? partnerName,
       memberCount: 2,
       partner: partner
-        ? { id: partner.id, name: partnerName, avatarUrl: partner.avatarUrl }
+        ? {
+            id: partner.id,
+            name: partnerName,
+            avatarUrl: partner.avatarUrl
+              ? await this.s3Service.getViewPresignedUrl(partner.avatarUrl)
+              : null,
+          }
         : null,
       // 내가 보낸 메시지의 읽음 표시용 — 상대가 마지막으로 읽은 시각
       partnerLastReadAt: partner?.lastReadAt ?? null,
@@ -340,6 +346,18 @@ export class ConversationsService {
       byConv.set(p.conversationId, list);
     }
 
+    // 아바타 presign (S3 키 → 조회 URL, 외부 URL·dicebear는 그대로). 중복 키는 1회만.
+    const avatarKeys = [
+      ...new Set(participants.map((p) => p.avatarUrl).filter((u): u is string => !!u)),
+    ];
+    const avatarMap = new Map<string, string>();
+    await Promise.all(
+      avatarKeys.map(async (k) => {
+        avatarMap.set(k, await this.s3Service.getViewPresignedUrl(k));
+      }),
+    );
+    const resolveAvatar = (k: string | null) => (k ? (avatarMap.get(k) ?? null) : null);
+
     return rows.map((r) => {
       const members = byConv.get(r.id) ?? [];
       const others = members.filter((m) => m.userId !== userId);
@@ -363,12 +381,12 @@ export class ConversationsService {
         // 우선순위: 내 별명 > (그룹) 공유 이름/자동 · (1:1) 상대 이름
         // alias가 빈 문자열("")이어도 base로 폴백되도록 ?? 대신 truthy 검사.
         title: r.alias?.trim() || base,
-        avatarUrl: isGroup ? null : (others[0]?.avatarUrl ?? null),
+        avatarUrl: isGroup ? null : resolveAvatar(others[0]?.avatarUrl ?? null),
         partner: partnerMember
           ? {
               id: partnerMember.userId,
               name: resolveName(partnerMember),
-              avatarUrl: partnerMember.avatarUrl,
+              avatarUrl: resolveAvatar(partnerMember.avatarUrl),
             }
           : null,
         memberCount: isGroup
@@ -661,14 +679,30 @@ export class ConversationsService {
     }
 
     const reactors = await this.repository.getMessageReactionsWithUsers(messageId);
-    return { reactors };
+    const resolved = await Promise.all(
+      reactors.map(async (r) => ({
+        ...r,
+        avatarUrl: r.avatarUrl
+          ? await this.s3Service.getViewPresignedUrl(r.avatarUrl)
+          : null,
+      })),
+    );
+    return { reactors: resolved };
   }
 
   // 대화방 참여자 목록 (멤버/초대 패널용)
   async getParticipants(userId: string, conversationId: string) {
     await this.assertMember(conversationId, userId);
     const participants = await this.repository.listParticipants(conversationId);
-    return { participants };
+    const resolved = await Promise.all(
+      participants.map(async (p) => ({
+        ...p,
+        avatarUrl: p.avatarUrl
+          ? await this.s3Service.getViewPresignedUrl(p.avatarUrl)
+          : null,
+      })),
+    );
+    return { participants: resolved };
   }
 
   // 대화방 사진 갤러리 — 이미지 메시지의 조회용 presigned URL 생성

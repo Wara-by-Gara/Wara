@@ -20,7 +20,7 @@ import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
 import { TextBlastSheet } from '@/domain/InvitationDetail/TextBlast/TextBlastSheet';
 import { QuestionnaireSheet } from '@/domain/InvitationDetail/Questionnaire/QuestionnaireSheet';
 import { FlyerSheet } from '@/domain/InvitationDetail/Flyer/FlyerSheet';
-import { InvitationCover } from '@/components/domain';
+import { InvitationCover, ParticipantProfileModal } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
@@ -76,6 +76,7 @@ export default function HostView({
   const [flyerOpen, setFlyerOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [profileTarget, setProfileTarget] = useState<{ userId: string; name?: string; avatarUrl?: string } | null>(null);
   const { mutate: cloneInvitation, isPending: isCloning } = useCloneInvitation();
 
   const handleClone = () => {
@@ -227,7 +228,7 @@ export default function HostView({
                 <header className="flex flex-col gap-2 text-left">
                   <h1
                     className={cn(
-                      'line-clamp-2 break-words text-[28px] font-bold leading-[1.15] tracking-tight lg:text-[34px]',
+                      'line-clamp-2 break-words pb-0.5 text-[28px] font-bold leading-[1.35] tracking-tight lg:text-[34px]',
                       isDarkBg ? 'text-white' : 'text-text',
                       fontClass,
                     )}
@@ -330,6 +331,7 @@ export default function HostView({
                       currentUserProfileImageUrl={
                         invitation.host?.profileImageUrl ?? null
                       }
+                      onSelect={setProfileTarget}
                     />
                   </section>
                 )}
@@ -374,6 +376,14 @@ export default function HostView({
               }}
             />
           }
+        />
+
+        <ParticipantProfileModal
+          open={!!profileTarget}
+          onOpenChange={(open) => !open && setProfileTarget(null)}
+          userId={profileTarget?.userId}
+          name={profileTarget?.name}
+          avatarUrl={profileTarget?.avatarUrl}
         />
 
         <ShareBottomSheet

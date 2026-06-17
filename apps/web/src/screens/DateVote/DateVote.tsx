@@ -180,11 +180,12 @@ function VoterChip({ voter }: { voter: VoterEntry }) {
 }
 
 // ── Vote Table ─────────────────────────────────────────────────────────────
-function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
+function VoteTable({ slots, myVotes, onVote, topSlotIds, isTie, showVoters }: {
   slots: DateSlot[];
   myVotes: MyVotes;
   onVote: (id: string, t: VoteResponse) => void;
   topSlotIds?: Set<string>;
+  isTie?: boolean;
   showVoters?: boolean;
 }) {
   const groups = groupByDate(slots);
@@ -212,7 +213,7 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
               <div key={slot.id} className={cn("border-b border-border last:border-0 transition-colors", isTop ? "bg-emerald-50/40" : myV ? "bg-surface-muted" : "bg-surface")}>
                 <div className="grid grid-cols-[1fr_52px_52px_52px] items-center gap-0 px-4 py-3">
                   <div className="flex flex-col gap-0.5">
-                    {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ 현재 최다</span>}
+                    {isTop && <span className="text-[10px] font-bold text-emerald-600">✦ {isTie ? "공동 1위" : "현재 최다"}</span>}
                     <span className={cn("text-[15px] font-bold", isTop ? "text-emerald-700" : "text-text")}>{slot.time}</span>
                     <span className={cn("text-[11px]", isTop ? "text-emerald-700/80" : "text-text-disabled")}>응답 {total}명</span>
                   </div>
@@ -238,14 +239,14 @@ function VoteTable({ slots, myVotes, onVote, topSlotIds, showVoters }: {
 }
 
 // ── Result Card ────────────────────────────────────────────────────────────
-function ResultCard({ slot, showNames, isConfirmed, isTop, onConfirm }: { slot: DateSlot; showNames: boolean; isConfirmed: boolean; isTop: boolean; onConfirm?: () => void }) {
+function ResultCard({ slot, showNames, isConfirmed, isTop, isTie, onConfirm }: { slot: DateSlot; showNames: boolean; isConfirmed: boolean; isTop: boolean; isTie?: boolean; onConfirm?: () => void }) {
   const total = slot.votes.circle + slot.votes.triangle + slot.votes.cross;
   return (
     <div className={cn("rounded-md border p-4", isConfirmed ? "border-primary bg-primary/5 ring-2 ring-primary/20" : isTop ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-surface")}>
       <div className="flex items-start justify-between gap-2">
         <div>
           {isConfirmed && <span className="text-[11px] font-extrabold uppercase tracking-widest text-primary">✓ 확정</span>}
-          {isTop && !isConfirmed && <span className="text-[11px] font-bold text-emerald-600">✦ 최다 응답</span>}
+          {isTop && !isConfirmed && <span className="text-[11px] font-bold text-emerald-600">✦ {isTie ? "공동 1위" : "최다 응답"}</span>}
           <p className="text-[15px] font-bold text-text">{slot.date}</p>
           <p className="text-[13px] text-text-muted">{slot.time}</p>
         </div>
@@ -876,16 +877,14 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
   const showNames = state === "resultsPublic" || (state === "confirmed" && !poll?.isAnonymous);
   const isConfirmedView = state === "confirmed";
 
-  // 현재 최다: 좋아요(good) 최다 슬롯 "1개"만. 동점이면 안 됨(bad) 적은 순 → 먼저 나온 슬롯 순으로
-  // 단일 결정해 배지가 여러 슬롯에 중복으로 뜨지 않게 한다.
-  const topSlotId = displaySlots.reduce<DateSlot | null>((best, s) => {
-    if (s.votes.circle === 0) return best;
-    if (!best) return s;
-    if (s.votes.circle !== best.votes.circle) return s.votes.circle > best.votes.circle ? s : best;
-    if (s.votes.cross !== best.votes.cross) return s.votes.cross < best.votes.cross ? s : best;
-    return best; // 완전 동률이면 먼저 나온 슬롯 유지
-  }, null)?.id ?? null;
-  const topSlotIds = topSlotId ? new Set([topSlotId]) : new Set<string>();
+  // 현재 최다: 좋아요(good)가 가장 많은 슬롯들. 동점이면 모두 표시 → '공동 1위'
+  const maxCircle = displaySlots.reduce((m, s) => Math.max(m, s.votes.circle), 0);
+  const topSlotIds = new Set<string>(
+    maxCircle > 0
+      ? displaySlots.filter((s) => s.votes.circle === maxCircle).map((s) => s.id)
+      : [],
+  );
+  const isTopTie = topSlotIds.size > 1;
 
   // 마감 시간 표시 — 서버는 "마감 없음"을 2099-12-31로 저장 (date-vote.service.ts:52)
   const isNoDeadline = poll?.closesAt && new Date(poll.closesAt).getFullYear() >= 2099;
@@ -1034,6 +1033,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
               myVotes={myVotes}
               onVote={handleVote}
               topSlotIds={topSlotIds}
+              isTie={isTopTie}
               showVoters={!poll?.isAnonymous}
             />
             <p className="text-center text-[12px] text-text-disabled">
@@ -1050,6 +1050,7 @@ export const DateVote = ({ invitationId, state: stateProp, onBack }: DateVotePro
               <ResultCard key={slot.id} slot={slot} showNames={showNames}
                 isConfirmed={isConfirmedView && slot.id === poll?.confirmedSlotId}
                 isTop={topSlotIds.has(slot.id) && !isConfirmedView}
+                isTie={isTopTie}
                 onConfirm={memberRole === 'HOST' && !isConfirmedView && invitationId
                   ? () => setConfirmSlotId(slot.id)
                   : undefined}

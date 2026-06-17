@@ -50,12 +50,14 @@ function isSameDay(a: string, b: string): boolean {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
-    weekday: "short",
   });
+  const weekday = d.toLocaleDateString("ko-KR", { weekday: "short" });
+  return `${date} (${weekday})`;
 }
 
 // 메시지 본문 내 URL을 클릭 가능한 링크로 변환
@@ -251,12 +253,22 @@ export const ChatRoom = ({ id }: ChatRoomProps) => {
     createdAt: m.createdAt,
   }));
 
-  // 새 메시지/입장 시 맨 아래로 스크롤
+  // 입장/새 메시지 시 항상 맨 아래로 (최신 메시지 노출). 레이아웃·이미지 로드 후에도 한 번 더 보정.
   const lastMessageId = messages[messages.length - 1]?.id;
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [lastMessageId]);
+    if (!el) return;
+    const toBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    toBottom();
+    const raf = requestAnimationFrame(toBottom);
+    const t = setTimeout(toBottom, 150);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+  }, [id, lastMessageId]);
 
   // 키보드 등장 등으로 viewport가 줄면 최신 메시지가 가려질 수 있다.
   // 이미 하단 근처를 보고 있을 때만 하단 고정 — 위로 스크롤해 과거를 보는 중이면 방해하지 않는다.

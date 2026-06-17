@@ -29,7 +29,7 @@ export default function InvitationDetailContainer({ invitationId }: { invitation
     return (
       <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:h-auto lg:min-h-0 lg:max-w-none">
         <TopAppBar className="shrink-0 lg:hidden" onBack={() => router.back()} />
-        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2 lg:mx-auto lg:w-full lg:max-w-2xl lg:pt-8">
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-page pb-6 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6 lg:pt-10">
           <InvitationDetailSkeleton />
         </main>
       </div>

@@ -9,7 +9,7 @@ import { TopAppBar } from "@wara/ui";
 import { BottomSheet } from "@wara/ui";
 import { SocialLoginButton } from "@/components/primitives/SocialLoginButton";
 import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
-import { InvitationCover } from "@/components/domain";
+import { InvitationCover, ParticipantProfileModal } from "@/components/domain";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
 import type { AnimationId } from "@/domain/InvitationCreate/constants";
@@ -51,6 +51,7 @@ export default function GuestView({ invitationId, invitation, me, participantsDa
   const router = useRouter();
   const [loginSheetOpen, setLoginSheetOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [profileTarget, setProfileTarget] = useState<{ userId: string; name?: string; avatarUrl?: string } | null>(null);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
 const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
@@ -177,7 +178,7 @@ const canViewFeed = !!myParticipant;
               <header className="flex flex-col gap-2 text-left">
                 <h1
                   className={cn(
-                    "line-clamp-2 break-words text-[28px] font-bold leading-[1.15] tracking-tight lg:text-[34px]",
+                    "line-clamp-2 break-words pb-0.5 text-[28px] font-bold leading-[1.35] tracking-tight lg:text-[34px]",
                     isDarkBg ? "text-white" : "text-text",
                     fontClass,
                   )}
@@ -257,6 +258,7 @@ const canViewFeed = !!myParticipant;
                     participants={attendingParticipants}
                     currentUserId={me?.id ?? null}
                     currentUserProfileImageUrl={me?.profileImageUrl ?? null}
+                    onSelect={setProfileTarget}
                   />
                 </section>
               )}
@@ -331,6 +333,14 @@ const canViewFeed = !!myParticipant;
       />
 
       <ShareBottomSheet invitationId={invitationId} open={shareSheetOpen} onOpenChange={setShareSheetOpen} />
+
+      <ParticipantProfileModal
+        open={!!profileTarget}
+        onOpenChange={(open) => !open && setProfileTarget(null)}
+        userId={profileTarget?.userId}
+        name={profileTarget?.name}
+        avatarUrl={profileTarget?.avatarUrl}
+      />
 
 
 <BottomSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} title="로그인이 필요해요" description="참석 응답을 남기려면 먼저 로그인해주세요">

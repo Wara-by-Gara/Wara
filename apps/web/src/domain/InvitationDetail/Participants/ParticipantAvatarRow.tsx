@@ -11,12 +11,15 @@ type Props = {
   }[];
   currentUserId?: string | null;
   currentUserProfileImageUrl?: string | null;
+  /** 아바타 클릭 시 프로필 모달 등을 띄우기 위한 콜백 */
+  onSelect?: (info: { userId: string; name?: string; avatarUrl?: string }) => void;
 };
 
 export default function ParticipantAvatarRow({
   participants,
   currentUserId,
   currentUserProfileImageUrl,
+  onSelect,
 }: Props) {
   const sorted = [...participants].sort((a, b) => {
     if (a.participant.memberRole === "HOST") return -1;
@@ -29,24 +32,28 @@ export default function ParticipantAvatarRow({
       <div className="flex w-max items-center gap-2 px-4 py-1">
         {sorted.map(({ participant, user }) => {
           const isHost = participant.memberRole === "HOST";
+          const avatarUrl =
+            participant.userId === currentUserId
+              ? (currentUserProfileImageUrl ?? undefined)
+              : (user.profileImageUrl ?? undefined);
+          const name = user.name ?? user.nickname ?? undefined;
           return (
-            <span key={participant.id} className="relative shrink-0">
-              <Avatar
-                src={
-                  participant.userId === currentUserId
-                    ? (currentUserProfileImageUrl ?? undefined)
-                    : (user.profileImageUrl ?? undefined)
-                }
-                alt={user.name ?? user.nickname ?? ''}
-                size="lg"
-                name={user.name ?? user.nickname ?? undefined}
-              />
+            <button
+              key={participant.id}
+              type="button"
+              aria-label={name ?? "참석자"}
+              onClick={() =>
+                onSelect?.({ userId: participant.userId, name, avatarUrl })
+              }
+              className="relative shrink-0 rounded-full transition-transform active:scale-95"
+            >
+              <Avatar src={avatarUrl} alt={name ?? ''} size="lg" name={name} />
               {isHost ? (
-                <span className="absolute -right-0.5 -top-0.5 inline-flex size-4 items-center justify-center rounded-full bg-yellow-400 text-white ring-2 ring-surface">
+                <span className="absolute -bottom-0.5 -right-0.5 inline-flex size-4 items-center justify-center rounded-full bg-yellow-400 text-white ring-2 ring-surface">
                   <Icon name="crown" size="xs" color="currentColor" decorative />
                 </span>
               ) : null}
-            </span>
+            </button>
           );
         })}
       </div>
