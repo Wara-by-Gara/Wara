@@ -82,7 +82,7 @@ export const MyPage = ({
     return (
       <div className="relative mx-auto flex h-full min-h-full w-full max-w-md flex-col overflow-x-hidden bg-surface-muted lg:max-w-none">
         <StickyHeader title="마이페이지" />
-        <main className="relative z-10 min-h-0 flex-1 overflow-y-auto">
+        <main className="relative z-10 min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-5xl">
           <ProfileSkeleton />
         </main>
       </div>
