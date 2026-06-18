@@ -15,6 +15,10 @@ export const DESIGN_BG_THEMES = [
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
   { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy" },
+  { id: "galaxy", label: "갤럭시", cls: "bg-invite-galaxy" },
+  { id: "water", label: "워터", cls: "bg-invite-water" },
+  { id: "hologram", label: "홀로그램", cls: "bg-invite-hologram" },
+  { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow" },
 ] as const;
 
 export type DesignBgColor =
@@ -88,6 +92,11 @@ export const ANIMATIONS = [
   { id: "bubble", label: "비눗방울", emoji: "🫧" },
   { id: "leaf", label: "낙엽", emoji: "🍂" },
   { id: "confetti", label: "컨페티", emoji: "🎉" },
+  { id: "paper", label: "색종이", emoji: "🎊" },
+  { id: "crystal", label: "크리스탈", emoji: "💎" },
+  { id: "bokeh", label: "빛망울", emoji: "✨" },
+  { id: "stream", label: "보라빛 라인", emoji: "🌌" },
+  { id: "firework", label: "폭죽", emoji: "🎆" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];

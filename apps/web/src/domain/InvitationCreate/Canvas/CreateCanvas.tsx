@@ -12,6 +12,11 @@ import { WaterBackground } from '@/components/invite/WaterBackground';
 import { HologramBackground } from '@/components/invite/HologramBackground';
 import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
 import { DESIGN_FONTS, fontStyle, getGradientVariant } from '@/domain/InvitationCreate/constants';
+import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
+import { WaterBackground } from '@/components/invite/WaterBackground';
+import { HologramBackground } from '@/components/invite/HologramBackground';
+import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
+import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
   RsvpType,
@@ -233,6 +238,7 @@ export function CreateCanvas({
                   imageError
                     ? 'text-danger'
                     : isDarkBg
+//                     : bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                       ? 'text-white/70'
                       : 'text-text-disabled',
                 )}
@@ -266,7 +272,7 @@ export function CreateCanvas({
             className={cn(
               // resize-none + overflow-hidden + max-h-[2.75em](leading-snug 1.375 × 2줄) → 최대 2줄
               'w-full resize-none overflow-hidden bg-transparent text-left text-[32px] font-extrabold leading-snug outline-none max-h-[2.75em]',
-              isDarkBg
+              bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white placeholder:text-white/50'
                 : 'text-text placeholder:text-text-disabled/50',
               fontStyle(designFont),
@@ -326,6 +332,7 @@ export function CreateCanvas({
           error={dateError}
           onClick={onEditDate}
           isDarkBg={isDarkBg}
+//           isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* 소개 — 투명 textarea (상세: 일정 다음, 장소 앞) */}
@@ -338,6 +345,7 @@ export function CreateCanvas({
           className={cn(
             "border-border/50 bg-[#dadada2b] backdrop-blur",
             isDarkBg
+//             bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
               ? 'text-white placeholder:text-white/70'
               : ''
           )}
@@ -351,6 +359,7 @@ export function CreateCanvas({
           error={locationError}
           onClick={onEditLocation}
           isDarkBg={isDarkBg}
+//           isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* 모임 옵션 — 회비·드레스코드·주차 (선택) */}
@@ -360,6 +369,7 @@ export function CreateCanvas({
           placeholder="모임 옵션 추가하기 (선택)"
           onClick={onEditOptions}
           isDarkBg={isDarkBg}
+//           isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* RSVP (탭하면 편집) */}
@@ -377,6 +387,10 @@ export function CreateCanvas({
                   isDarkBg
                     ? 'text-white hover:bg-white/15'
                     : 'text-text-muted hover:bg-surface',
+//                   'flex flex-col items-center gap-1.5 rounded-md border border-border/50 bg-[#dadada2b] px-3 py-3 backdrop-blur hover:bg-surface transition-colors',
+//                   bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
+//                     ? 'text-white'
+//                     : 'text-text-muted',
                 )}
               >
                 <span className="text-[26px] leading-none">
@@ -398,6 +412,7 @@ export function CreateCanvas({
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               isDarkBg
+//               bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -411,6 +426,7 @@ export function CreateCanvas({
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               isDarkBg
+//               bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -424,6 +440,7 @@ export function CreateCanvas({
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
               isDarkBg
+//               bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
