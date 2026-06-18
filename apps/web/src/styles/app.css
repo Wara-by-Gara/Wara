@@ -296,6 +296,14 @@ body {
       radial-gradient(ellipse at 40% 30%, #6b21a855 0%, transparent 60%),
       radial-gradient(ellipse at 70% 80%, #4c1d9555 0%, transparent 60%);
   }
+
+  /* 워터 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-water {
+    background-color: #7dd3e8;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, #e0f7fa 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 65%, #00bcd4 0%, transparent 55%);
+  }
 }
 
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해

@@ -13,6 +13,7 @@ import { InvitationCover, ParticipantProfileModal } from "@/components/domain";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
 import { GalaxyBackground } from "@/components/invite/GalaxyBackground";
+import { WaterBackground } from "@/components/invite/WaterBackground";
 import type { AnimationId } from "@/domain/InvitationCreate/constants";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
@@ -130,6 +131,9 @@ const canViewFeed = !!myParticipant;
     >
       {pageBgClass === 'bg-invite-galaxy' && (
         <GalaxyBackground className="absolute inset-0 z-[0]" />
+      )}
+      {pageBgClass === 'bg-invite-water' && (
+        <WaterBackground className="absolute inset-0 z-[0]" />
       )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       <InvitationAnimation
