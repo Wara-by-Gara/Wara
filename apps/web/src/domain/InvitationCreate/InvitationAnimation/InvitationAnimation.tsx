@@ -2,6 +2,13 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
+import { CloudSpriteAnimation } from "@/components/invite/CloudSpriteAnimation";
+import { PaperConfettiAnimation } from "@/components/invite/PaperConfettiAnimation";
+import { CrystalGlitterAnimation } from "@/components/invite/CrystalGlitterAnimation";
+import { BokehAnimation } from "@/components/invite/BokehAnimation";
+import { AuroraAnimation } from "@/components/invite/AuroraAnimation";
+import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
+import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -71,6 +78,26 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
     anim: "twinkle", visual: "star", count: 26, size: [8, 20], duration: [2, 5],
     drift: [0, 0], opacity: [0.6, 1],
   },
+  paper: {
+    anim: "fall", visual: "confetti", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  crystal: {
+    anim: "fall", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  bokeh: {
+    anim: "twinkle", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  stream: {
+    anim: "drift", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  firework: {
+    anim: "rise", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
 };
 
 /** index 기반 결정론적 의사난수 (SSR 안정) */
@@ -88,6 +115,7 @@ type Particle = {
 
 function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string): Particle[] {
   const c = CONFIG[effect];
+  if (!c || c.count === 0) return [];
 
   // 어두운 테마에서는 pastel 파티클이 묻혀서 더 밝은 팔레트로 교체
   const DARK_THEMES = ["bg-invite-starry", "bg-invite-aurora", "bg-invite-dreamy"];
@@ -185,11 +213,59 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" || effect === "balloon" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "stream") {
+    return (
+      <>
+        <AuroraAnimation className="absolute inset-0 pointer-events-none z-0" />
+        <AuroraAnimation className="absolute inset-0 pointer-events-none z-20" starsOnly />
+      </>
+    );
+  }
+
+  if (effect === "bokeh") {
+    return <BokehAnimation className={className} />;
+  }
+
+  if (effect === "crystal") {
+    return (
+      <>
+        <CrystalGlitterAnimation count={150} className="absolute inset-0 pointer-events-none z-0" />
+        <CrystalGlitterAnimation count={100} className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
+  }
+
+  if (effect === "paper") {
+    return (
+      <>
+        <PaperConfettiAnimation count={120} className="absolute inset-0 pointer-events-none z-0" />
+        <PaperConfettiAnimation count={80} className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
+  }
+
+  if (effect === "cloud") {
+    return (
+      <>
+        <CloudSpriteAnimation endIdx={5} className="absolute inset-0 pointer-events-none z-0" />
+        <CloudSpriteAnimation startIdx={5} className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
+  }
+
+  if (effect === "firework") {
+    return <FireworkAnimation className="absolute inset-0 pointer-events-none z-10" />;
+  }
+
+  if (effect === "balloon") {
+    return <BalloonAnimation className={className} />;
+  }
 
   return (
     <div
