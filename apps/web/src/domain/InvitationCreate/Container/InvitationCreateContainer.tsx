@@ -1098,7 +1098,6 @@ export default function InvitationCreateContainer({
         rsvp={rsvpOptions}
         onEditRsvp={() => setRsvpSheetOpen(true)}
         bgClass={designBgColor}
-        animation={selectedAnimation}
         onEditBgColor={() => setBgColorSheetOpen(true)}
         onEditAnimation={() => setAnimationSheetOpen(true)}
           />

@@ -11,7 +11,6 @@ import type {
   DesignFont,
   RsvpType,
   RsvpOption,
-  AnimationId,
 } from '@/domain/InvitationCreate/constants';
 
 function formatTimeKorean(timeStr: string): string {
@@ -59,9 +58,8 @@ export interface CreateCanvasProps {
   /* RSVP */
   rsvp: Record<RsvpType, RsvpOption>;
   onEditRsvp: () => void;
-  /* 배경색 & 애니메이션 */
+  /* 배경색 */
   bgClass: string;
-  animation: AnimationId;
   onEditBgColor: () => void;
   onEditAnimation: () => void;
 }
@@ -143,7 +141,6 @@ export function CreateCanvas({
   rsvp,
   onEditRsvp,
   bgClass,
-  animation,
   onEditBgColor,
   onEditAnimation,
 }: CreateCanvasProps) {
