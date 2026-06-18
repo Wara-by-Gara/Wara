@@ -288,6 +288,131 @@ body {
       animation: none;
     }
   }
+
+  /* 검은 고양이 — 캐릭터 그리드(BlackCatGridLayer)가 위에 깔리므로 베이스는 검정 (가장자리·미세 여백 노출 시 자연스럽게) */
+  .bg-invite-blackcat {
+    background-color: #0e0b08;
+  }
+
+  /* 검은 고양이 — base ↔ blink 눈 깜빡임 (closed 이미지의 opacity를 짧게 띄움) */
+  .animate-blackcat-blink {
+    animation: blackcat-blink 4.8s ease-in-out infinite;
+    opacity: 0;
+  }
+}
+
+@keyframes blackcat-blink {
+  0%, 92% { opacity: 0; }
+  94%, 98% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 혀 낼름 (6.4초 주기 중 약 0.5초만 혀 보임) */
+.animate-blackcat-blep {
+  animation: blackcat-blep 6.4s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-blep {
+  0%, 88% { opacity: 0; }
+  91%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 윙크 (5.6초 주기 중 약 0.6초 한쪽 눈 감김) */
+.animate-blackcat-wink {
+  animation: blackcat-wink 5.6s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-wink {
+  0%, 85% { opacity: 0; }
+  88%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 신난 반응 (7.2초 주기 중 약 0.8초 신난 표정 등장) */
+.animate-blackcat-excited {
+  animation: blackcat-excited 7.2s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-excited {
+  0%, 80% { opacity: 0; }
+  84%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 초롱초롱 반응 (8.0초 주기 중 약 0.8초 순진한 표정 등장) */
+.animate-blackcat-innocent {
+  animation: blackcat-innocent 8s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-innocent {
+  0%, 82% { opacity: 0; }
+  86%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 코 골이 ZZZ 등장 (4초 주기 중 약 1초 ZZZ 보임) */
+.animate-blackcat-snore {
+  animation: blackcat-snore 4s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-snore {
+  0%, 60% { opacity: 0; }
+  70%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — back 꼬리 흔들 (같은 이미지 + 좌우 반전 두 장 opacity 50:50 교차, 1.6초 주기) */
+.animate-blackcat-tail-wag {
+  animation: blackcat-tail-wag 1.6s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes blackcat-tail-wag {
+  0%, 45% { opacity: 0; }
+  55%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — belly popup (아래에서 슬라이드 업 → 잠시 머무름 → 페이드 아웃, 7.6초 주기) */
+.animate-blackcat-popup {
+  animation: blackcat-popup 7.6s ease-in-out infinite;
+  transform: translateY(110%);
+  opacity: 0;
+}
+
+@keyframes blackcat-popup {
+  0%, 10% {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  20%, 85% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  95%, 100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blackcat-blink,
+  .animate-blackcat-blep,
+  .animate-blackcat-wink,
+  .animate-blackcat-excited,
+  .animate-blackcat-innocent,
+  .animate-blackcat-tail-wag,
+  .animate-blackcat-snore,
+  .animate-blackcat-popup {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해

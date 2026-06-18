@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import type { AnimationId } from "../constants";
+import { ThreeCatScene } from "./ThreeCatScene";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
 type Visual = "petal" | "confetti" | "bubble" | "emoji" | "star";
@@ -29,7 +30,10 @@ const ANIM_KEYFRAME: Record<AnimKind, string> = {
   twinkle: "invite-anim-twinkle",
 };
 
-const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
+/** ThreeCatScene 같은 외부 컴포넌트로 처리하는 effect — buildParticles 대신 별도 렌더 */
+const CUSTOM_EFFECTS = new Set<AnimationId>(["blackcat"]);
+
+const CONFIG: Record<Exclude<AnimationId, "none" | "blackcat">, EffectConfig> = {
   cherry: {
     anim: "fall", visual: "petal", count: 22, size: [10, 22], duration: [8, 15],
     drift: [-60, 60], opacity: [0.5, 0.82], colors: ["#ffe1ef", "#ff9aca", "#ffd6e0", "#ffb3d9"],
@@ -86,7 +90,10 @@ type Particle = {
   content: string | null;
 };
 
-function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string): Particle[] {
+function buildParticles(
+  effect: Exclude<AnimationId, "none" | "blackcat">,
+  bgClass?: string,
+): Particle[] {
   const c = CONFIG[effect];
 
   // 어두운 테마에서는 pastel 파티클이 묻혀서 더 밝은 팔레트로 교체
@@ -185,11 +192,28 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" ? [] : buildParticles(effect, bgClass)),
+    () =>
+      effect === "none" || CUSTOM_EFFECTS.has(effect)
+        ? []
+        : buildParticles(effect as Exclude<AnimationId, "none" | "blackcat">, bgClass),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "blackcat") {
+    return (
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden",
+          className,
+        )}
+      >
+        <ThreeCatScene />
+      </div>
+    );
+  }
 
   return (
     <div

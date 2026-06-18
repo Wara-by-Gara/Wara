@@ -15,6 +15,7 @@ export const DESIGN_BG_THEMES = [
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
   { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy" },
+  { id: "blackcat", label: "검은고양이", cls: "bg-invite-blackcat" },
 ] as const;
 
 export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
@@ -53,6 +54,7 @@ export const ANIMATIONS = [
   { id: "bubble", label: "비눗방울", emoji: "🫧" },
   { id: "leaf", label: "낙엽", emoji: "🍂" },
   { id: "confetti", label: "컨페티", emoji: "🎉" },
+  { id: "blackcat", label: "검은 고양이", emoji: "🐈‍⬛" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];
