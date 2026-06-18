@@ -4,10 +4,11 @@ import Image from "next/image";
 import { cn } from "@/lib/cn";
 
 /**
- * 검은 고양이 그리드 배경 — 3열 3행 고정 9셀.
- * 셀 0·8: 깜빡임 페어(피치 톤 base ↔ blink), 다른 박자.
- * 셀 3: 혀 낼름 페어(노랑 톤 base ↔ blep).
- * 나머지: 정적 다양한 포즈.
+ * 검은 고양이 그리드 배경 — 반응형:
+ * - 모바일/태블릿: 2열 4행 (8셀, 9번째 셀 숨김)
+ * - 데스크톱 lg+: 3열 3행 (9셀 전부)
+ * 셀 0·8: 깜빡임 페어 / 셀 3: 혀 낼름 / 셀 5: 윙크 / 셀 1: 신난 / 셀 4: 초롱초롱 /
+ * 셀 6: 꼬리 흔들 / 셀 7: belly popup / 셀 2: 코 골이.
  */
 
 const BASE = "/template_images/blackcat";
@@ -54,21 +55,23 @@ function PairCell({
   animClass,
   delay,
   objectPosition,
+  cellClassName,
 }: {
   openSrc: string;
   closedSrc: string;
   animClass: string;
   delay: number;
   objectPosition?: string;
+  cellClassName?: string;
 }) {
   const posStyle = objectPosition ? { objectPosition } : undefined;
   return (
-    <div className="relative overflow-hidden">
+    <div className={cn("relative overflow-hidden", cellClassName)}>
       <Image
         src={openSrc}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className="object-cover"
         style={posStyle}
       />
@@ -76,7 +79,7 @@ function PairCell({
         src={closedSrc}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className={cn("object-cover", animClass)}
         style={{ animationDelay: `${delay}s`, ...posStyle }}
       />
@@ -84,10 +87,16 @@ function PairCell({
   );
 }
 
-function StaticCell({ src }: { src: string }) {
+function StaticCell({
+  src,
+  cellClassName,
+}: {
+  src: string;
+  cellClassName?: string;
+}) {
   return (
-    <div className="relative overflow-hidden">
-      <Image src={src} alt="" fill sizes="33vw" className="object-cover" />
+    <div className={cn("relative overflow-hidden", cellClassName)}>
+      <Image src={src} alt="" fill sizes="50vw" className="object-cover" />
     </div>
   );
 }
@@ -95,18 +104,20 @@ function StaticCell({ src }: { src: string }) {
 function SleepCell({
   delay,
   objectPosition,
+  cellClassName,
 }: {
   delay: number;
   objectPosition?: string;
+  cellClassName?: string;
 }) {
   const posStyle = objectPosition ? { objectPosition } : undefined;
   return (
-    <div className="relative overflow-hidden">
+    <div className={cn("relative overflow-hidden", cellClassName)}>
       <Image
         src={SLEEP_OPEN}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className="object-cover"
         style={posStyle}
       />
@@ -114,7 +125,7 @@ function SleepCell({
         src={SLEEP_CLOSED}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className="animate-blackcat-snore object-cover"
         style={{ animationDelay: `${delay}s`, ...posStyle }}
       />
@@ -122,15 +133,21 @@ function SleepCell({
   );
 }
 
-function WagCell({ src }: { src: string }) {
+function WagCell({
+  src,
+  cellClassName,
+}: {
+  src: string;
+  cellClassName?: string;
+}) {
   return (
-    <div className="relative overflow-hidden">
-      <Image src={src} alt="" fill sizes="33vw" className="object-cover" />
+    <div className={cn("relative overflow-hidden", cellClassName)}>
+      <Image src={src} alt="" fill sizes="50vw" className="object-cover" />
       <Image
         src={src}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className="animate-blackcat-tail-wag scale-x-[-1] object-cover"
       />
     </div>
@@ -141,21 +158,23 @@ function PopupCell({
   src,
   delay,
   bgColor,
+  cellClassName,
 }: {
   src: string;
   delay: number;
   bgColor: string;
+  cellClassName?: string;
 }) {
   return (
     <div
-      className="relative overflow-hidden"
+      className={cn("relative overflow-hidden", cellClassName)}
       style={{ backgroundColor: bgColor }}
     >
       <Image
         src={src}
         alt=""
         fill
-        sizes="33vw"
+        sizes="50vw"
         className="animate-blackcat-popup object-cover"
         style={{ animationDelay: `${delay}s` }}
       />
@@ -168,11 +187,13 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3",
+        "pointer-events-none absolute inset-0 grid grid-cols-2 grid-rows-4 lg:grid-cols-3 lg:grid-rows-3",
         className,
       )}
     >
       {CELLS.map((cell, i) => {
+        // 9번째 셀(index 8)은 lg에서만 표시 — 모바일은 2x4=8셀로 맞춤
+        const cellClassName = i === 8 ? "hidden lg:block" : undefined;
         if (cell.kind === "blink") {
           return (
             <PairCell
@@ -181,6 +202,7 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               closedSrc={BLINK_CLOSED}
               animClass="animate-blackcat-blink"
               delay={cell.delay}
+              cellClassName={cellClassName}
             />
           );
         }
@@ -192,6 +214,7 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               closedSrc={BLEP_CLOSED}
               animClass="animate-blackcat-blep"
               delay={cell.delay}
+              cellClassName={cellClassName}
             />
           );
         }
@@ -203,6 +226,7 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               closedSrc={WINK_CLOSED}
               animClass="animate-blackcat-wink"
               delay={cell.delay}
+              cellClassName={cellClassName}
             />
           );
         }
@@ -214,6 +238,7 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               closedSrc={EXCITED_CLOSED}
               animClass="animate-blackcat-excited"
               delay={cell.delay}
+              cellClassName={cellClassName}
             />
           );
         }
@@ -225,16 +250,24 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               closedSrc={INNOCENT_CLOSED}
               animClass="animate-blackcat-innocent"
               delay={cell.delay}
+              cellClassName={cellClassName}
             />
           );
         }
         if (cell.kind === "sleep") {
           return (
-            <SleepCell key={i} delay={cell.delay} objectPosition="50% 25%" />
+            <SleepCell
+              key={i}
+              delay={cell.delay}
+              objectPosition="50% 25%"
+              cellClassName={cellClassName}
+            />
           );
         }
         if (cell.kind === "wag") {
-          return <WagCell key={i} src={cell.src} />;
+          return (
+            <WagCell key={i} src={cell.src} cellClassName={cellClassName} />
+          );
         }
         if (cell.kind === "popup") {
           return (
@@ -243,10 +276,13 @@ export function BlackCatGridLayer({ className }: { className?: string }) {
               src={cell.src}
               delay={cell.delay}
               bgColor={cell.bgColor}
+              cellClassName={cellClassName}
             />
           );
         }
-        return <StaticCell key={i} src={cell.src} />;
+        return (
+          <StaticCell key={i} src={cell.src} cellClassName={cellClassName} />
+        );
       })}
     </div>
   );
