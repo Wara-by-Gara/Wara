@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import { CloudSpriteAnimation } from "@/components/invite/CloudSpriteAnimation";
 import { PaperConfettiAnimation } from "@/components/invite/PaperConfettiAnimation";
 import { CrystalGlitterAnimation } from "@/components/invite/CrystalGlitterAnimation";
+import { BokehAnimation } from "@/components/invite/BokehAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -80,6 +81,10 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
   },
   crystal: {
     anim: "fall", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  bokeh: {
+    anim: "twinkle", visual: "star", count: 0, size: [0, 0],
     duration: [0, 0], drift: [0, 0], opacity: [1, 1],
   },
 };
@@ -196,11 +201,15 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "bokeh") {
+    return <BokehAnimation className={className} />;
+  }
 
   if (effect === "crystal") {
     return (
