@@ -289,6 +289,38 @@ body {
     }
   }
 
+  /* 갤럭시 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-galaxy {
+    background-color: #1a0a2e;
+    background-image:
+      radial-gradient(ellipse at 40% 30%, #6b21a855 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, #4c1d9555 0%, transparent 60%);
+  }
+
+  /* 워터 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-water {
+    background-color: #7dd3e8;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, #e0f7fa 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 65%, #00bcd4 0%, transparent 55%);
+  }
+
+  /* 홀로그램 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-hologram {
+    background-color: #f8f8fc;
+    background-image:
+      linear-gradient(135deg, #fce4ec88 0%, #e8f5e988 25%, #e3f2fd88 50%, #fff9c488 75%, #fce4ec88 100%);
+  }
+
+  /* 레이저쇼 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-lasershow {
+    background-color: #050515;
+    background-image:
+      radial-gradient(ellipse at 50% 100%, #2233aa55 0%, transparent 60%),
+      radial-gradient(ellipse at 30% 55%, #6600ff22 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 55%, #00ff5522 0%, transparent 50%);
+  }
+
   /* 검은 고양이 — 베이스는 검정 + 대표 캐릭터 이미지(미리보기용; 실제 페이지에선 BlackCatGridLayer가 덮음) */
   .bg-invite-blackcat {
     background-color: #0e0b08;
@@ -307,134 +339,103 @@ body {
     background-repeat: no-repeat;
   }
 
-  /* 검은 고양이 — base ↔ blink 눈 깜빡임 (closed 이미지의 opacity를 짧게 띄움) */
-  .animate-blackcat-blink {
-    animation: blackcat-blink 4.8s ease-in-out infinite;
-    opacity: 0;
+  /* 마스터피스 액자 내부 어두운 배경 (외곽 액자는 PNG overlay로 대체) */
+  .masterpiece-frame {
+    background-color: #1a0e08;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
   }
 }
 
+/* 검은 고양이 — 눈 깜빡임 페어 (4.8초 주기) */
+.animate-blackcat-blink {
+  animation: blackcat-blink 4.8s ease-in-out infinite;
+  opacity: 0;
+}
 @keyframes blackcat-blink {
   0%, 92% { opacity: 0; }
   94%, 98% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — 혀 낼름 (6.4초 주기 중 약 0.5초만 혀 보임) */
+/* 검은 고양이 — 혀 낼름 페어 (6.4초 주기) */
 .animate-blackcat-blep {
   animation: blackcat-blep 6.4s ease-in-out infinite;
   opacity: 0;
 }
-
 @keyframes blackcat-blep {
   0%, 88% { opacity: 0; }
   91%, 96% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — 윙크 (5.6초 주기 중 약 0.6초 한쪽 눈 감김) */
+/* 검은 고양이 — 윙크 페어 (5.6초 주기) */
 .animate-blackcat-wink {
   animation: blackcat-wink 5.6s ease-in-out infinite;
   opacity: 0;
 }
-
 @keyframes blackcat-wink {
   0%, 85% { opacity: 0; }
   88%, 96% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — 신난 반응 (7.2초 주기 중 약 0.8초 신난 표정 등장) */
+/* 검은 고양이 — 신난 표정 페어 (7.2초 주기) */
 .animate-blackcat-excited {
   animation: blackcat-excited 7.2s ease-in-out infinite;
   opacity: 0;
 }
-
 @keyframes blackcat-excited {
   0%, 80% { opacity: 0; }
   84%, 95% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — 초롱초롱 반응 (8.0초 주기 중 약 0.8초 순진한 표정 등장) */
+/* 검은 고양이 — 초롱초롱 페어 (8초 주기) */
 .animate-blackcat-innocent {
   animation: blackcat-innocent 8s ease-in-out infinite;
   opacity: 0;
 }
-
 @keyframes blackcat-innocent {
   0%, 82% { opacity: 0; }
   86%, 96% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — 코 골이 ZZZ 등장 (4초 주기 중 약 1초 ZZZ 보임) */
-.animate-blackcat-snore {
-  animation: blackcat-snore 4s ease-in-out infinite;
-  opacity: 0;
-}
-
-@keyframes blackcat-snore {
-  0%, 60% { opacity: 0; }
-  70%, 92% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* 검은 고양이 — back 꼬리 흔들 (같은 이미지 + 좌우 반전 두 장 opacity 50:50 교차, 1.6초 주기) */
+/* 검은 고양이 — 꼬리 흔들 (좌우 반전 교차, 1.6초 주기) */
 .animate-blackcat-tail-wag {
   animation: blackcat-tail-wag 1.6s ease-in-out infinite;
   opacity: 0;
 }
-
 @keyframes blackcat-tail-wag {
   0%, 45% { opacity: 0; }
   55%, 95% { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 검은 고양이 — belly popup (아래에서 슬라이드 업 → 잠시 머무름 → 페이드 아웃, 7.6초 주기) */
+/* 검은 고양이 — 코 골이 ZZZ (4초 주기) */
+.animate-blackcat-snore {
+  animation: blackcat-snore 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-snore {
+  0%, 60% { opacity: 0; }
+  70%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — belly popup (슬라이드 업, 7.6초 주기) */
 .animate-blackcat-popup {
   animation: blackcat-popup 7.6s ease-in-out infinite;
   transform: translateY(110%);
   opacity: 0;
 }
-
 @keyframes blackcat-popup {
-  0%, 10% {
-    transform: translateY(110%);
-    opacity: 0;
-  }
-  20%, 85% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  95%, 100% {
-    transform: translateY(0);
-    opacity: 0;
-  }
+  0%, 10% { transform: translateY(110%); opacity: 0; }
+  20%, 85% { transform: translateY(0); opacity: 1; }
+  95%, 100% { transform: translateY(0); opacity: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-blackcat-blink,
-  .animate-blackcat-blep,
-  .animate-blackcat-wink,
-  .animate-blackcat-excited,
-  .animate-blackcat-innocent,
-  .animate-blackcat-tail-wag,
-  .animate-blackcat-snore,
-  .animate-blackcat-popup {
-    animation: none;
-    opacity: 0;
-  }
-}
-
-/* 명화 패러디 — 액자 내부 어두운 배경만 (외곽 액자는 PNG overlay로 대체) */
-.masterpiece-frame {
-  background-color: #1a0e08;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
-}
-
-/* 명화별 페어 모션 — OPEN 위에 CLOSED를 짧게 띄움 */
+/* 마스터피스 — 명화별 페어 모션 */
 .animate-pair-bubblegum {
   animation: pair-bubblegum 4s ease-in-out infinite;
   opacity: 0;
@@ -486,6 +487,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-blackcat-blink,
+  .animate-blackcat-blep,
+  .animate-blackcat-wink,
+  .animate-blackcat-excited,
+  .animate-blackcat-innocent,
+  .animate-blackcat-tail-wag,
+  .animate-blackcat-snore,
+  .animate-blackcat-popup,
   .animate-pair-bubblegum,
   .animate-pair-wink,
   .animate-pair-stunned,
