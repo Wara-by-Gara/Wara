@@ -9,6 +9,7 @@ import { BokehAnimation } from "@/components/invite/BokehAnimation";
 import { AuroraAnimation } from "@/components/invite/AuroraAnimation";
 import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
 import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
+import { FlowerFallAnimation } from "@/components/invite/FlowerFallAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -96,6 +97,10 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
   },
   firework: {
     anim: "rise", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  flower: {
+    anim: "fall", visual: "petal", count: 0, size: [0, 0],
     duration: [0, 0], drift: [0, 0], opacity: [1, 1],
   },
 };
@@ -213,7 +218,7 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" || effect === "balloon" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" || effect === "balloon" || effect === "flower" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
@@ -265,6 +270,15 @@ export function InvitationAnimation({
 
   if (effect === "balloon") {
     return <BalloonAnimation className={className} />;
+  }
+
+  if (effect === "flower") {
+    return (
+      <>
+        <FlowerFallAnimation className="absolute inset-0 pointer-events-none z-0" />
+        <FlowerFallAnimation className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
   }
 
   return (
