@@ -8,6 +8,7 @@ import { CrystalGlitterAnimation } from "@/components/invite/CrystalGlitterAnima
 import { BokehAnimation } from "@/components/invite/BokehAnimation";
 import { AuroraAnimation } from "@/components/invite/AuroraAnimation";
 import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
+import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -212,7 +213,7 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" || effect === "balloon" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
@@ -260,6 +261,10 @@ export function InvitationAnimation({
 
   if (effect === "firework") {
     return <FireworkAnimation className="absolute inset-0 pointer-events-none z-10" />;
+  }
+
+  if (effect === "balloon") {
+    return <BalloonAnimation className={className} />;
   }
 
   return (
