@@ -61,19 +61,33 @@ function generateSplashes(count: number, seed: number): Splash[] {
   });
 }
 
-const CYCLE_MS = 4200;
-const SPLASH_COUNT = 8;
+const DESKTOP_CYCLE_MS = 4200;
+const DESKTOP_SPLASH_COUNT = 8;
+const MOBILE_CYCLE_MS = 7800;
+const MOBILE_SPLASH_COUNT = 4;
 
 export function PaintAnimation({ className }: { className?: string }) {
   const [seed, setSeed] = useState(1);
-  const splashes = useMemo(() => generateSplashes(SPLASH_COUNT, seed), [seed]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const count = isMobile ? MOBILE_SPLASH_COUNT : DESKTOP_SPLASH_COUNT;
+  const cycleMs = isMobile ? MOBILE_CYCLE_MS : DESKTOP_CYCLE_MS;
+  const splashes = useMemo(() => generateSplashes(count, seed), [count, seed]);
 
   useEffect(() => {
     const id = setInterval(() => {
       setSeed((s) => s + 1);
-    }, CYCLE_MS);
+    }, cycleMs);
     return () => clearInterval(id);
-  }, []);
+  }, [cycleMs]);
 
   return (
     <div
