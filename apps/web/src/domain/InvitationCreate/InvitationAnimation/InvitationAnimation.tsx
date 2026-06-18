@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { CloudSpriteAnimation } from "@/components/invite/CloudSpriteAnimation";
 import { PaperConfettiAnimation } from "@/components/invite/PaperConfettiAnimation";
+import { CrystalGlitterAnimation } from "@/components/invite/CrystalGlitterAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -75,6 +76,10 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
   },
   paper: {
     anim: "fall", visual: "confetti", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  crystal: {
+    anim: "fall", visual: "star", count: 0, size: [0, 0],
     duration: [0, 0], drift: [0, 0], opacity: [1, 1],
   },
 };
@@ -191,11 +196,20 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" || effect === "paper" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "crystal") {
+    return (
+      <>
+        <CrystalGlitterAnimation count={150} className="absolute inset-0 pointer-events-none z-0" />
+        <CrystalGlitterAnimation count={100} className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
+  }
 
   if (effect === "paper") {
     return (
