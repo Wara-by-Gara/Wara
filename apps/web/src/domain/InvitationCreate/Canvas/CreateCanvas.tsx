@@ -7,6 +7,10 @@ import type { IconName } from '@/components/icons';
 import { Textarea } from "@wara/ui";
 import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
+import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
+import { WaterBackground } from '@/components/invite/WaterBackground';
+import { HologramBackground } from '@/components/invite/HologramBackground';
+import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
 import { DESIGN_FONTS, fontStyle, getGradientVariant } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
@@ -152,7 +156,7 @@ export function CreateCanvas({
   const hasCover = !!coverImageUrl || !!coverGifUrl;
   const gradientVariant = getGradientVariant(bgClass);
   const isDarkBg =
-    !!gradientVariant || ['aurora', 'starry', 'dreamy'].some((k) => bgClass.includes(k));
+    !!gradientVariant || ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'].some((k) => bgClass.includes(k));
 
   // 제목 textarea 자동 높이 — 내용에 따라 1~2줄(max-h로 상한)
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -177,6 +181,18 @@ export function CreateCanvas({
           bgClass,
         )}
       >
+        {bgClass === 'bg-invite-galaxy' && (
+          <GalaxyBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-water' && (
+          <WaterBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-hologram' && (
+          <HologramBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-lasershow' && (
+          <LaserShowBackground className="absolute inset-0 z-[0]" />
+        )}
         <main className="relative z-[2] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* 대표 이미지 — 클릭/편집 버튼으로 시트 진입 */}
         <div className="relative">
