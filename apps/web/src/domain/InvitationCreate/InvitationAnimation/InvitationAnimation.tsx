@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { CloudSpriteAnimation } from "@/components/invite/CloudSpriteAnimation";
+import { PaperConfettiAnimation } from "@/components/invite/PaperConfettiAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -71,6 +72,10 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
   star: {
     anim: "twinkle", visual: "star", count: 26, size: [8, 20], duration: [2, 5],
     drift: [0, 0], opacity: [0.6, 1],
+  },
+  paper: {
+    anim: "fall", visual: "confetti", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
   },
 };
 
@@ -186,17 +191,26 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" || effect === "paper" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
 
+  if (effect === "paper") {
+    return (
+      <>
+        <PaperConfettiAnimation count={120} className="absolute inset-0 pointer-events-none z-0" />
+        <PaperConfettiAnimation count={80} className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
+  }
+
   if (effect === "cloud") {
     return (
       <>
-        <CloudSpriteAnimation endIdx={5} className="absolute inset-0 pointer-events-none z-[0]" />
-        <CloudSpriteAnimation startIdx={5} className="absolute inset-0 pointer-events-none z-[20]" />
+        <CloudSpriteAnimation endIdx={5} className="absolute inset-0 pointer-events-none z-0" />
+        <CloudSpriteAnimation startIdx={5} className="absolute inset-0 pointer-events-none z-20" />
       </>
     );
   }

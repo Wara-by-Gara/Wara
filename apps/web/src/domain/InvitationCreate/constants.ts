@@ -56,6 +56,7 @@ export const ANIMATIONS = [
   { id: "bubble", label: "비눗방울", emoji: "🫧" },
   { id: "leaf", label: "낙엽", emoji: "🍂" },
   { id: "confetti", label: "컨페티", emoji: "🎉" },
+  { id: "paper", label: "색종이", emoji: "🎊" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];
