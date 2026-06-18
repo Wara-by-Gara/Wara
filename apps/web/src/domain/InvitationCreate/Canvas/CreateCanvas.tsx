@@ -6,7 +6,6 @@ import { Icon } from '@/components/icons';
 import type { IconName } from '@/components/icons';
 import { Textarea } from "@wara/ui";
 import { InvitationCover } from '@/components/domain';
-import { InvitationAnimation } from '../InvitationAnimation';
 import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
@@ -161,12 +160,6 @@ export function CreateCanvas({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <InvitationAnimation
-        effect={animation}
-        bgClass={bgClass}
-        className="absolute inset-0 z-[1] pointer-events-none"
-      />
-
       <div
         className={cn(
           'relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg font-pretendard',

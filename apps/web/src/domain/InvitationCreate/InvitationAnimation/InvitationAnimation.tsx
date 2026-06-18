@@ -38,6 +38,10 @@ const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
     anim: "fall", visual: "emoji", count: 16, size: [16, 26], duration: [7, 18],
     drift: [-80, 80], opacity: [0.75, 1], emojis: ["🍂", "🍁"],
   },
+  coffee: {
+    anim: "fall", visual: "emoji", count: 12, size: [16, 26], duration: [7, 16],
+    drift: [-70, 70], opacity: [0.75, 1], emojis: ["☕", "☕️"],
+  },
   confetti: {
     anim: "confetti", visual: "confetti", count: 30, size: [6, 12], duration: [4, 8],
     drift: [-90, 90], opacity: [0.85, 1],

@@ -41,4 +41,8 @@ export const POPULAR_TEMPLATE_CATALOG = [
     name: "테크 밋업",
     imageUrl: "/template_images/tech-meetup/imgi_86_2a39c59a-3aee-4cf8-bae3-f0b996451d1d.png",
   },
+  {
+    name: "가을 카페",
+    imageUrl: "/template_images/autumn-cafe/cover-preview.png",
+  },
 ] as const;

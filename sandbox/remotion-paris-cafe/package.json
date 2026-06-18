@@ -1,0 +1,24 @@
+{
+  "name": "remotion-paris-cafe",
+  "private": true,
+  "description": "Personal sandbox — Paris autumn café invitation template (not part of turbo workspace)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "still": "remotion still src/index.ts ParisAutumnCafe out/preview.png --frame=90",
+    "render": "remotion render src/index.ts ParisAutumnCafe out/preview.mp4",
+    "export:png": "node scripts/export-png.mjs",
+    "export:autumn-cafe": "node scripts/export-autumn-cafe.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.272",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.272"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "gifenc": "^1.0.3",
+    "sharp": "^0.34.5",
+    "typescript": "^5.7.0"
+  }
+}

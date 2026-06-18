@@ -52,6 +52,7 @@ export const ANIMATIONS = [
   { id: "plane", label: "종이비행기", emoji: "✈️" },
   { id: "bubble", label: "비눗방울", emoji: "🫧" },
   { id: "leaf", label: "낙엽", emoji: "🍂" },
+  { id: "coffee", label: "커피잔", emoji: "☕" },
   { id: "confetti", label: "컨페티", emoji: "🎉" },
 ] as const;
 

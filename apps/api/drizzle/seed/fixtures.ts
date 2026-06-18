@@ -114,7 +114,11 @@ const templateImageUrlFromRel = (rel: string) => {
 
 /** template_images 풀에서 folder 기반 결정적 미리보기 URL */
 const templatePreviewFromFolder = (folder: string) =>
-  templatePreviewUrl(`template-${folder.normalize('NFC')}`);
+  templateImageUrlFromPool(
+    TEMPLATE_IMAGE_PATHS_BY_FOLDER[folder.normalize('NFC')] ?? TEMPLATE_IMAGE_PATHS,
+    'template-preview',
+    folder,
+  );
 
 // ── 규모 ─────────────────────────────────────────────────────────────────────
 // 기본은 dev 작업용 작은 규모. 부하 테스트 시 일시적으로 늘려 사용.
@@ -189,6 +193,8 @@ const TEMPLATE_DEFS = [
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 아늑한 브런치 배경에 자연스럽게 합성해 주세요. 부드러운 아침 햇살과 카페 분위기, 정성스러운 테이블 세팅을 유지해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
   { key: 'tmpl10', name: '테크 밋업',     theme: 'tech',     font: 'mono',    effect: 'sparkle',  bgColor: 'bg-invite-aurora', animation: 'star', isActive: true, previewFolder: 'tech-meetup',
     prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 모던한 테크 밋업 배경에 자연스럽게 합성해 주세요. 깔끔한 기하학적 요소와 미래적인 분위기를 유지하면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
+  { key: 'tmpl11', name: '가을 카페', theme: 'cafe',    font: 'serif',   effect: null,       bgColor: 'bg-invite-film', animation: 'leaf', isActive: true, previewFolder: 'autumn-cafe',
+    prompt: '왼쪽 이미지의 인물을 오른쪽 이미지의 가을 카페 테라스·따뜻한 커피 분위기 배경에 자연스럽게 합성해 주세요. COFFEE TALK 포스터의 아늑한 카페 톤과 낙엽 가을 분위기를 유지하면서 인물을 배치해 주세요. 인물의 얼굴과 정체성은 그대로 보존해 주세요.' },
 ] as const;
 
 // ── 실재하는 한국 모임 장소 데이터셋 ──────────────────────────────────────────

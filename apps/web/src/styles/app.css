@@ -1,4 +1,4 @@
-/* 앱 전역: base 스타일 · .type-* 타이포 · .home-* 레이아웃 · .bg-invite-* 배경 · 애니메이션 */
+/* 앱 전역: base 스타일 · .type-* 타이포 · .home-* 레이아웃 · .bg-invite-* 배경(가을 카페 포함) · 애니메이션 */
 /* ============================================================
    Base styles — Light theme default
    ============================================================ */
@@ -199,6 +199,15 @@ body {
       #ede8e0 52%,
       #f5f0eb 100%
     );
+  }
+
+  /** 가을 카페 — 초대장 만들기 전체 배경 */
+  .bg-invite-autumn-cafe {
+    background-color: #a0522d;
+    background-image: url("/template_images/autumn-cafe/create-bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   .bg-invite-aurora {

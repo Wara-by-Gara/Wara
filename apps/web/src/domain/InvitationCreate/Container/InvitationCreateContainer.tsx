@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import imageCompression from 'browser-image-compression';
 import type { Area } from 'react-easy-crop';
 import { cn } from '@/lib/cn';
@@ -47,6 +47,7 @@ import {
 import { useLightTheme } from '@/hooks/useLightTheme';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { CreateCanvas } from '@/domain/InvitationCreate/Canvas/CreateCanvas';
+import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation/InvitationAnimation';
 import { AiCompositeSheet } from '@/domain/InvitationCreate/Sheets/AiCompositeSheet';
 import {
   DEFAULT_COVER_KEY,
@@ -65,6 +66,8 @@ import {
 } from '@/domain/InvitationCreate/constants';
 
 const COVER_CONTENT_TYPE = 'image/webp' as const;
+/** 가을 카페 템플릿 — Remotion COFFEE TALK 반짝임 GIF */
+const AUTUMN_CAFE_COVER_GIF = '/template_images/autumn-cafe/coffee-cover.gif';
 
 interface FormData {
   templateId: string;
@@ -474,6 +477,15 @@ export default function InvitationCreateContainer({
     queryFn: getTemplates,
   });
 
+  const isAutumnCafeTemplate = useMemo(() => {
+    if (!form.templateId) return false;
+    const t = templates.find((item) => item.id === form.templateId);
+    return (
+      t?.name === '가을 카페' ||
+      !!t?.previewImageKey.includes('autumn-cafe')
+    );
+  }, [form.templateId, templates]);
+
   useEffect(() => {
     if (
       editInvitation ||
@@ -485,11 +497,24 @@ export default function InvitationCreateContainer({
     if (!tid) return;
     const t = templates.find((item) => item.id === tid);
     if (!t) return;
-    setForm((prev) => ({
-      ...prev,
-      templateId: t.id,
-      mainImageKey: t.previewImageKey ?? prev.mainImageKey,
-    }));
+    const isAutumnCafe =
+      t.name === '가을 카페' || t.previewImageKey.includes('autumn-cafe');
+    if (isAutumnCafe) {
+      setMainGifUrl(AUTUMN_CAFE_COVER_GIF);
+      setLocalPreviewUrl(null);
+      setForm((prev) => ({
+        ...prev,
+        templateId: t.id,
+        mainImageKey: DEFAULT_COVER_KEY,
+      }));
+    } else {
+      setMainGifUrl('');
+      setForm((prev) => ({
+        ...prev,
+        templateId: t.id,
+        mainImageKey: t.previewImageKey ?? prev.mainImageKey,
+      }));
+    }
     // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·애니메이션도 템플릿 값으로 프리필
     if (t.bgColor) setDesignBgColor(t.bgColor as DesignBgColor);
     if (t.animation) setSelectedAnimation(t.animation as AnimationId);
@@ -983,8 +1008,28 @@ export default function InvitationCreateContainer({
     );
   }
 
+  const showAutumnCafeBg =
+    isAutumnCafeTemplate || mainGifUrl.includes('autumn-cafe');
+
   return (
-    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-5xl">
+    <div
+      className={cn(
+        'relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col lg:max-w-5xl',
+        !showAutumnCafeBg && 'bg-background',
+      )}
+    >
+      {showAutumnCafeBg && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-0 bg-invite-autumn-cafe"
+        />
+      )}
+      <InvitationAnimation
+        effect={selectedAnimation}
+        bgClass={designBgColor}
+        className="fixed inset-0 z-[1]"
+      />
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       <TopAppBar
         className="shrink-0"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
@@ -1024,7 +1069,10 @@ export default function InvitationCreateContainer({
         }
         coverGifUrl={mainGifUrl || undefined}
         imageError={imageError}
-        onEditImage={() => setImageSheetOpen(true)}
+        onEditImage={() => {
+          if (mainGifUrl) setImageTab('gif');
+          setImageSheetOpen(true);
+        }}
         dateText={
           dateUnknown
             ? form.date || undefined
@@ -1099,22 +1147,6 @@ export default function InvitationCreateContainer({
       >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
-            {form.templateId ? (
-              <InvitationCover
-                imageUrl={
-                  localPreviewUrl ??
-                  (form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? form.mainImageKey
-                    : undefined)
-                }
-                variant={
-                  localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? 'image'
-                    : 'no-image'
-                }
-                fitToImage
-              />
-            ) : (
               <div>
                 {/* 탭: 이미지 업로드 / GIF */}
                 <div className="mb-3 flex gap-2">
@@ -1348,7 +1380,6 @@ export default function InvitationCreateContainer({
                   </>
                 )}
               </div>
-            )}
           </BottomSheet>
 
         {/* 날짜·시간 편집 시트 */}
@@ -2117,6 +2148,7 @@ export default function InvitationCreateContainer({
             })}
           </div>
         </BottomSheet>
+      </div>
     </div>
   );
 }
