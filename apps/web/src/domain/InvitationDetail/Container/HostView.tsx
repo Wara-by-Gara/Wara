@@ -23,6 +23,8 @@ import { FlyerSheet } from '@/domain/InvitationDetail/Flyer/FlyerSheet';
 import { InvitationCover, ParticipantProfileModal } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
+import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
+import { getGradientVariant } from '@/domain/InvitationCreate/constants';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
@@ -154,7 +156,9 @@ export default function HostView({
   });
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
+  const gradientVariant = getGradientVariant(invitation.bgColor);
   const isDarkBg =
+    !!gradientVariant ||
     invitation.bgColor.includes('aurora') ||
     invitation.bgColor.includes('starry') ||
     invitation.bgColor.includes('dreamy');
@@ -168,6 +172,7 @@ export default function HostView({
         pageBgClass,
       )}
     >
+      {gradientVariant && <GradientScene variant={gradientVariant} className="fixed inset-0 z-0" />}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <InvitationAnimation
           effect={(invitation.animation as AnimationId) ?? 'none'}
@@ -219,7 +224,12 @@ export default function HostView({
               variant={cover.variant}
               imageUrl={cover.imageUrl}
               gifUrl={cover.gifUrl}
-              backgroundClass={invitation.bgColor}
+              backgroundClass={gradientVariant ? 'bg-invite-grad-base' : invitation.bgColor}
+              style={
+                gradientVariant
+                  ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)
+                  : undefined
+              }
               hideBottomGradient
               detailMode
             />

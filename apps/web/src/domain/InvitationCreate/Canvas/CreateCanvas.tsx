@@ -7,7 +7,7 @@ import type { IconName } from '@/components/icons';
 import { Textarea } from "@wara/ui";
 import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
-import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
+import { DESIGN_FONTS, fontStyle, getGradientVariant } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
   RsvpType,
@@ -89,7 +89,8 @@ function EditableRow({
       onClick={onClick}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-md border px-4 py-3.5 text-left transition-colors',
-        'bg-[#dadada2b] backdrop-blur hover:bg-gray-50 transition-colors duration-150',
+        'bg-[#dadada2b] backdrop-blur transition-colors duration-150',
+        isDarkBg ? 'hover:bg-white/15' : 'hover:bg-gray-50',
         error ? 'border-danger' : 'border-border/50',
       )}
     >
@@ -149,6 +150,9 @@ export function CreateCanvas({
   onEditAnimation,
 }: CreateCanvasProps) {
   const hasCover = !!coverImageUrl || !!coverGifUrl;
+  const gradientVariant = getGradientVariant(bgClass);
+  const isDarkBg =
+    !!gradientVariant || ['aurora', 'starry', 'dreamy'].some((k) => bgClass.includes(k));
 
   // 제목 textarea 자동 높이 — 내용에 따라 1~2줄(max-h로 상한)
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -212,7 +216,7 @@ export function CreateCanvas({
                   'text-[13px]',
                   imageError
                     ? 'text-danger'
-                    : bgClass.includes('aurora') || bgClass.includes('starry')
+                    : isDarkBg
                       ? 'text-white/70'
                       : 'text-text-disabled',
                 )}
@@ -246,7 +250,7 @@ export function CreateCanvas({
             className={cn(
               // resize-none + overflow-hidden + max-h-[2.75em](leading-snug 1.375 × 2줄) → 최대 2줄
               'w-full resize-none overflow-hidden bg-transparent text-left text-[32px] font-extrabold leading-snug outline-none max-h-[2.75em]',
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              isDarkBg
                 ? 'text-white placeholder:text-white/50'
                 : 'text-text placeholder:text-text-disabled/50',
               fontStyle(designFont),
@@ -305,7 +309,7 @@ export function CreateCanvas({
           placeholder="날짜·시간을 정해주세요"
           error={dateError}
           onClick={onEditDate}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={isDarkBg}
         />
 
         {/* 소개 — 투명 textarea (상세: 일정 다음, 장소 앞) */}
@@ -317,7 +321,7 @@ export function CreateCanvas({
           maxLength={2000}
           className={cn(
             "border-border/50 bg-[#dadada2b] backdrop-blur",
-            bgClass.includes('aurora') || bgClass.includes('starry')
+            isDarkBg
               ? 'text-white placeholder:text-white/70'
               : ''
           )}
@@ -330,7 +334,7 @@ export function CreateCanvas({
           placeholder={locationUnknown ? "장소를 입력하세요" : "장소 미정"}
           error={locationError}
           onClick={onEditLocation}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={isDarkBg}
         />
 
         {/* 모임 옵션 — 회비·드레스코드·주차 (선택) */}
@@ -339,7 +343,7 @@ export function CreateCanvas({
           text={optionsText}
           placeholder="모임 옵션 추가하기 (선택)"
           onClick={onEditOptions}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={isDarkBg}
         />
 
         {/* RSVP (탭하면 편집) */}
@@ -353,10 +357,10 @@ export function CreateCanvas({
               <div
                 key={type}
                 className={cn(
-                  'flex flex-col items-center gap-1.5 rounded-md border border-border/50 bg-[#dadada2b] px-3 py-3 backdrop-blur hover:bg-surface transition-colors',
-                  bgClass.includes('aurora') || bgClass.includes('starry')
-                    ? 'text-white'
-                    : 'text-text-muted',
+                  'flex flex-col items-center gap-1.5 rounded-md border border-border/50 bg-[#dadada2b] px-3 py-3 backdrop-blur transition-colors',
+                  isDarkBg
+                    ? 'text-white hover:bg-white/15'
+                    : 'text-text-muted hover:bg-surface',
                 )}
               >
                 <span className="text-[26px] leading-none">
@@ -371,13 +375,13 @@ export function CreateCanvas({
         </button>
 
         {/* 편집 버튼 (RSVP, 배경색, 애니메이션) */}
-        <div className="mt-3 pt-3 border-t border-border/50 flex gap-2">
+        <div className="mt-3 pt-3 border-t border-border/50 flex gap-2 lg:hidden">
           <button
             type="button"
             onClick={onEditRsvp}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              isDarkBg
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -390,7 +394,7 @@ export function CreateCanvas({
             onClick={onEditBgColor}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              isDarkBg
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -403,7 +407,7 @@ export function CreateCanvas({
             onClick={onEditAnimation}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              isDarkBg
                 ? 'text-white'
                 : 'text-text'
             )}
