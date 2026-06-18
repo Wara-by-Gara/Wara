@@ -65,6 +65,7 @@ export const ANIMATIONS = [
   { id: "stream", label: "보라빛 라인", emoji: "🌌" },
   { id: "firework", label: "폭죽", emoji: "🎆" },
   { id: "blackcat", label: "검은 고양이", emoji: "🐈‍⬛" },
+  { id: "paint", label: "물감", emoji: "🎨" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];

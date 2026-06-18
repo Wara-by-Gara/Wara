@@ -13,7 +13,7 @@ import type { AnimationId } from "../constants";
 import { ThreeCatScene } from "./ThreeCatScene";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
-type Visual = "petal" | "confetti" | "bubble" | "emoji" | "star";
+type Visual = "petal" | "confetti" | "bubble" | "emoji" | "star" | "splash";
 
 type EffectConfig = {
   anim: AnimKind;
@@ -90,6 +90,11 @@ const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
   star: {
     anim: "twinkle", visual: "star", count: 26, size: [8, 20], duration: [2, 5],
     drift: [0, 0], opacity: [0.6, 1],
+  },
+  paint: {
+    anim: "twinkle", visual: "splash", count: 28, size: [18, 56], duration: [2, 6],
+    drift: [0, 0], opacity: [0.55, 0.9],
+    colors: ["#ff6b6b", "#feca57", "#48dbfb", "#1dd1a1", "#5f27cd", "#ff9ff3", "#ee5253", "#10ac84", "#fd79a8", "#fdcb6e"],
   },
   paper: {
     anim: "fall", visual: "confetti", count: 0, size: [0, 0],
@@ -208,6 +213,16 @@ function buildParticles(
       style.borderRadius = "50%";
       style.background = "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 30%, transparent 70%)";
       style.boxShadow = "0 0 8px rgba(255,255,255,0.6), 0 0 16px rgba(255,200,255,0.3)";
+    } else if (c.visual === "splash") {
+      // 페인트 splash — 무작위 색 + 불규칙 border-radius로 흩뿌려진 물감 느낌
+      const color = particleColors?.[i % particleColors.length] ?? "#ff6b6b";
+      const tl = 35 + ((i * 17) % 40);
+      const tr = 30 + ((i * 23) % 45);
+      const br = 40 + ((i * 31) % 35);
+      const bl = 35 + ((i * 41) % 40);
+      style.background = `radial-gradient(circle at ${30 + (i % 5) * 6}% ${30 + (i % 7) * 5}%, ${color} 0%, ${color} 45%, ${color}99 70%, transparent 100%)`;
+      style.borderRadius = `${tl}% ${tr}% ${br}% ${bl}%`;
+      style.filter = "blur(0.5px)";
     }
 
     return {

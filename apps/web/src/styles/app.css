@@ -344,6 +344,80 @@ body {
     background-color: #1a0e08;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
   }
+
+  /* 마스터피스 슬롯 — 반응형 layout
+     모바일: slot 0(가운데)만 풀스크린, 나머지는 opacity 0으로 숨김
+     lg+: 미술관 벽 (가운데 큰 + 모서리 4 작은) */
+  .mp-slot {
+    position: absolute;
+    transition: all 700ms ease-in-out;
+  }
+  /* 모바일 기본: slot 0 풀스크린, 1~4는 fade-out */
+  .mp-slot-0 {
+    inset: 4% 4%;
+    z-index: 2;
+    opacity: 1;
+  }
+  .mp-slot-1,
+  .mp-slot-2,
+  .mp-slot-3,
+  .mp-slot-4 {
+    inset: 4% 4%;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* lg+: 미술관 벽 layout */
+  @media (min-width: 1024px) {
+    .mp-slot-0 {
+      inset: auto;
+      left: 26%;
+      top: 14%;
+      width: 48%;
+      height: 72%;
+      opacity: 1;
+    }
+    .mp-slot-1 {
+      inset: auto;
+      left: 3%;
+      top: 3%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-2 {
+      inset: auto;
+      left: 77%;
+      top: 3%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-3 {
+      inset: auto;
+      left: 3%;
+      top: 71%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-4 {
+      inset: auto;
+      left: 77%;
+      top: 71%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 }
 
 /* 검은 고양이 — 눈 깜빡임 페어 (4.8초 주기) */
