@@ -130,16 +130,16 @@ const canViewFeed = !!myParticipant;
       )}
     >
       {pageBgClass.includes('blackcat') && (
-        <BlackCatGridLayer className="z-[0]" />
+        <BlackCatGridLayer className="z-0" />
       )}
       {pageBgClass.includes('masterpiece') && (
-        <MasterpieceSlideLayer className="z-[0]" />
+        <MasterpieceSlideLayer className="z-0" />
       )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       <InvitationAnimation
         effect={(invitation.animation as AnimationId) ?? 'none'}
         bgClass={pageBgClass}
-        className="absolute inset-0 z-[1] pointer-events-none"
+        className="absolute inset-0 z-1 pointer-events-none"
       />
       <InvitationCherryBlossomEffect title={invitation.title} />
       <TopAppBar
@@ -185,10 +185,10 @@ const canViewFeed = !!myParticipant;
         left={
           <>
             <div className="flex flex-col gap-3">
-              <header className="flex flex-col gap-[3px] text-left">
+              <header className="flex flex-col gap-0.75 text-left">
                 <h1
                   className={cn(
-                    "line-clamp-2 break-words pb-0.5 text-[34px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]",
+                    "line-clamp-2 wrap-break-word pb-0.5 text-[34px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]",
                     isDarkBg ? "text-white" : "text-text",
                     fontClass,
                   )}

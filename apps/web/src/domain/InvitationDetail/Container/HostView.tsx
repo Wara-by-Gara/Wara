@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/icons';
-import { Button } from "@wara/ui";
-import { TopAppBar } from "@wara/ui";
+import { Button } from '@wara/ui';
+import { TopAppBar } from '@wara/ui';
 import { InvitationDetailPanes } from '@/domain/InvitationDetail/Container/InvitationDetailPanes';
 import { HostActionRail } from '@/domain/InvitationDetail/Container/HostActionRail';
 import { InvitationDescriptionBox } from '@/domain/InvitationDetail/InvitationDescriptionBox';
@@ -79,9 +79,14 @@ export default function HostView({
   const [flyerOpen, setFlyerOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
-  const [profileTarget, setProfileTarget] = useState<{ userId: string; name?: string; avatarUrl?: string } | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{
+    userId: string;
+    name?: string;
+    avatarUrl?: string;
+  } | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
-  const { mutate: cloneInvitation, isPending: isCloning } = useCloneInvitation();
+  const { mutate: cloneInvitation, isPending: isCloning } =
+    useCloneInvitation();
 
   const handleClone = () => {
     cloneInvitation(invitationId, {
@@ -109,9 +114,18 @@ export default function HostView({
 
   // 호스트는 응답을 바꿀 수 없지만 게스트가 보는 RSVP 위치를 그대로 노출(읽기 전용)
   const rsvpOptions = {
-    attending: { emoji: invitation.rsvpAttendingEmoji, label: invitation.rsvpAttendingLabel },
-    undecided: { emoji: invitation.rsvpMaybeEmoji, label: invitation.rsvpMaybeLabel },
-    absent: { emoji: invitation.rsvpDeclinedEmoji, label: invitation.rsvpDeclinedLabel },
+    attending: {
+      emoji: invitation.rsvpAttendingEmoji,
+      label: invitation.rsvpAttendingLabel,
+    },
+    undecided: {
+      emoji: invitation.rsvpMaybeEmoji,
+      label: invitation.rsvpMaybeLabel,
+    },
+    absent: {
+      emoji: invitation.rsvpDeclinedEmoji,
+      label: invitation.rsvpDeclinedLabel,
+    },
   };
 
   const { mutate: submitStatusChange, isPending: isStatusPending } =
@@ -171,16 +185,16 @@ export default function HostView({
       )}
     >
       {pageBgClass.includes('blackcat') && (
-        <BlackCatGridLayer className="z-[0]" />
+        <BlackCatGridLayer className="z-0" />
       )}
       {pageBgClass.includes('masterpiece') && (
-        <MasterpieceSlideLayer className="z-[0]" />
+        <MasterpieceSlideLayer className="z-0" />
       )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <InvitationAnimation
           effect={(invitation.animation as AnimationId) ?? 'none'}
           bgClass={pageBgClass}
-          className="absolute inset-0 z-[1] pointer-events-none"
+          className="absolute inset-0 z-1 pointer-events-none"
         />
         <InvitationCherryBlossomEffect title={invitation.title} />
         <TopAppBar
@@ -235,10 +249,10 @@ export default function HostView({
           left={
             <>
               <div className="flex flex-col gap-3">
-                <header className="flex flex-col gap-[3px] text-left">
+                <header className="flex flex-col gap-0.75 text-left">
                   <h1
                     className={cn(
-                      'line-clamp-2 break-words pb-0.5 text-[34px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]',
+                      'line-clamp-2 wrap-break-word pb-0.5 text-[34px] font-extrabold leading-[1.35] tracking-tight lg:text-[36px]',
                       isDarkBg ? 'text-white' : 'text-text',
                       fontClass,
                     )}
@@ -290,7 +304,9 @@ export default function HostView({
                     pollData={pollData}
                     resultsData={resultsData}
                     isHost
-                    onClick={() => router.push(ROUTES.INVITATIONS.VOTE(invitationId))}
+                    onClick={() =>
+                      router.push(ROUTES.INVITATIONS.VOTE(invitationId))
+                    }
                   />
                 )}
 
@@ -310,38 +326,39 @@ export default function HostView({
                 />
 
                 {/* 참석자 — 게스트와 동일 표시 (참석 N명 + 아바타). 요약카드/최근응답 제거 */}
-                {participantsData && participantsData.summary.attendingCount > 0 && (
-                  <section>
-                    <div className="mb-3 flex items-center justify-between">
-                      <h3
-                        className={cn(
-                          'text-[18px] font-bold',
-                          isDarkBg ? 'text-white' : 'text-text',
-                        )}
-                      >
-                        참석자 · {participantsData.summary.attendingCount}명
-                      </h3>
-                      <button
-                        type="button"
-                        className={cn(
-                          'text-[13px]',
-                          isDarkBg ? 'text-white' : 'text-accent',
-                        )}
-                        onClick={() => setParticipantsOpen(true)}
-                      >
-                        전체보기
-                      </button>
-                    </div>
-                    <ParticipantAvatarRow
-                      participants={attendingParticipants}
-                      currentUserId={invitation.userId}
-                      currentUserProfileImageUrl={
-                        invitation.host?.profileImageUrl ?? null
-                      }
-                      onSelect={setProfileTarget}
-                    />
-                  </section>
-                )}
+                {participantsData &&
+                  participantsData.summary.attendingCount > 0 && (
+                    <section>
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3
+                          className={cn(
+                            'text-[18px] font-bold',
+                            isDarkBg ? 'text-white' : 'text-text',
+                          )}
+                        >
+                          참석자 · {participantsData.summary.attendingCount}명
+                        </h3>
+                        <button
+                          type="button"
+                          className={cn(
+                            'text-[13px]',
+                            isDarkBg ? 'text-white' : 'text-accent',
+                          )}
+                          onClick={() => setParticipantsOpen(true)}
+                        >
+                          전체보기
+                        </button>
+                      </div>
+                      <ParticipantAvatarRow
+                        participants={attendingParticipants}
+                        currentUserId={invitation.userId}
+                        currentUserProfileImageUrl={
+                          invitation.host?.profileImageUrl ?? null
+                        }
+                        onSelect={setProfileTarget}
+                      />
+                    </section>
+                  )}
               </div>
             </>
           }
@@ -362,7 +379,8 @@ export default function HostView({
               edit={{
                 icon: 'edit',
                 label: '수정',
-                onClick: () => router.push(ROUTES.INVITATIONS.EDIT(invitationId)),
+                onClick: () =>
+                  router.push(ROUTES.INVITATIONS.EDIT(invitationId)),
               }}
               textBlast={{
                 icon: 'megaphone',
@@ -419,80 +437,87 @@ export default function HostView({
           onOpenChange={setFlyerOpen}
         />
 
-        <BottomSheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen} title="더보기" hideTitle>
-            <div className="flex flex-col pb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false);
-                  router.push(ROUTES.INVITATIONS.EDIT(invitationId));
-                }}
-                className="flex h-14 items-center px-2 text-[16px] text-text"
-              >
-                수정
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false);
-                  setTextBlastOpen(true);
-                }}
-                className="flex h-14 items-center px-2 text-[16px] text-text"
-              >
-                단체 공지 보내기
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false);
-                  setQuestionnaireOpen(true);
-                }}
-                className="flex h-14 items-center px-2 text-[16px] text-text"
-              >
-                맞춤 질문 관리
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false);
-                  setFlyerOpen(true);
-                }}
-                className="flex h-14 items-center px-2 text-[16px] text-text"
-              >
-                플라이어 만들기
-              </button>
-              <button
-                type="button"
-                disabled={isCloning}
-                onClick={handleClone}
-                className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
-              >
-                {isCloning ? '복제 중...' : '초대장 복제'}
-              </button>
-              <button
-                type="button"
-                disabled={isStatusPending}
-                onClick={() =>
-                  submitStatusChange(
-                    invitation.status === 'closed' ? 'active' : 'closed',
-                  )
-                }
-                className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
-              >
-                {invitation.status === 'closed' ? '참석 응답 다시 받기' : '참석 응답 마감'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMoreSheetOpen(false);
-                  setDeleteConfirmOpen(true);
-                }}
-                className="flex h-14 items-center px-2 text-[16px] text-danger"
-              >
-                삭제
-              </button>
-            </div>
-          </BottomSheet>
+        <BottomSheet
+          open={moreSheetOpen}
+          onOpenChange={setMoreSheetOpen}
+          title="더보기"
+          hideTitle
+        >
+          <div className="flex flex-col pb-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMoreSheetOpen(false);
+                router.push(ROUTES.INVITATIONS.EDIT(invitationId));
+              }}
+              className="flex h-14 items-center px-2 text-[16px] text-text"
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreSheetOpen(false);
+                setTextBlastOpen(true);
+              }}
+              className="flex h-14 items-center px-2 text-[16px] text-text"
+            >
+              단체 공지 보내기
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreSheetOpen(false);
+                setQuestionnaireOpen(true);
+              }}
+              className="flex h-14 items-center px-2 text-[16px] text-text"
+            >
+              맞춤 질문 관리
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreSheetOpen(false);
+                setFlyerOpen(true);
+              }}
+              className="flex h-14 items-center px-2 text-[16px] text-text"
+            >
+              플라이어 만들기
+            </button>
+            <button
+              type="button"
+              disabled={isCloning}
+              onClick={handleClone}
+              className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
+            >
+              {isCloning ? '복제 중...' : '초대장 복제'}
+            </button>
+            <button
+              type="button"
+              disabled={isStatusPending}
+              onClick={() =>
+                submitStatusChange(
+                  invitation.status === 'closed' ? 'active' : 'closed',
+                )
+              }
+              className="flex h-14 items-center px-2 text-[16px] text-text disabled:opacity-50"
+            >
+              {invitation.status === 'closed'
+                ? '참석 응답 다시 받기'
+                : '참석 응답 마감'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMoreSheetOpen(false);
+                setDeleteConfirmOpen(true);
+              }}
+              className="flex h-14 items-center px-2 text-[16px] text-danger"
+            >
+              삭제
+            </button>
+          </div>
+        </BottomSheet>
 
         <BottomSheet
           open={deleteConfirmOpen}
@@ -503,31 +528,31 @@ export default function HostView({
           title="초대장 삭제"
           description="삭제하면 복구할 수 없어요. 정말 삭제할까요?"
         >
-            <div className="flex flex-col gap-2 pt-2">
-              {deleteError && (
-                <p className="text-center text-[13px] text-danger">
-                  {deleteError}
-                </p>
-              )}
-              <Button
-                fullWidth
-                variant="danger"
-                size="lg"
-                disabled={isDeletePending}
-                onClick={() => submitDelete()}
-              >
-                {isDeletePending ? '삭제 중...' : '삭제하기'}
-              </Button>
-              <Button
-                fullWidth
-                variant="secondary"
-                size="lg"
-                onClick={() => setDeleteConfirmOpen(false)}
-              >
-                취소
-              </Button>
-            </div>
-          </BottomSheet>
+          <div className="flex flex-col gap-2 pt-2">
+            {deleteError && (
+              <p className="text-center text-[13px] text-danger">
+                {deleteError}
+              </p>
+            )}
+            <Button
+              fullWidth
+              variant="danger"
+              size="lg"
+              disabled={isDeletePending}
+              onClick={() => submitDelete()}
+            >
+              {isDeletePending ? '삭제 중...' : '삭제하기'}
+            </Button>
+            <Button
+              fullWidth
+              variant="secondary"
+              size="lg"
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              취소
+            </Button>
+          </div>
+        </BottomSheet>
       </div>
     </div>
   );
