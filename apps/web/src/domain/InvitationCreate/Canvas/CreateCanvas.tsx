@@ -9,6 +9,7 @@ import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
 import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
 import { WaterBackground } from '@/components/invite/WaterBackground';
+import { HologramBackground } from '@/components/invite/HologramBackground';
 import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
@@ -180,6 +181,9 @@ export function CreateCanvas({
         )}
         {bgClass === 'bg-invite-water' && (
           <WaterBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-hologram' && (
+          <HologramBackground className="absolute inset-0 z-[0]" />
         )}
         <main className="relative z-[2] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* 대표 이미지 — 클릭/편집 버튼으로 시트 진입 */}

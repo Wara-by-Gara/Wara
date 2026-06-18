@@ -304,6 +304,13 @@ body {
       radial-gradient(ellipse at 30% 40%, #e0f7fa 0%, transparent 55%),
       radial-gradient(ellipse at 75% 65%, #00bcd4 0%, transparent 55%);
   }
+
+  /* 홀로그램 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-hologram {
+    background-color: #f8f8fc;
+    background-image:
+      linear-gradient(135deg, #fce4ec88 0%, #e8f5e988 25%, #e3f2fd88 50%, #fff9c488 75%, #fce4ec88 100%);
+  }
 }
 
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해
