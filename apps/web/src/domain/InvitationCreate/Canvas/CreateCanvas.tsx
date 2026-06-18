@@ -12,11 +12,6 @@ import { WaterBackground } from '@/components/invite/WaterBackground';
 import { HologramBackground } from '@/components/invite/HologramBackground';
 import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
 import { DESIGN_FONTS, fontStyle, getGradientVariant } from '@/domain/InvitationCreate/constants';
-import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
-import { WaterBackground } from '@/components/invite/WaterBackground';
-import { HologramBackground } from '@/components/invite/HologramBackground';
-import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
-import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
   RsvpType,
