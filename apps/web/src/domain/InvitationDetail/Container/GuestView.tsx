@@ -12,6 +12,10 @@ import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover, ParticipantProfileModal } from "@/components/domain";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
+import { GalaxyBackground } from "@/components/invite/GalaxyBackground";
+import { WaterBackground } from "@/components/invite/WaterBackground";
+import { HologramBackground } from "@/components/invite/HologramBackground";
+import { LaserShowBackground } from "@/components/invite/LaserShowBackground";
 import type { AnimationId } from "@/domain/InvitationCreate/constants";
 import InformationsContainer from "@/domain/InvitationDetail/Informations/Container/InformationsContainer";
 import { getParticipants } from "@/lib/api/participants";
@@ -116,7 +120,7 @@ const canViewFeed = !!myParticipant;
 
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
-  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry') || invitation.bgColor.includes('dreamy');
+  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry') || invitation.bgColor.includes('dreamy') || invitation.bgColor.includes('galaxy') || invitation.bgColor.includes('lasershow');
 
   return (
     <div
@@ -127,6 +131,18 @@ const canViewFeed = !!myParticipant;
         pageBgClass,
       )}
     >
+      {pageBgClass === 'bg-invite-galaxy' && (
+        <GalaxyBackground className="absolute inset-0 z-[0]" />
+      )}
+      {pageBgClass === 'bg-invite-water' && (
+        <WaterBackground className="absolute inset-0 z-[0]" />
+      )}
+      {pageBgClass === 'bg-invite-hologram' && (
+        <HologramBackground className="absolute inset-0 z-[0]" />
+      )}
+      {pageBgClass === 'bg-invite-lasershow' && (
+        <LaserShowBackground className="absolute inset-0 z-[0]" />
+      )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       <InvitationAnimation
         effect={(invitation.animation as AnimationId) ?? 'none'}

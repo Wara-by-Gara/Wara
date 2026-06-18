@@ -7,6 +7,10 @@ import type { IconName } from '@/components/icons';
 import { Textarea } from "@wara/ui";
 import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
+import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
+import { WaterBackground } from '@/components/invite/WaterBackground';
+import { HologramBackground } from '@/components/invite/HologramBackground';
+import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
 import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
@@ -173,6 +177,18 @@ export function CreateCanvas({
           bgClass,
         )}
       >
+        {bgClass === 'bg-invite-galaxy' && (
+          <GalaxyBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-water' && (
+          <WaterBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-hologram' && (
+          <HologramBackground className="absolute inset-0 z-[0]" />
+        )}
+        {bgClass === 'bg-invite-lasershow' && (
+          <LaserShowBackground className="absolute inset-0 z-[0]" />
+        )}
         <main className="relative z-[2] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* 대표 이미지 — 클릭/편집 버튼으로 시트 진입 */}
         <div className="relative">
@@ -212,7 +228,7 @@ export function CreateCanvas({
                   'text-[13px]',
                   imageError
                     ? 'text-danger'
-                    : bgClass.includes('aurora') || bgClass.includes('starry')
+                    : bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                       ? 'text-white/70'
                       : 'text-text-disabled',
                 )}
@@ -246,7 +262,7 @@ export function CreateCanvas({
             className={cn(
               // resize-none + overflow-hidden + max-h-[2.75em](leading-snug 1.375 × 2줄) → 최대 2줄
               'w-full resize-none overflow-hidden bg-transparent text-left text-[32px] font-extrabold leading-snug outline-none max-h-[2.75em]',
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white placeholder:text-white/50'
                 : 'text-text placeholder:text-text-disabled/50',
               fontStyle(designFont),
@@ -305,7 +321,7 @@ export function CreateCanvas({
           placeholder="날짜·시간을 정해주세요"
           error={dateError}
           onClick={onEditDate}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* 소개 — 투명 textarea (상세: 일정 다음, 장소 앞) */}
@@ -317,7 +333,7 @@ export function CreateCanvas({
           maxLength={2000}
           className={cn(
             "border-border/50 bg-[#dadada2b] backdrop-blur",
-            bgClass.includes('aurora') || bgClass.includes('starry')
+            bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
               ? 'text-white placeholder:text-white/70'
               : ''
           )}
@@ -330,7 +346,7 @@ export function CreateCanvas({
           placeholder={locationUnknown ? "장소를 입력하세요" : "장소 미정"}
           error={locationError}
           onClick={onEditLocation}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* 모임 옵션 — 회비·드레스코드·주차 (선택) */}
@@ -339,7 +355,7 @@ export function CreateCanvas({
           text={optionsText}
           placeholder="모임 옵션 추가하기 (선택)"
           onClick={onEditOptions}
-          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry')}
+          isDarkBg={bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')}
         />
 
         {/* RSVP (탭하면 편집) */}
@@ -354,7 +370,7 @@ export function CreateCanvas({
                 key={type}
                 className={cn(
                   'flex flex-col items-center gap-1.5 rounded-md border border-border/50 bg-[#dadada2b] px-3 py-3 backdrop-blur hover:bg-surface transition-colors',
-                  bgClass.includes('aurora') || bgClass.includes('starry')
+                  bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                     ? 'text-white'
                     : 'text-text-muted',
                 )}
@@ -377,7 +393,7 @@ export function CreateCanvas({
             onClick={onEditRsvp}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -390,7 +406,7 @@ export function CreateCanvas({
             onClick={onEditBgColor}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
@@ -403,7 +419,7 @@ export function CreateCanvas({
             onClick={onEditAnimation}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 rounded-md bg-[#dadada2b] px-3 py-2 text-[12px] font-semibold transition-colors hover:bg-[#dadada4d] backdrop-blur",
-              bgClass.includes('aurora') || bgClass.includes('starry')
+              bgClass.includes('aurora') || bgClass.includes('starry') || bgClass.includes('galaxy') || bgClass.includes('lasershow')
                 ? 'text-white'
                 : 'text-text'
             )}
