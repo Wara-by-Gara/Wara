@@ -145,6 +145,7 @@ export function BalloonAnimation({ className }: { className?: string }) {
         const dw = b.size * aspect;
         const dh = b.size;
         const src = tintedCache[b.tintIdx];
+        if (!src) continue;
 
         ctx!.save();
         ctx!.globalAlpha = b.opacity;

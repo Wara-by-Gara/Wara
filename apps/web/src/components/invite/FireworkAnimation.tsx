@@ -163,18 +163,6 @@ export function FireworkAnimation({ className }: { className?: string }) {
       return fw;
     });
 
-    function drawGlow(
-      x: number, y: number, radius: number, color: string, alpha: number,
-    ) {
-      const grad = ctx!.createRadialGradient(x, y, 0, x, y, radius);
-      grad.addColorStop(0, color.replace(')', `, ${alpha})`).replace('rgb(', 'rgba(').replace('#', 'rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/, (_, r, g, b) =>
-        `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},`));
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx!.fillStyle = grad;
-      ctx!.beginPath();
-      ctx!.arc(x, y, radius, 0, Math.PI * 2);
-      ctx!.fill();
-    }
 
     function hexToRgba(hex: string, alpha: number): string {
       const r = parseInt(hex.slice(1, 3), 16);
