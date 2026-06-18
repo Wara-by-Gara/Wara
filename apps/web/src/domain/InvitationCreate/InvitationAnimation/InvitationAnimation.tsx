@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
+import { CloudSpriteAnimation } from "@/components/invite/CloudSpriteAnimation";
 import type { AnimationId } from "../constants";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -185,11 +186,20 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" ? [] : buildParticles(effect, bgClass)),
+    () => (effect === "none" || effect === "cloud" ? [] : buildParticles(effect, bgClass)),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "cloud") {
+    return (
+      <>
+        <CloudSpriteAnimation endIdx={5} className="absolute inset-0 pointer-events-none z-[0]" />
+        <CloudSpriteAnimation startIdx={5} className="absolute inset-0 pointer-events-none z-[20]" />
+      </>
+    );
+  }
 
   return (
     <div
