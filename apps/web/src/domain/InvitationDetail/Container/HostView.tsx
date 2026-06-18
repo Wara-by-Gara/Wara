@@ -24,6 +24,7 @@ import { InvitationCover, ParticipantProfileModal } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
 import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import { BlackCatGridLayer } from '@/domain/InvitationCreate/BlackCatGrid/BlackCatGridLayer';
+import { MasterpieceSlideLayer } from '@/domain/InvitationCreate/MasterpieceSlide/MasterpieceSlideLayer';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
@@ -171,6 +172,9 @@ export default function HostView({
     >
       {pageBgClass.includes('blackcat') && (
         <BlackCatGridLayer className="z-[0]" />
+      )}
+      {pageBgClass.includes('masterpiece') && (
+        <MasterpieceSlideLayer className="z-[0]" />
       )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <InvitationAnimation

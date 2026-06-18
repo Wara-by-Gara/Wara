@@ -289,9 +289,22 @@ body {
     }
   }
 
-  /* 검은 고양이 — 캐릭터 그리드(BlackCatGridLayer)가 위에 깔리므로 베이스는 검정 (가장자리·미세 여백 노출 시 자연스럽게) */
+  /* 검은 고양이 — 베이스는 검정 + 대표 캐릭터 이미지(미리보기용; 실제 페이지에선 BlackCatGridLayer가 덮음) */
   .bg-invite-blackcat {
     background-color: #0e0b08;
+    background-image: url("/template_images/blackcat/blackcat-base.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* 마스터피스 — 베이스는 검정 + 대표 명화(미리보기용; 실제 페이지에선 MasterpieceSlideLayer가 덮음) */
+  .bg-invite-masterpiece {
+    background-color: #1a0e08;
+    background-image: url("/template_images/masterpiece/masterpiece-mona-base.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   /* 검은 고양이 — base ↔ blink 눈 깜빡임 (closed 이미지의 opacity를 짧게 띄움) */
@@ -410,6 +423,74 @@ body {
   .animate-blackcat-tail-wag,
   .animate-blackcat-snore,
   .animate-blackcat-popup {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* 명화 패러디 — 액자 내부 어두운 배경만 (외곽 액자는 PNG overlay로 대체) */
+.masterpiece-frame {
+  background-color: #1a0e08;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+/* 명화별 페어 모션 — OPEN 위에 CLOSED를 짧게 띄움 */
+.animate-pair-bubblegum {
+  animation: pair-bubblegum 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-bubblegum {
+  0%, 60% { opacity: 0; }
+  70%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-wink {
+  animation: pair-wink 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-wink {
+  0%, 75% { opacity: 0; }
+  82%, 94% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-stunned {
+  animation: pair-stunned 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-stunned {
+  0%, 65% { opacity: 0; }
+  75%, 93% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-clap {
+  animation: pair-clap 3s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-clap {
+  0%, 50% { opacity: 0; }
+  62%, 90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-wave {
+  animation: pair-wave 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-wave {
+  0%, 60% { opacity: 0; }
+  72%, 94% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pair-bubblegum,
+  .animate-pair-wink,
+  .animate-pair-stunned,
+  .animate-pair-clap,
+  .animate-pair-wave {
     animation: none;
     opacity: 0;
   }

@@ -8,6 +8,7 @@ import { Textarea } from "@wara/ui";
 import { InvitationCover } from '@/components/domain';
 import { InvitationAnimation } from '../InvitationAnimation';
 import { BlackCatGridLayer } from '../BlackCatGrid/BlackCatGridLayer';
+import { MasterpieceSlideLayer } from '../MasterpieceSlide/MasterpieceSlideLayer';
 import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
@@ -176,6 +177,9 @@ export function CreateCanvas({
       >
         {bgClass.includes('blackcat') && (
           <BlackCatGridLayer className="z-[0]" />
+        )}
+        {bgClass.includes('masterpiece') && (
+          <MasterpieceSlideLayer className="z-[0]" />
         )}
         <main className="relative z-[2] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-page pb-6 pt-4">
         {/* 대표 이미지 — 클릭/편집 버튼으로 시트 진입 */}
