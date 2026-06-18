@@ -353,36 +353,6 @@ body {
       #0288d1 68%,
       #01579b 100%
     );
-  /* 갤럭시 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
-  .bg-invite-galaxy {
-    background-color: #1a0a2e;
-    background-image:
-      radial-gradient(ellipse at 40% 30%, #6b21a855 0%, transparent 60%),
-      radial-gradient(ellipse at 70% 80%, #4c1d9555 0%, transparent 60%);
-  }
-
-  /* 워터 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
-  .bg-invite-water {
-    background-color: #7dd3e8;
-    background-image:
-      radial-gradient(ellipse at 30% 40%, #e0f7fa 0%, transparent 55%),
-      radial-gradient(ellipse at 75% 65%, #00bcd4 0%, transparent 55%);
-  }
-
-  /* 홀로그램 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
-  .bg-invite-hologram {
-    background-color: #f8f8fc;
-    background-image:
-      linear-gradient(135deg, #fce4ec88 0%, #e8f5e988 25%, #e3f2fd88 50%, #fff9c488 75%, #fce4ec88 100%);
-  }
-
-  /* 레이저쇼 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
-  .bg-invite-lasershow {
-    background-color: #050515;
-    background-image:
-      radial-gradient(ellipse at 50% 100%, #2233aa55 0%, transparent 60%),
-      radial-gradient(ellipse at 30% 55%, #6600ff22 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 55%, #00ff5522 0%, transparent 50%);
   }
 
   /* 갤럭시 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
