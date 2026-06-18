@@ -288,6 +288,14 @@ body {
       animation: none;
     }
   }
+
+  /* 갤럭시 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-galaxy {
+    background-color: #1a0a2e;
+    background-image:
+      radial-gradient(ellipse at 40% 30%, #6b21a855 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, #4c1d9555 0%, transparent 60%);
+  }
 }
 
 /* react-remove-scroll-bar이 모달 오픈 시 body에 margin을 !important로 주입해
