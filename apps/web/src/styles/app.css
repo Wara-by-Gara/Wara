@@ -596,6 +596,20 @@ body {
   }
 }
 
+/* 페인트 splash (Lottie) — fade-in 후 자연스럽게 사라짐 (Lottie 자체는 1회 재생) */
+@keyframes paint-lottie-fade {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-blackcat-blink,
   .animate-blackcat-blep,
