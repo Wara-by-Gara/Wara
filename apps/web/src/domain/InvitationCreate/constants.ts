@@ -19,6 +19,8 @@ export const DESIGN_BG_THEMES = [
   { id: "water", label: "워터", cls: "bg-invite-water" },
   { id: "hologram", label: "홀로그램", cls: "bg-invite-hologram" },
   { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow" },
+  { id: "blackcat", label: "검은고양이", cls: "bg-invite-blackcat" },
+  { id: "masterpiece", label: "마스터피스", cls: "bg-invite-masterpiece" },
 ] as const;
 
 export type DesignBgColor =
@@ -97,6 +99,8 @@ export const ANIMATIONS = [
   { id: "bokeh", label: "빛망울", emoji: "✨" },
   { id: "stream", label: "보라빛 라인", emoji: "🌌" },
   { id: "firework", label: "폭죽", emoji: "🎆" },
+  { id: "blackcat", label: "검은 고양이", emoji: "🐈‍⬛" },
+  { id: "paint", label: "물감", emoji: "🎨" },
   { id: "flower", label: "꽃 낙화", emoji: "🌸" },
 ] as const;
 

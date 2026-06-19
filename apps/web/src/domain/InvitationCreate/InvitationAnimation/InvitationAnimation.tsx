@@ -11,9 +11,11 @@ import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
 import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
 import { FlowerFallAnimation } from "@/components/invite/FlowerFallAnimation";
 import type { AnimationId } from "../constants";
+import { ThreeCatScene } from "./ThreeCatScene";
+import { PaintAnimation } from "./PaintAnimation";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
-type Visual = "petal" | "confetti" | "bubble" | "emoji" | "star";
+type Visual = "petal" | "confetti" | "bubble" | "emoji" | "star" | "splash";
 
 type EffectConfig = {
   anim: AnimKind;
@@ -37,7 +39,21 @@ const ANIM_KEYFRAME: Record<AnimKind, string> = {
   twinkle: "invite-anim-twinkle",
 };
 
-const CONFIG: Record<Exclude<AnimationId, "none">, EffectConfig> = {
+/** 별도 컴포넌트로 처리하는 effect — buildParticles 대신 분기 렌더 */
+const CUSTOM_EFFECTS = new Set<AnimationId>([
+  "blackcat",
+  "paint",
+  "stream",
+  "bokeh",
+  "crystal",
+  "paper",
+  "cloud",
+  "firework",
+  "balloon",
+  "flower",
+]);
+
+const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
   cherry: {
     anim: "fall", visual: "petal", count: 22, size: [10, 22], duration: [8, 15],
     drift: [-60, 60], opacity: [0.5, 0.82], colors: ["#ffe1ef", "#ff9aca", "#ffd6e0", "#ffb3d9"],
@@ -118,7 +134,10 @@ type Particle = {
   content: string | null;
 };
 
-function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string): Particle[] {
+function buildParticles(
+  effect: AnimationId,
+  bgClass?: string,
+): Particle[] {
   const c = CONFIG[effect];
   if (!c || c.count === 0) return [];
 
@@ -136,8 +155,19 @@ function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string):
     const opacity = rand(i, 4, c.opacity[0], c.opacity[1]);
     const spin = rand(i, 5, 120, 720);
     const tilt = c.tilt ? rand(i, 6, c.tilt[0], c.tilt[1]) : 0;
-    const x = rand(i, 7, 0, 100);
-    const y = c.anim === "twinkle" ? rand(i, 8, 0, 100) : rand(i, 8, 6, 90);
+    // splash (페인트)는 sin-hash로 더 잘 흩어진 좌표 (LCG의 격자 패턴 회피)
+    const sinHash = (seed: number) => {
+      const v = Math.sin(i * 12.9898 + seed) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const x =
+      c.visual === "splash" ? sinHash(78.233) * 100 : rand(i, 7, 0, 100);
+    const y =
+      c.visual === "splash"
+        ? sinHash(39.846) * 100
+        : c.anim === "twinkle"
+          ? rand(i, 8, 0, 100)
+          : rand(i, 8, 6, 90);
     const delay = -rand(i, 9, 0, duration); // 음수 delay → 마운트 즉시 진행중
     const entryEdge = i % 4; // 4방향 진입점 순환: 상/우/하/좌
 
@@ -197,6 +227,36 @@ function buildParticles(effect: Exclude<AnimationId, "none">, bgClass?: string):
       style.borderRadius = "50%";
       style.background = "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 30%, transparent 70%)";
       style.boxShadow = "0 0 8px rgba(255,255,255,0.6), 0 0 16px rgba(255,200,255,0.3)";
+    } else if (c.visual === "splash") {
+      // 페인트 splash — 본체 + 주변 satellite 점들 (튄 페인트 흔적)
+      const color = particleColors?.[i % particleColors.length] ?? "#ff6b6b";
+      // 본체 불규칙 border-radius (4 코너 다 다른 비율)
+      const tl = 30 + ((i * 17) % 50);
+      const tr = 25 + ((i * 23) % 55);
+      const br = 35 + ((i * 31) % 45);
+      const bl = 30 + ((i * 41) % 50);
+      // 그라디언트 비중심 (페인트 농담 효과)
+      const gx = 25 + (i % 7) * 8;
+      const gy = 25 + (i % 5) * 9;
+      // 주변 satellite 점들 (튄 페인트 4개, 다양한 거리·방향)
+      const r = size * 0.7;
+      const a1 = i * 1.7;
+      const a2 = i * 2.9 + 1.2;
+      const a3 = i * 3.7 + 2.5;
+      const a4 = i * 4.3 + 4.1;
+      const s1 = Math.min(size * 0.18, 6);
+      const s2 = Math.min(size * 0.12, 4);
+      const s3 = Math.min(size * 0.1, 3);
+      const s4 = Math.min(size * 0.08, 2.5);
+      style.background = `radial-gradient(circle at ${gx}% ${gy}%, ${color} 0%, ${color} 50%, ${color}cc 75%, transparent 100%)`;
+      style.borderRadius = `${tl}% ${tr}% ${br}% ${bl}%`;
+      style.filter = "blur(0.4px)";
+      style.boxShadow = [
+        `${(Math.cos(a1) * r).toFixed(1)}px ${(Math.sin(a1) * r).toFixed(1)}px 0 -${(size / 2 - s1).toFixed(1)}px ${color}`,
+        `${(Math.cos(a2) * r * 0.85).toFixed(1)}px ${(Math.sin(a2) * r * 0.85).toFixed(1)}px 0 -${(size / 2 - s2).toFixed(1)}px ${color}`,
+        `${(Math.cos(a3) * r * 1.1).toFixed(1)}px ${(Math.sin(a3) * r * 1.1).toFixed(1)}px 0 -${(size / 2 - s3).toFixed(1)}px ${color}`,
+        `${(Math.cos(a4) * r * 0.95).toFixed(1)}px ${(Math.sin(a4) * r * 0.95).toFixed(1)}px 0 -${(size / 2 - s4).toFixed(1)}px ${color}`,
+      ].join(", ");
     }
 
     return {
@@ -218,11 +278,32 @@ export function InvitationAnimation({
   className?: string;
 }) {
   const particles = useMemo(
-    () => (effect === "none" || effect === "cloud" || effect === "paper" || effect === "crystal" || effect === "bokeh" || effect === "stream" || effect === "firework" || effect === "balloon" || effect === "flower" ? [] : buildParticles(effect, bgClass)),
+    () =>
+      effect === "none" || CUSTOM_EFFECTS.has(effect)
+        ? []
+        : buildParticles(effect, bgClass),
     [effect, bgClass],
   );
 
   if (effect === "none") return null;
+
+  if (effect === "blackcat") {
+    return (
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden",
+          className,
+        )}
+      >
+        <ThreeCatScene />
+      </div>
+    );
+  }
+
+  if (effect === "paint") {
+    return <PaintAnimation className={className} />;
+  }
 
   if (effect === "stream") {
     return (
