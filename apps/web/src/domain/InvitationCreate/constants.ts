@@ -21,9 +21,44 @@ export const DESIGN_BG_THEMES = [
   { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow" },
 ] as const;
 
-export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
+export type DesignBgColor =
+  | (typeof DESIGN_BG_THEMES)[number]["cls"]
+  | `bg-invite-grad-${string}`;
 
 export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[1].cls;
+
+/* ---------- 배경: 애니메이션 그라데이션 변형 ----------
+ * 색쌍(c1/c2)을 추가하면 자동으로 배경 옵션·렌더에 반영된다.
+ * 저장값은 `bg-invite-grad-<id>` 문자열 (DB/DTO 변경 불필요).
+ * 색은 GradientScene에서 --c1/--c2 CSS 변수로 주입된다. */
+export const GRADIENT_BG_VARIANTS = [
+  { id: "sunset", label: "선셋", c1: "#ff7e5f", c2: "#feb47b" },
+  { id: "ocean", label: "바다", c1: "#87ceeb", c2: "#0288d1" },
+  { id: "lightning", label: "번개", c1: "#191c38", c2: "#23294e" },
+  { id: "soccer", label: "축구", c1: "#2e8020", c2: "#1d5a12" },
+] as const;
+
+export type GradientVariant = (typeof GRADIENT_BG_VARIANTS)[number];
+
+export const gradientCls = (id: string): `bg-invite-grad-${string}` =>
+  `bg-invite-grad-${id}`;
+
+/** 피커용 — 기존 DESIGN_BG_THEMES와 동일 형태({id,label,cls})에 색을 더한 목록 */
+export const GRADIENT_BG_THEMES = GRADIENT_BG_VARIANTS.map((v) => ({
+  id: v.id,
+  label: v.label,
+  cls: gradientCls(v.id),
+  c1: v.c1,
+  c2: v.c2,
+}));
+
+/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) */
+export function getGradientVariant(bg?: string | null): GradientVariant | undefined {
+  const prefix = "bg-invite-grad-";
+  if (!bg?.startsWith(prefix)) return undefined;
+  const id = bg.slice(prefix.length);
+  return GRADIENT_BG_VARIANTS.find((v) => v.id === id);
+}
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */
 export const DESIGN_FONTS = [

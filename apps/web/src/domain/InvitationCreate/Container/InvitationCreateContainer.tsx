@@ -47,12 +47,15 @@ import {
 import { useLightTheme } from '@/hooks/useLightTheme';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { CreateCanvas } from '@/domain/InvitationCreate/Canvas/CreateCanvas';
+import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
 import { AiCompositeSheet } from '@/domain/InvitationCreate/Sheets/AiCompositeSheet';
 import {
   DEFAULT_COVER_KEY,
   DEFAULT_BG_COLOR,
   type DesignBgColor,
   DESIGN_BG_THEMES,
+  GRADIENT_BG_THEMES,
+  getGradientVariant,
   DEFAULT_FONT,
   ANIMATIONS,
   type AnimationId,
@@ -983,10 +986,15 @@ export default function InvitationCreateContainer({
     );
   }
 
+  const createGradient = getGradientVariant(designBgColor);
+
   return (
     <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-5xl">
+      {createGradient && (
+        <GradientScene variant={createGradient} className="absolute inset-0 z-0" />
+      )}
       <TopAppBar
-        className="shrink-0"
+        className="relative z-10 shrink-0"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
         onBack={() => {
           if (
@@ -1001,7 +1009,7 @@ export default function InvitationCreateContainer({
       />
 
       {/* PC: 좌측 고정 WYSIWYG 캔버스(실제 초대장 크기) / 우측 편집 패널. 모바일은 캔버스만 */}
-      <div className="lg:grid lg:grid-cols-[28rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-6 lg:py-6">
+      <div className="relative z-10 lg:grid lg:grid-cols-[28rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-6 lg:py-6">
         <div className="lg:sticky lg:top-6 lg:self-start">
           {/* WYSIWYG 캔버스 */}
           <CreateCanvas
@@ -1058,7 +1066,7 @@ export default function InvitationCreateContainer({
 
         {/* 우측 편집 패널 (PC 전용). 각 항목은 모바일과 동일한 시트를 연다 */}
         <aside className="hidden lg:flex lg:flex-col lg:gap-2">
-          <p className="px-1 pb-1 text-[13px] font-bold text-text-muted">편집</p>
+          <p className={cn('px-1 pb-1 text-[13px] font-bold', createGradient ? 'text-white' : 'text-text-muted')}>편집</p>
           {[
             { label: '대표 이미지', onClick: () => setImageSheetOpen(true) },
             { label: '날짜·시간', onClick: () => setDateSheetOpen(true) },
@@ -1072,10 +1080,13 @@ export default function InvitationCreateContainer({
               key={it.label}
               type="button"
               onClick={it.onClick}
-              className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3 text-left text-[14px] font-medium text-text transition-colors hover:bg-surface-muted"
+              className={cn(
+                'flex items-center justify-between rounded-md border border-border/50 bg-[#dadada2b] px-4 py-3 text-left text-[14px] font-medium backdrop-blur transition-colors',
+                createGradient ? 'text-white hover:bg-white/15' : 'text-text hover:bg-surface-muted',
+              )}
             >
               {it.label}
-              <span aria-hidden className="text-text-disabled">›</span>
+              <span aria-hidden className={createGradient ? 'text-white/60' : 'text-text-disabled'}>›</span>
             </button>
           ))}
           <button
@@ -1095,7 +1106,7 @@ export default function InvitationCreateContainer({
 
       <main
         ref={contentScrollRef}
-        className="flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5 lg:flex-none lg:overflow-visible lg:p-0"
+        className="relative z-10 flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-page py-5 lg:flex-none lg:overflow-visible lg:p-0"
       >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
@@ -1815,7 +1826,9 @@ export default function InvitationCreateContainer({
         {/* 배경색 편집 시트 */}
         <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen} title="배경색">
             <div className="grid grid-cols-5 gap-2">
-              {DESIGN_BG_THEMES.map(({ id, label, cls }) => (
+              {[...DESIGN_BG_THEMES, ...GRADIENT_BG_THEMES].map(({ id, label, cls }) => {
+                const grad = getGradientVariant(cls);
+                return (
                 <button
                   key={id}
                   type="button"
@@ -1826,9 +1839,10 @@ export default function InvitationCreateContainer({
                   <span
                     className={cn(
                       'aspect-square w-full rounded-md border-2',
-                      cls,
+                      grad ? 'bg-invite-grad-base' : cls,
                       designBgColor === cls ? 'border-primary' : 'border-border',
                     )}
+                    style={grad ? { ['--c1' as string]: grad.c1, ['--c2' as string]: grad.c2 } : undefined}
                   />
                   <span
                     className={cn(
@@ -1841,7 +1855,8 @@ export default function InvitationCreateContainer({
                     {label}
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </BottomSheet>
 

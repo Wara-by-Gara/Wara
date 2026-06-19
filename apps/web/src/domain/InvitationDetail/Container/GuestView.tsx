@@ -12,6 +12,8 @@ import ShareBottomSheet from "@/domain/Invitation/ShareBottomSheet";
 import { InvitationCover, ParticipantProfileModal } from "@/components/domain";
 import { InvitationCherryBlossomEffect } from "@/domain/InvitationDetail/CherryBlossomRain";
 import { InvitationAnimation } from "@/domain/InvitationCreate/InvitationAnimation";
+import { GradientScene } from "@/domain/InvitationCreate/GradientScene";
+import { getGradientVariant } from "@/domain/InvitationCreate/constants";
 import { GalaxyBackground } from "@/components/invite/GalaxyBackground";
 import { WaterBackground } from "@/components/invite/WaterBackground";
 import { HologramBackground } from "@/components/invite/HologramBackground";
@@ -120,7 +122,8 @@ const canViewFeed = !!myParticipant;
 
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
-  const isDarkBg = invitation.bgColor.includes('aurora') || invitation.bgColor.includes('starry') || invitation.bgColor.includes('dreamy') || invitation.bgColor.includes('galaxy') || invitation.bgColor.includes('lasershow');
+  const gradientVariant = getGradientVariant(invitation.bgColor);
+  const isDarkBg = !!gradientVariant || ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'].some((k) => invitation.bgColor.includes(k));
 
   return (
     <div
@@ -131,6 +134,7 @@ const canViewFeed = !!myParticipant;
         pageBgClass,
       )}
     >
+      {gradientVariant && <GradientScene variant={gradientVariant} className="fixed inset-0 z-0" />}
       {pageBgClass === 'bg-invite-galaxy' && (
         <GalaxyBackground className="absolute inset-0 z-[0]" />
       )}
@@ -174,7 +178,12 @@ const canViewFeed = !!myParticipant;
               variant={cover.variant}
               imageUrl={cover.imageUrl}
               gifUrl={cover.gifUrl}
-              backgroundClass={invitation.bgColor}
+              backgroundClass={gradientVariant ? 'bg-invite-grad-base' : invitation.bgColor}
+              style={
+                gradientVariant
+                  ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)
+                  : undefined
+              }
               hideBottomGradient
               detailMode
             />
