@@ -1,1 +1,0 @@
-export { GradientScene } from "./GradientScene";

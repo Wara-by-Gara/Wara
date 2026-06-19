@@ -1,7 +1,6 @@
 import {
   DEFAULT_BG_COLOR,
   DESIGN_BG_THEMES,
-  getGradientVariant,
 } from "@/domain/InvitationCreate/constants";
 
 const INVITE_BG_CLASSES = new Set<string>(
@@ -10,7 +9,6 @@ const INVITE_BG_CLASSES = new Set<string>(
 
 /** API bgColor → 적용 가능한 테마 클래스 */
 export function resolveInvitationBgClass(bgColor?: string | null): string {
-  if (getGradientVariant(bgColor)) return bgColor!;
   if (bgColor && INVITE_BG_CLASSES.has(bgColor)) {
     return bgColor;
   }

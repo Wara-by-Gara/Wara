@@ -9,7 +9,6 @@ import Album from '../Album/Album';
 import InvitationFeedbacks from '../InvitationFeedbacks/InvitationFeedbacks';
 import BestNineModal from '../../BestNine/BestNineModal';
 import { InvitationFeedSkeleton } from '@/components/domain/Skeleton';
-import { getGradientVariant } from '@/domain/InvitationCreate/constants';
 
 function isMomentLogVisible(eventStartAt: string | null): boolean {
   if (!eventStartAt) return false;
@@ -27,7 +26,6 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
   const { data: invitation } = useInvitation(invitationId);
   const bg = invitation?.bgColor ?? '';
   const isDarkBg =
-    !!getGradientVariant(bg) ||
     bg.includes('aurora') || bg.includes('starry') || bg.includes('dreamy');
   const showMomentLog = isMomentLogVisible(invitation?.eventStartAt ?? null);
   const { data: best9 } = useBest9(showMomentLog ? invitationId : '');

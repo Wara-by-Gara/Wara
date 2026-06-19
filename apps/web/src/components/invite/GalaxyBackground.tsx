@@ -5,9 +5,7 @@ import * as THREE from 'three';
 import { cn } from '@/lib/cn';
 
 const vertexShader = /* glsl */ `
-
 varying vec2 vUv;
-
 void main() {
   vUv = uv;
   gl_Position = vec4(position, 1.0);
