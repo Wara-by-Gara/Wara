@@ -1,3 +1,4 @@
+export { FlowerFallAnimation } from "./FlowerFallAnimation";
 export { InviteTemplateRenderer } from "./InviteTemplateRenderer";
 export type { InviteTemplateRendererProps } from "./InviteTemplateRenderer";
 export { InvitePreview } from "./InvitePreview";

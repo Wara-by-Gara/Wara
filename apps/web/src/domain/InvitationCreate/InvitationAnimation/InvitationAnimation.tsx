@@ -9,6 +9,7 @@ import { BokehAnimation } from "@/components/invite/BokehAnimation";
 import { AuroraAnimation } from "@/components/invite/AuroraAnimation";
 import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
 import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
+import { FlowerFallAnimation } from "@/components/invite/FlowerFallAnimation";
 import type { AnimationId } from "../constants";
 import { ThreeCatScene } from "./ThreeCatScene";
 import { PaintAnimation } from "./PaintAnimation";
@@ -49,6 +50,7 @@ const CUSTOM_EFFECTS = new Set<AnimationId>([
   "cloud",
   "firework",
   "balloon",
+  "flower",
 ]);
 
 const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
@@ -111,6 +113,10 @@ const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
   },
   firework: {
     anim: "rise", visual: "star", count: 0, size: [0, 0],
+    duration: [0, 0], drift: [0, 0], opacity: [1, 1],
+  },
+  flower: {
+    anim: "fall", visual: "petal", count: 0, size: [0, 0],
     duration: [0, 0], drift: [0, 0], opacity: [1, 1],
   },
 };
@@ -345,6 +351,15 @@ export function InvitationAnimation({
 
   if (effect === "balloon") {
     return <BalloonAnimation className={className} />;
+  }
+
+  if (effect === "flower") {
+    return (
+      <>
+        <FlowerFallAnimation className="absolute inset-0 pointer-events-none z-0" />
+        <FlowerFallAnimation className="absolute inset-0 pointer-events-none z-20" />
+      </>
+    );
   }
 
   return (
