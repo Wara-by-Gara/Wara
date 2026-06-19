@@ -62,6 +62,7 @@ export const ANIMATIONS = [
   { id: "bokeh", label: "빛망울", emoji: "✨" },
   { id: "stream", label: "보라빛 라인", emoji: "🌌" },
   { id: "firework", label: "폭죽", emoji: "🎆" },
+  { id: "flower", label: "꽃 낙화", emoji: "🌸" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];
