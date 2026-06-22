@@ -12,14 +12,14 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^21.0.1",
-    "@types/node": "^22.0.0",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@types/node": "^26.0.0",
     "@wara/tsconfig": "workspace:*",
-    "commitlint": "^21.0.1",
+    "commitlint": "^21.0.2",
     "husky": "^9.1.7",
-    "prettier": "^3.4.2",
-    "turbo": "^2.9.10",
-    "typescript": "^5.7.0"
+    "prettier": "^3.8.4",
+    "turbo": "^2.9.18",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20.0.0",
