@@ -92,6 +92,13 @@
       "when": 1782918588160,
       "tag": "0012_hard_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782919991034,
+      "tag": "0013_unknown_star_brand",
+      "breakpoints": true
     }
   ]
 }

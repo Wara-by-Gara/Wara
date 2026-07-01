@@ -169,6 +169,16 @@ export class AuthService {
       });
     }
 
+    // 어드민 제재 유저는 토큰 재발급 차단 + 전체 세션 무효화.
+    if (user.suspendedAt) {
+      this.logger.warn(`Suspended user refresh blocked: ${user.id}`);
+      await this.refreshStore.revokeAllByUserId(user.id);
+      throw new UnauthorizedException({
+        code: ErrorCode.AUTH_ACCOUNT_SUSPENDED,
+        message: '정지된 계정입니다.',
+      });
+    }
+
     this.logger.debug(`Token refreshed for user: ${user.id}`);
     const payload: JwtPayload = {
       id: user.id,

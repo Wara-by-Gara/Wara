@@ -23,6 +23,9 @@ export const users = pgTable('users', {
   // 탈퇴 사유 — soft delete 시 함께 기록. 분석/개선 피드백 용도이므로 nullable.
   withdrawalReason: varchar('withdrawal_reason', { length: 32 }),
   withdrawalDetail: text('withdrawal_detail'),
+  // 어드민 제재 — 값이 있으면 정지 상태. refresh 시 차단(access 토큰 TTL 내 반영).
+  suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+  suspendedReason: text('suspended_reason'),
 });
 
 export const socialAccounts = pgTable('social_accounts', {

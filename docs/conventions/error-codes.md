@@ -32,6 +32,7 @@
 | `AUTH_PROVIDER_TOKEN_INVALID` | 401 | 소셜 provider 토큰(access token / id_token) 검증 실패 또는 만료 |
 | `AUTH_INVALID_TOKEN` | 401 | id_token 위조 또는 만료 |
 | `AUTH_USER_NOT_FOUND` | 401 | 유저 조회 실패 |
+| `AUTH_ACCOUNT_SUSPENDED` | 401 | 어드민 제재된 계정의 토큰 재발급(refresh) 시도 |
 | `TOKEN_EXPIRED` | 401 | refresh token 만료 |
 | `TOKEN_INVALID` | 401 | refresh token 위조 또는 없음 |
 | `APPLE_SERVER_TIMEOUT` | 504 | Apple 인증 서버 응답 시간 초과 |
