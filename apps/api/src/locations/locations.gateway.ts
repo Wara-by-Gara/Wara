@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { z } from 'zod';
 import { LocationsService, ARRIVAL_NOTIFICATION_DELAY_MS } from './locations.service';
+import type { ParticipantLocationWithUser } from './locations.repository';
 import { UpdateParticipantLocationSchema } from './dto/update-participant-location.dto';
 import { ParticipantRepository } from '../common/repositories/participant.repository';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
@@ -86,6 +87,13 @@ export class LocationsGateway implements OnGatewayConnection {
       .emit('location:removed', { invitationId, participantId });
   }
 
+  /** 티어 변경 등으로 마스킹된 위치를 즉시 재브로드캐스트. service에서 호출. */
+  emitLocationUpdated(invitationId: string, location: ParticipantLocationWithUser): void {
+    this.server
+      .to(`invitation:${invitationId}`)
+      .emit('location:updated', location);
+  }
+
   /** 미도착 상태메시지 설정/수정 broadcast. service에서 호출. */
   emitStatusMessageUpdated(
     invitationId: string,
@@ -119,12 +127,19 @@ export class LocationsGateway implements OnGatewayConnection {
     const { invitationId, ...dto } = result.data;
 
     try {
-      const { location, justArrived } =
+      const { location, broadcast, justArrived } =
         await this.locationsService.updateMyLocation(invitationId, user.id, dto);
 
-      this.server
-        .to(`invitation:${invitationId}`)
-        .emit('location:updated', location);
+      // 티어 마스킹된 broadcast만 방 전체에 전송. hidden(null)이면 마커 제거 신호.
+      if (broadcast) {
+        this.server
+          .to(`invitation:${invitationId}`)
+          .emit('location:updated', broadcast);
+      } else {
+        this.server
+          .to(`invitation:${invitationId}`)
+          .emit('location:removed', { invitationId, participantId: location.participantId });
+      }
 
       if (justArrived) {
         setTimeout(() => {

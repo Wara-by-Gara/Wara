@@ -95,6 +95,8 @@ export const settlementSplitTypeEnum = pgEnum('settlement_split_type', ['equal',
 // 콘텐츠 신고 대상 / 처리 상태
 export const reportTargetTypeEnum = pgEnum('report_target_type', ['photo', 'feedback']);
 export const reportStatusEnum = pgEnum('report_status', ['pending', 'reviewing', 'resolved', 'dismissed']);
+// 위치 공유 프라이버시 티어: full=정확좌표, distance=대략(coarse), hidden=비공개
+export const locationTierEnum = pgEnum('location_tier', ['full', 'distance', 'hidden']);
 
 export const inquiryTypeEnum = pgEnum('inquiry_type', [
   'invitation',

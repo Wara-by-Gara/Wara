@@ -24,6 +24,7 @@ export type ParticipantLocationWithUser = {
   updatedAt: Date;
   nickname: string | null;
   profileImageUrl: string | null;
+  tier?: 'full' | 'distance' | 'hidden';
 };
 
 @Injectable()
@@ -132,7 +133,12 @@ export class LocationsRepository {
   async findUserInfoByParticipantIds(
     participantIds: string[],
   ): Promise<
-    Map<string, { nickname: string | null; profileImageUrl: string | null }>
+    Map<string, {
+      nickname: string | null;
+      profileImageUrl: string | null;
+      participantTier: 'full' | 'distance' | 'hidden' | null;
+      userDefaultTier: 'full' | 'distance' | 'hidden';
+    }>
   > {
     if (participantIds.length === 0) return new Map();
     const rows = await this.db
@@ -140,6 +146,8 @@ export class LocationsRepository {
         participantId: participants.id,
         nickname: users.nickname,
         profileImageUrl: users.profileImageUrl,
+        participantTier: participants.locationTier,
+        userDefaultTier: users.defaultLocationTier,
       })
       .from(participants)
       .innerJoin(users, eq(users.id, participants.userId))
@@ -147,9 +155,36 @@ export class LocationsRepository {
     return new Map(
       rows.map((r) => [
         r.participantId,
-        { nickname: r.nickname, profileImageUrl: r.profileImageUrl },
+        {
+          nickname: r.nickname,
+          profileImageUrl: r.profileImageUrl,
+          participantTier: r.participantTier,
+          userDefaultTier: r.userDefaultTier,
+        },
       ]),
     );
+  }
+
+  /** 유저 기본 티어 설정 */
+  async setUserDefaultTier(userId: string, tier: 'full' | 'distance' | 'hidden') {
+    await this.db
+      .update(users)
+      .set({ defaultLocationTier: tier, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  /** 참가자(모임별) 티어 설정. null = 유저 기본값 따름 */
+  async setParticipantTier(
+    userId: string,
+    invitationId: string,
+    tier: 'full' | 'distance' | 'hidden' | null,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .update(participants)
+      .set({ locationTier: tier, updatedAt: new Date() })
+      .where(and(eq(participants.userId, userId), eq(participants.invitationId, invitationId)))
+      .returning({ id: participants.id });
+    return row?.id ?? null;
   }
 
   // GPS upsert 시 활성 상태 검증용. 마감/soft deleted면 broadcast 차단.

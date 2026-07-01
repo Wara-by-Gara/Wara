@@ -1,6 +1,6 @@
 import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
-import { genderEnum, userRoleEnum, socialProviderEnum } from './enums';
+import { genderEnum, userRoleEnum, socialProviderEnum, locationTierEnum } from './enums';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   birthYear: integer('birth_year'),
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('member'),
+  defaultLocationTier: locationTierEnum('default_location_tier').notNull().default('full'), /** 위치 공유 기본 프라이버시 티어 */
   promotedBy: text('promoted_by').references((): AnyPgColumn => users.id),
   promotedAt: timestamp('promoted_at', { withTimezone: true }),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
