@@ -171,12 +171,13 @@ export class ParticipantsRepository {
     invitationId: string,
     blockedUserId: string,
     blockedByUserId: string,
+    reason?: string | null,
   ): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(participants).where(eq(participants.id, participantId));
       await tx
         .insert(invitationBlocklists)
-        .values({ invitationId, blockedUserId, blockedByUserId })
+        .values({ invitationId, blockedUserId, blockedByUserId, reason: reason ?? null })
         .onConflictDoNothing();
     });
   }

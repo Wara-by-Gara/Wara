@@ -156,7 +156,7 @@ export class ParticipantsService {
     return this.repository.updateHidden(viewer.id, isHidden);
   }
 
-  async leave(participantId: string, viewer: Participant) {
+  async leave(participantId: string, viewer: Participant, reason?: string | null) {
     const target = await this.repository.findById(participantId);
     if (!target || target.invitationId !== viewer.invitationId) {
       throw new NotFoundException(ErrorCode.PARTICIPANT_NOT_FOUND);
@@ -176,6 +176,7 @@ export class ParticipantsService {
         viewer.invitationId,
         target.userId,
         viewer.userId,
+        reason,
       );
     } else {
       await this.repository.hardDelete(participantId);

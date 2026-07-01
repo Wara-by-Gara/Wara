@@ -143,7 +143,19 @@
 | `VOTE_SLOT_NOT_FOUND` | 404 | 슬롯 없음 또는 해당 폴에 속하지 않음 |
 | `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
 | `VOTE_SLOT_DUPLICATE` | 422 | 동일 날짜·시간 슬롯 중복 등록 |
+| `VOTE_SLOT_TYPE_MISMATCH` | 422 | 투표 유형과 슬롯 형식 불일치 (date 투표에 label 지정, custom 투표에 date 지정 등) |
 | `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
+
+## Settlement (비용 정산)
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `SETTLEMENT_NOT_FOUND` | 404 | 정산 없음 |
+| `SETTLEMENT_EXPENSE_NOT_FOUND` | 404 | 비용 항목 없음 또는 해당 정산 소속 아님 |
+| `SETTLEMENT_FORBIDDEN` | 403 | 지불자 본인 또는 HOST가 아닌데 항목 수정/삭제 시도 |
+| `SETTLEMENT_CONFIRMED` | 422 | 확정된 정산의 항목 추가/수정/삭제 시도 |
+| `SETTLEMENT_PARTICIPANT_INVALID` | 400 | 지불자/분담 참가자가 해당 초대장 참가자가 아님 |
+| `SETTLEMENT_SHARE_DISABLED` | 404 | 공유 비활성(토큰 없음/폐기) 상태의 공개 링크 접근 |
 
 ## AI
 

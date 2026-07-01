@@ -87,6 +87,11 @@ export const dateVoteResponseEnum = pgEnum('date_vote_response', [
   'maybe',
   'bad',
 ]);
+// 'date' = 날짜/시간 후보 투표(확정 시 eventStartAt 세팅), 'custom' = 임의 텍스트 후보 투표
+export const dateVoteTypeEnum = pgEnum('date_vote_type', ['date', 'custom']);
+// 비용 정산 상태 / 항목 분배 방식
+export const settlementStatusEnum = pgEnum('settlement_status', ['open', 'confirmed']);
+export const settlementSplitTypeEnum = pgEnum('settlement_split_type', ['equal', 'custom']);
 
 export const inquiryTypeEnum = pgEnum('inquiry_type', [
   'invitation',

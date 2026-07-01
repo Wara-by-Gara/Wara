@@ -1,16 +1,18 @@
 import { pgTable, text, boolean, integer, varchar, timestamp, uniqueIndex, index, date } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
-import { dateVotePollStatusEnum, dateVoteResponseEnum } from './enums';
+import { dateVotePollStatusEnum, dateVoteResponseEnum, dateVoteTypeEnum } from './enums';
 import { invitations, participants } from './invitations';
 
 // ── date_vote_polls ─────────────────────────────────────────────────────────
-// 초대장당 1개. confirmedSlotId는 date_vote_slots을 참조하지만
+// 초대장당 N개(다중 투표). confirmedSlotId는 date_vote_slots을 참조하지만
 // polls ↔ slots 간 순환 FK를 피하기 위해 inline references 없이 text만 선언.
 export const dateVotePolls = pgTable(
   'date_vote_polls',
   {
     id:              text('id').primaryKey().$defaultFn(() => ulid()),
     invitationId:    text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
+    voteType:        dateVoteTypeEnum('vote_type').notNull().default('date'), /** 'date' 확정 시 eventStartAt 세팅, 'custom' 미세팅 */
+    title:           varchar('title', { length: 100 }), /** 투표 이름(다중 투표 목록 구분용). null 허용 */
     closesAt:        timestamp('closes_at', { withTimezone: true }).notNull(),
     status:          dateVotePollStatusEnum('status').notNull().default('open'),
     isAnonymous:     boolean('is_anonymous').notNull().default(false),
@@ -21,20 +23,22 @@ export const dateVotePolls = pgTable(
     deletedAt:       timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex('uq_date_vote_polls_invitation').on(t.invitationId),
+    index('idx_date_vote_polls_invitation').on(t.invitationId),
     index('idx_date_vote_polls_status').on(t.status),
     index('idx_date_vote_polls_closes_at').on(t.closesAt),
   ],
 );
 
 // ── date_vote_slots ──────────────────────────────────────────────────────────
-// 날짜+시간 후보. 폴당 최대 30개.
-// startTime null = 종일(시간 미지정).
+// 후보. 폴당 최대 30개.
+// voteType='date': date(+startTime) 사용, label null.
+// voteType='custom': label 사용, date/startTime null.
 export const dateVoteSlots = pgTable('date_vote_slots', {
   id:        text('id').primaryKey().$defaultFn(() => ulid()),
   pollId:    text('poll_id').notNull().references(() => dateVotePolls.id, { onDelete: 'cascade' }),
-  date:      date('date').notNull(),                        // 'YYYY-MM-DD'
+  date:      date('date'),                                  // 'YYYY-MM-DD', custom이면 null
   startTime: varchar('start_time', { length: 5 }),          // 'HH:MM', null = 종일
+  label:     varchar('label', { length: 100 }),             // custom 후보 텍스트, date면 null
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

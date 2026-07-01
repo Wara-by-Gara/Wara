@@ -16,6 +16,7 @@ import { UpdateRsvpSchema, UpdateRsvpDto } from './dto/update-rsvp.dto';
 import { UpdateHiddenSchema, UpdateHiddenDto } from './dto/update-hidden.dto';
 import { UpdateHostMemoSchema, UpdateHostMemoDto } from './dto/update-host-memo.dto';
 import { SetCoHostSchema, SetCoHostDto } from './dto/set-co-host.dto';
+import { leaveParticipantSchema, LeaveParticipantDto } from './dto/leave-participant.dto';
 import { ParticipantGuard } from '../common/guards/participant.guard';
 import { HostGuard } from '../common/guards/host.guard';
 import { BlocklistGuard } from '../common/guards/blocklist.guard';
@@ -125,7 +126,8 @@ export class ParticipantsController {
   leave(
     @Param('participantId', ParseUlidPipe) participantId: string,
     @CurrentParticipant() viewer: Participant,
+    @Body(new ZodValidationPipe(leaveParticipantSchema)) dto: LeaveParticipantDto,
   ) {
-    return this.participantsService.leave(participantId, viewer);
+    return this.participantsService.leave(participantId, viewer, dto.reason);
   }
 }

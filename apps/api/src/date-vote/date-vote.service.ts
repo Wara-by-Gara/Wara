@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { DateVoteRepository } from './date-vote.repository';
@@ -10,11 +9,15 @@ import { ErrorCode } from '../common/constants/error-codes';
 import type { CreatePollDto } from './dto/create-poll.dto';
 import type { UpdatePollDto } from './dto/update-poll.dto';
 import type { AddSlotDto } from './dto/add-slot.dto';
+import type { UpdateSlotDto } from './dto/update-slot.dto';
 import type { SubmitResponsesDto } from './dto/submit-responses.dto';
 import type { ConfirmSlotDto } from './dto/confirm-slot.dto';
 import { findDuplicateVoteSlotKey, voteSlotKey } from './vote-slot.util';
+import type { DateVotePoll, DateVoteSlot } from '../database/schema';
 
 const SLOT_LIMIT = 30;
+
+type SlotShape = { date?: string | null; startTime?: string | null; label?: string | null };
 
 @Injectable()
 export class DateVoteService {
@@ -33,18 +36,11 @@ export class DateVoteService {
         message: '초대장을 찾을 수 없습니다.',
       });
     }
-    if (invitation.eventStartAt !== null) {
+    // 날짜 확정 투표는 이벤트 날짜가 이미 정해졌으면 만들 수 없음 (custom 투표는 무관).
+    if (dto.voteType === 'date' && invitation.eventStartAt !== null) {
       throw new UnprocessableEntityException({
         code: ErrorCode.VOTE_EVENT_DATE_SET,
-        message: '이미 날짜가 확정된 초대장에는 투표를 만들 수 없습니다.',
-      });
-    }
-
-    const existing = await this.repo.findPollByInvitationId(invitationId);
-    if (existing) {
-      throw new ConflictException({
-        code: ErrorCode.VOTE_POLL_ALREADY_EXISTS,
-        message: '이미 투표가 존재합니다.',
+        message: '이미 날짜가 확정된 초대장에는 날짜 투표를 만들 수 없습니다.',
       });
     }
 
@@ -52,6 +48,8 @@ export class DateVoteService {
 
     const poll = await this.repo.createPoll({
       invitationId,
+      voteType: dto.voteType,
+      title: dto.title ?? null,
       closesAt: dto.closesAt ? new Date(dto.closesAt) : new Date('2099-12-31T23:59:59Z'),
       isAnonymous: dto.isAnonymous,
     });
@@ -59,20 +57,22 @@ export class DateVoteService {
     const slots = await this.repo.createSlots(
       dto.slots.map((s, i) => ({
         pollId:    poll.id,
-        date:      s.date,
+        date:      s.date ?? null,
         startTime: s.startTime ?? null,
+        label:     s.label ?? null,
         sortOrder: s.sortOrder ?? i,
       })),
     );
 
     // 투표 생성 직후: 해당 초대장의 전체 참가자에게 투표 시작 알림을 보낸다.
     const allUserIds = await this.repo.findAllParticipantUserIds(invitationId);
+    const pollLabel = poll.title ?? (poll.voteType === 'custom' ? '투표' : '일정 투표');
     await Promise.all(
       allUserIds.map((userId) =>
         this.notificationsService.notify({
           userId,
           type: 'vote_reminder',
-          content: `[${invitation.title}] 일정 투표가 시작됐어요. 원하는 시간을 선택해주세요!`,
+          content: `[${invitation.title}] ${pollLabel}가 시작됐어요. 원하는 항목을 선택해주세요!`,
           targetType: 'invitation',
           targetId: invitationId,
           invitationId,
@@ -83,21 +83,22 @@ export class DateVoteService {
     return { poll, slots };
   }
 
-  async getPoll(invitationId: string, userId: string) {
-    const participantId = await this.repo.findParticipantIdByUser(userId, invitationId);
-    if (!participantId) {
-      throw new NotFoundException({
-        code: ErrorCode.PARTICIPANT_NOT_FOUND,
-        message: '해당 초대장의 참가자가 아닙니다.',
-      });
-    }
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({
-        code: ErrorCode.VOTE_POLL_NOT_FOUND,
-        message: '투표를 찾을 수 없습니다.',
-      });
-    }
+  /** 초대장의 투표 목록 (다중 투표). */
+  async listPolls(invitationId: string, userId: string) {
+    await this.assertParticipant(userId, invitationId);
+    const polls = await this.repo.findPollsByInvitationId(invitationId);
+    const withSlots = await Promise.all(
+      polls.map(async (poll) => ({
+        poll,
+        slots: await this.repo.findSlotsByPollId(poll.id),
+      })),
+    );
+    return { polls: withSlots };
+  }
+
+  async getPoll(invitationId: string, pollId: string, userId: string) {
+    const participantId = await this.assertParticipant(userId, invitationId);
+    const poll = await this.getOwnedPoll(invitationId, pollId);
 
     const slots = await this.repo.findSlotsByPollId(poll.id);
     const myResponses = await this.repo.findMyResponsesByPoll(participantId, poll.id);
@@ -105,30 +106,28 @@ export class DateVoteService {
     return { poll, slots, myResponses };
   }
 
-  async updatePoll(invitationId: string, dto: UpdatePollDto) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({
-        code: ErrorCode.VOTE_POLL_NOT_FOUND,
-        message: '투표를 찾을 수 없습니다.',
-      });
-    }
+  async updatePoll(invitationId: string, pollId: string, dto: UpdatePollDto) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     this.assertOpen(poll);
 
     return this.repo.updatePoll(poll.id, {
+      ...(dto.title !== undefined && { title: dto.title }),
       ...(dto.closesAt && { closesAt: new Date(dto.closesAt) }),
       ...(dto.isAnonymous !== undefined && { isAnonymous: dto.isAnonymous }),
     });
   }
 
+  async deletePoll(invitationId: string, pollId: string) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
+    await this.repo.softDeletePoll(poll.id);
+  }
+
   // ── Slots ───────────────────────────────────────────────────────────────────
 
-  async addSlot(invitationId: string, dto: AddSlotDto) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
-    }
+  async addSlot(invitationId: string, pollId: string, dto: AddSlotDto) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     this.assertOpen(poll);
+    this.assertSlotMatchesType(poll.voteType, dto);
 
     const currentCount = await this.repo.countSlotsByPollId(poll.id);
     if (currentCount >= SLOT_LIMIT) {
@@ -139,28 +138,61 @@ export class DateVoteService {
     }
 
     const existingSlots = await this.repo.findSlotsByPollId(poll.id);
-    const nextKey = voteSlotKey(dto.date, dto.startTime);
-    if (existingSlots.some((s) => voteSlotKey(s.date, s.startTime) === nextKey)) {
+    const nextKey = voteSlotKey(dto);
+    if (existingSlots.some((s) => voteSlotKey(s) === nextKey)) {
       throw new UnprocessableEntityException({
         code: ErrorCode.VOTE_SLOT_DUPLICATE,
-        message: '동일한 날짜·시간 후보는 중복 등록할 수 없습니다.',
+        message: '동일한 후보는 중복 등록할 수 없습니다.',
       });
     }
 
     const [slot] = await this.repo.createSlots([{
       pollId:    poll.id,
-      date:      dto.date,
+      date:      dto.date ?? null,
       startTime: dto.startTime ?? null,
+      label:     dto.label ?? null,
       sortOrder: dto.sortOrder ?? currentCount,
     }]);
     return slot!;
   }
 
-  async deleteSlot(invitationId: string, slotId: string) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
+  async updateSlot(invitationId: string, pollId: string, slotId: string, dto: UpdateSlotDto) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
+    this.assertOpen(poll);
+
+    const slot = await this.repo.findSlotById(slotId);
+    if (!slot || slot.pollId !== poll.id) {
+      throw new NotFoundException({ code: ErrorCode.VOTE_SLOT_NOT_FOUND, message: '슬롯을 찾을 수 없습니다.' });
     }
+
+    // 수정 후 값이 이 투표 타입과 맞는지 검증
+    const merged: SlotShape = {
+      date:      dto.date !== undefined ? dto.date : slot.date,
+      startTime: dto.startTime !== undefined ? dto.startTime : slot.startTime,
+      label:     dto.label !== undefined ? dto.label : slot.label,
+    };
+    this.assertSlotMatchesType(poll.voteType, merged);
+
+    // 수정 후 다른 슬롯과 겹치는지 검사 (자기 자신 제외)
+    const nextKey = voteSlotKey(merged);
+    const existingSlots = await this.repo.findSlotsByPollId(poll.id);
+    if (existingSlots.some((s) => s.id !== slotId && voteSlotKey(s) === nextKey)) {
+      throw new UnprocessableEntityException({
+        code: ErrorCode.VOTE_SLOT_DUPLICATE,
+        message: '동일한 후보는 중복 등록할 수 없습니다.',
+      });
+    }
+
+    return this.repo.updateSlot(slotId, {
+      ...(dto.date !== undefined && { date: dto.date }),
+      ...(dto.startTime !== undefined && { startTime: dto.startTime }),
+      ...(dto.label !== undefined && { label: dto.label }),
+      ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+    });
+  }
+
+  async deleteSlot(invitationId: string, pollId: string, slotId: string) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     this.assertOpen(poll);
 
     const slot = await this.repo.findSlotById(slotId);
@@ -173,18 +205,9 @@ export class DateVoteService {
 
   // ── Responses ───────────────────────────────────────────────────────────────
 
-  async submitResponses(invitationId: string, userId: string, dto: SubmitResponsesDto) {
-    const participantId = await this.repo.findParticipantIdByUser(userId, invitationId);
-    if (!participantId) {
-      throw new NotFoundException({
-        code: ErrorCode.PARTICIPANT_NOT_FOUND,
-        message: '해당 초대장의 참가자가 아닙니다.',
-      });
-    }
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
-    }
+  async submitResponses(invitationId: string, pollId: string, userId: string, dto: SubmitResponsesDto) {
+    const participantId = await this.assertParticipant(userId, invitationId);
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     this.assertOpen(poll);
 
     // 요청의 slotId들이 모두 이 폴의 슬롯인지 검증
@@ -203,11 +226,8 @@ export class DateVoteService {
 
   // ── Results ─────────────────────────────────────────────────────────────────
 
-  async getResults(invitationId: string) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
-    }
+  async getResults(invitationId: string, pollId: string) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
 
     const slots = await this.repo.findSlotsByPollId(poll.id);
     const allResponses = await this.repo.findResponsesBySlotIds(slots.map((s) => s.id));
@@ -242,11 +262,8 @@ export class DateVoteService {
 
   // ── Close / Confirm ─────────────────────────────────────────────────────────
 
-  async closePoll(invitationId: string) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
-    }
+  async closePoll(invitationId: string, pollId: string) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     // 수동 마감은 status만 확인 (closesAt 기한과 무관하게 open이면 마감 가능)
     if (poll.status !== 'open') {
       throw new UnprocessableEntityException({
@@ -254,18 +271,15 @@ export class DateVoteService {
         message: '이미 마감된 투표입니다.',
       });
     }
-    return this.processClose(poll.id, invitationId);
+    return this.processClose(poll, invitationId);
   }
 
-  async confirmSlot(invitationId: string, dto: ConfirmSlotDto) {
-    const poll = await this.repo.findPollByInvitationId(invitationId);
-    if (!poll) {
-      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
-    }
+  async confirmSlot(invitationId: string, pollId: string, dto: ConfirmSlotDto) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
     if (poll.status !== 'closed') {
       throw new UnprocessableEntityException({
         code: ErrorCode.VOTE_POLL_CLOSED,
-        message: '마감된 투표에서만 날짜를 확정할 수 있습니다.',
+        message: '마감된 투표에서만 확정할 수 있습니다.',
       });
     }
 
@@ -274,7 +288,42 @@ export class DateVoteService {
       throw new NotFoundException({ code: ErrorCode.VOTE_SLOT_NOT_FOUND, message: '슬롯을 찾을 수 없습니다.' });
     }
 
-    await this.applyConfirmation(poll.id, invitationId, slot);
+    await this.applyConfirmation(poll, invitationId, slot);
+    return this.repo.findPollById(poll.id);
+  }
+
+  /** 확정 되돌리기 — 확정된 투표를 다시 마감(closed) 상태로 되돌린다. date 투표는 초대장 날짜도 해제. */
+  async unconfirmSlot(invitationId: string, pollId: string) {
+    const poll = await this.getOwnedPoll(invitationId, pollId);
+    if (poll.status !== 'confirmed') {
+      throw new UnprocessableEntityException({
+        code: ErrorCode.VOTE_POLL_CLOSED,
+        message: '확정된 투표에서만 되돌릴 수 있습니다.',
+      });
+    }
+
+    if (poll.voteType === 'date') {
+      await this.repo.unconfirmPollAndClearInvitation(poll.id, invitationId);
+    } else {
+      await this.repo.unconfirmPollOnly(poll.id);
+    }
+
+    const invitation = await this.repo.findInvitationById(invitationId);
+    const title = invitation?.title ?? '모임';
+    const userIds = await this.repo.findAllParticipantUserIds(invitationId);
+    await Promise.all(
+      userIds.map((userId) =>
+        this.notificationsService.notify({
+          userId,
+          type:       'vote_reminder',
+          content:    `[${title}] 확정됐던 항목이 취소됐어요. 호스트가 다시 정할 예정이에요.`,
+          targetType: 'invitation',
+          targetId:   invitationId,
+          invitationId,
+        }),
+      ),
+    );
+
     return this.repo.findPollById(poll.id);
   }
 
@@ -283,7 +332,7 @@ export class DateVoteService {
   async processExpiredPolls() {
     const polls = await this.repo.findExpiredOpenPolls();
     for (const poll of polls) {
-      await this.processClose(poll.id, poll.invitationId);
+      await this.processClose(poll, poll.invitationId);
     }
   }
 
@@ -323,11 +372,46 @@ export class DateVoteService {
 
   // ── Private helpers ──────────────────────────────────────────────────────────
 
-  private assertNoDuplicateSlots(slots: { date: string; startTime?: string | null }[]) {
+  private async assertParticipant(userId: string, invitationId: string): Promise<string> {
+    const participantId = await this.repo.findParticipantIdByUser(userId, invitationId);
+    if (!participantId) {
+      throw new NotFoundException({
+        code: ErrorCode.PARTICIPANT_NOT_FOUND,
+        message: '해당 초대장의 참가자가 아닙니다.',
+      });
+    }
+    return participantId;
+  }
+
+  /** pollId로 투표를 찾고, 해당 초대장 소속인지 검증. */
+  private async getOwnedPoll(invitationId: string, pollId: string): Promise<DateVotePoll> {
+    const poll = await this.repo.findPollById(pollId);
+    if (!poll || poll.invitationId !== invitationId) {
+      throw new NotFoundException({ code: ErrorCode.VOTE_POLL_NOT_FOUND, message: '투표를 찾을 수 없습니다.' });
+    }
+    return poll;
+  }
+
+  private assertNoDuplicateSlots(slots: SlotShape[]) {
     if (findDuplicateVoteSlotKey(slots)) {
       throw new UnprocessableEntityException({
         code: ErrorCode.VOTE_SLOT_DUPLICATE,
-        message: '동일한 날짜·시간 후보는 중복 등록할 수 없습니다.',
+        message: '동일한 후보는 중복 등록할 수 없습니다.',
+      });
+    }
+  }
+
+  /** 슬롯 값이 투표 타입에 맞는지 검증 (date 투표=date 필수/label 금지, custom=label 필수/date 금지) */
+  private assertSlotMatchesType(voteType: 'date' | 'custom', slot: SlotShape) {
+    const hasDate = slot.date != null && slot.date !== '';
+    const hasLabel = slot.label != null && slot.label !== '';
+    const valid = voteType === 'date' ? hasDate && !hasLabel : hasLabel && !hasDate;
+    if (!valid) {
+      throw new UnprocessableEntityException({
+        code: ErrorCode.VOTE_SLOT_TYPE_MISMATCH,
+        message: voteType === 'date'
+          ? '날짜 투표의 후보는 날짜여야 합니다.'
+          : '커스텀 투표의 후보는 텍스트(label)여야 합니다.',
       });
     }
   }
@@ -341,10 +425,10 @@ export class DateVoteService {
     }
   }
 
-  private async processClose(pollId: string, invitationId: string) {
-    await this.repo.updatePoll(pollId, { status: 'closed' });
+  private async processClose(poll: DateVotePoll, invitationId: string) {
+    await this.repo.updatePoll(poll.id, { status: 'closed' });
 
-    const slots = await this.repo.findSlotsByPollId(pollId);
+    const slots = await this.repo.findSlotsByPollId(poll.id);
     const allResponses = await this.repo.findResponsesBySlotIds(slots.map((s) => s.id));
 
     // 슬롯별 good 응답 수 집계
@@ -357,7 +441,7 @@ export class DateVoteService {
 
     if (maxGood > 0 && winners.length === 1) {
       // 단독 최다 득표 → 자동 확정
-      await this.applyConfirmation(pollId, invitationId, winners[0]!.slot);
+      await this.applyConfirmation({ ...poll, status: 'closed' }, invitationId, winners[0]!.slot);
     } else {
       // 동점 또는 응답 없음 → 호스트에게 동점 알림, 참가자 전체에게 마감 알림
       const invitation = await this.repo.findInvitationById(invitationId);
@@ -371,8 +455,8 @@ export class DateVoteService {
             userId,
             type:         'vote_tied',
             content:      userId === hostUserId
-              ? `[${title}] 투표가 마감됐어요. 동점이 발생해 날짜를 직접 선택해주세요.`
-              : `[${title}] 일정 투표가 마감됐어요. 호스트가 날짜를 선택할 예정이에요.`,
+              ? `[${title}] 투표가 마감됐어요. 동점이 발생해 직접 선택해주세요.`
+              : `[${title}] 투표가 마감됐어요. 호스트가 결과를 선택할 예정이에요.`,
             targetType:   'invitation',
             targetId:     invitationId,
             invitationId,
@@ -381,7 +465,7 @@ export class DateVoteService {
       );
     }
 
-    return this.repo.findPollById(pollId);
+    return this.repo.findPollById(poll.id);
   }
 
   private formatConfirmedDate(date: string, startTime: string | null): string {
@@ -397,29 +481,34 @@ export class DateVoteService {
     return `${dateStr} ${ampm} ${h12}시${minStr}`;
   }
 
+  /** 투표 타입에 따라 확정을 적용한다. date 투표만 invitation.eventStartAt을 세팅. */
   private async applyConfirmation(
-    pollId: string,
+    poll: DateVotePoll,
     invitationId: string,
-    slot: { id: string; date: string; startTime: string | null },
+    slot: DateVoteSlot,
   ) {
-    // 날짜+시간을 eventStartAt으로 변환 (KST 기준, UTC로 저장)
-    const dateStr = `${slot.date}T${slot.startTime ?? '00:00'}:00+09:00`;
-    const eventStartAt = new Date(dateStr);
-
-    await this.repo.confirmPollAndUpdateInvitation(pollId, slot.id, invitationId, eventStartAt);
-
     const invitation = await this.repo.findInvitationById(invitationId);
-    const formattedDate = this.formatConfirmedDate(slot.date, slot.startTime);
     const title = invitation?.title ?? '모임';
-
-    // 전체 참가자에게 확정 알림
     const userIds = await this.repo.findAllParticipantUserIds(invitationId);
+
+    let content: string;
+    if (poll.voteType === 'date' && slot.date) {
+      // 날짜+시간을 eventStartAt으로 변환 (KST 기준, UTC로 저장)
+      const eventStartAt = new Date(`${slot.date}T${slot.startTime ?? '00:00'}:00+09:00`);
+      await this.repo.confirmPollAndUpdateInvitation(poll.id, slot.id, invitationId, eventStartAt);
+      content = `${title} 날짜가 확정됐어요! ${this.formatConfirmedDate(slot.date, slot.startTime)}`;
+    } else {
+      await this.repo.confirmPollSlotOnly(poll.id, slot.id);
+      const pollLabel = poll.title ?? '투표';
+      content = `[${title}] ${pollLabel} 결과가 '${slot.label ?? ''}'(으)로 확정됐어요!`;
+    }
+
     await Promise.all(
       userIds.map((userId) =>
         this.notificationsService.notify({
           userId,
           type:         'vote_confirmed',
-          content:      `${title} 날짜가 확정됐어요! ${formattedDate}`,
+          content,
           targetType:   'invitation',
           targetId:     invitationId,
           invitationId,

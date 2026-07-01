@@ -82,6 +82,20 @@ export class AiGenerationsService {
     return { id: row.id, status: row.status };
   }
 
+  // GET /ai/generations/quota — 오늘 남은 AI 생성 횟수. 두 흐름(invitation 합성 + 만들기 단계) 합산.
+  async getDailyQuota(userId: string) {
+    const [jobs, gens] = await Promise.all([
+      this.aiJobsRepository.countTodayByUser(userId),
+      this.repository.countTodayByUser(userId),
+    ]);
+    const used = jobs + gens;
+    return {
+      limit: AI_DAILY_LIMIT,
+      used,
+      remaining: Math.max(0, AI_DAILY_LIMIT - used),
+    };
+  }
+
   // GET /ai/generations/:id — 본인 것만. completed면 다운로드 URL 발급.
   async getGeneration(id: string, userId: string) {
     const row = await this.repository.findById(id);

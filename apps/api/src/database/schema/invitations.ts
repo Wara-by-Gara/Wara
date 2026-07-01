@@ -102,6 +102,7 @@ export const invitationBlocklists = pgTable('invitation_blocklists', {
   invitationId: text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
   blockedUserId: text('blocked_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   blockedByUserId: text('blocked_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  reason: text('reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
