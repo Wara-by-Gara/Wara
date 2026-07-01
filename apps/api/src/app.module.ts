@@ -35,6 +35,7 @@ import { TermsModule } from './terms/terms.module';
 import { DateVoteModule } from './date-vote/date-vote.module';
 import { ActivityFeedModule } from './activity-feed/activity-feed.module';
 import { SettlementsModule } from './settlements/settlements.module';
+import { ReportsModule } from './reports/reports.module';
 import { DevAuthModule } from './dev/dev-auth.module';
 import { WeatherModule } from './weather/weather.module';
 import { FriendsModule } from './friends/friends.module';
@@ -101,6 +102,7 @@ import { LoggerModule } from './logger/logger.module';
     DateVoteModule,
     ActivityFeedModule,
     SettlementsModule,
+    ReportsModule,
     WeatherModule,
     FriendsModule,
     ConversationsModule,

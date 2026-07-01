@@ -18,6 +18,7 @@ export const photos = pgTable('photos', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  hiddenAt: timestamp('hidden_at', { withTimezone: true }), /** 모데레이션 숨김(어드민). 사용자 삭제(deletedAt)와 구분 */
   exifFingerprint: text('exif_fingerprint'),
 }, (t) => [
   check('check_photo_view_count', sql`${t.viewCount} >= 0`),

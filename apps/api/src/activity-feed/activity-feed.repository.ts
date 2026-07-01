@@ -65,6 +65,7 @@ export class ActivityFeedRepository {
         and(
           eq(schema.photos.invitationId, q.invitationId),
           isNull(schema.photos.deletedAt),
+          isNull(schema.photos.hiddenAt),
           q.before ? lt(schema.photos.createdAt, q.before) : undefined,
         ),
       )
@@ -92,6 +93,7 @@ export class ActivityFeedRepository {
         and(
           eq(schema.participants.invitationId, q.invitationId),
           isNull(schema.feedbacks.deletedAt),
+          isNull(schema.feedbacks.hiddenAt),
           q.before ? lt(schema.feedbacks.createdAt, q.before) : undefined,
         ),
       )

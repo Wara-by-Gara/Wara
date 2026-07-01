@@ -16,6 +16,7 @@ export const feedbacks = pgTable('feedbacks', {
   content: text('content'),
   likeCount: integer('like_count').notNull().default(0),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  hiddenAt: timestamp('hidden_at', { withTimezone: true }), /** 모데레이션 숨김(어드민) */
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

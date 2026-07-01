@@ -61,6 +61,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
     ),
     isNull(feedbacks.parentId),
     isNull(feedbacks.deletedAt),
+    isNull(feedbacks.hiddenAt),
   ];
 
   const [countRow] = await this.db
@@ -139,6 +140,7 @@ async findAllByInvitation(invitationId: string, dto: ListFeedbacksDto, participa
         eq(feedbacks.attachedPhotoId, photoId),
       ) as SQL,
       isNull(feedbacks.parentId),
+      isNull(feedbacks.hiddenAt),
       ...cursorConditions,
     ];
 

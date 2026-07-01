@@ -92,6 +92,9 @@ export const dateVoteTypeEnum = pgEnum('date_vote_type', ['date', 'custom']);
 // 비용 정산 상태 / 항목 분배 방식
 export const settlementStatusEnum = pgEnum('settlement_status', ['open', 'confirmed']);
 export const settlementSplitTypeEnum = pgEnum('settlement_split_type', ['equal', 'custom']);
+// 콘텐츠 신고 대상 / 처리 상태
+export const reportTargetTypeEnum = pgEnum('report_target_type', ['photo', 'feedback']);
+export const reportStatusEnum = pgEnum('report_status', ['pending', 'reviewing', 'resolved', 'dismissed']);
 
 export const inquiryTypeEnum = pgEnum('inquiry_type', [
   'invitation',

@@ -157,6 +157,14 @@
 | `SETTLEMENT_PARTICIPANT_INVALID` | 400 | 지불자/분담 참가자가 해당 초대장 참가자가 아님 |
 | `SETTLEMENT_SHARE_DISABLED` | 404 | 공유 비활성(토큰 없음/폐기) 상태의 공개 링크 접근 |
 
+## Moderation (콘텐츠 신고)
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `REPORT_NOT_FOUND` | 404 | 신고 없음 |
+| `REPORT_TARGET_NOT_FOUND` | 404 | 신고 대상(사진/댓글)이 없거나 삭제됨 |
+| `REPORT_ALREADY_EXISTS` | 409 | 동일 사용자가 같은 대상을 이미 신고함 |
+
 ## AI
 
 | 코드 | 상태코드 | 상황 |
