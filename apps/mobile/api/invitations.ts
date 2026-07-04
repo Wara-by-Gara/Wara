@@ -182,7 +182,11 @@ export function createInvitation(payload: CreateInvitationPayload) {
 }
 
 export function updateInvitation(id: string, payload: UpdateInvitationPayload) {
-  return apiFetch<Invitation>(`/invitations/${id}`, { method: 'PATCH', body: payload });
+  return apiFetch<Invitation>(`/invitations/${id}`, {
+    method: 'PATCH',
+    body: payload,
+    idempotencyKey: newIdempotencyKey(),
+  });
 }
 
 export function updateInvitationStatus(id: string, status: 'active' | 'closed') {

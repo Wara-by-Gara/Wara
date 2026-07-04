@@ -47,7 +47,24 @@ export default function InvitationDetailScreen() {
 
   return (
     <Screen scroll>
-      <Stack.Screen options={{ title: inv.title }} />
+      <Stack.Screen
+        options={{
+          title: inv.title,
+          // HOST(공동호스트 포함)에게만 편집 진입 노출 — 웹 권한 분기 미러.
+          headerRight:
+            inv.myRole === 'HOST'
+              ? () => (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="초대장 편집"
+                    hitSlop={8}
+                    onPress={() => router.push(`/invitations/${id}/edit`)}>
+                    <Text style={styles.headerEdit}>편집</Text>
+                  </Pressable>
+                )
+              : undefined,
+        }}
+      />
       <View style={styles.body}>
         <InvitationCover invitation={inv} />
 
@@ -152,6 +169,7 @@ const styles = StyleSheet.create({
   participantRow: { marginTop: iosMetrics.spacing[1], alignSelf: 'flex-start' },
   participantPressed: { opacity: 0.5 },
   participantText: { ...iosType.subhead, color: ios.tint },
+  headerEdit: { ...iosType.body, color: ios.tint },
   section: { marginTop: iosMetrics.spacing[6] },
   description: { ...iosType.body, color: ios.label },
   errorTitle: { ...iosType.headline, color: ios.label },

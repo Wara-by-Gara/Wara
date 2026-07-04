@@ -7,7 +7,8 @@ export default function SettingsLayout() {
   return (
     <Stack screenOptions={{ headerBackTitle: '뒤로' }}>
       <Stack.Screen name="index" options={{ title: '설정', headerLargeTitle: true }} />
-      <Stack.Screen name="terms" options={{ title: '약관 및 정책', headerLargeTitle: true }} />
+      <Stack.Screen name="terms/index" options={{ title: '약관 및 정책', headerLargeTitle: true }} />
+      <Stack.Screen name="terms/[type]" options={{ title: '약관' }} />
       <Stack.Screen name="reminders" options={{ title: '리마인드', headerLargeTitle: true }} />
     </Stack>
   );
