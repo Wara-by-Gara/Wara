@@ -33,12 +33,14 @@
 - JWT 토큰은 `api/auth-storage`의 `getAccessToken/setTokens/clearTokens` 사용 (SecureStore)
 - 환경 변수: `EXPO_PUBLIC_API_URL` → `app.config.ts` extra로 노출 → `Constants.expoConfig.extra.apiUrl`
 - 화면 라우팅은 Expo Router (file-based, `app/` 디렉터리)
-- **디자인 토큰 SoT는 모바일이 독립 소유** (웹 브랜드 미러 아님):
+- **IA·화면 구성·플로우·카피는 웹과 패리티 유지, 시각 표현은 iOS 네이티브로 모바일 소유**:
+  - 정보 구조("무엇을 어떤 순서로 보여주는가")는 웹과 통일 — 패리티 매트릭스(`docs/parity/web-mobile-parity.md`) 기준.
   - **앱 크롬**(네비게이션·탭·리스트·설정·시트·폼 컨트롤·텍스트/배경) → `theme/`의 iOS 네이티브 토큰
     (`import { ios, iosType, iosMetrics } from '@/theme'`). 컬러는 `PlatformColor` 기반 시스템 시맨틱.
   - **초대장 콘텐츠/캔버스** → 초대장 자체의 시각 정체성. 필요 시 hex 사용 가능하나 iOS 톤 유지.
-  - iOS HIG를 기준으로 mobile이 직접 결정 (web과 불일치 허용).
+  - 컴포넌트 룩·타이포·컬러("어떻게 그리는가")는 iOS HIG 기준으로 mobile이 결정.
 - 재사용 UI는 `components/ios/*`의 네이티브 컴포넌트 킷을 우선 사용 (grouped List, Button, BottomSheet 등)
+- **`@expo/ui`·`expo-glass-effect` 직접 import 금지** — 반드시 `components/ios/*` 래퍼 경유 (베타 API 파손 변경 격리)
 - 모든 외부 입력은 Zod 등으로 검증 (서버에서 이미 검증해도 클라 안전망)
 
 ## Never
