@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { DEV_USER_EMAILS, issueDevToken } from '@/api/dev-auth';
 import type { DevUserEmail } from '@/api/dev-auth';
 import { setTokens } from '@/api/auth-storage';
+import { AUTH_QUERY_KEY } from '@/hooks/useAuthGuard';
 import { colors, spacing, typography, radius } from '@/constants/tokens';
 
 interface DevTokenFormProps {
@@ -11,6 +13,7 @@ interface DevTokenFormProps {
 }
 
 export function DevTokenForm({ onIssued }: DevTokenFormProps) {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState<DevUserEmail | null>(null);
   const [error, setError] = useState('');
 
@@ -20,6 +23,8 @@ export function DevTokenForm({ onIssued }: DevTokenFormProps) {
     try {
       const { accessToken } = await issueDevToken(email);
       await setTokens({ accessToken });
+      // 가드 쿼리 캐시 즉시 갱신 — 안 하면 (tabs) 진입 시 캐시된 null로 /login으로 튕김
+      queryClient.setQueryData(AUTH_QUERY_KEY, accessToken);
       onIssued();
     } catch {
       setError('토큰 발급 실패 — API 서버가 실행 중인지 확인하세요');

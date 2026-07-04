@@ -16,6 +16,8 @@ import {
   LOGIN_CANCELLED_MESSAGE,
   setTokens,
 } from '@/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { AUTH_QUERY_KEY } from '@/hooks/useAuthGuard';
 import { colors, layout, radius, spacing, typography } from '@/constants/tokens';
 
 type LoadingProvider = 'kakao' | 'naver' | 'google' | 'apple' | null;
@@ -28,6 +30,7 @@ type AuthResult = {
 };
 
 export default function LoginScreen() {
+  const queryClient = useQueryClient();
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [loading, setLoading] = useState<LoadingProvider>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,7 +41,9 @@ export default function LoginScreen() {
     }
   }, []);
 
-  function routeAfterLogin(needsProfileCompletion: boolean) {
+  function routeAfterLogin(needsProfileCompletion: boolean, accessToken: string) {
+    // 가드 쿼리 캐시 즉시 갱신 — 캐시된 null로 /login에 되튕기는 레이스 방지
+    queryClient.setQueryData(AUTH_QUERY_KEY, accessToken);
     router.replace(needsProfileCompletion ? '/signup' : '/(tabs)');
   }
 
@@ -57,7 +62,7 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      routeAfterLogin(needsProfileCompletion);
+      routeAfterLogin(needsProfileCompletion, accessToken);
     } catch (err) {
       if (isKakaoCancellation(err)) {
         setErrorMessage(LOGIN_CANCELLED_MESSAGE);
@@ -88,7 +93,7 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      routeAfterLogin(needsProfileCompletion);
+      routeAfterLogin(needsProfileCompletion, accessToken);
     } catch (err) {
       if (__DEV__) console.warn('[naver login]', err);
       setErrorMessage(describeLoginError(err));
@@ -120,7 +125,7 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      routeAfterLogin(needsProfileCompletion);
+      routeAfterLogin(needsProfileCompletion, accessToken);
     } catch (err) {
       if (__DEV__) console.warn('[google login]', err);
       setErrorMessage(describeLoginError(err));
@@ -168,7 +173,7 @@ export default function LoginScreen() {
         },
       );
       await setTokens({ accessToken, refreshToken });
-      routeAfterLogin(needsProfileCompletion);
+      routeAfterLogin(needsProfileCompletion, accessToken);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ERR_CANCELED') {
         setErrorMessage(LOGIN_CANCELLED_MESSAGE);

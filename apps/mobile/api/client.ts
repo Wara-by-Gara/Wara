@@ -37,6 +37,7 @@ async function doRefreshAccessToken(): Promise<boolean> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({ refreshToken }),
+      credentials: 'omit',
     });
     const raw = (await res.json().catch(() => null)) as {
       success?: boolean;
@@ -149,6 +150,9 @@ async function apiRequestEnvelope<T>(
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       keepalive,
+      // 모바일은 Bearer 토큰 인증만 사용 — 서버가 웹용으로 심은 쿠키가 iOS 쿠키 저장소에
+      // 남아 실려가면 CSRF 가드(CSRF_INVALID_ORIGIN 403)에 걸리므로 쿠키 전송을 차단.
+      credentials: 'omit',
       // RN 0.81의 fetch는 global.AbortSignal type을 요구하는데 DOM AbortSignal과
       // onabort 콜백 시그니처가 미묘하게 다름. RN runtime은 둘 다 처리하므로
       // unknown으로 우회 (런타임 안전).
