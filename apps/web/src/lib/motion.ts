@@ -68,13 +68,13 @@ export const confettiPop: Variants = {
   show: { scale: 1, opacity: 1, transition: spring.bouncy },
 };
 
-/** 축하 — glow-pulse: accent 컬러 글로우 1회 확산. */
+/** 축하 — glow-pulse: 화이트 글로우 1회 (inset — 원 안쪽에서만 번져 경계 밖으로 안 나감). */
 export const glowPulse: Variants = {
-  idle: { boxShadow: "0 0 0 0 rgba(255,77,141,0)" },
+  idle: { boxShadow: "inset 0 0 0 0 rgba(255,255,255,0)" },
   glow: {
     boxShadow: [
-      "0 0 0 0 rgba(255,77,141,0.45)",
-      "0 0 0 16px rgba(255,77,141,0)",
+      "inset 0 0 14px 3px rgba(255,255,255,0.85)",
+      "inset 0 0 0 0 rgba(255,255,255,0)",
     ],
     transition: { duration: 0.9, ease: "easeOut" },
   },

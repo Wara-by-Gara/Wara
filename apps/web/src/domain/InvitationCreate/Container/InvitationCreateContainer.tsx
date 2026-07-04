@@ -62,6 +62,8 @@ import {
   DEFAULT_RSVP,
   RSVP_DEFAULT_LABELS,
   RSVP_PACKS,
+  DESIGN_FONTS,
+  fontStyle,
 } from '@/domain/InvitationCreate/constants';
 
 const COVER_CONTENT_TYPE = 'image/webp' as const;
@@ -984,9 +986,9 @@ export default function InvitationCreateContainer({
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-5xl">
+    <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-none">
       <TopAppBar
-        className="shrink-0"
+        className="shrink-0 lg:mx-auto lg:w-full lg:max-w-5xl"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
         onBack={() => {
           if (
@@ -1001,7 +1003,7 @@ export default function InvitationCreateContainer({
       />
 
       {/* PC: 좌측 고정 WYSIWYG 캔버스(실제 초대장 크기) / 우측 편집 패널. 모바일은 캔버스만 */}
-      <div className="lg:grid lg:grid-cols-[28rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-6 lg:py-6">
+      <div className="lg:mx-auto lg:w-full lg:max-w-5xl lg:grid lg:grid-cols-[28rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-6 lg:py-6">
         <div className="lg:sticky lg:top-6 lg:self-start">
           {/* WYSIWYG 캔버스 */}
           <CreateCanvas
@@ -1058,6 +1060,65 @@ export default function InvitationCreateContainer({
 
         {/* 우측 편집 패널 (PC 전용). 각 항목은 모바일과 동일한 시트를 연다 */}
         <aside className="hidden lg:flex lg:flex-col lg:gap-2">
+          {/* 제목 — 실제 상세처럼 우측 상단에 입력 칸 배치 */}
+          <div className="flex flex-col gap-2 pb-3">
+            <p className="px-1 text-[13px] font-bold text-text-muted">제목</p>
+            <textarea
+              value={form.title}
+              onChange={(e) => {
+                set({ title: e.target.value });
+                if (titleError) setTitleError(false);
+              }}
+              onFocus={() => setTitleFocused(true)}
+              onBlur={() => setTitleFocused(false)}
+              placeholder="초대장 제목"
+              maxLength={20}
+              rows={2}
+              aria-label="모임 이름"
+              className={cn(
+                'w-full resize-none rounded-md border bg-surface px-4 py-3 text-[22px] font-extrabold leading-snug outline-none',
+                titleError ? 'border-danger' : 'border-border-strong focus:border-text',
+                fontStyle(designFont),
+              )}
+            />
+            {titleError && (
+              <p className="px-1 text-[13px] text-danger">모임 이름을 입력해주세요</p>
+            )}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {DESIGN_FONTS.map(({ id, label, style }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setDesignFont(id)}
+                  className={cn(
+                    'flex shrink-0 flex-col items-center gap-1 rounded-md border-2 px-3 py-2 transition-colors',
+                    designFont === id
+                      ? 'border-primary bg-primary-soft'
+                      : 'border-border/60 bg-surface',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'text-[18px] leading-tight',
+                      style,
+                      designFont === id ? 'text-primary' : 'text-text',
+                    )}
+                  >
+                    가나다
+                  </span>
+                  <span
+                    className={cn(
+                      'whitespace-nowrap text-[11px]',
+                      designFont === id ? 'font-semibold text-primary' : 'text-text-muted',
+                    )}
+                  >
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <p className="px-1 pb-1 text-[13px] font-bold text-text-muted">편집</p>
           {[
             { label: '대표 이미지', onClick: () => setImageSheetOpen(true) },

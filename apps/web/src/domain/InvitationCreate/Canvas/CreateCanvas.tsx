@@ -231,8 +231,8 @@ export function CreateCanvas({
           )}
         </div>
 
-        {/* 제목 — 투명 인풋 (배경 비침) + 폰트 즉시 반영 */}
-        <div className="flex flex-col gap-2">
+        {/* 제목 — 모바일: 투명 인풋(WYSIWYG). PC: 편집은 우측 패널, 여기선 미리보기만 */}
+        <div className="flex flex-col gap-2 lg:hidden">
           <textarea
             ref={titleRef}
             value={title}
@@ -297,6 +297,23 @@ export function CreateCanvas({
             </div>
           )}
         </div>
+
+        {/* PC 미리보기 제목 (편집은 우측 패널) */}
+        <p
+          className={cn(
+            'hidden w-full break-words text-left text-[32px] font-extrabold leading-snug lg:block',
+            bgClass.includes('aurora') || bgClass.includes('starry')
+              ? title
+                ? 'text-white'
+                : 'text-white/50'
+              : title
+                ? 'text-text'
+                : 'text-text-disabled/50',
+            fontStyle(designFont),
+          )}
+        >
+          {title || '초대장 제목'}
+        </p>
 
         {/* 일정 — 상세(Hero schedule)와 동일하게 소개 위에 배치 */}
         <EditableRow

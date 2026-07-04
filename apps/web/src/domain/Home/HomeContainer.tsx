@@ -44,29 +44,29 @@ export default function HomeContainer() {
 
   if (!isLoggedIn) {
     return (
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background">
-        <HeaderGradient fixed />
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background lg:max-w-none">
+        <HeaderGradient fixed className="lg:max-w-none" />
         <TopAppBar
-          className="relative z-30"
+          className="relative z-30 lg:mx-auto lg:w-full lg:max-w-5xl"
           variant="transparent"
           leftSlot={
-            <span className="ml-[4px] text-[20px] font-bold leading-none tracking-wide text-white">
+            <span className="ml-[4px] text-[20px] font-bold leading-none tracking-wide text-white lg:hidden">
               WARA
             </span>
           }
         />
 
-        <div className="relative z-10 flex flex-1 flex-col justify-end px-page pb-[calc(env(safe-area-inset-bottom)+32px)]">
-          <div className="mb-8">
-            <h1 className="text-[34px] font-extrabold leading-tight text-text">
+        <div className="relative z-10 flex flex-1 flex-col justify-end px-page pb-[calc(env(safe-area-inset-bottom)+32px)] lg:items-center lg:justify-center lg:pb-0 lg:text-center">
+          <div className="mb-8 lg:mb-10">
+            <h1 className="text-[34px] font-extrabold leading-tight text-text lg:text-[56px]">
               초대장을<br />더 특별하게 <span className="text-primary">✦</span>
             </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
+            <p className="mt-3 text-[15px] leading-relaxed text-text-muted lg:mt-5 lg:text-[18px]">
               쉽게 만들고, 바로 공유하고,<br />함께 추억을 기록하세요
             </p>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:w-full lg:max-w-sm">
             <Button
               variant="primary"
               size="lg"

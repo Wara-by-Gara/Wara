@@ -71,7 +71,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
       return (
         <section className="flex flex-col gap-3">
           <h1 className="text-[22px] font-extrabold text-text">{title}</h1>
-          <p className="rounded-md bg-gray-50 p-4 text-[13px] leading-relaxed text-text-muted">
+          <p className="rounded-md bg-surface-muted p-4 text-[13px] leading-relaxed text-text-muted">
             (약관 본문 발췌) 본 약관은 Wara(이하 &ldquo;회사&rdquo;)가 제공하는 서비스를 이용함에 있어 회사와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다…
           </p>
         </section>
@@ -103,7 +103,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
             <button
               type="button"
               aria-label="프로필 이미지 선택"
-              className="relative inline-flex size-36 items-center justify-center rounded-full bg-gray-100"
+              className="relative inline-flex size-36 items-center justify-center rounded-full bg-surface-muted"
             >
               <Avatar size="xl" name="와" className="size-36 text-3xl" />
               <span className="absolute right-0 bottom-0 inline-flex size-9 items-center justify-center rounded-full bg-primary text-text-inverse">
@@ -111,7 +111,7 @@ export const Signup = ({ step = "termsAgreement", onNext, onBack }: SignupProps)
               </span>
             </button>
           ) : (
-            <div className="relative size-64 overflow-hidden rounded-lg bg-gray-900">
+            <div className="relative size-64 overflow-hidden rounded-lg bg-surface-inverse">
               <div className="absolute inset-4 rounded-full border-4 border-dashed border-white/60" />
               <div className="absolute inset-x-4 bottom-4 text-center text-[12px] text-white/80">
                 원하는 영역을 맞춰주세요
