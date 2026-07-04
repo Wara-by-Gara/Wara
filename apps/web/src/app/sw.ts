@@ -1,20 +1,61 @@
-/* WARA Service Worker — Web Push 수신/표시 전용 (오프라인 캐싱 없음).
-   페이로드 형태는 apps/api PushService.PushPayload와 일치: { title, body, url, tag } */
+/// <reference lib="webworker" />
+/* WARA Service Worker — Serwist 프리캐시/런타임 캐싱 + Web Push 수신/표시.
+   push 페이로드 형태는 apps/api PushService.PushPayload와 일치: { title, body, url, tag } */
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+import { defaultCache } from '@serwist/next/worker';
+import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist';
+import { NetworkOnly, Serwist } from 'serwist';
+
+declare global {
+  interface WorkerGlobalScope extends SerwistGlobalConfig {
+    __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
+  }
+}
+
+declare const self: ServiceWorkerGlobalScope;
+
+const serwist = new Serwist({
+  precacheEntries: self.__SW_MANIFEST,
+  // 기존 수동 SW의 skipWaiting/clients.claim 동작 유지
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: true,
+  runtimeCaching: [
+    // /api/* 는 백엔드 프록시(인증·개인화 데이터) — 절대 캐싱하지 않음.
+    // defaultCache의 apis 항목(NetworkFirst)보다 먼저 매칭되어야 하므로 최상단.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/'),
+      handler: new NetworkOnly(),
+    },
+    ...defaultCache,
+  ],
+  fallbacks: {
+    entries: [
+      {
+        url: '/offline',
+        matcher({ request }) {
+          return request.destination === 'document';
+        },
+      },
+    ],
+  },
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
+serwist.addEventListeners();
+
+interface PushPayload {
+  title?: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+}
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  let payload;
+  let payload: PushPayload;
   try {
-    payload = event.data.json();
+    payload = event.data.json() as PushPayload;
   } catch {
     payload = { title: 'WARA', body: event.data.text(), url: '/notifications' };
   }
@@ -45,7 +86,8 @@ self.addEventListener('push', (event) => {
         badge: '/icons/icon-192.png',
         data: { url },
         tag,
-        renotify: !!tag,
+        // Chromium 계열 전용 옵션 — 표준 타입에 없어 단언 필요
+        ...( { renotify: !!tag } as NotificationOptions),
       });
     })(),
   );
@@ -53,8 +95,9 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url =
-    (event.notification.data && event.notification.data.url) || '/notifications';
+  const url: string =
+    (event.notification.data && (event.notification.data as { url?: string }).url) ||
+    '/notifications';
 
   event.waitUntil(
     (async () => {

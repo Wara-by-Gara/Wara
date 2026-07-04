@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
 import path from "path";
+import withSerwistInit from "@serwist/next";
+
+// PWA — Serwist가 빌드 시 src/app/sw.ts → public/sw.js 생성 (프리캐시 매니페스트 주입).
+// swDest를 기존 수동 SW와 동일 경로로 유지해 기존 사용자의 push 구독이 끊기지 않는다.
+// register: false — 등록은 기존 ServiceWorkerRegister 컴포넌트가 담당 (푸시 구독 마운트 순서 보존).
+// dev는 Turbopack이라 Serwist 플러그인이 동작하지 않으므로 비활성.
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  register: false,
+  disable: process.env.NODE_ENV === "development",
+});
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -41,4 +53,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

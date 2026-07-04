@@ -17,10 +17,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(FRONTEND_ORIGIN),
   title: 'WARA',
   description: '요즘 모이는 방식',
+  // iOS 홈 화면 설치(standalone) 지원 — apple-touch-icon은 src/app/apple-icon.png 컨벤션으로 제공
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'WARA',
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: '#14121A',
+  width: 'device-width',
+  initialScale: 1,
+  // 노치/홈 인디케이터 영역까지 확장 (standalone 실행 시 safe-area-inset 사용 가능)
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
