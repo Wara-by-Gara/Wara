@@ -65,7 +65,9 @@ export function Text<T extends ElementType = "p">({
   className,
   ...rest
 }: TextProps<T>) {
-  const Comp = (as ?? DEFAULT_TAG[variant]) as ElementType;
+  const Comp = (as ?? DEFAULT_TAG[variant]) as ElementType<{
+    className?: string;
+  }>;
   return (
     <Comp
       className={cn(

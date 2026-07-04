@@ -15,11 +15,52 @@ export const DESIGN_BG_THEMES = [
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
   { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy" },
+  { id: "galaxy", label: "갤럭시", cls: "bg-invite-galaxy" },
+  { id: "water", label: "워터", cls: "bg-invite-water" },
+  { id: "hologram", label: "홀로그램", cls: "bg-invite-hologram" },
+  { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow" },
+  { id: "blackcat", label: "검은고양이", cls: "bg-invite-blackcat" },
+  { id: "masterpiece", label: "마스터피스", cls: "bg-invite-masterpiece" },
 ] as const;
 
-export type DesignBgColor = (typeof DESIGN_BG_THEMES)[number]["cls"];
+export type DesignBgColor =
+  | (typeof DESIGN_BG_THEMES)[number]["cls"]
+  | `bg-invite-grad-${string}`;
 
 export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[1].cls;
+
+/* ---------- 배경: 애니메이션 그라데이션 변형 ----------
+ * 색쌍(c1/c2)을 추가하면 자동으로 배경 옵션·렌더에 반영된다.
+ * 저장값은 `bg-invite-grad-<id>` 문자열 (DB/DTO 변경 불필요).
+ * 색은 GradientScene에서 --c1/--c2 CSS 변수로 주입된다. */
+export const GRADIENT_BG_VARIANTS = [
+  { id: "sunset", label: "선셋", c1: "#ff7e5f", c2: "#feb47b" },
+  { id: "ocean", label: "바다", c1: "#87ceeb", c2: "#0288d1" },
+  { id: "lightning", label: "번개", c1: "#191c38", c2: "#23294e" },
+  { id: "soccer", label: "축구", c1: "#2e8020", c2: "#1d5a12" },
+] as const;
+
+export type GradientVariant = (typeof GRADIENT_BG_VARIANTS)[number];
+
+export const gradientCls = (id: string): `bg-invite-grad-${string}` =>
+  `bg-invite-grad-${id}`;
+
+/** 피커용 — 기존 DESIGN_BG_THEMES와 동일 형태({id,label,cls})에 색을 더한 목록 */
+export const GRADIENT_BG_THEMES = GRADIENT_BG_VARIANTS.map((v) => ({
+  id: v.id,
+  label: v.label,
+  cls: gradientCls(v.id),
+  c1: v.c1,
+  c2: v.c2,
+}));
+
+/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) */
+export function getGradientVariant(bg?: string | null): GradientVariant | undefined {
+  const prefix = "bg-invite-grad-";
+  if (!bg?.startsWith(prefix)) return undefined;
+  const id = bg.slice(prefix.length);
+  return GRADIENT_BG_VARIANTS.find((v) => v.id === id);
+}
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */
 export const DESIGN_FONTS = [
@@ -53,6 +94,14 @@ export const ANIMATIONS = [
   { id: "bubble", label: "비눗방울", emoji: "🫧" },
   { id: "leaf", label: "낙엽", emoji: "🍂" },
   { id: "confetti", label: "컨페티", emoji: "🎉" },
+  { id: "paper", label: "색종이", emoji: "🎊" },
+  { id: "crystal", label: "크리스탈", emoji: "💎" },
+  { id: "bokeh", label: "빛망울", emoji: "✨" },
+  { id: "stream", label: "보라빛 라인", emoji: "🌌" },
+  { id: "firework", label: "폭죽", emoji: "🎆" },
+  { id: "blackcat", label: "검은 고양이", emoji: "🐈‍⬛" },
+  { id: "paint", label: "물감", emoji: "🎨" },
+  { id: "flower", label: "꽃 낙화", emoji: "🌸" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];

@@ -1,4 +1,3 @@
-# Welcome to your organization's demo respository
-This code repository (or "repo") is designed to demonstrate the best GitHub has to offer with the least amount of noise.
+# WARA(와라) | 요즘 모이는 방식
 
-The repo includes an `index.html` file (so it can render a web page), two GitHub Actions workflows, and a CSS stylesheet dependency.
+**'준비의 부담'을 '만남의 설렘'으로 바꾸기 위한 첫걸음**

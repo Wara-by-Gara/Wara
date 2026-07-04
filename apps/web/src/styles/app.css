@@ -280,13 +280,419 @@ body {
       no-repeat, no-repeat, no-repeat,
       no-repeat,
       no-repeat;
-    animation: bg-invite-dreamy-twinkle 4s ease-in-out infinite;
+    animation: bg-invite-dreamy-twinkle 10s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .bg-invite-dreamy {
       animation: none;
     }
+  }
+
+  /* 그라데이션 변형 — 색은 --c1/--c2 변수로 주입 (GRADIENT_BG_VARIANTS) */
+  /* 정적 폴백: 피커 스와치·이미지 없는 커버용 (애니 없음) */
+  .bg-invite-grad-base {
+    background-color: var(--c1, #667eea);
+    background-image: linear-gradient(135deg, var(--c1), var(--c2), var(--c1));
+    background-size: 200% 200%;
+  }
+
+  /* 애니메이션 면 (drift) — GradientScene 바닥 레이어 */
+  .grad-plane {
+    position: absolute;
+    inset: 0;
+    background-color: var(--c1, #667eea);
+    background-image: linear-gradient(135deg, var(--c1), var(--c2), var(--c1));
+    background-size: 300% 300%;
+    animation: grad-drift 8s ease-in-out infinite;
+  }
+
+  /* 떠다니는 빛 덩어리 — 크기·위치·애니는 컴포넌트에서 inline 지정 */
+  .grad-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(55px);
+    mix-blend-mode: screen;
+    opacity: 1;
+    will-change: transform;
+  }
+
+  /* 정적 테마에 은은한 drift 모션 — 그라데이션 위치를 천천히 이동 */
+  .bg-invite-pastel,
+  .bg-invite-sky,
+  .bg-invite-glass,
+  .bg-invite-y2k,
+  .bg-invite-flower,
+  .bg-invite-aurora {
+    background-size: 200% 200%;
+    animation: bg-invite-shift 18s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .grad-plane,
+    .grad-orb,
+    .bg-invite-pastel,
+    .bg-invite-sky,
+    .bg-invite-glass,
+    .bg-invite-y2k,
+    .bg-invite-flower,
+    .bg-invite-aurora {
+      animation: none;
+    }
+  }
+
+  /* ── 바다 배경 (OceanScene) ──────────────────── */
+  /* 하늘 레이어 — canvas 파도 위에 하늘 그라데이션 */
+  .ocean-sky {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      #87ceeb 0%,
+      #4fc3f7 42%,
+      #0288d1 68%,
+      #01579b 100%
+    );
+  }
+
+  /* 갤럭시 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-galaxy {
+    background-color: #1a0a2e;
+    background-image:
+      radial-gradient(ellipse at 40% 30%, #6b21a855 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, #4c1d9555 0%, transparent 60%);
+  }
+
+  /* 워터 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-water {
+    background-color: #7dd3e8;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, #e0f7fa 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 65%, #00bcd4 0%, transparent 55%);
+  }
+
+  /* 홀로그램 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-hologram {
+    background-color: #f8f8fc;
+    background-image:
+      linear-gradient(135deg, #fce4ec88 0%, #e8f5e988 25%, #e3f2fd88 50%, #fff9c488 75%, #fce4ec88 100%);
+  }
+
+  /* 레이저쇼 — Three.js 캔버스가 실제 배경을 그림. CSS는 ThemeSheet 썸네일 전용 */
+  .bg-invite-lasershow {
+    background-color: #050515;
+    background-image:
+      radial-gradient(ellipse at 50% 100%, #2233aa55 0%, transparent 60%),
+      radial-gradient(ellipse at 30% 55%, #6600ff22 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 55%, #00ff5522 0%, transparent 50%);
+  }
+
+  /* 검은 고양이 — 베이스는 검정 + 대표 캐릭터 이미지(미리보기용; 실제 페이지에선 BlackCatGridLayer가 덮음) */
+  .bg-invite-blackcat {
+    background-color: #0e0b08;
+    background-image: url("/template_images/blackcat/blackcat-base.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* 마스터피스 — 베이스는 검정 + 대표 명화(미리보기용; 실제 페이지에선 MasterpieceSlideLayer가 덮음) */
+  .bg-invite-masterpiece {
+    background-color: #1a0e08;
+    background-image: url("/template_images/masterpiece/masterpiece-mona-base.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* 마스터피스 액자 내부 어두운 배경 (외곽 액자는 PNG overlay로 대체) */
+  .masterpiece-frame {
+    background-color: #1a0e08;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+
+  /* 마스터피스 슬롯 — 반응형 layout
+     모바일: slot 0(가운데)만 풀스크린, 나머지는 opacity 0으로 숨김
+     lg+: 미술관 벽 (가운데 큰 + 모서리 4 작은) */
+  .mp-slot {
+    position: absolute;
+    transition: all 700ms ease-in-out;
+  }
+  /* 모바일 기본: slot 0 풀스크린, 1~4는 fade-out */
+  .mp-slot-0 {
+    inset: 4% 4%;
+    z-index: 2;
+    opacity: 1;
+  }
+  .mp-slot-1,
+  .mp-slot-2,
+  .mp-slot-3,
+  .mp-slot-4 {
+    inset: 4% 4%;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* lg+: 미술관 벽 layout */
+  @media (min-width: 1024px) {
+    .mp-slot-0 {
+      inset: auto;
+      left: 26%;
+      top: 14%;
+      width: 48%;
+      height: 72%;
+      opacity: 1;
+    }
+    .mp-slot-1 {
+      inset: auto;
+      left: 3%;
+      top: 3%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-2 {
+      inset: auto;
+      left: 77%;
+      top: 3%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-3 {
+      inset: auto;
+      left: 3%;
+      top: 71%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mp-slot-4 {
+      inset: auto;
+      left: 77%;
+      top: 71%;
+      width: 20%;
+      height: 26%;
+      z-index: 1;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+/* 검은 고양이 — 눈 깜빡임 페어 (4.8초 주기) */
+.animate-blackcat-blink {
+  animation: blackcat-blink 4.8s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-blink {
+  0%, 92% { opacity: 0; }
+  94%, 98% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 혀 낼름 페어 (6.4초 주기) */
+.animate-blackcat-blep {
+  animation: blackcat-blep 6.4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-blep {
+  0%, 88% { opacity: 0; }
+  91%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 윙크 페어 (5.6초 주기) */
+.animate-blackcat-wink {
+  animation: blackcat-wink 5.6s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-wink {
+  0%, 85% { opacity: 0; }
+  88%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 신난 표정 페어 (7.2초 주기) */
+.animate-blackcat-excited {
+  animation: blackcat-excited 7.2s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-excited {
+  0%, 80% { opacity: 0; }
+  84%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 초롱초롱 페어 (8초 주기) */
+.animate-blackcat-innocent {
+  animation: blackcat-innocent 8s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-innocent {
+  0%, 82% { opacity: 0; }
+  86%, 96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 꼬리 흔들 (좌우 반전 교차, 1.6초 주기) */
+.animate-blackcat-tail-wag {
+  animation: blackcat-tail-wag 1.6s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-tail-wag {
+  0%, 45% { opacity: 0; }
+  55%, 95% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — 코 골이 ZZZ (4초 주기) */
+.animate-blackcat-snore {
+  animation: blackcat-snore 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes blackcat-snore {
+  0%, 60% { opacity: 0; }
+  70%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 검은 고양이 — belly popup (슬라이드 업, 7.6초 주기) */
+.animate-blackcat-popup {
+  animation: blackcat-popup 7.6s ease-in-out infinite;
+  transform: translateY(110%);
+  opacity: 0;
+}
+@keyframes blackcat-popup {
+  0%, 10% { transform: translateY(110%); opacity: 0; }
+  20%, 85% { transform: translateY(0); opacity: 1; }
+  95%, 100% { transform: translateY(0); opacity: 0; }
+}
+
+/* 마스터피스 — 명화별 페어 모션 */
+.animate-pair-bubblegum {
+  animation: pair-bubblegum 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-bubblegum {
+  0%, 60% { opacity: 0; }
+  70%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-wink {
+  animation: pair-wink 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-wink {
+  0%, 75% { opacity: 0; }
+  82%, 94% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-stunned {
+  animation: pair-stunned 4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-stunned {
+  0%, 65% { opacity: 0; }
+  75%, 93% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-clap {
+  animation: pair-clap 3s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-clap {
+  0%, 50% { opacity: 0; }
+  62%, 90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-pair-wave {
+  animation: pair-wave 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes pair-wave {
+  0%, 60% { opacity: 0; }
+  72%, 94% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 페인트 splash — 떨어짐 → 바닥 splat → 머무름 → 사라짐 (한 사이클) */
+.animate-paint-splash {
+  animation-name: paint-splash;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes paint-splash {
+  0% {
+    transform: translateY(-180px) scale(0.45);
+    opacity: 0;
+  }
+  18% {
+    transform: translateY(-12px) scale(0.7);
+    opacity: 0.7;
+  }
+  24% {
+    transform: translateY(0) scale(1.25);
+    opacity: 0.95;
+  }
+  30% {
+    transform: translateY(0) scale(1.05);
+    opacity: 0.92;
+  }
+  45%,
+  75% {
+    transform: translateY(0) scale(1.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(0) scale(1.12);
+    opacity: 0;
+  }
+}
+
+/* 페인트 splash (Lottie) — fade-in 후 자연스럽게 사라짐 (Lottie 자체는 1회 재생) */
+@keyframes paint-lottie-fade {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blackcat-blink,
+  .animate-blackcat-blep,
+  .animate-blackcat-wink,
+  .animate-blackcat-excited,
+  .animate-blackcat-innocent,
+  .animate-blackcat-tail-wag,
+  .animate-blackcat-snore,
+  .animate-blackcat-popup,
+  .animate-pair-bubblegum,
+  .animate-pair-wink,
+  .animate-pair-stunned,
+  .animate-pair-clap,
+  .animate-pair-wave,
+  .animate-paint-splash {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -438,7 +844,33 @@ a {
   }
 }
 
-/* 몽환 배경 반짝임 — .bg-invite-dreamy 전체에 적용됨 */
-@keyframes bg-invite-dreamy-twinkle {
-  /* TODO(human): 글리터가 은은하게 반짝이도록 keyframe 작성 */
+/* 정적 테마 drift — 그라데이션 위치를 대각선으로 천천히 왕복 */
+@keyframes bg-invite-shift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
 }
+
+/* 몽환 배경 반짝임 — 글리터 타일이 은은하게 흔들리며 반짝 */
+@keyframes bg-invite-dreamy-twinkle {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 6% 4%; }
+}
+
+/* 그라데이션 면 drift — 배경 위치 왕복 */
+@keyframes grad-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* orb 부유 — 시차용 2종 (이동 폭 크게 → 체감되는 움직임) */
+@keyframes grad-floatA {
+  from { translate: -30% -22%; scale: 0.9; }
+  to { translate: 32% 26%; scale: 1.3; }
+}
+@keyframes grad-floatB {
+  from { translate: 26% 30%; scale: 1.25; }
+  to { translate: -32% -24%; scale: 0.9; }
+}
+
