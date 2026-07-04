@@ -21,6 +21,8 @@ export const conversations = pgTable('conversations', {
   // 1:1 대화 중복 방지용 정규화 키: min(userId):max(userId).
   // 그룹챗은 null (1:1만 유니크 보장).
   directKey: text('direct_key').unique(),
+  // 고정 공지 메시지 id. 순환 FK 회피 위해 constraint 없이 관리(삭제 시 service에서 해제).
+  pinnedMessageId: text('pinned_message_id'),
   // 비정규화 캐시 — 대화 목록 미리보기/정렬용. 메시지 전송 시 함께 갱신.
   lastMessageText: text('last_message_text'),
   lastMessageAt: timestamp('last_message_at', { withTimezone: true }),

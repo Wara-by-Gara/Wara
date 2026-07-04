@@ -133,6 +133,13 @@ export class ConversationsRepository {
     return rows[0] ?? null;
   }
 
+  async setPinnedMessage(conversationId: string, messageId: string | null) {
+    await this.db
+      .update(conversations)
+      .set({ pinnedMessageId: messageId, updatedAt: new Date() })
+      .where(eq(conversations.id, conversationId));
+  }
+
   async findParticipant(conversationId: string, userId: string) {
     const rows = await this.db
       .select()
