@@ -10,7 +10,7 @@ export interface SwitchProps
   loading?: boolean;
 }
 
-/** iOS식 토글 — ON 시 잉크(검정/라이트) 채움. */
+/** iOS식 토글 — ON 시 systemGreen 채움 (모바일 네이티브 Switch 미러). */
 export const Switch = forwardRef<ComponentRef<typeof RSwitch.Root>, SwitchProps>(
   function Switch({ className, loading, disabled, ...props }, ref) {
     return (
@@ -20,7 +20,7 @@ export const Switch = forwardRef<ComponentRef<typeof RSwitch.Root>, SwitchProps>
         aria-busy={loading || undefined}
         className={cn(
           "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
-          "bg-border-strong data-[state=checked]:bg-surface-inverse",
+          "bg-border-strong data-[state=checked]:bg-ios-green",
           "focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-40",
           className,

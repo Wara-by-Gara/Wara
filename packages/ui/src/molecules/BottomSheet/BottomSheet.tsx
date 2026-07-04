@@ -30,7 +30,8 @@ export function BottomSheet({
         <Vaul.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]" />
         <Vaul.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[92dvh] flex-col rounded-t-2xl",
+            // iOS 26 시트 코너 곡률 미러 (모바일 네이티브 시트와 정렬)
+            "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[92dvh] flex-col rounded-t-[28px]",
             "border-t border-border bg-surface focus:outline-none",
             className,
           )}

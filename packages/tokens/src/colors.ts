@@ -99,6 +99,7 @@ export const semanticColors: Record<ThemeMode, Record<string, string>> = {
     // iOS 시스템 시맨틱 미러 (앱 크롬 iOS 26 리스킨용 — 모바일 theme/ios-colors.ts hex 폴백과 정렬)
     "ios-tint": "#007AFF",
     "ios-red": "#FF3B30",
+    "ios-green": "#34C759",
     "ios-fill": "rgba(118,118,128,0.12)",
     "ios-grouped-bg": "#F2F2F7",
     "ios-separator": "rgba(198,198,200,0.60)",
@@ -142,6 +143,7 @@ export const semanticColors: Record<ThemeMode, Record<string, string>> = {
 
     "ios-tint": "#0A84FF",
     "ios-red": "#FF453A",
+    "ios-green": "#30D158",
     "ios-fill": "rgba(118,118,128,0.24)",
     "ios-grouped-bg": "#000000",
     "ios-separator": "rgba(56,56,58,0.65)",

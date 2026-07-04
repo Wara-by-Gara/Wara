@@ -37,6 +37,7 @@
   --link-soft: #E8F0FE;
   --ios-tint: #007AFF;
   --ios-red: #FF3B30;
+  --ios-green: #34C759;
   --ios-fill: rgba(118,118,128,0.12);
   --ios-grouped-bg: #F2F2F7;
   --ios-separator: rgba(198,198,200,0.60);
@@ -153,6 +154,7 @@
   --link-soft: rgba(91,157,255,0.16);
   --ios-tint: #0A84FF;
   --ios-red: #FF453A;
+  --ios-green: #30D158;
   --ios-fill: rgba(118,118,128,0.24);
   --ios-grouped-bg: #000000;
   --ios-separator: rgba(56,56,58,0.65);
@@ -219,6 +221,7 @@
   --color-link-soft: var(--link-soft);
   --color-ios-tint: var(--ios-tint);
   --color-ios-red: var(--ios-red);
+  --color-ios-green: var(--ios-green);
   --color-ios-fill: var(--ios-fill);
   --color-ios-grouped-bg: var(--ios-grouped-bg);
   --color-ios-separator: var(--ios-separator);
