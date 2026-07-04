@@ -4,9 +4,11 @@ import {
   cloneInvitation,
   createInvitation,
   deleteInvitation,
+  fetchHiddenInvitations,
   fetchInvitation,
   fetchMyInvitations,
   invitationKeys,
+  updateHidden,
   updateInvitation,
   updateInvitationStatus,
   type CreateInvitationPayload,
@@ -17,6 +19,23 @@ export function useMyInvitations() {
   return useQuery({
     queryKey: invitationKeys.myList,
     queryFn: ({ signal }) => fetchMyInvitations({ signal }),
+  });
+}
+
+export function useHiddenInvitations() {
+  return useQuery({
+    queryKey: invitationKeys.hidden,
+    queryFn: ({ signal }) => fetchHiddenInvitations({ signal }),
+  });
+}
+
+/** 초대장 숨김/해제 — 내 목록·숨김 목록이 함께 바뀌므로 invitations 전체 무효화. */
+export function useHideInvitation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { invitationId: string; isHidden: boolean }) =>
+      updateHidden(vars.invitationId, vars.isHidden),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invitationKeys.all }),
   });
 }
 

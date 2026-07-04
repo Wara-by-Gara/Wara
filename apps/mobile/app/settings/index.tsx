@@ -20,6 +20,11 @@ export default function SettingsScreen() {
         <ListRowLink title="약관 및 정책" icon="doc.text.fill" href="/settings/terms" />
       </ListSection>
 
+      <ListSection header="숨김 관리">
+        <ListRowLink title="숨긴 초대장" icon="eye.slash.fill" href="/invitations/hidden" />
+        <ListRowLink title="삭제한 친구" icon="person.crop.circle.badge.xmark" href="/friends/hidden" />
+      </ListSection>
+
       <ListSection header="알림" footer="알림 설정은 준비 중이에요.">
         <ListRow title="알림 설정" icon="bell.fill" value="준비 중" accessory="none" />
       </ListSection>

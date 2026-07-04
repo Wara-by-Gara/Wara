@@ -57,8 +57,10 @@ export default function RootLayout() {
                 {__DEV__ && <Stack.Screen name="dev-login" options={{ headerShown: false }} />}
                 <Stack.Screen name="terms-agree" options={{ headerShown: false }} />
                 <Stack.Screen name="signup" options={{ headerShown: false }} />
+                <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
                 <Stack.Screen name="invitations/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="invitations/create" options={{ headerShown: false, presentation: 'modal' }} />
+                <Stack.Screen name="invitations/hidden" options={{ title: '숨긴 초대장' }} />
                 <Stack.Screen name="chat" options={{ headerShown: false }} />
                 <Stack.Screen name="friends" options={{ headerShown: false }} />
                 <Stack.Screen name="settings" options={{ headerShown: false }} />

@@ -88,7 +88,8 @@ export default function SignupScreen() {
     mutationFn: updateMe,
     onSuccess: (updated) => {
       queryClient.setQueryData(userKeys.me(), updated);
-      router.replace('/(tabs)');
+      // 신규 가입 완료 → 권한 온보딩 (웹 /onboarding 패리티)
+      router.replace('/onboarding');
     },
     onError: () => {
       setSubmitError('정보 저장에 실패했어요. 다시 시도해주세요.');
