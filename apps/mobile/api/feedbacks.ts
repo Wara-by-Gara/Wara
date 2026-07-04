@@ -1,5 +1,5 @@
-// 사진 피드백(댓글) API — 웹 apps/web/src/lib/api/feedbacks.ts 포팅.
-// 범위: 사진 낱개 댓글 목록/작성/삭제. (초대장 전체 피드백·수정·좋아요는 범위 제외)
+// 피드백(댓글) API — 웹 apps/web/src/lib/api/feedbacks.ts 포팅.
+// 범위: 사진 낱개 댓글 + 초대장 전체 댓글 목록/작성/삭제. (수정·좋아요는 범위 제외)
 import { apiFetch, newIdempotencyKey } from './client';
 
 export interface FeedbackPhoto {
@@ -44,6 +44,8 @@ export interface FeedbackListResponse {
   total?: number;
 }
 
+export const INVITATION_FEEDBACK_PAGE_SIZE = 10;
+
 // ── 조회 ────────────────────────────────────────────────────────────────────
 
 export function fetchPhotoFeedbacks(
@@ -53,6 +55,20 @@ export function fetchPhotoFeedbacks(
 ) {
   return apiFetch<FeedbackListResponse>(
     `/invitations/${invitationId}/photos/${photoId}/feedbacks`,
+    { signal: opts.signal },
+  );
+}
+
+/** 초대장 전체 댓글(활동 피드 댓글) 목록 — 커서 페이지네이션. */
+export function fetchInvitationFeedbacks(
+  invitationId: string,
+  opts: { cursor?: string; limit?: number; signal?: AbortSignal } = {},
+) {
+  const params = new URLSearchParams();
+  if (opts.cursor) params.set('cursor', opts.cursor);
+  params.set('limit', String(opts.limit ?? INVITATION_FEEDBACK_PAGE_SIZE));
+  return apiFetch<FeedbackListResponse>(
+    `/invitations/${invitationId}/feedbacks/all?${params.toString()}`,
     { signal: opts.signal },
   );
 }
@@ -86,8 +102,24 @@ export function createPhotoFeedback(
   );
 }
 
-/** 피드백 삭제(soft delete). 엔드포인트는 photos 하위가 아닌 feedbacks 하위. */
-export function deletePhotoFeedback(invitationId: string, feedbackId: string) {
+/** 초대장 전체 댓글 작성 (parentId 지정 시 답글). */
+export function createInvitationFeedback(
+  invitationId: string,
+  payload: { content?: string; parentId?: string; gifUrl?: string },
+) {
+  return apiFetch<Feedback>(`/invitations/${invitationId}/feedbacks`, {
+    method: 'POST',
+    body: {
+      ...(payload.content && { content: payload.content }),
+      ...(payload.parentId && { parentId: payload.parentId }),
+      ...(payload.gifUrl && { gifUrl: payload.gifUrl }),
+    },
+    idempotencyKey: newIdempotencyKey(),
+  });
+}
+
+/** 피드백 삭제(soft delete). 사진 댓글·초대장 댓글 공용 (feedbacks 하위 단일 엔드포인트). */
+export function deleteFeedback(invitationId: string, feedbackId: string) {
   return apiFetch<void>(`/invitations/${invitationId}/feedbacks/${feedbackId}`, {
     method: 'DELETE',
     idempotencyKey: newIdempotencyKey(),
@@ -99,4 +131,5 @@ export const feedbackKeys = {
   all: ['feedbacks'] as const,
   photo: (invitationId: string, photoId: string) =>
     ['feedbacks', 'photo', invitationId, photoId] as const,
+  invitation: (invitationId: string) => ['feedbacks', 'invitation', invitationId] as const,
 };

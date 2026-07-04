@@ -66,6 +66,7 @@ export default function RootLayout() {
                 <Stack.Screen name="settings" options={{ headerShown: false }} />
                 <Stack.Screen name="support" options={{ headerShown: false }} />
                 <Stack.Screen name="explore/index" options={{ title: '둘러보기', headerLargeTitle: true }} />
+                <Stack.Screen name="meetings" options={{ title: '모임 내역' }} />
                 <Stack.Screen name="photos/map" options={{ title: '사진 지도' }} />
               </Stack>
               {/* 로그인 상태에서만 내부적으로 푸시 토큰 등록(훅이 토큰 유무로 게이팅). */}

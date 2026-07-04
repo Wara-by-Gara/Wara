@@ -214,6 +214,12 @@ export default function ProfileScreen() {
           <Text style={styles.value}>{me?.email ?? '—'}</Text>
         </View>
 
+        <Text style={styles.sectionTitle}>내역</Text>
+        <Pressable style={styles.row} onPress={() => router.push('/meetings')}>
+          <Text style={styles.rowLabel}>모임 내역</Text>
+          <Text style={styles.rowAction}>보기</Text>
+        </Pressable>
+
         <Text style={styles.sectionTitle}>연결된 소셜 계정</Text>
         {(['kakao', 'naver', 'google'] as const).map((provider) => {
           const isConnected = connectedProviders.has(provider);

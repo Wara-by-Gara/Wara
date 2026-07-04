@@ -86,6 +86,15 @@ export default function InvitationDetailScreen() {
           </View>
         ) : null}
 
+        <ListSection style={styles.section}>
+          <ListRow
+            title="댓글"
+            icon="text.bubble"
+            accessory="chevron"
+            onPress={() => router.push(`/invitations/${id}/comments`)}
+          />
+        </ListSection>
+
         <View style={styles.section}>
           <RsvpControl invitation={inv} />
         </View>
