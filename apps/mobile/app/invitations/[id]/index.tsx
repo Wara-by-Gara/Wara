@@ -1,116 +1,150 @@
-import { useQuery } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+/**
+ * 초대장 상세 화면 (Phase 1) — 커버 + 정보 섹션 + 내 RSVP.
+ * iOS 네이티브 룩: grouped 리스트 · 시스템 시맨틱 컬러 · SF Symbols.
+ */
 
-import { fetchInvitation, invitationKeys, WaraApiError } from '@/api';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { colors } from '@/constants/tokens';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { WaraApiError } from '@/api';
+import { ListRow, ListSection, Screen } from '@/components/ios';
+import { InvitationCover } from '@/components/invitation/InvitationCover';
+import { RsvpControl } from '@/components/invitation/RsvpControl';
+import { useInvitation } from '@/hooks/queries/invitations';
+import { ios, iosMetrics, iosType } from '@/theme';
 
 export default function InvitationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const query = useQuery({
-    queryKey: invitationKeys.detail(id),
-    queryFn: ({ signal }) => fetchInvitation(id, { signal }),
-    enabled: !!id,
-  });
+  const { data, isPending, error } = useInvitation(id);
 
-  if (query.isPending) {
+  if (isPending) {
     return (
-      <ThemedView style={styles.center}>
+      <View style={styles.center}>
         <Stack.Screen options={{ title: '초대장' }} />
         <ActivityIndicator size="large" />
-      </ThemedView>
+      </View>
     );
   }
 
-  if (query.error) {
-    const err = query.error;
+  if (error || !data) {
+    const message =
+      error instanceof WaraApiError
+        ? `${error.code} — 초대장을 불러오지 못했어요`
+        : '네트워크 오류 — 잠시 후 다시 시도해 주세요';
     return (
-      <ThemedView style={styles.center}>
+      <View style={styles.center}>
         <Stack.Screen options={{ title: '오류' }} />
-        <ThemedText type="subtitle">불러오기 실패</ThemedText>
-        <ThemedText style={styles.errorBody}>
-          {err instanceof WaraApiError
-            ? `${err.code} — ${err.message}`
-            : '네트워크 오류 — 서버가 켜져 있나요?'}
-        </ThemedText>
-      </ThemedView>
+        <Text style={styles.errorTitle}>불러오기 실패</Text>
+        <Text style={styles.errorBody}>{message}</Text>
+      </View>
     );
   }
 
-  const inv = query.data;
+  const inv = data;
+  const hostName = inv.host?.nickname ?? inv.host?.name ?? null;
+  const location = inv.eventLocation;
+
   return (
-    <ThemedView style={styles.container}>
+    <Screen scroll>
       <Stack.Screen options={{ title: inv.title }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <ThemedText type="title">{inv.title}</ThemedText>
-        <View style={styles.metaRow}>
-          <Badge label={inv.status === 'closed' ? '마감됨' : '진행 중'} />
-          {inv.isMissionEnabled && <Badge label="미션" />}
+      <View style={styles.body}>
+        <InvitationCover invitation={inv} />
+
+        <View style={styles.headerBlock}>
+          <Text style={styles.title}>{inv.title}</Text>
+          {hostName ? <Text style={styles.host}>{hostName}</Text> : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="참가자 보기"
+            onPress={() => router.push(`/invitations/${id}/participants`)}
+            style={({ pressed }) => [styles.participantRow, pressed && styles.participantPressed]}>
+            <Text style={styles.participantText}>참가자 {inv.participantTotal ?? 0}명</Text>
+          </Pressable>
         </View>
-        {inv.eventStartAt && (
-          <ThemedText style={styles.meta}>
-            일시 · {formatDateTime(inv.eventStartAt)}
-          </ThemedText>
-        )}
-        <ThemedText style={styles.description}>{inv.description}</ThemedText>
-        <TouchableOpacity
-          style={styles.mapButton}
-          onPress={() => router.push(`/invitations/${id}/map`)}
-          accessibilityRole="button"
-          accessibilityLabel="지도 보기"
-        >
-          <ThemedText style={styles.mapButtonText}>📍 지도 보기</ThemedText>
-        </TouchableOpacity>
-      </ScrollView>
-    </ThemedView>
+
+        <ListSection style={styles.section}>
+          {inv.eventStartAt ? (
+            <ListRow title="일시" value={formatKstDateTime(inv.eventStartAt)} accessory="none" />
+          ) : null}
+          {location ? (
+            <ListRow
+              title={location.placeName || '장소'}
+              subtitle={location.address}
+              accessory="chevron"
+              onPress={() => router.push(`/invitations/${id}/map`)}
+            />
+          ) : null}
+          {inv.fee ? <ListRow title="회비" value={inv.fee} accessory="none" /> : null}
+          {inv.dressCode ? <ListRow title="드레스코드" value={inv.dressCode} accessory="none" /> : null}
+          {inv.parkingInfo ? <ListRow title="주차" value={inv.parkingInfo} accessory="none" /> : null}
+        </ListSection>
+
+        {inv.description ? (
+          <View style={styles.section}>
+            <Text style={styles.description}>{inv.description}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <RsvpControl invitation={inv} />
+        </View>
+      </View>
+    </Screen>
   );
 }
 
-function Badge({ label }: { label: string }) {
-  return (
-    <View style={styles.badge}>
-      <ThemedText style={styles.badgeText}>{label}</ThemedText>
-    </View>
-  );
-}
+const WEEKDAY_KO: Record<string, string> = {
+  Sun: '일',
+  Mon: '월',
+  Tue: '화',
+  Wed: '수',
+  Thu: '목',
+  Fri: '금',
+  Sat: '토',
+};
 
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  const date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return `${date} ${time}`;
+/** ISO → KST '7월 2일 (수) 오후 7:00'. */
+function formatKstDateTime(iso: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).formatToParts(new Date(iso));
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  const month = get('month');
+  const day = get('day');
+  const hour = get('hour');
+  const minute = get('minute');
+  const period = get('dayPeriod').toLowerCase() === 'am' ? '오전' : '오후';
+  const weekday = WEEKDAY_KO[get('weekday')] ?? get('weekday');
+
+  return `${month}월 ${day}일 (${weekday}) ${period} ${hour}:${minute}`;
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    padding: 24,
+    gap: iosMetrics.spacing[3],
+    padding: iosMetrics.spacing[6],
+    backgroundColor: ios.systemBackground,
   },
-  scroll: { padding: 20, gap: 12 },
-  metaRow: { flexDirection: 'row', gap: 8 },
-  meta: { fontSize: 14, opacity: 0.7 },
-  description: { fontSize: 15, lineHeight: 22, marginTop: 8 },
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-  },
-  badgeText: { fontSize: 12 },
-  errorBody: { fontSize: 13, opacity: 0.7, textAlign: 'center' },
-  mapButton: {
-    marginTop: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  mapButtonText: { fontSize: 15, fontWeight: '700', color: colors.textInverse },
+  body: { paddingHorizontal: iosMetrics.pagePadding, paddingBottom: iosMetrics.spacing[10] },
+  headerBlock: { marginTop: iosMetrics.spacing[5], gap: iosMetrics.spacing[1] },
+  title: { ...iosType.title1, fontWeight: '700', color: ios.label },
+  host: { ...iosType.subhead, color: ios.secondaryLabel },
+  participantRow: { marginTop: iosMetrics.spacing[1], alignSelf: 'flex-start' },
+  participantPressed: { opacity: 0.5 },
+  participantText: { ...iosType.subhead, color: ios.tint },
+  section: { marginTop: iosMetrics.spacing[6] },
+  description: { ...iosType.body, color: ios.label },
+  errorTitle: { ...iosType.headline, color: ios.label },
+  errorBody: { ...iosType.footnote, color: ios.secondaryLabel, textAlign: 'center' },
 });

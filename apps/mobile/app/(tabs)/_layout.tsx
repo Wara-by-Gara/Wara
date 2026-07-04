@@ -1,10 +1,8 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ios } from '@/theme';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useTermsGuard } from '@/hooks/useTermsGuard';
 
@@ -15,28 +13,49 @@ export default function TabLayout() {
 }
 
 function AuthenticatedTabs() {
-  const colorScheme = useColorScheme();
   useTermsGuard();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarActiveTintColor: ios.tint,
+        tabBarInactiveTintColor: ios.secondaryLabel,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: '홈',
+          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={26} name="house.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="invitations"
+        options={{
+          title: '초대장',
+          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={26} name="envelope.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="photos"
+        options={{
+          title: '사진',
+          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={26} name="photo.on.rectangle.angled" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: '알림',
+          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={26} name="bell.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'My',
-          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          title: '마이',
+          tabBarIcon: ({ color }: { color: string }) => <IconSymbol size={26} name="person.fill" color={color} />,
         }}
       />
     </Tabs>

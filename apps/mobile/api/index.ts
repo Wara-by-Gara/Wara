@@ -1,4 +1,4 @@
-export { apiFetch } from './client';
+export { apiFetch, apiFetchWithMeta, newIdempotencyKey } from './client';
 export { createQueryClient } from './query-client';
 export {
   getAccessToken,
@@ -17,9 +17,50 @@ export {
 export {
   fetchMyInvitations,
   fetchInvitation,
+  fetchHiddenInvitations,
+  createInvitation,
+  updateInvitation,
+  updateInvitationStatus,
+  deleteInvitation,
+  verifyInvitationAccess,
+  cloneInvitation,
+  getInvitationImagePresignedUrl,
+  applyAiToMainImage,
+  getAiJobStatus,
   invitationKeys,
   type Invitation,
+  type InvitationListItem,
+  type InvitationEventLocation,
+  type InvitationParticipantAvatar,
+  type CreatedInvitation,
+  type CreateInvitationPayload,
+  type UpdateInvitationPayload,
+  type AiJobStatusResponse,
+  type ImageContentType,
+  type MainImageFrame,
 } from './invitations';
+export {
+  getParticipants,
+  getMyParticipant,
+  joinInvitation,
+  updateRsvp,
+  leaveInvitation,
+  updateHostMemo,
+  transferHost,
+  setCoHost,
+  updateHidden,
+  participantKeys,
+  type Participant,
+  type ParticipantUser,
+  type ParticipantsResponse,
+  type RsvpStatus,
+  type MemberRole,
+} from './participants';
+export {
+  getTemplates,
+  templateKeys,
+  type Template,
+} from './templates';
 export {
   fetchEventLocation,
   locationKeys,
