@@ -14,6 +14,9 @@ const barVariants = cva(
         transparent: "bg-transparent",
         glass:
           "bg-surface-glass-strong border-b border-glass-border backdrop-blur-[var(--blur-glass)]",
+        // iOS 26 Liquid Glass 헤더 (모바일 systemChromeMaterial 헤더 미러)
+        lglass:
+          "bg-surface-lglass border-b border-lglass-border backdrop-blur-[20px] backdrop-saturate-[1.8]",
       },
     },
     defaultVariants: { variant: "solid" },
