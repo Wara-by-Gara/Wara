@@ -1,4 +1,5 @@
-// 알림 탭 = in-app 알림 목록 (Phase 4). 소켓 실시간 수신 + 커서 무한 스크롤.
+// 알림 화면 = in-app 알림 목록 (Phase 4). 소켓 실시간 수신 + 커서 무한 스크롤.
+// 루트 스택 화면(네이티브 헤더 '알림') — 홈 탭 타이틀바 우측 종 버튼으로 진입.
 // 앱 크롬이므로 색상/메트릭은 theme 토큰과 components/ios 킷만 사용(hex 금지).
 import { useCallback } from 'react';
 import {
@@ -12,7 +13,6 @@ import {
   type OpaqueColorValue,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import type { SymbolViewProps } from 'expo-symbols';
 
@@ -123,8 +123,7 @@ function asNotification(raw: unknown): Notification | null {
 
 type ListCache = InfiniteData<NotificationsPage, string | undefined>;
 
-export default function NotificationsTabScreen() {
-  const insets = useSafeAreaInsets();
+export default function NotificationsScreen() {
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -180,27 +179,24 @@ export default function NotificationsTabScreen() {
     [onPressItem, markAsRead],
   );
 
-  const header = (
-    <View style={[styles.header, { paddingTop: insets.top + iosMetrics.spacing[3] }]}>
-      <Text style={styles.title}>알림</Text>
-      {hasUnread ? (
-        <Pressable
-          onPress={() => {
-            haptics.selection();
-            markAllAsRead.mutate();
-          }}
-          hitSlop={8}>
-          <Text style={styles.markAll}>모두 읽음</Text>
-        </Pressable>
-      ) : null}
+  // 타이틀은 네이티브 헤더가 담당 — 리스트 상단에는 '모두 읽음' 액션만 노출.
+  const header = hasUnread ? (
+    <View style={styles.header}>
+      <Pressable
+        onPress={() => {
+          haptics.selection();
+          markAllAsRead.mutate();
+        }}
+        hitSlop={8}>
+        <Text style={styles.markAll}>모두 읽음</Text>
+      </Pressable>
     </View>
-  );
+  ) : null;
 
   // 초기 로딩
   if (listQuery.isPending) {
     return (
       <View style={styles.screen}>
-        {header}
         <View style={styles.center}>
           <ActivityIndicator size="large" />
         </View>
@@ -212,7 +208,6 @@ export default function NotificationsTabScreen() {
   if (listQuery.isError) {
     return (
       <View style={styles.screen}>
-        {header}
         <View style={styles.center}>
           <Text style={styles.emptyTitle}>{messageForError(listQuery.error)}</Text>
           <Pressable onPress={() => listQuery.refetch()} hitSlop={8}>
@@ -230,6 +225,7 @@ export default function NotificationsTabScreen() {
         keyExtractor={(n) => n.id}
         renderItem={renderItem}
         ListHeaderComponent={header}
+        contentInsetAdjustmentBehavior="automatic"
         ItemSeparatorComponent={Separator}
         contentContainerStyle={items.length === 0 ? styles.emptyContainer : undefined}
         ListEmptyComponent={
@@ -309,12 +305,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: ios.systemBackground },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: iosMetrics.pagePadding,
-    paddingBottom: iosMetrics.spacing[3],
+    paddingVertical: iosMetrics.spacing[2],
   },
-  title: { ...iosType.largeTitle, color: ios.label },
   markAll: { ...iosType.body, color: ios.tint },
   center: {
     flex: 1,

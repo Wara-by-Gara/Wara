@@ -58,15 +58,16 @@ export default function RootLayout() {
                 <Stack.Screen name="terms-agree" options={{ headerShown: false }} />
                 <Stack.Screen name="signup" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+                <Stack.Screen name="invitations/index" options={{ title: '초대장', headerLargeTitle: true }} />
                 <Stack.Screen name="invitations/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="invitations/create" options={{ headerShown: false, presentation: 'modal' }} />
                 <Stack.Screen name="invitations/hidden" options={{ title: '숨긴 초대장' }} />
                 <Stack.Screen name="chat" options={{ headerShown: false }} />
-                <Stack.Screen name="friends" options={{ headerShown: false }} />
                 <Stack.Screen name="settings" options={{ headerShown: false }} />
                 <Stack.Screen name="support" options={{ headerShown: false }} />
                 <Stack.Screen name="explore/index" options={{ title: '둘러보기', headerLargeTitle: true }} />
-                <Stack.Screen name="meetings" options={{ title: '모임 내역' }} />
+                <Stack.Screen name="notifications" options={{ title: '알림' }} />
+                <Stack.Screen name="photos/index" options={{ title: '사진' }} />
                 <Stack.Screen name="photos/map" options={{ title: '사진 지도' }} />
               </Stack>
               {/* 로그인 상태에서만 내부적으로 푸시 토큰 등록(훅이 토큰 유무로 게이팅). */}

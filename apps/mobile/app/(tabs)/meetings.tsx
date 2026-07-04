@@ -1,4 +1,4 @@
-// 모임 내역 화면 — 웹 /meetings 미러 (F-MPBPAP 내 모임/참여 내역).
+// 일정 탭 — 웹 /meetings 미러 (F-MPBPAP 내 모임/참여 내역).
 // 웹 IA: 월 달력(날짜 탭 = 날짜 필터, 재탭 = 전체 모임) + 모임 카드 리스트.
 // 앱 크롬 — theme 토큰 + components/ios 킷만 사용. 카드 탭 → /invitations/[id].
 
@@ -7,14 +7,16 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WaraApiError, type Invitation } from '@/api';
-import { Button, haptics, ListSection, Screen } from '@/components/ios';
+import { Button, haptics, ListSection } from '@/components/ios';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useMyInvitations } from '@/hooks/queries/invitations';
 import { ios, iosHex, iosMetrics, iosType } from '@/theme';
@@ -78,6 +80,7 @@ type ListMode = 'all' | 'date';
 // ── 화면 ──────────────────────────────────────────────────────────────────────
 
 export default function MeetingsScreen() {
+  const insets = useSafeAreaInsets();
   const query = useMyInvitations();
 
   const today = new Date();
@@ -140,24 +143,33 @@ export default function MeetingsScreen() {
     setMonth(d.getMonth() + 1);
   };
 
-  const screenHeader = <Stack.Screen options={{ title: '모임 내역', headerLargeTitle: true }} />;
+  // 탭 화면은 네이티브 헤더가 없어 홈 탭과 동일한 타이틀바 패턴 사용.
+  const titleBar = (
+    <View style={[styles.header, { paddingTop: insets.top + iosMetrics.spacing[3] }]}>
+      <Text style={styles.title}>일정</Text>
+    </View>
+  );
 
   if (query.isPending) {
     return (
-      <View style={styles.center}>
-        {screenHeader}
-        <ActivityIndicator size="large" />
+      <View style={styles.screen}>
+        {titleBar}
+        <View style={styles.center}>
+          <ActivityIndicator size="large" />
+        </View>
       </View>
     );
   }
 
   if (query.error) {
     return (
-      <View style={styles.center}>
-        {screenHeader}
-        <Text style={styles.errorTitle}>불러오지 못했어요</Text>
-        <Text style={styles.errorBody}>{messageForError(query.error)}</Text>
-        <Button title="다시 시도" onPress={() => query.refetch()} />
+      <View style={styles.screen}>
+        {titleBar}
+        <View style={styles.center}>
+          <Text style={styles.errorTitle}>불러오지 못했어요</Text>
+          <Text style={styles.errorBody}>{messageForError(query.error)}</Text>
+          <Button title="다시 시도" onPress={() => query.refetch()} />
+        </View>
       </View>
     );
   }
@@ -165,14 +177,13 @@ export default function MeetingsScreen() {
   const hasAnyEvent = allEventsSorted.length > 0;
 
   return (
-    <>
-      {screenHeader}
-      <Screen
-        background="grouped"
-        scroll
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} />
         }>
+        {titleBar}
         {!hasAnyEvent ? (
           <View style={styles.empty}>
             <IconSymbol name="calendar" size={44} color={ios.tertiaryLabel} />
@@ -204,8 +215,8 @@ export default function MeetingsScreen() {
             </ListSection>
           </>
         )}
-      </Screen>
-    </>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -364,6 +375,13 @@ function EmptyRow({ text }: { text: string; isLast?: boolean }) {
 // ── 스타일 ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: ios.systemGroupedBackground },
+  header: {
+    paddingHorizontal: iosMetrics.pagePadding,
+    paddingBottom: iosMetrics.spacing[2],
+  },
+  title: { ...iosType.largeTitle, color: ios.label },
+  scrollContent: { flexGrow: 1, paddingBottom: iosMetrics.spacing[8] },
   center: {
     flex: 1,
     alignItems: 'center',

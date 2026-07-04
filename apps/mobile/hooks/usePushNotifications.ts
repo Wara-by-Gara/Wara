@@ -3,7 +3,7 @@
 //  2) foreground 수신 시 배너 표시(setNotificationHandler)
 //  3) 알림 탭(response) → payload로 초대장 딥링크(expo-router)
 // 미로그인(토큰 없음) 상태에서는 등록을 시도하지 않는다.
-// 라우팅 규칙은 app/(tabs)/notifications.tsx의 hrefFor와 동일하게 유지한다.
+// 라우팅 규칙은 app/notifications.tsx의 hrefFor와 동일하게 유지한다.
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';

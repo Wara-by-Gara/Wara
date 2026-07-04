@@ -135,6 +135,16 @@ export default function HomeScreen() {
   const titleBar = (
     <View style={[styles.header, { paddingTop: insets.top + iosMetrics.spacing[3] }]}>
       <Text style={styles.title}>홈</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="알림"
+        onPress={() => {
+          haptics.selection();
+          router.push('/notifications');
+        }}
+        hitSlop={8}>
+        <IconSymbol name="bell" size={24} color={ios.tint} />
+      </Pressable>
     </View>
   );
 
@@ -263,6 +273,9 @@ function UpcomingCard({ item, onPress }: { item: InvitationListItem; onPress: ()
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: ios.systemBackground },
   header: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
     paddingHorizontal: iosMetrics.pagePadding,
     paddingBottom: iosMetrics.spacing[2],
   },

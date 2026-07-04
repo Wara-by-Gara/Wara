@@ -19,21 +19,21 @@ function AuthenticatedTabs() {
         <Icon sf="house.fill" />
         <Label>홈</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="invitations">
-        <Icon sf="envelope.fill" />
-        <Label>초대장</Label>
+      <NativeTabs.Trigger name="meetings">
+        <Icon sf="calendar" />
+        <Label>일정</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="photos">
-        <Icon sf="photo.on.rectangle.angled" />
-        <Label>사진</Label>
+      <NativeTabs.Trigger name="create">
+        <Icon sf="plus.circle.fill" />
+        <Label>만들기</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notifications">
-        <Icon sf="bell.fill" />
-        <Label>알림</Label>
+      <NativeTabs.Trigger name="friends">
+        <Icon sf="person.2.fill" />
+        <Label>친구</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf="person.fill" />
-        <Label>마이</Label>
+        <Label>프로필</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
