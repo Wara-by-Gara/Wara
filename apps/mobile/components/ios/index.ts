@@ -12,3 +12,4 @@ export { SwipeableRow, type SwipeAction } from './SwipeableRow';
 export { BottomSheet, type BottomSheetRef } from './BottomSheet';
 export { showActionSheet, type ActionSheetOption } from './ActionSheet';
 export { haptics } from './Haptics';
+export { Glass, isLiquidGlassAvailable, type GlassProps } from './Glass';
