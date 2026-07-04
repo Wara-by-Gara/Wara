@@ -874,3 +874,24 @@ a {
   to { translate: -32% -24%; scale: 0.9; }
 }
 
+
+/* ── iOS 26 Liquid Glass 모방 서피스 (앱 크롬 리스킨) ─────────────────────────
+   토큰: @wara/tokens glass.ts의 lglass 계열. 모바일 UIGlassEffect 톤 미러.
+   @utility로 정의 — 일반 CSS 규칙의 backdrop-filter는 CSS 처리기가 제거해서
+   Tailwind 유틸리티 파이프라인(backdrop-filter 보존됨)을 경유한다.
+   backdrop-filter 미지원 브라우저·투명도 감소 설정에서는 불투명 서피스로 폴백. */
+@utility lglass {
+  background: var(--surface-lglass);
+  border: 1px solid var(--lglass-border);
+  /* 값 SoT는 @wara/tokens glass.ts (blur.lglass=20px, lglassSaturate=1.8) — 변경 시 여기도 갱신 */
+  backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: 0 8px 32px var(--lglass-shadow);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background: var(--surface-lglass-strong);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+}

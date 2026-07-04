@@ -40,9 +40,10 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
       <nav
         ref={ref}
         aria-label="주요 탭"
+        // iOS 26 Liquid Glass 플로팅 캡슐 — 모바일 NativeTabs 룩 미러
         className={cn(
-          "flex h-16 w-full items-stretch justify-around",
-          "rounded-none border-t border-white/40 bg-white/55 backdrop-blur-xl backdrop-saturate-150",
+          "flex h-16 w-full items-stretch justify-around gap-1 p-1.5",
+          "lglass rounded-full",
           className,
         )}
         {...props}
@@ -52,8 +53,14 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
           const colorClass = item.disabled
             ? "text-text-disabled opacity-40"
             : active
-              ? "text-primary"
+              ? "text-ios-tint"
               : "text-text-muted";
+          // 선택 탭 캡슐 하이라이트 (iOS 26 탭바의 선택 pill)
+          const pillClass = cn(
+            "rounded-full transition-colors duration-150",
+            active && !item.fab && "bg-ios-fill",
+            !item.disabled && !item.fab && "hover:bg-ios-fill/60",
+          );
 
           const content = item.fab ? (
             <span className="flex flex-col items-center justify-center -mt-5">
@@ -96,21 +103,14 @@ export const BottomNavigation = forwardRef<HTMLElement, BottomNavigationProps>(
               aria-label={showLabels ? undefined : item.label}
               aria-current={active ? "page" : undefined}
               onClick={() => onSelect?.(item.key)}
-              className={cn(
-                "flex flex-1 items-center justify-center",
-                colorClass,
-                !item.disabled && !item.fab && "hover:bg-black/5 transition-colors duration-150",
-              )}
+              className={cn("flex flex-1 items-center justify-center", colorClass, pillClass)}
             >
               {content}
             </button>
           );
 
           return renderItem ? (
-            <span
-              key={item.key}
-              className={cn("flex flex-1", colorClass, !item.disabled && !item.fab && "hover:bg-black/5 transition-colors duration-150")}
-            >
+            <span key={item.key} className={cn("flex flex-1", colorClass, pillClass)}>
               {renderItem(item, content)}
             </span>
           ) : (

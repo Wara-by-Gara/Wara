@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 
 import { colorPrimitives, semanticColors } from "../src/colors.ts";
 import { gradient } from "../src/gradient.ts";
-import { glass, blur } from "../src/glass.ts";
+import { glass, blur, lglassSaturate } from "../src/glass.ts";
 import { typeScale, fontFamily } from "../src/typography.ts";
 import { spacingSemanticPx } from "../src/spacing.ts";
 import { radiusPx } from "../src/radius.ts";
@@ -38,6 +38,10 @@ const themeVars = (mode: "light" | "dark") => {
     lines.push(`  --ev-${k}: ${v};`);
   lines.push(`  --blur-glass: ${mode === "dark" ? "18px" : "16px"};`);
   lines.push(`  --blur-glass-strong: ${blur["glass-strong"]};`);
+  lines.push(`  --blur-lglass: ${blur.lglass};`);
+  lines.push(`  --saturate-lglass: ${lglassSaturate};`);
+  // backdrop-filter 전체 값 — Lightning CSS가 filter 함수 안 var()를 제거하는 문제 우회
+  lines.push(`  --lglass-backdrop: blur(${blur.lglass}) saturate(${lglassSaturate});`);
   const ring =
     mode === "dark"
       ? "0 0 0 3px rgba(244,241,250,0.34)"
