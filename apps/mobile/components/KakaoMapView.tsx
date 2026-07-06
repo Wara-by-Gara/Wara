@@ -82,7 +82,7 @@ html, body, #map { width: 100%; height: 100%; overflow: hidden; }
 </head>
 <body>
 <div id="map"></div>
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoKey}&autoload=false"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoKey}&autoload=false"></script>
 <script>
 var map = null;
 var participants = {};
@@ -262,10 +262,11 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
     <WebView
       ref={webViewRef}
       style={styles.map}
-      source={{ html }}
+      // baseUrl: 카카오 JS 키 도메인 검증 + SDK 내부 리소스를 https로 로드 (ATS 차단 회피)
+      source={{ html, baseUrl: 'https://localhost:3000' }}
       javaScriptEnabled
       domStorageEnabled
-      originWhitelist={['about:*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
+      originWhitelist={['about:*', 'https://localhost*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
       mixedContentMode="always"
       onMessage={handleMessage}
     />

@@ -1,8 +1,10 @@
 // 초대장 활동 피드 댓글 (F-DPZZXZ) — 웹 /invitations/[invitationId]/comments 미러.
-// 목록(아바타·이름·시간·본문·첨부이미지·답글) + 하단 텍스트 입력 + 본인 댓글 삭제.
-// 웹과 동일하게 실시간 소켓 없이 작성/삭제 후 invalidate로 갱신한다.
+// 목록(아바타·이름·시간·본문·첨부이미지·답글·좋아요) + 하단 텍스트 입력 +
+// 본인 댓글 수정/삭제 + 사진 첨부(presigned 업로드 → attachedPhotoId).
+// 웹과 동일하게 실시간 소켓 없이 작성/수정/삭제 후 invalidate로 갱신한다.
+// (좋아요는 웹과 동일하게 낙관적 캐시 갱신 — useToggleFeedbackLike)
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -21,14 +23,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { showActionSheet } from '@/components/ios';
+import { haptics, showActionSheet } from '@/components/ios';
 import { ios, iosMetrics, iosType } from '@/theme';
 import { WaraApiError, fetchMe, userKeys } from '@/api';
 import type { Feedback } from '@/api/feedbacks';
 import {
+  deletePhoto,
+  getPhotoPresignedUrl,
+  registerPhoto,
+  type MobilePhoto,
+} from '@/api/photos';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import {
   useCreateInvitationFeedback,
   useDeleteInvitationFeedback,
   useInvitationFeedbacks,
+  useToggleFeedbackLike,
+  useUpdateInvitationFeedback,
 } from '@/hooks/queries/feedbacks';
 
 function messageForError(err: unknown): string {
@@ -40,6 +51,10 @@ function messageForError(err: unknown): string {
         return '이 초대장에 접근할 수 없어요';
       case 'PARTICIPANT_NOT_FOUND':
         return '모임 참가자만 댓글을 남길 수 있어요';
+      case 'FEEDBACK_NOT_FOUND':
+        return '댓글을 찾을 수 없어요';
+      case 'FEEDBACK_FORBIDDEN':
+        return '본인 댓글만 수정·삭제할 수 있어요';
     }
   }
   return '문제가 발생했어요';
@@ -75,10 +90,34 @@ export default function CommentsScreen() {
 
   const feedbacksQuery = useInvitationFeedbacks(id);
   const createMutation = useCreateInvitationFeedback(id);
+  const updateMutation = useUpdateInvitationFeedback(id);
   const deleteMutation = useDeleteInvitationFeedback(id);
+  const likeMutation = useToggleFeedbackLike(id);
 
   const [draft, setDraft] = useState('');
   const [replyingTo, setReplyingTo] = useState<ReplyTarget | null>(null);
+  // 본인 댓글 수정 모드 — 하단 입력창을 재사용(웹 editingSlot 대응).
+  const [editingId, setEditingId] = useState<string | null>(null);
+  // 첨부 대기 사진 — 이미 앨범 등록(registerPhoto)까지 끝난 상태로 대기.
+  const [pendingPhoto, setPendingPhoto] = useState<MobilePhoto | null>(null);
+
+  // 사진 첨부: 웹 CommentInputBar 계약 미러 — presigned PUT → registerPhoto → attachedPhotoId.
+  const upload = useImageUpload<MobilePhoto>({
+    getPresignedUrl: (fileName, contentType) => getPhotoPresignedUrl(id, fileName, contentType),
+    register: (meta) =>
+      registerPhoto(id, meta.imageKey, {
+        takenAt: meta.takenAt,
+        fileSize: meta.fileSize,
+        exifMetadata: meta.exifMetadata,
+      }),
+  });
+
+  useEffect(() => {
+    if (upload.error) {
+      Alert.alert('사진 첨부', upload.error);
+      upload.reset();
+    }
+  }, [upload.error, upload.reset]);
 
   const feedbacks = useMemo(
     () => feedbacksQuery.data?.pages.flatMap((p) => p.rows) ?? [],
@@ -87,27 +126,88 @@ export default function CommentsScreen() {
   const total = feedbacksQuery.data?.pages[0]?.total ?? feedbacks.length;
   const title = feedbacksQuery.data ? `댓글 ${total}` : '댓글';
 
-  const canSend = draft.trim().length > 0 && !createMutation.isPending;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const canSend =
+    !isSubmitting &&
+    !upload.uploading &&
+    (editingId ? draft.trim().length > 0 : draft.trim().length > 0 || pendingPhoto !== null);
+
+  async function onAttachPhoto() {
+    if (upload.uploading || editingId) return;
+    const [photo] = await upload.pickAndUpload({ allowsMultipleSelection: false });
+    if (photo) setPendingPhoto(photo);
+  }
+
+  /** 첨부 취소 — 이미 앨범에 등록된 사진이므로 고아 사진이 남지 않게 삭제(soft delete). */
+  function removePendingPhoto() {
+    const photo = pendingPhoto;
+    setPendingPhoto(null);
+    if (photo) {
+      deletePhoto(id, photo.id).catch(() => {
+        // 삭제 실패는 치명적이지 않음(앨범에 남을 뿐) — 조용히 무시.
+      });
+    }
+  }
+
+  function startEdit(feedback: Feedback) {
+    if (pendingPhoto) removePendingPhoto();
+    setReplyingTo(null);
+    setEditingId(feedback.id);
+    setDraft(feedback.content ?? '');
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setDraft('');
+  }
 
   function handleSend() {
+    if (!canSend) return;
     const content = draft.trim();
-    if (!content || createMutation.isPending) return;
+
+    if (editingId) {
+      updateMutation.mutate(
+        { feedbackId: editingId, content },
+        {
+          onSuccess: cancelEdit,
+          onError: (err) => Alert.alert('댓글 수정', messageForError(err)),
+        },
+      );
+      return;
+    }
+
     createMutation.mutate(
-      { content, parentId: replyingTo?.id },
+      {
+        ...(content && { content }),
+        parentId: replyingTo?.id,
+        attachedPhotoId: pendingPhoto?.id,
+      },
       {
         onSuccess: () => {
           setDraft('');
           setReplyingTo(null);
+          setPendingPhoto(null);
         },
         onError: (err) => Alert.alert('댓글 작성', messageForError(err)),
       },
     );
   }
 
-  // 웹 미러: 더보기 메뉴(삭제) → 확인 다이얼로그('이 댓글을 삭제할까요?').
+  function onToggleLike(feedbackId: string) {
+    haptics.light();
+    likeMutation.mutate(feedbackId, {
+      onError: (err) => Alert.alert('좋아요', messageForError(err)),
+    });
+  }
+
+  // 웹 미러: 더보기 메뉴(수정/삭제) → 수정은 입력창 재사용, 삭제는 확인 다이얼로그.
   function onLongPressMine(feedback: Feedback) {
     showActionSheet({
       options: [
+        // 사진/GIF 단독 댓글은 서버가 content 필수라 수정 대상에서 제외(웹과 동일하게 본문만 수정).
+        ...(feedback.content
+          ? [{ label: '수정', onPress: () => startEdit(feedback) }]
+          : []),
         {
           label: '삭제',
           destructive: true,
@@ -177,6 +277,7 @@ export default function CommentsScreen() {
               feedback={item}
               mine={!item.deletedAt && !!meId && item.participant.userId === meId}
               onLongPressMine={onLongPressMine}
+              onLike={onToggleLike}
               onReply={() =>
                 setReplyingTo({
                   id: item.id,
@@ -190,6 +291,7 @@ export default function CommentsScreen() {
                   feedback={reply}
                   mine={!reply.deletedAt && !!meId && reply.participant.userId === meId}
                   onLongPressMine={onLongPressMine}
+                  onLike={onToggleLike}
                 />
               </View>
             ))}
@@ -198,7 +300,14 @@ export default function CommentsScreen() {
       />
 
       <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, iosMetrics.spacing[2]) }]}>
-        {replyingTo ? (
+        {editingId ? (
+          <View style={styles.replyBanner}>
+            <Text style={styles.replyBannerText}>댓글 수정 중</Text>
+            <Pressable onPress={cancelEdit} accessibilityRole="button" hitSlop={6}>
+              <Text style={styles.replyBannerCancel}>취소</Text>
+            </Pressable>
+          </View>
+        ) : replyingTo ? (
           <View style={styles.replyBanner}>
             <Text style={styles.replyBannerText}>@{replyingTo.authorName}에게 답글</Text>
             <Pressable onPress={() => setReplyingTo(null)} accessibilityRole="button" hitSlop={6}>
@@ -206,12 +315,45 @@ export default function CommentsScreen() {
             </Pressable>
           </View>
         ) : null}
+        {pendingPhoto ? (
+          <View style={styles.attachBanner}>
+            <Image
+              source={{ uri: pendingPhoto.url }}
+              style={styles.attachThumb}
+              contentFit="cover"
+            />
+            <Pressable onPress={removePendingPhoto} accessibilityRole="button" hitSlop={6}>
+              <Text style={styles.replyBannerCancel}>취소</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View style={styles.inputBar}>
+          {editingId ? null : (
+            <Pressable
+              onPress={onAttachPhoto}
+              disabled={upload.uploading}
+              accessibilityRole="button"
+              accessibilityLabel="사진 첨부"
+              hitSlop={6}
+              style={styles.attachButton}>
+              {upload.uploading ? (
+                <ActivityIndicator size="small" />
+              ) : (
+                <IconSymbol name="photo" size={24} color={ios.tint} />
+              )}
+            </Pressable>
+          )}
           <TextInput
             style={styles.input}
             value={draft}
             onChangeText={setDraft}
-            placeholder={replyingTo ? `@${replyingTo.authorName}에게 답글...` : '댓글 남기기'}
+            placeholder={
+              editingId
+                ? '댓글 수정...'
+                : replyingTo
+                  ? `@${replyingTo.authorName}에게 답글...`
+                  : '댓글 남기기'
+            }
             placeholderTextColor={ios.placeholderText}
             multiline
           />
@@ -232,11 +374,13 @@ function CommentRow({
   feedback,
   mine,
   onLongPressMine,
+  onLike,
   onReply,
 }: {
   feedback: Feedback;
   mine: boolean;
   onLongPressMine: (feedback: Feedback) => void;
+  onLike: (feedbackId: string) => void;
   /** 최상위 댓글에만 제공 — 답글에 답글은 웹과 동일하게 미지원. */
   onReply?: () => void;
 }) {
@@ -284,11 +428,28 @@ function CommentRow({
         {attachedUrl ? (
           <Image source={{ uri: attachedUrl }} style={styles.attachedImage} contentFit="cover" transition={150} />
         ) : null}
-        {onReply ? (
-          <Pressable onPress={onReply} accessibilityRole="button" hitSlop={6} style={styles.replyButton}>
-            <Text style={styles.replyButtonText}>답글</Text>
+        <View style={styles.actionRow}>
+          <Pressable
+            onPress={() => onLike(feedback.id)}
+            accessibilityRole="button"
+            accessibilityLabel={feedback.likedByMe ? '좋아요 취소' : '좋아요'}
+            hitSlop={6}
+            style={styles.likeButton}>
+            <IconSymbol
+              name={feedback.likedByMe ? 'heart.fill' : 'heart'}
+              size={14}
+              color={feedback.likedByMe ? ios.systemRed : ios.secondaryLabel}
+            />
+            {feedback.likeCount > 0 ? (
+              <Text style={styles.likeCount}>{feedback.likeCount}</Text>
+            ) : null}
           </Pressable>
-        ) : null}
+          {onReply ? (
+            <Pressable onPress={onReply} accessibilityRole="button" hitSlop={6}>
+              <Text style={styles.replyButtonText}>답글</Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </Pressable>
   );
@@ -346,7 +507,14 @@ const styles = StyleSheet.create({
     marginTop: iosMetrics.spacing[1],
   },
   deletedText: { ...iosType.body, fontStyle: 'italic', color: ios.tertiaryLabel, alignSelf: 'center' },
-  replyButton: { alignSelf: 'flex-start', marginTop: iosMetrics.spacing[1] },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: iosMetrics.spacing[4],
+    marginTop: iosMetrics.spacing[1],
+  },
+  likeButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  likeCount: { ...iosType.footnote, fontWeight: '600', color: ios.secondaryLabel },
   replyButtonText: { ...iosType.footnote, color: ios.tint },
 
   inputArea: {
@@ -365,6 +533,28 @@ const styles = StyleSheet.create({
   },
   replyBannerText: { ...iosType.footnote, color: ios.tint },
   replyBannerCancel: { ...iosType.footnote, color: ios.secondaryLabel },
+  attachBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: iosMetrics.spacing[3],
+    paddingHorizontal: iosMetrics.pagePadding,
+    paddingVertical: iosMetrics.spacing[2],
+    borderBottomWidth: iosMetrics.hairline,
+    borderBottomColor: ios.separator,
+  },
+  attachThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: iosMetrics.radius.sm,
+    backgroundColor: ios.systemGray5,
+  },
+  attachButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

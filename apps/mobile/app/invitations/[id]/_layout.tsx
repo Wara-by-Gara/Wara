@@ -11,6 +11,7 @@ export default function InvitationLayout() {
       <Stack.Screen name="comments" options={{ title: '댓글' }} />
       <Stack.Screen name="photos/index" options={{ title: '앨범', headerLargeTitle: true }} />
       <Stack.Screen name="remeet" options={{ title: '재모임 만들기', headerLargeTitle: true }} />
+      <Stack.Screen name="respond" options={{ title: '응답하기' }} />
     </Stack>
   );
 }

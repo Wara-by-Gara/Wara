@@ -1,5 +1,5 @@
 // 피드백(댓글) API — 웹 apps/web/src/lib/api/feedbacks.ts 포팅.
-// 범위: 사진 낱개 댓글 + 초대장 전체 댓글 목록/작성/삭제. (수정·좋아요는 범위 제외)
+// 범위: 사진 낱개 댓글 + 초대장 전체 댓글 목록/작성/수정/삭제/좋아요.
 import { apiFetch, newIdempotencyKey } from './client';
 
 export interface FeedbackPhoto {
@@ -102,20 +102,48 @@ export function createPhotoFeedback(
   );
 }
 
-/** 초대장 전체 댓글 작성 (parentId 지정 시 답글). */
+/** 초대장 전체 댓글 작성 (parentId 지정 시 답글, attachedPhotoId로 사진 첨부). */
 export function createInvitationFeedback(
   invitationId: string,
-  payload: { content?: string; parentId?: string; gifUrl?: string },
+  payload: {
+    content?: string;
+    parentId?: string;
+    /** 앨범 등록(registerPhoto) 완료된 사진 id — gifUrl과 상호 배타(서버 DTO). */
+    attachedPhotoId?: string;
+    gifUrl?: string;
+  },
 ) {
   return apiFetch<Feedback>(`/invitations/${invitationId}/feedbacks`, {
     method: 'POST',
     body: {
       ...(payload.content && { content: payload.content }),
       ...(payload.parentId && { parentId: payload.parentId }),
+      ...(payload.attachedPhotoId && { attachedPhotoId: payload.attachedPhotoId }),
       ...(payload.gifUrl && { gifUrl: payload.gifUrl }),
     },
     idempotencyKey: newIdempotencyKey(),
   });
+}
+
+/** 피드백 본문 수정 — PATCH, content만 변경 가능(서버 UpdateFeedbackSchema). */
+export function updateFeedback(
+  invitationId: string,
+  feedbackId: string,
+  content: string,
+) {
+  return apiFetch<Feedback>(`/invitations/${invitationId}/feedbacks/${feedbackId}`, {
+    method: 'PATCH',
+    body: { content },
+    idempotencyKey: newIdempotencyKey(),
+  });
+}
+
+/** 피드백 좋아요 토글 — 서버는 `{ liked }`만 반환(likeCount 없음). keepalive로 이탈 중 전송 보장. */
+export function toggleFeedbackLike(invitationId: string, feedbackId: string) {
+  return apiFetch<{ liked: boolean }>(
+    `/invitations/${invitationId}/feedbacks/${feedbackId}/likes`,
+    { method: 'POST', body: {}, keepalive: true },
+  );
 }
 
 /** 피드백 삭제(soft delete). 사진 댓글·초대장 댓글 공용 (feedbacks 하위 단일 엔드포인트). */
