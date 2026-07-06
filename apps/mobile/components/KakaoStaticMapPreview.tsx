@@ -70,12 +70,12 @@ export function KakaoStaticMapPreview({ lat, lng, level = 3, height = 160, style
     <View pointerEvents="none" style={[styles.container, { height }, style]}>
       <WebView
         style={styles.map}
-        // baseUrl: 카카오 JS 키 도메인 검증용 오리진 (웹 dev 등록 도메인). originWhitelist에 포함해
-        // RN WebView가 이 오리진을 외부 브라우저로 넘기지 않게 한다.
+        // baseUrl: SDK 내부 프로토콜 상대 리소스를 https로 해석(ATS) + 카카오 등록 도메인 리퍼러.
+        // 주의: 카카오 콘솔에 localhost:3000 등록이 해제되면 지도가 빈 박스가 된다.
         source={{ html: buildHtml(kakaoKey, lat, lng, Math.trunc(level)), baseUrl: 'https://localhost:3000' }}
         javaScriptEnabled
         scrollEnabled={false}
-        originWhitelist={['about:*', 'https://localhost*', 'http://localhost*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
+        originWhitelist={['about:*', 'https://localhost*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
         mixedContentMode="always"
       />
     </View>

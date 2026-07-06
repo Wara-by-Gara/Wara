@@ -262,7 +262,7 @@ export default function KakaoMapView({ eventLocation, participants, myLocation }
     <WebView
       ref={webViewRef}
       style={styles.map}
-      // baseUrl: 카카오 JS 키 도메인 검증 + SDK 내부 리소스를 https로 로드 (ATS 차단 회피)
+      // baseUrl: SDK 내부 리소스 https 해석(ATS) + 카카오 등록 도메인 리퍼러
       source={{ html, baseUrl: 'https://localhost:3000' }}
       javaScriptEnabled
       domStorageEnabled
