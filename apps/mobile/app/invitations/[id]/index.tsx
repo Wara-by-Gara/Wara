@@ -97,8 +97,8 @@ export default function InvitationDetailScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="초대장 공유"
-                  hitSlop={8}
-                  onPress={() => shareRef.current?.present()}>
+                  onPress={() => shareRef.current?.present()}
+                  style={styles.headerButton}>
                   <IconSymbol name="square.and.arrow.up" size={20} color={dark ? '#FFFFFF' : ios.tint} />
                 </Pressable>
               ) : null}
@@ -106,8 +106,8 @@ export default function InvitationDetailScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="호스트 메뉴"
-                  hitSlop={8}
-                  onPress={() => hostToolsRef.current?.present()}>
+                  onPress={() => hostToolsRef.current?.present()}
+                  style={styles.headerButton}>
                   <IconSymbol name="ellipsis" size={20} color={dark ? '#FFFFFF' : ios.tint} />
                 </Pressable>
               ) : null}
@@ -261,7 +261,18 @@ const styles = StyleSheet.create({
     padding: iosMetrics.spacing[6],
     backgroundColor: ios.systemBackground,
   },
-  headerActions: { flexDirection: 'row', gap: iosMetrics.spacing[4], alignItems: 'center' },
+  // iOS 26 네이티브 헤더는 headerRight 커스텀 뷰를 리퀴드 글래스 원(≈53pt)으로 감싸는데,
+  // RNS 4.16이 뷰를 원 안에서 상단 정렬해 콘텐츠가 (53−44)/2 ≈ 4pt 아래로 처진다.
+  // 버튼을 44pt 정사각(접근성 최소 터치 타깃)으로 고정하고 paddingBottom 8(중심 −4pt)로
+  // 보정해 아이콘을 원 중심에 맞춘다 — 시뮬레이터 픽셀 측정으로 검증(1pt 이내).
+  headerActions: { flexDirection: 'row', alignItems: 'center', height: iosMetrics.minTouchTarget },
+  headerButton: {
+    width: iosMetrics.minTouchTarget,
+    height: iosMetrics.minTouchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 8,
+  },
   body: {
     paddingHorizontal: iosMetrics.pagePadding,
     paddingTop: iosMetrics.spacing[2],
