@@ -1,6 +1,6 @@
 import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ulid } from 'ulid';
-import { genderEnum, userRoleEnum, socialProviderEnum } from './enums';
+import { genderEnum, userRoleEnum, socialProviderEnum, locationTierEnum } from './enums';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey().$defaultFn(() => ulid()),
@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   birthYear: integer('birth_year'),
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('member'),
+  defaultLocationTier: locationTierEnum('default_location_tier').notNull().default('full'), /** 위치 공유 기본 프라이버시 티어 */
   promotedBy: text('promoted_by').references((): AnyPgColumn => users.id),
   promotedAt: timestamp('promoted_at', { withTimezone: true }),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
@@ -22,6 +23,9 @@ export const users = pgTable('users', {
   // 탈퇴 사유 — soft delete 시 함께 기록. 분석/개선 피드백 용도이므로 nullable.
   withdrawalReason: varchar('withdrawal_reason', { length: 32 }),
   withdrawalDetail: text('withdrawal_detail'),
+  // 어드민 제재 — 값이 있으면 정지 상태. refresh 시 차단(access 토큰 TTL 내 반영).
+  suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+  suspendedReason: text('suspended_reason'),
 });
 
 export const socialAccounts = pgTable('social_accounts', {

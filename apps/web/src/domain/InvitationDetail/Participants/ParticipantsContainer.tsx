@@ -172,7 +172,7 @@ export default function ParticipantsContainer({ onClose }: { onClose?: () => voi
   return (
     <>
     {/* 모달: 모바일=전체화면 / PC=중앙 카드(딤 배경) */}
-    <div className="fixed inset-0 z-50 flex flex-col bg-surface-muted lg:items-start lg:justify-center lg:bg-black/45 lg:px-6 lg:pb-6 lg:pt-[calc(var(--header-height)+20px)] lg:backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-muted lg:items-center lg:justify-center lg:bg-black/45 lg:px-6 lg:pb-6 lg:pt-[calc(var(--header-height)+20px)] lg:backdrop-blur-sm">
       <div className="relative flex h-full w-full flex-col overflow-hidden bg-surface-muted lg:h-[calc(100dvh-var(--header-height)-44px)] lg:max-w-2xl lg:rounded-2xl lg:shadow-2xl">
       <TopAppBar
         title="참석자"

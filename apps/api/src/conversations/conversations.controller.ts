@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -33,6 +34,7 @@ import {
 } from './dto/list-messages.query.dto';
 import { ReactMessageSchema, ReactMessageDto } from './dto/react-message.dto';
 import { InviteSchema, InviteDto, SetAliasSchema, SetAliasDto } from './dto/invite.dto';
+import { PinMessageSchema, PinMessageDto } from './dto/pin-message.dto';
 
 @Controller('conversations')
 export class ConversationsController {
@@ -146,6 +148,26 @@ export class ConversationsController {
     @Body(new ZodValidationPipe(InviteSchema)) dto: InviteDto,
   ) {
     return this.conversationsService.invite(user.id, id, dto.userIds, dto.title);
+  }
+
+  // 공지 메시지 고정
+  @Put(':id/pin')
+  pinMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(PinMessageSchema)) dto: PinMessageDto,
+  ) {
+    return this.conversationsService.pinMessage(user.id, id, dto.messageId);
+  }
+
+  // 공지 고정 해제
+  @Delete(':id/pin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  unpinMessage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUlidPipe) id: string,
+  ) {
+    return this.conversationsService.unpinMessage(user.id, id);
   }
 
   // 내 개인 방 별명 설정/해제

@@ -36,7 +36,7 @@ export const Comments = ({ invitationId }: Props) => {
     {
       label: "수정",
       onClick: () => setEditingComment({ id, content }),
-      className: "text-gray-900",
+      className: "text-text",
     },
     {
       label: "삭제",
@@ -199,7 +199,7 @@ function InlineCommentEditor({
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }
           if (e.key === "Escape") onCancel();
         }}
-        className="w-full rounded-md bg-gray-100 px-3 py-1.5 text-[14px] text-text outline-none"
+        className="w-full rounded-md bg-surface-muted px-3 py-1.5 text-[14px] text-text outline-none"
       />
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="text-[12px] text-text-disabled hover:text-text-muted">

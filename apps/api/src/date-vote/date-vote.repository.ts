@@ -87,11 +87,33 @@ export class DateVoteRepository {
     return row ?? null;
   }
 
+  /** 초대장의 삭제되지 않은 투표 전체 (다중 투표 목록) */
+  async findPollsByInvitationId(invitationId: string) {
+    return this.db
+      .select()
+      .from(schema.dateVotePolls)
+      .where(
+        and(
+          eq(schema.dateVotePolls.invitationId, invitationId),
+          isNull(schema.dateVotePolls.deletedAt),
+        ),
+      )
+      .orderBy(schema.dateVotePolls.createdAt);
+  }
+
+  async softDeletePoll(id: string) {
+    await this.db
+      .update(schema.dateVotePolls)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(schema.dateVotePolls.id, id));
+  }
+
   async updatePoll(
     id: string,
     data: Partial<
       Pick<
         schema.DateVotePoll,
+        | 'title'
         | 'closesAt'
         | 'isAnonymous'
         | 'status'
@@ -179,6 +201,18 @@ export class DateVoteRepository {
       .from(schema.dateVoteSlots)
       .where(eq(schema.dateVoteSlots.pollId, pollId));
     return row?.total ?? 0;
+  }
+
+  async updateSlot(
+    id: string,
+    data: Partial<Pick<schema.DateVoteSlot, 'date' | 'startTime' | 'label' | 'sortOrder'>>,
+  ) {
+    const [row] = await this.db
+      .update(schema.dateVoteSlots)
+      .set(data)
+      .where(eq(schema.dateVoteSlots.id, id))
+      .returning();
+    return row!;
   }
 
   async deleteSlot(id: string) {
@@ -377,6 +411,37 @@ export class DateVoteRepository {
       await tx
         .update(schema.invitations)
         .set({ eventStartAt, updatedAt: new Date() })
+        .where(eq(schema.invitations.id, invitationId));
+    });
+  }
+
+  /** custom 투표 확정 — invitation.eventStartAt은 건드리지 않음 */
+  async confirmPollSlotOnly(pollId: string, confirmedSlotId: string) {
+    await this.db
+      .update(schema.dateVotePolls)
+      .set({ status: 'confirmed', confirmedSlotId, updatedAt: new Date() })
+      .where(eq(schema.dateVotePolls.id, pollId));
+  }
+
+  /** custom 투표 확정 해제 — invitation.eventStartAt은 건드리지 않음 */
+  async unconfirmPollOnly(pollId: string) {
+    await this.db
+      .update(schema.dateVotePolls)
+      .set({ status: 'closed', confirmedSlotId: null, updatedAt: new Date() })
+      .where(eq(schema.dateVotePolls.id, pollId));
+  }
+
+  /** poll 확정 해제 + invitation.eventStartAt null 복원을 하나의 트랜잭션으로 처리 */
+  async unconfirmPollAndClearInvitation(pollId: string, invitationId: string) {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(schema.dateVotePolls)
+        .set({ status: 'closed', confirmedSlotId: null, updatedAt: new Date() })
+        .where(eq(schema.dateVotePolls.id, pollId));
+
+      await tx
+        .update(schema.invitations)
+        .set({ eventStartAt: null, updatedAt: new Date() })
         .where(eq(schema.invitations.id, invitationId));
     });
   }

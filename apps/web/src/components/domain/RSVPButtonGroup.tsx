@@ -37,8 +37,8 @@ const circleVariants = cva(
     "[background:radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.55)_0%,rgba(255,255,255,0.30)_52%,rgba(255,255,255,0.04)_100%)]",
     // 미선택에서도 뚜렷한 글래스 테두리
     "border-[1.5px] border-white/75",
-    // 흰 glow로 가장자리 페더 + 살짝 떠 보이는 그림자
-    "shadow-[0_0_8px_0_rgba(255,255,255,0.3),0_14px_30px_-12px_rgba(0,0,0,0.22)]",
+    // 흰 glow는 inset(안쪽)으로 가장자리 페더 — 경계 밖으로 안 번짐. 떠 보이는 건 어두운 드롭섀도로.
+    "shadow-[inset_0_0_10px_1px_rgba(255,255,255,0.35),0_14px_30px_-12px_rgba(0,0,0,0.22)]",
   ],
   {
     variants: {
@@ -50,7 +50,7 @@ const circleVariants = cva(
         default: "hover:scale-[1.03]",
         // 선택됨: 더 진한 frost + 살짝 키움 (보더 아님)
         selected:
-          "scale-[1.06] [background:radial-gradient(circle_at_50%_40%,rgba(255,255,255,1)_0%,rgba(255,255,255,0.85)_55%,rgba(255,255,255,0.35)_100%)] shadow-[0_0_18px_3px_rgba(255,255,255,0.95),0_16px_34px_-12px_rgba(0,0,0,0.3)]",
+          "scale-[1.06] [background:radial-gradient(circle_at_50%_40%,rgba(255,255,255,1)_0%,rgba(255,255,255,0.85)_55%,rgba(255,255,255,0.35)_100%)] shadow-[inset_0_0_22px_3px_rgba(255,255,255,0.9),0_16px_34px_-12px_rgba(0,0,0,0.3)]",
         // 나머지: 비활성 느낌 (흐리게 + 채도↓ + 축소)
         dimmed: "scale-95 opacity-45 saturate-[0.55]",
       },

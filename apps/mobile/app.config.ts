@@ -16,6 +16,15 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
   // Naver SDK: iOS Info.plist의 LSApplicationQueriesSchemes/CFBundleURLTypes + AppDelegate URL handler 자동 등록.
   // login.tsx의 serviceUrlSchemeIOS와 일치해야 함.
   plugins.push(['@react-native-seoul/naver-login', { urlScheme: 'wara' }]);
+  // google-signin의 Swift static pod modular header 문제 해결 (use_modular_headers!)
+  plugins.push('./plugins/with-modular-headers');
+  // 사진 앨범 업로드 — 사진 라이브러리 접근 권한 문구.
+  plugins.push([
+    'expo-image-picker',
+    { photosPermission: '모임 앨범에 사진을 올리기 위해 사진 접근 권한이 필요합니다.' },
+  ]);
+  // 푸시 알림 (in-app + Expo push). 실제 APNs 토큰은 실기기에서만 발급됨.
+  plugins.push(['expo-notifications', {}]);
 
   return {
     ...config,

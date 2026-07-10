@@ -214,10 +214,11 @@ export default function PhotoKakaoMapView({ markers, onMarkerClick }: Props) {
     <WebView
       ref={webViewRef}
       style={styles.map}
-      source={{ html }}
+      // baseUrl: SDK 내부 리소스 https 해석(ATS) + 카카오 등록 도메인 리퍼러
+      source={{ html, baseUrl: 'https://localhost:3000' }}
       javaScriptEnabled
       domStorageEnabled
-      originWhitelist={['about:*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
+      originWhitelist={['about:*', 'https://localhost*', 'https://*.kakao.com', 'http://*.kakao.com', 'https://*.kakaocdn.com']}
       mixedContentMode="always"
       onMessage={handleMessage}
     />

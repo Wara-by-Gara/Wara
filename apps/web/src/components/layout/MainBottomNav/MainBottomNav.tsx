@@ -69,9 +69,10 @@ export function MainBottomNav({ activeKey: activeKeyProp }: MainBottomNavProps) 
     <div className="lg:hidden">
       <div
         aria-hidden="true"
-        className="shrink-0 h-[calc(4rem+env(safe-area-inset-bottom))]"
+        className="shrink-0 h-[calc(4.75rem+env(safe-area-inset-bottom))]"
       />
-      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto w-full max-w-md transform-gpu pb-[env(safe-area-inset-bottom)] will-change-transform [backface-visibility:hidden]">
+      {/* iOS 26 플로팅 캡슐 — 가장자리에서 띄워서 렌더 (모바일 NativeTabs 미러) */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 mx-auto w-full max-w-md transform-gpu px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] will-change-transform [backface-visibility:hidden]">
         <BottomNavigation
           items={items}
           activeKey={activeKey}

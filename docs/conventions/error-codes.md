@@ -32,6 +32,7 @@
 | `AUTH_PROVIDER_TOKEN_INVALID` | 401 | 소셜 provider 토큰(access token / id_token) 검증 실패 또는 만료 |
 | `AUTH_INVALID_TOKEN` | 401 | id_token 위조 또는 만료 |
 | `AUTH_USER_NOT_FOUND` | 401 | 유저 조회 실패 |
+| `AUTH_ACCOUNT_SUSPENDED` | 401 | 어드민 제재된 계정의 토큰 재발급(refresh) 시도 |
 | `TOKEN_EXPIRED` | 401 | refresh token 만료 |
 | `TOKEN_INVALID` | 401 | refresh token 위조 또는 없음 |
 | `APPLE_SERVER_TIMEOUT` | 504 | Apple 인증 서버 응답 시간 초과 |
@@ -143,7 +144,27 @@
 | `VOTE_SLOT_NOT_FOUND` | 404 | 슬롯 없음 또는 해당 폴에 속하지 않음 |
 | `VOTE_SLOT_LIMIT_EXCEEDED` | 422 | 슬롯 30개 초과 |
 | `VOTE_SLOT_DUPLICATE` | 422 | 동일 날짜·시간 슬롯 중복 등록 |
+| `VOTE_SLOT_TYPE_MISMATCH` | 422 | 투표 유형과 슬롯 형식 불일치 (date 투표에 label 지정, custom 투표에 date 지정 등) |
 | `VOTE_EVENT_DATE_SET` | 422 | eventStartAt이 이미 설정된 초대장에 투표 생성 시도 |
+
+## Settlement (비용 정산)
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `SETTLEMENT_NOT_FOUND` | 404 | 정산 없음 |
+| `SETTLEMENT_EXPENSE_NOT_FOUND` | 404 | 비용 항목 없음 또는 해당 정산 소속 아님 |
+| `SETTLEMENT_FORBIDDEN` | 403 | 지불자 본인 또는 HOST가 아닌데 항목 수정/삭제 시도 |
+| `SETTLEMENT_CONFIRMED` | 422 | 확정된 정산의 항목 추가/수정/삭제 시도 |
+| `SETTLEMENT_PARTICIPANT_INVALID` | 400 | 지불자/분담 참가자가 해당 초대장 참가자가 아님 |
+| `SETTLEMENT_SHARE_DISABLED` | 404 | 공유 비활성(토큰 없음/폐기) 상태의 공개 링크 접근 |
+
+## Moderation (콘텐츠 신고)
+
+| 코드 | 상태코드 | 상황 |
+|------|:--------:|------|
+| `REPORT_NOT_FOUND` | 404 | 신고 없음 |
+| `REPORT_TARGET_NOT_FOUND` | 404 | 신고 대상(사진/댓글)이 없거나 삭제됨 |
+| `REPORT_ALREADY_EXISTS` | 409 | 동일 사용자가 같은 대상을 이미 신고함 |
 
 ## AI
 

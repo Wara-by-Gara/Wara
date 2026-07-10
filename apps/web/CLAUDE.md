@@ -508,5 +508,6 @@ if (isError) return <p className="text-center text-red-500 py-10">오류가 발�
 
 ## 디자인 시스템
 - 토큰 SoT: `packages/tokens` (`@wara/tokens`) · 컴포넌트 SoT: `packages/ui` (`@wara/ui`) + `src/components/domain`
-- 문서: @docs/design-system/03-component-system.md (인벤토리·레거시 매핑·키보드/접근성·마이그레이션 현황), @docs/design-system/01-direction.md, @docs/design-system/02-partiful-reference.md
+- 문서: @docs/design-system/03-component-system.md (인벤토리·레거시 매핑·키보드/접근성·마이그레이션 현황), @docs/design-system/01-direction.md, @docs/design-system/02-partiful-reference.md, @docs/design-system/04-styleseed-adoption.md (StyleSeed 규칙·모션 차용 규칙집)
+- 앱 셸 모션 시드: `src/lib/motion.ts` (framer-motion 프리셋, token-driven). 초대장 캔버스 모션은 `src/components/invite/presets/motionPresets.ts`
 - `src/styles/DESIGN.md`는 DEPRECATED (구 Luma 기반)

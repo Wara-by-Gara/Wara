@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   clearAllSocialSessions,
@@ -16,14 +15,13 @@ import { ThemedView } from '@/components/themed-view';
 import { colors, shadow } from '@/constants/tokens';
 
 /**
- * 본인 host 초대장 목록.
+ * 본인 host 초대장 목록 — 루트 스택 /invitations 화면(네이티브 헤더 '초대장')에서 사용.
  * - useQuery로 GET /invitations 호출, AbortSignal 자동 전달
  * - 로딩/에러/빈 상태 명시
  * - 카드 탭 → /invitations/[id] 상세로 이동 (Expo Router Link)
  */
 export function InvitationsList({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const query = useQuery({
     queryKey: invitationKeys.myList,
     queryFn: ({ signal }) => fetchMyInvitations({ signal }),
@@ -68,27 +66,27 @@ export function InvitationsList({ onLogout }: { onLogout: () => void }) {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <ThemedText type="title">내 초대장</ThemedText>
-        <View style={styles.headerActions}>
-          <Pressable onPress={() => router.push('/photos/map')}>
-            <ThemedText style={styles.mapLink}>사진 지도</ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={async () => {
-              await clearAllSocialSessions();
-              await clearTokens();
-              await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
-              onLogout();
-            }}>
-            <ThemedText style={styles.logout}>로그아웃</ThemedText>
-          </Pressable>
-        </View>
-      </View>
       <FlatList
         data={query.data}
         keyExtractor={(item) => item.id}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => router.push('/photos/map')}>
+              <ThemedText style={styles.mapLink}>사진 지도</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await clearAllSocialSessions();
+                await clearTokens();
+                await queryClient.invalidateQueries({ queryKey: invitationKeys.all });
+                onLogout();
+              }}>
+              <ThemedText style={styles.logout}>로그아웃</ThemedText>
+            </Pressable>
+          </View>
+        }
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <ThemedText style={styles.empty}>
@@ -129,17 +127,12 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 24,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingTop: 12,
-  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 16,
+    paddingVertical: 12,
   },
   mapLink: {
     fontSize: 14,

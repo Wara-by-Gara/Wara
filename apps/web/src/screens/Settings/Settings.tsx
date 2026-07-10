@@ -16,6 +16,7 @@ import {
   RadioGroup,
 } from '@wara/ui';
 import { useState } from 'react';
+import { InstallPrompt } from '@/components/pwa/install-prompt';
 
 export type SettingsScreen =
   | 'main'
@@ -93,6 +94,7 @@ export const Settings = ({ screen = 'main', onBack, onNavigate, onHiddenFriends,
           variant="solid"
         />
         <main className="min-h-0 flex-1 overflow-y-auto lg:mx-auto lg:w-full lg:max-w-2xl">
+          <InstallPrompt />
           <Section title="알림">
             <MenuItem
               leftIcon="bell"

@@ -108,9 +108,9 @@ function slotResultToDateSlot(sr: SlotResult): DateSlot {
 
 // ── Vote constants ─────────────────────────────────────────────────────────
 const VOTE_CFG = {
-  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-surface text-emerald-500 border-emerald-200 hover:bg-gray-50 transition-colors duration-150", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
-  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-surface text-amber-500 border-amber-200 hover:bg-gray-50 transition-colors duration-150",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
-  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-surface text-rose-400 border-rose-200 hover:bg-gray-50 transition-colors duration-150",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
+  circle:   { symbol: "👍", label: "좋아요",   active: "bg-emerald-500 text-white border-transparent shadow-sm", passive: "bg-surface text-emerald-500 border-emerald-200 hover:bg-surface-muted transition-colors duration-150", bar: "bg-emerald-400", chip: "bg-emerald-50 text-emerald-700", col: "text-emerald-500" },
+  triangle: { symbol: "🤔", label: "애매해요", active: "bg-amber-400 text-white border-transparent shadow-sm",   passive: "bg-surface text-amber-500 border-amber-200 hover:bg-surface-muted transition-colors duration-150",   bar: "bg-amber-300",   chip: "bg-amber-50 text-amber-700",   col: "text-amber-500"   },
+  cross:    { symbol: "👎", label: "안 됨",    active: "bg-rose-500 text-white border-transparent shadow-sm",    passive: "bg-surface text-rose-400 border-rose-200 hover:bg-surface-muted transition-colors duration-150",      bar: "bg-rose-300",    chip: "bg-rose-50 text-rose-700",     col: "text-rose-400"    },
 } as const;
 
 const TYPES: VoteResponse[] = ["circle", "triangle", "cross"];
@@ -256,7 +256,7 @@ function ResultCard({ slot, showNames, isConfirmed, isTop, isTie, onConfirm }: {
             <button
               type="button"
               onClick={onConfirm}
-              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover:bg-gray-50 transition-colors duration-150"
+              className="rounded-full border border-primary px-3 py-1 text-[12px] font-semibold text-primary hover:bg-surface-muted transition-colors duration-150"
             >
               이 날짜로 확정
             </button>
@@ -686,7 +686,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
           </div>
           <Icon name="chevron-right" size="xs" color="inactive" decorative />
           <div className="flex items-center gap-1.5">
-            <span className="flex size-5 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">2</span>
+            <span className="flex size-5 items-center justify-center rounded-full bg-surface-muted text-[11px] font-bold text-text-muted">2</span>
             <span className="text-[13px] text-text-disabled">투표 설정</span>
           </div>
         </div>
@@ -770,7 +770,7 @@ export function HostCreatingView({ onBack, invitationId, onDraftComplete, initia
                       type="button"
                       onClick={() => removeSlot(slots.indexOf(s))}
                       aria-label="삭제"
-                      className="flex size-7 items-center justify-center rounded-full text-text-disabled hover:bg-gray-50 transition-colors duration-150"
+                      className="flex size-7 items-center justify-center rounded-full text-text-disabled hover:bg-surface-muted transition-colors duration-150"
                     >
                       <Icon name="x" size="xs" color="currentColor" decorative />
                     </button>

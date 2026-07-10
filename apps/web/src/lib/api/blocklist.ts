@@ -5,6 +5,7 @@ export interface BlockedUser {
   name: string | null;
   nickname: string | null;
   profileImageUrl: string | null;
+  reason: string | null;
   blockedAt: string;
 }
 

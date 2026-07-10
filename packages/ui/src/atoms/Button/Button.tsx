@@ -39,6 +39,10 @@ const buttonVariants = cva(
         danger: "bg-danger text-white hover:opacity-90",
         // 텍스트 = 블루 링크 (Partiful: Save·Poll your guests 등)
         text: "bg-transparent text-link hover:underline underline-offset-4 active:scale-100",
+        // iOS 26 정렬 변형 — 모바일 components/ios Button(filled/tinted/plain)과 이름·역할 미러
+        filled: "bg-ios-tint text-white shadow-sm hover:opacity-90",
+        tinted: "bg-ios-fill text-ios-tint hover:opacity-80",
+        plain: "bg-transparent text-ios-tint hover:bg-surface-muted",
       },
       /** 히어로 CTA: 하단 무지개 글로우 + 각진(둥근 사각) — Get started/Sign up */
       glow: {

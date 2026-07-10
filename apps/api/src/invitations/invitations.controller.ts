@@ -116,6 +116,8 @@ export class InvitationsController {
   }
 
   /** 입장 비밀번호 검증 — 링크로 들어온 사용자가 잠긴 초대장 열람 전 호출 */
+  // Throttle (5req/60s): 비밀번호 brute-force 방어용 시도제한/쿨다운.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post(':invitationId/access/verify')
   verifyAccess(

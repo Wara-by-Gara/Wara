@@ -1,7 +1,13 @@
 import Constants from 'expo-constants';
 
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './auth-storage';
-import { WaraApiError, WaraNetworkError, type ApiResponse } from './types';
+import {
+  WaraApiError,
+  WaraNetworkError,
+  type ApiMeta,
+  type ApiResponse,
+  type ApiSuccess,
+} from './types';
 
 // API base URL — app.config.ts의 expo.extra.apiUrl에서 옴.
 // dev: origin만 들어옴(예: http://localhost:3001 또는 Android 에뮬레이터의 http://10.0.2.2:3001).
@@ -31,6 +37,7 @@ async function doRefreshAccessToken(): Promise<boolean> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({ refreshToken }),
+      credentials: 'omit',
     });
     const raw = (await res.json().catch(() => null)) as {
       success?: boolean;
@@ -69,36 +76,49 @@ type RequestOptions = {
   signal?: AbortSignal;
   /** ms 단위 timeout. 기본 15초. 0 또는 음수는 비활성 */
   timeoutMs?: number;
+  /**
+   * 멱등성 키. 변경 작업(POST 등)에 전달하면 `Idempotency-Key` 헤더로 보냄.
+   * 서버는 같은 키의 진행 중 요청에 409 IDEMPOTENCY_IN_PROGRESS, 완료 응답은 replay.
+   * refresh 재시도 시에도 같은 키가 유지된다.
+   */
+  idempotencyKey?: string;
+  /** 화면 이탈 중에도 전송 보장 (좋아요 등 짧은 변경). RN에서 지원 시 적용. */
+  keepalive?: boolean;
 };
 
+/** 멱등성 키 생성 — crypto.randomUUID가 없는 Hermes 환경 대비 폴백. */
+export function newIdempotencyKey(): string {
+  const g = globalThis as { crypto?: { randomUUID?: () => string } };
+  if (g.crypto?.randomUUID) return g.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /**
- * 와라 API fetcher.
+ * 와라 API 코어 fetcher — 성공 envelope(`{ success, data, meta }`) 전체를 반환.
  *
- * - 응답 envelope({ success, data, error, meta })를 풀어서 `data`만 반환
- *   참고: 페이지네이션 응답(total/page/limit/totalPages)이 필요한 호출은
- *   별도 helper(apiFetchWithMeta — V1.0 페이지네이션 화면 PR에서 추가) 사용.
- *   현재 `apiFetch`는 meta 정보 손실됨.
  * - 4xx/5xx envelope는 `WaraApiError`로 throw — UI는 `error.code`로 분기
  * - 네트워크 실패는 `WaraNetworkError`로 throw — 재시도/오프라인 표시 대상
  * - 인증 헤더(`Authorization: Bearer ...`) SecureStore 토큰으로 자동
+ * - TOKEN_EXPIRED/INVALID 시 refresh 후 1회 재시도
  *
- * 사용 예:
- *   const me = await apiFetch<UserDto>('/users/me');
- *   const created = await apiFetch<InvitationDto>('/invitations', {
- *     method: 'POST',
- *     body: { title, ... },
- *   });
+ * 공개 wrapper는 `apiFetch`(data만) / `apiFetchWithMeta`({data, meta}) 사용.
  */
-export async function apiFetch<T>(
+async function apiRequestEnvelope<T>(
   path: string,
   options: RequestOptions = {},
-): Promise<T> {
+): Promise<ApiSuccess<T>> {
   const {
     method = 'GET',
     body,
     authenticated = true,
     signal,
     timeoutMs = DEFAULT_TIMEOUT_MS,
+    idempotencyKey,
+    keepalive,
   } = options;
 
   const headers: Record<string, string> = {
@@ -108,6 +128,7 @@ export async function apiFetch<T>(
     // 한국어 body 인코딩 안전망 — fetch 기본도 UTF-8이지만 명시
     headers['Content-Type'] = 'application/json; charset=utf-8';
   }
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   if (authenticated) {
     const token = await getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -128,6 +149,10 @@ export async function apiFetch<T>(
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      keepalive,
+      // 모바일은 Bearer 토큰 인증만 사용 — 서버가 웹용으로 심은 쿠키가 iOS 쿠키 저장소에
+      // 남아 실려가면 CSRF 가드(CSRF_INVALID_ORIGIN 403)에 걸리므로 쿠키 전송을 차단.
+      credentials: 'omit',
       // RN 0.81의 fetch는 global.AbortSignal type을 요구하는데 DOM AbortSignal과
       // onabort 콜백 시그니처가 미묘하게 다름. RN runtime은 둘 다 처리하므로
       // unknown으로 우회 (런타임 안전).
@@ -152,7 +177,7 @@ export async function apiFetch<T>(
   // 204 No Content: body 없음. envelope 없이도 성공 (예: PATCH /logs/:logId/open).
   // 호출 측은 제네릭 T를 void로 두는 패턴.
   if (res.status === 204) {
-    return undefined as T;
+    return { success: true, data: undefined as T };
   }
 
   let raw: unknown;
@@ -179,7 +204,7 @@ export async function apiFetch<T>(
   const json = raw as ApiResponse<T>;
 
   if (json.success) {
-    return json.data;
+    return json;
   }
 
   // access token 만료/소실 → refresh 시도 후 원 요청 1회 재시도 (웹과 일관성)
@@ -190,7 +215,7 @@ export async function apiFetch<T>(
   ) {
     const refreshed = await tryRefreshAccessToken();
     if (refreshed) {
-      return apiFetch<T>(path, options);
+      return apiRequestEnvelope<T>(path, options);
     }
     // refresh도 실패하면 저장된 토큰 제거 (로그인 화면으로 자연스럽게 떨어지도록)
     await clearTokens();
@@ -209,4 +234,38 @@ export async function apiFetch<T>(
     details: json.error.details,
     requestId: json.meta?.requestId,
   });
+}
+
+/**
+ * 와라 API fetcher — 성공 envelope에서 `data`만 반환.
+ *
+ * 사용 예:
+ *   const me = await apiFetch<UserDto>('/users/me');
+ *   const created = await apiFetch<InvitationDto>('/invitations', {
+ *     method: 'POST',
+ *     body: { title, ... },
+ *   });
+ */
+export async function apiFetch<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const res = await apiRequestEnvelope<T>(path, options);
+  return res.data;
+}
+
+/**
+ * 페이지네이션 응답용 fetcher — `data`와 `meta`(total/page/limit/totalPages/nextCursor 등)를
+ * 함께 반환. `useInfiniteQuery`/오프셋 페이지네이션 화면에서 사용.
+ *
+ * 사용 예:
+ *   const { data, meta } = await apiFetchWithMeta<PhotoDto[]>('/invitations/x/photos?page=1');
+ *   const hasNext = (meta?.page ?? 1) < (meta?.totalPages ?? 1);
+ */
+export async function apiFetchWithMeta<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<{ data: T; meta?: ApiMeta }> {
+  const res = await apiRequestEnvelope<T>(path, options);
+  return { data: res.data, meta: res.meta };
 }

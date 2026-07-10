@@ -31,6 +31,10 @@ import {
   UpdateStatusMessageSchema,
   type UpdateStatusMessageDto,
 } from './dto/update-status-message.dto';
+import {
+  setMeetingTierSchema,
+  type SetMeetingTierDto,
+} from './dto/set-location-tier.dto';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import type { JwtPayload } from '../common/types/jwt-payload.type';
 
@@ -82,6 +86,17 @@ export class LocationsController {
     dto: UpdateParticipantLocationDto,
   ) {
     return this.locationsService.updateMyLocation(invitationId, user.id, dto);
+  }
+
+  // 이 모임에서의 위치 프라이버시 티어 설정 (null=유저 기본값 따름). 공유 중이면 즉시 재브로드캐스트.
+  @Put('participant/me/location-tier')
+  @UseGuards(BlocklistGuard, ParticipantGuard)
+  setMyMeetingTier(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(setMeetingTierSchema)) dto: SetMeetingTierDto,
+  ) {
+    return this.locationsService.setMyMeetingTier(invitationId, user.id, dto.tier);
   }
 
   // 사용자가 자기 GPS 공유를 즉시 종료. 본인 entry만 정리, 다른 참여자 무영향.

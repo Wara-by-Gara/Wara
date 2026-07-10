@@ -272,10 +272,41 @@ export class ConversationsService {
     return { count: await this.repository.unreadTotal(userId) };
   }
 
+  /** 공지 메시지 고정 (그룹 대화방 멤버). */
+  async pinMessage(userId: string, conversationId: string, messageId: string) {
+    await this.assertMember(conversationId, userId);
+    const message = await this.repository.findMessageById(messageId);
+    if (!message || message.conversationId !== conversationId || message.deletedAt) {
+      throw new NotFoundException(ErrorCode.MESSAGE_NOT_FOUND);
+    }
+    await this.repository.setPinnedMessage(conversationId, messageId);
+    return { pinnedMessageId: messageId };
+  }
+
+  /** 공지 고정 해제. */
+  async unpinMessage(userId: string, conversationId: string) {
+    await this.assertMember(conversationId, userId);
+    await this.repository.setPinnedMessage(conversationId, null);
+  }
+
+  private async resolvePinnedMessage(pinnedMessageId: string | null) {
+    if (!pinnedMessageId) return null;
+    const msg = await this.repository.findMessageById(pinnedMessageId);
+    if (!msg || msg.deletedAt) return null;
+    return {
+      id: msg.id,
+      senderId: msg.senderId,
+      content: msg.content,
+      hasImage: msg.imageKey !== null,
+      createdAt: msg.createdAt,
+    };
+  }
+
   async getDetail(userId: string, conversationId: string) {
     const me = await this.assertMember(conversationId, userId);
     const conversation = await this.repository.findConversationById(conversationId);
     const isGroup = conversation?.type === 'group';
+    const pinnedMessage = await this.resolvePinnedMessage(conversation?.pinnedMessageId ?? null);
 
     if (isGroup) {
       const members = await this.repository.listParticipants(conversationId);
@@ -292,6 +323,7 @@ export class ConversationsService {
         memberCount: members.length,
         partner: null,
         partnerLastReadAt: null,
+        pinnedMessage,
       };
     }
 
@@ -313,6 +345,7 @@ export class ConversationsService {
         : null,
       // 내가 보낸 메시지의 읽음 표시용 — 상대가 마지막으로 읽은 시각
       partnerLastReadAt: partner?.lastReadAt ?? null,
+      pinnedMessage,
     };
   }
 
@@ -575,6 +608,12 @@ export class ConversationsService {
     }
 
     await this.repository.softDeleteMessage(messageId);
+
+    // 고정된 공지가 삭제되면 고정 해제.
+    const conversation = await this.repository.findConversationById(conversationId);
+    if (conversation?.pinnedMessageId === messageId) {
+      await this.repository.setPinnedMessage(conversationId, null);
+    }
 
     // 목록 미리보기 재계산 — 삭제됐으면 "삭제된 메시지입니다", 이미지면 "사진"
     const latest = await this.repository.findLatestMessage(conversationId);

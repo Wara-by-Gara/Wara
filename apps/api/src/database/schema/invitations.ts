@@ -1,7 +1,7 @@
 import { pgTable, text, varchar, boolean, timestamp, integer, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
-import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum } from './enums';
+import { invitationStatusEnum, linkEventTypeEnum, mainCoverTypeEnum, memberRoleEnum, rsvpStatusEnum, sendChannelEnum, locationTierEnum } from './enums';
 import { users } from './users';
 
 export const invitationTemplates = pgTable('invitation_templates', {
@@ -75,6 +75,7 @@ export const participants = pgTable('participants', {
   memberRole: memberRoleEnum('member_role').notNull(),
   rsvpStatus: rsvpStatusEnum('rsvp_status').notNull().default('undecided'),
   isHidden: boolean('is_hidden').notNull().default(false),
+  locationTier: locationTierEnum('location_tier'), /** 이 모임에서의 위치 티어. null = 유저 기본값(defaultLocationTier) 따름 */
   note: text('note'),
   hostMemo: text('host_memo'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -102,6 +103,7 @@ export const invitationBlocklists = pgTable('invitation_blocklists', {
   invitationId: text('invitation_id').notNull().references(() => invitations.id, { onDelete: 'cascade' }),
   blockedUserId: text('blocked_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   blockedByUserId: text('blocked_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  reason: text('reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [

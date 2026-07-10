@@ -9,8 +9,10 @@ import {
   submitResponses,
   closePoll,
   confirmSlot,
+  updateSlot,
+  unconfirmSlot,
 } from "@/lib/api/dateVote";
-import type { CreatePollBody, ApiVoteResponse } from "@/lib/api/dateVote";
+import type { CreatePollBody, ApiVoteResponse, UpdateSlotBody } from "@/lib/api/dateVote";
 import { isOptionalVotePollError } from "@/lib/api/getApiErrorCode";
 
 // ── Queries ──────────────────────────────────────────────────────────────────
@@ -91,6 +93,32 @@ export function useConfirmSlot(invitationId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (slotId: string) => confirmSlot(invitationId, slotId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.vote(invitationId) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.voteResults(invitationId) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.detail(invitationId) });
+    },
+  });
+}
+
+/** 슬롯 수정 (HOST 전용, open 상태에서만). */
+export function useUpdateSlot(invitationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slotId, body }: { slotId: string; body: UpdateSlotBody }) =>
+      updateSlot(invitationId, slotId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.vote(invitationId) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.voteResults(invitationId) });
+    },
+  });
+}
+
+/** 확정 되돌리기 (HOST 전용, confirmed 상태에서만). */
+export function useUnconfirmSlot(invitationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unconfirmSlot(invitationId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.vote(invitationId) });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.invitations.voteResults(invitationId) });

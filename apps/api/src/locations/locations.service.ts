@@ -14,6 +14,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ErrorCode } from '../common/constants/error-codes';
 import type { SetEventLocationDto } from './dto/set-event-location.dto';
 import type { UpdateParticipantLocationDto } from './dto/update-participant-location.dto';
+import { maskLocation, effectiveTier, type LocationTier } from './location-tier.util';
 
 export const ARRIVAL_RADIUS_METERS = 10;
 export const ARRIVAL_NOTIFICATION_DELAY_MS = 10_000;
@@ -137,18 +138,28 @@ export class LocationsService {
     for (const [participantId, value] of map.entries()) {
       const user = userInfo.get(participantId);
       if (!user) continue; // 참가자 정보 사라진 stale entry
+
+      // 위치 소유자의 유효 티어로 마스킹. hidden이면 목록에서 제외.
+      const tier = effectiveTier(user.participantTier, user.userDefaultTier);
+      const masked = maskLocation(
+        { lat: value.lat, lng: value.lng, accuracy: value.accuracy },
+        tier,
+      );
+      if (!masked) continue;
+
       result.push({
         id: syntheticLocationId(invitationId, participantId),
         invitationId,
         participantId,
-        lat: value.lat,
-        lng: value.lng,
-        accuracy: value.accuracy,
+        lat: masked.lat,
+        lng: masked.lng,
+        accuracy: masked.accuracy,
         isArrived: value.isArrived,
         statusMessage: value.statusMessage,
         updatedAt: new Date(value.updatedAt),
         nickname: user.nickname,
         profileImageUrl: user.profileImageUrl,
+        tier,
       });
     }
     return result;
@@ -156,6 +167,47 @@ export class LocationsService {
 
   async searchPlaces(query: string, page: number, size: number) {
     return this.kakaoLocal.searchByKeyword(query, page, size);
+  }
+
+  /** 유저 기본 위치 티어 설정. 즉시 반영은 다음 갱신/조회 시점부터. */
+  async setMyDefaultTier(userId: string, tier: LocationTier) {
+    await this.repository.setUserDefaultTier(userId, tier);
+    return { defaultTier: tier };
+  }
+
+  /** 모임별 위치 티어 설정(null=기본값 따름) + 현재 공유 중이면 즉시 재브로드캐스트. */
+  async setMyMeetingTier(invitationId: string, userId: string, tier: LocationTier | null) {
+    const participantId = await this.repository.setParticipantTier(userId, invitationId, tier);
+    if (!participantId) {
+      throw new ForbiddenException(ErrorCode.PARTICIPANT_NOT_FOUND);
+    }
+
+    const infoMap = await this.repository.findUserInfoByParticipantIds([participantId]);
+    const info = infoMap.get(participantId);
+    const effective = effectiveTier(tier, info?.userDefaultTier ?? 'full');
+
+    // 위치 공유 중이면 새 티어로 즉시 재브로드캐스트 (S-ULTZWS 즉시 반영).
+    const current = await this.redisStore.findOne(invitationId, participantId);
+    if (current && info) {
+      const loc: ParticipantLocationWithUser = {
+        id: syntheticLocationId(invitationId, participantId),
+        invitationId,
+        participantId,
+        lat: current.lat,
+        lng: current.lng,
+        accuracy: current.accuracy,
+        isArrived: current.isArrived,
+        statusMessage: current.statusMessage,
+        updatedAt: new Date(current.updatedAt),
+        nickname: info.nickname,
+        profileImageUrl: info.profileImageUrl,
+      };
+      const masked = this.maskForBroadcast(loc, effective);
+      if (masked) this.gateway.emitLocationUpdated(invitationId, masked);
+      else this.gateway.emitLocationRemoved(invitationId, participantId);
+    }
+
+    return { tier, effectiveTier: effective };
   }
 
   // 미도착 상태메시지 설정 — 위치 공유 중인(Redis entry 존재) 참여자만 가능.
@@ -260,11 +312,25 @@ export class LocationsService {
     this.gateway.emitLocationRemoved(invitationId, participant.id);
   }
 
+  /** 위치를 티어에 맞게 마스킹한 broadcast payload. hidden이면 null(브로드캐스트 금지). */
+  private maskForBroadcast(
+    loc: ParticipantLocationWithUser,
+    tier: LocationTier,
+  ): ParticipantLocationWithUser | null {
+    const masked = maskLocation({ lat: loc.lat, lng: loc.lng, accuracy: loc.accuracy }, tier);
+    if (!masked) return null;
+    return { ...loc, lat: masked.lat, lng: masked.lng, accuracy: masked.accuracy, tier };
+  }
+
   async updateMyLocation(
     invitationId: string,
     userId: string,
     dto: UpdateParticipantLocationDto,
-  ): Promise<{ location: ParticipantLocationWithUser; justArrived: boolean }> {
+  ): Promise<{
+    location: ParticipantLocationWithUser;
+    broadcast: ParticipantLocationWithUser | null;
+    justArrived: boolean;
+  }> {
     // 마감/삭제된 초대장에 GPS 계속 upsert되면 flush scheduler 정시까지 stale broadcast.
     // upsert 시점에 차단해 진입 자체를 막음.
     const invitationStatus = await this.repository.findInvitationStatus(invitationId);
@@ -313,14 +379,18 @@ export class LocationsService {
       profileImageUrl: participant.user.profileImageUrl,
     };
 
+    // 소유자 유효 티어로 마스킹한 broadcast payload (hidden이면 null → 브로드캐스트 금지).
+    const tier = effectiveTier(participant.locationTier, participant.user.defaultLocationTier);
+    const broadcast = this.maskForBroadcast(location, tier);
+
     if (wasArrived) {
-      return { location, justArrived: false };
+      return { location, broadcast, justArrived: false };
     }
 
     const eventLocation =
       await this.repository.findEventLocation(invitationId);
     if (!eventLocation) {
-      return { location, justArrived: false };
+      return { location, broadcast, justArrived: false };
     }
 
     const distance = haversineMeters(
@@ -330,7 +400,7 @@ export class LocationsService {
       eventLocation.lng,
     );
     if (distance > ARRIVAL_RADIUS_METERS) {
-      return { location, justArrived: false };
+      return { location, broadcast, justArrived: false };
     }
 
     // SETNX로 중복 도착 처리 방지
@@ -339,7 +409,7 @@ export class LocationsService {
       participant.id,
     );
     if (!claimed) {
-      return { location, justArrived: false };
+      return { location, broadcast, justArrived: false };
     }
 
     await this.redisStore.upsert(invitationId, participant.id, {
@@ -349,7 +419,12 @@ export class LocationsService {
 
     void this.sendArrivalNotificationsDelayed(invitationId, participant);
 
-    return { location: { ...location, isArrived: true }, justArrived: true };
+    const arrivedLocation = { ...location, isArrived: true };
+    return {
+      location: arrivedLocation,
+      broadcast: this.maskForBroadcast(arrivedLocation, tier),
+      justArrived: true,
+    };
   }
 
   async processPreEventNotifications() {

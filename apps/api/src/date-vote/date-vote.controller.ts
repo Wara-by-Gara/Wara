@@ -24,6 +24,7 @@ import { DateVoteService } from './date-vote.service';
 import { createPollSchema, type CreatePollDto } from './dto/create-poll.dto';
 import { updatePollSchema, type UpdatePollDto } from './dto/update-poll.dto';
 import { addSlotSchema, type AddSlotDto } from './dto/add-slot.dto';
+import { updateSlotSchema, type UpdateSlotDto } from './dto/update-slot.dto';
 import { submitResponsesSchema, type SubmitResponsesDto } from './dto/submit-responses.dto';
 import { confirmSlotSchema, type ConfirmSlotDto } from './dto/confirm-slot.dto';
 
@@ -45,91 +46,142 @@ export class DateVoteController {
     return this.service.createPoll(invitationId, dto);
   }
 
+  /** 초대장의 투표 목록 (다중 투표). */
   @Get()
-  async getPoll(
+  async listPolls(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.service.getPoll(invitationId, user.id);
+    return this.service.listPolls(invitationId, user.id);
   }
 
-  @Patch()
+  @Get(':pollId')
+  async getPoll(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.getPoll(invitationId, pollId, user.id);
+  }
+
+  @Patch(':pollId')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
   async updatePoll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
     @Body(new ZodValidationPipe(updatePollSchema)) dto: UpdatePollDto,
   ) {
-    return this.service.updatePoll(invitationId, dto);
+    return this.service.updatePoll(invitationId, pollId, dto);
+  }
+
+  @Delete(':pollId')
+  @UseGuards(HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePoll(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
+  ) {
+    await this.service.deletePoll(invitationId, pollId);
   }
 
   // ── Slots ───────────────────────────────────────────────────────────────────
 
-  @Post('slots')
+  @Post(':pollId/slots')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
   @HttpCode(HttpStatus.CREATED)
   async addSlot(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
     @Body(new ZodValidationPipe(addSlotSchema)) dto: AddSlotDto,
   ) {
-    return this.service.addSlot(invitationId, dto);
+    return this.service.addSlot(invitationId, pollId, dto);
   }
 
-  @Delete('slots/:slotId')
+  @Patch(':pollId/slots/:slotId')
+  @UseGuards(HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  async updateSlot(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
+    @Param('slotId', ParseUlidPipe) slotId: string,
+    @Body(new ZodValidationPipe(updateSlotSchema)) dto: UpdateSlotDto,
+  ) {
+    return this.service.updateSlot(invitationId, pollId, slotId, dto);
+  }
+
+  @Delete(':pollId/slots/:slotId')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSlot(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
     @Param('slotId', ParseUlidPipe) slotId: string,
   ) {
-    await this.service.deleteSlot(invitationId, slotId);
+    await this.service.deleteSlot(invitationId, pollId, slotId);
   }
 
   // ── Responses ───────────────────────────────────────────────────────────────
 
-  @Put('responses')
+  @Put(':pollId/responses')
   @UseGuards(ParticipantGuard)
   @HttpCode(HttpStatus.OK)
   async submitResponses(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
     @CurrentUser() user: JwtPayload,
     @Body(new ZodValidationPipe(submitResponsesSchema)) dto: SubmitResponsesDto,
   ) {
-    return this.service.submitResponses(invitationId, user.id, dto);
+    return this.service.submitResponses(invitationId, pollId, user.id, dto);
   }
 
   // ── Results ─────────────────────────────────────────────────────────────────
 
-  @Get('results')
+  @Get(':pollId/results')
   @UseGuards(ParticipantGuard)
   async getResults(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
   ) {
-    return this.service.getResults(invitationId);
+    return this.service.getResults(invitationId, pollId);
   }
 
   // ── Close / Confirm ─────────────────────────────────────────────────────────
 
-  @Post('close')
+  @Post(':pollId/close')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
   @HttpCode(HttpStatus.OK)
   async closePoll(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
   ) {
-    return this.service.closePoll(invitationId);
+    return this.service.closePoll(invitationId, pollId);
   }
 
-  @Post('confirm')
+  @Post(':pollId/confirm')
   @UseGuards(HostGuard)
   @RequireMemberRole(MemberRole.HOST)
   @HttpCode(HttpStatus.OK)
   async confirmSlot(
     @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
     @Body(new ZodValidationPipe(confirmSlotSchema)) dto: ConfirmSlotDto,
   ) {
-    return this.service.confirmSlot(invitationId, dto);
+    return this.service.confirmSlot(invitationId, pollId, dto);
+  }
+
+  @Post(':pollId/unconfirm')
+  @UseGuards(HostGuard)
+  @RequireMemberRole(MemberRole.HOST)
+  @HttpCode(HttpStatus.OK)
+  async unconfirmSlot(
+    @Param('invitationId', ParseUlidPipe) invitationId: string,
+    @Param('pollId', ParseUlidPipe) pollId: string,
+  ) {
+    return this.service.unconfirmSlot(invitationId, pollId);
   }
 }

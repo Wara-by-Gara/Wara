@@ -65,6 +65,7 @@ export class PhotosRepository {
     const conditions = [
       eq(photos.invitationId, invitationId),
       isNull(photos.deletedAt),
+      isNull(photos.hiddenAt),
     ];
 
     const [countRow] = await this.db
@@ -90,7 +91,7 @@ export class PhotosRepository {
       const cursorIndex = await this.db
         .select({ id: photos.id })
         .from(photos)
-        .where(and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt)))
+        .where(and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt), isNull(photos.hiddenAt)))
         .orderBy(orderFn(sortCol))
         .then((rows) => rows.findIndex((r) => r.id === cursor));
 
@@ -138,12 +139,13 @@ export class PhotosRepository {
           inArray(photos.id, ids),
           eq(photos.invitationId, invitationId),
           isNull(photos.deletedAt),
+          isNull(photos.hiddenAt),
         ),
       );
     return rows;
   }
 
-  //특정 id의 사진 단건 조회 (삭제된 사진은 제외)
+  //특정 id의 사진 단건 조회 (삭제·모데레이션 숨김 제외)
   async findPhotoById(id: string, invitationId: string) {
     const [row] = await this.db
       .select()
@@ -153,6 +155,7 @@ export class PhotosRepository {
           eq(photos.id, id),
           eq(photos.invitationId, invitationId),
           isNull(photos.deletedAt),
+          isNull(photos.hiddenAt),
         ),
       );
     return row ?? null;
@@ -279,6 +282,7 @@ export class PhotosRepository {
         and(
           eq(participants.userId, userId),
           isNull(photos.deletedAt),
+          isNull(photos.hiddenAt),
           isNotNull(photos.exifMetadata),
           sql`${photos.exifMetadata}->>'gps_lat' IS NOT NULL`,
           sql`${photos.exifMetadata}->>'gps_lng' IS NOT NULL`,
@@ -310,7 +314,7 @@ export class PhotosRepository {
       .select()
       .from(photos)
       .where(
-        and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt)),
+        and(eq(photos.invitationId, invitationId), isNull(photos.deletedAt), isNull(photos.hiddenAt)),
       )
       .orderBy(
         desc(

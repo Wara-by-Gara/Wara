@@ -1,41 +1,37 @@
-// Fallback for using MaterialIcons on Android and web.
-
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import type { SymbolWeight, SymbolViewProps } from 'expo-symbols';
-import type { ComponentProps } from 'react';
-import type { OpaqueColorValue, StyleProp, TextStyle } from 'react-native';
-
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
+import type { SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import { SymbolView } from 'expo-symbols';
+import type { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
- */
-const MAPPING = {
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-} as IconMapping;
-
-/**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * SF Symbols 아이콘 (iOS 전용). `expo-symbols`의 `SymbolView` 래퍼.
+ * `color`는 hex 문자열 또는 `PlatformColor`(OpaqueColorValue) 모두 허용.
  */
 export function IconSymbol({
   name,
   size = 24,
   color,
   style,
+  weight = 'regular',
+  type = 'monochrome',
+  animationSpec,
 }: {
-  name: IconSymbolName;
+  name: SymbolViewProps['name'];
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
+  type?: SymbolViewProps['type'];
+  animationSpec?: SymbolViewProps['animationSpec'];
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return (
+    <SymbolView
+      name={name}
+      weight={weight}
+      type={type}
+      animationSpec={animationSpec}
+      tintColor={color as string}
+      resizeMode="scaleAspectFit"
+      style={[{ width: size, height: size }, style]}
+    />
+  );
 }

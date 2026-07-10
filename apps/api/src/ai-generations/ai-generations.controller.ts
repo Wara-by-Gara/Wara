@@ -37,6 +37,12 @@ export class AiGenerationsController {
     return this.service.createGeneration(dto, user.id);
   }
 
+  // 오늘 남은 AI 생성 횟수 조회. ':id' 파라미터 라우트보다 먼저 선언해야 매칭됨.
+  @Get('quota')
+  getQuota(@CurrentUser() user: JwtPayload) {
+    return this.service.getDailyQuota(user.id);
+  }
+
   // 폴링용 fallback. WS를 못 받을 환경(모바일 백그라운드 진입 후 복귀 등)에서도 상태 확인.
   @Get(':id')
   get(

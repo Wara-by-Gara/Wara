@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from './client';
+import { apiGet, apiPost, apiPut, apiPatch } from './client';
 
 // ── Domain types (API shape) ─────────────────────────────────────────────────
 
@@ -98,4 +98,23 @@ export function closePoll(invitationId: string): Promise<DateVotePoll> {
 
 export function confirmSlot(invitationId: string, slotId: string): Promise<DateVotePoll> {
   return apiPost<DateVotePoll>(`/invitations/${invitationId}/vote/confirm`, { slotId });
+}
+
+export interface UpdateSlotBody {
+  date?: string;              // YYYY-MM-DD
+  startTime?: string | null;  // HH:MM, null = 종일
+  sortOrder?: number;
+}
+
+export function updateSlot(
+  invitationId: string,
+  slotId: string,
+  body: UpdateSlotBody,
+): Promise<DateVoteSlot> {
+  return apiPatch<DateVoteSlot>(`/invitations/${invitationId}/vote/slots/${slotId}`, body);
+}
+
+/** 확정 되돌리기 (HOST 전용, confirmed 상태에서만). */
+export function unconfirmSlot(invitationId: string): Promise<DateVotePoll> {
+  return apiPost<DateVotePoll>(`/invitations/${invitationId}/vote/unconfirm`);
 }

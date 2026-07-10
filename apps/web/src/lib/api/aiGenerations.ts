@@ -27,3 +27,14 @@ export function createAiGeneration(
 export function getAiGeneration(id: string): Promise<AiGenerationDetail> {
   return apiGet(`/ai/generations/${id}`);
 }
+
+export interface AiDailyQuota {
+  limit: number;
+  used: number;
+  remaining: number;
+}
+
+/** 오늘 남은 AI 생성 횟수. */
+export function getAiQuota(): Promise<AiDailyQuota> {
+  return apiGet(`/ai/generations/quota`);
+}

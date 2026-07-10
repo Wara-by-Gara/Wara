@@ -14,6 +14,7 @@ export class BlocklistsRepository {
         name: users.name,
         nickname: users.nickname,
         profileImageUrl: users.profileImageUrl,
+        reason: invitationBlocklists.reason,
         blockedAt: invitationBlocklists.createdAt,
       })
       .from(invitationBlocklists)

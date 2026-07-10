@@ -1,7 +1,7 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { typography } from '@/constants/tokens';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { ios, iosType } from '@/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -9,21 +9,25 @@ export type ThemedTextProps = TextProps & {
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 
-export function ThemedText({
-  style,
-  lightColor,
-  darkColor,
-  type = 'default',
-  ...rest
-}: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-  const tint = useThemeColor({}, 'tint');
+/**
+ * iOS 타입 스케일 매핑:
+ * - default = Body (17)
+ * - defaultSemiBold = Headline (17/600)
+ * - title = Large Title (34/700)
+ * - subtitle = Title 3 (20)
+ * - link = Body + tint(systemBlue)
+ *
+ * 색은 iOS `label`(PlatformColor, 라이트/다크 자동). link는 `systemBlue`.
+ */
+export function ThemedText({ style, lightColor, darkColor, type = 'default', ...rest }: ThemedTextProps) {
+  const scheme = useColorScheme() ?? 'light';
+  const override = scheme === 'dark' ? darkColor : lightColor;
+  const color = type === 'link' ? ios.tint : (override ?? ios.label);
 
-  // link 색상은 토큰(primary)에서 가져옴 — 라이트/다크 자동 분기
   return (
     <Text
       style={[
-        type === 'link' ? { color: tint } : { color },
+        { color },
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
@@ -36,15 +40,10 @@ export function ThemedText({
   );
 }
 
-// DESIGN.md §5 type scale 매핑:
-// - default = Body 1, defaultSemiBold = Body 1 + 600
-// - title = Display 1 (32/40/800)
-// - subtitle = Heading 3 (20/28/700)
-// - link = Body 1 + tint 컬러 (정확한 Type 토큰은 별도 없음)
 const styles = StyleSheet.create({
-  default: typography.body1,
-  defaultSemiBold: { ...typography.body1, fontWeight: '600' },
-  title: typography.display1,
-  subtitle: typography.heading3,
-  link: typography.body1,
+  default: iosType.body,
+  defaultSemiBold: iosType.headline,
+  title: iosType.largeTitle,
+  subtitle: iosType.title3,
+  link: iosType.body,
 });

@@ -162,7 +162,7 @@ export const MyPage = ({
           </section>
 
           {/* ── 랜덤 추억 모임 ── */}
-          <div className="bg-surface px-4 py-4 shadow-sm">
+          <div className="bg-surface px-4 py-4 shadow-card">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">✨</span>
@@ -217,7 +217,7 @@ export const MyPage = ({
           </div>
 
           {/* ── Place log ── */}
-          <div className="bg-surface px-4 py-4 shadow-sm">
+          <div className="bg-surface px-4 py-4 shadow-card">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-[15px]">📍</span>

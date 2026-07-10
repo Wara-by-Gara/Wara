@@ -50,3 +50,7 @@ next-env.d.ts
 
 # storybook
 /storybook-static
+
+# PWA — Serwist가 빌드 시 생성 (src/app/sw.ts가 소스)
+public/sw.js
+public/swe-worker-*.js

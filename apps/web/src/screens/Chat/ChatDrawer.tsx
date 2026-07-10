@@ -145,7 +145,7 @@ export function ChatDrawer({
                 <button
                   type="button"
                   onClick={() => setLeaveOpen(true)}
-                  className="mt-2 w-full rounded-lg py-2.5 text-[14px] font-bold text-red-500 active:opacity-70"
+                  className="mt-2 w-full rounded-lg py-2.5 text-[14px] font-bold text-danger active:opacity-70"
                 >
                   채팅방 나가기
                 </button>

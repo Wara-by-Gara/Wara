@@ -64,6 +64,48 @@
       "when": 1781704608868,
       "tag": "0008_lively_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782902920825,
+      "tag": "0009_elite_ghost_rider",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782904163780,
+      "tag": "0010_hot_kat_farrell",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782915760628,
+      "tag": "0011_flimsy_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782918588160,
+      "tag": "0012_hard_jazinda",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782919991034,
+      "tag": "0013_unknown_star_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782923919786,
+      "tag": "0014_omniscient_zaladane",
+      "breakpoints": true
     }
   ]
 }

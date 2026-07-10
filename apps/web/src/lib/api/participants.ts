@@ -59,8 +59,15 @@ export function updateRsvp(invitationId: string, participantId: string, rsvpStat
   return apiPatch<Participant>(`/invitations/${invitationId}/participants/${participantId}/rsvp`, { rsvpStatus });
 }
 
-export function leaveInvitation(invitationId: string, participantId: string): Promise<void> {
-  return apiDelete(`/invitations/${invitationId}/participants/${participantId}`);
+export function leaveInvitation(
+  invitationId: string,
+  participantId: string,
+  reason?: string,
+): Promise<void> {
+  return apiDelete(
+    `/invitations/${invitationId}/participants/${participantId}`,
+    reason ? { reason } : undefined,
+  );
 }
 
 export function updateHostMemo(invitationId: string, participantId: string, memo: string | null): Promise<Participant> {

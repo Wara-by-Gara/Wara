@@ -1,15 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { io, type Socket } from "socket.io-client";
 import {
   createAiGeneration,
   getAiGeneration,
+  getAiQuota,
   type AiGenerationDetail,
   type AiGenerationStatus,
   type CreateAiGenerationInput,
 } from "@/lib/api/aiGenerations";
 import { SOCKET_BASE } from "@/lib/env";
+
+/** 오늘 남은 AI 생성 횟수 조회. */
+export function useAiQuota(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["ai", "quota"],
+    queryFn: getAiQuota,
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 30,
+  });
+}
 
 // 폴링 간격(ms). WS가 도달 안 하는 모바일 백그라운드 상황의 fallback.
 const POLL_INTERVAL_MS = 5_000;
