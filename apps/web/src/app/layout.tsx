@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(FRONTEND_ORIGIN),
   title: 'WARA',
   description: '요즘 모이는 방식',
+  // 탭 favicon(.ico)은 src/app/favicon.ico 컨벤션으로 자동 서빙 — SVG(모던 브라우저 선호) + 고해상도 PNG 명시
+  icons: {
+    icon: [
+      { url: '/favicons/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+  },
   // iOS 홈 화면 설치(standalone) 지원 — apple-touch-icon은 src/app/apple-icon.png 컨벤션으로 제공
   appleWebApp: {
     capable: true,
