@@ -34,6 +34,8 @@ export function useUnreadCount() {
     queryKey: notificationKeys.unread,
     queryFn: ({ signal }) => fetchUnreadCount({ signal }),
     select: (d) => d.count,
+    // 소켓 끊긴 상태에서도 배지가 stale로 남지 않도록 60초 폴링 fallback.
+    refetchInterval: 60_000,
   });
 }
 

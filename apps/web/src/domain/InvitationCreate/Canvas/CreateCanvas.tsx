@@ -333,7 +333,7 @@ export function CreateCanvas({
           {/* PC 미리보기 제목 (편집은 우측 패널) */}
           <p
             className={cn(
-              'hidden w-full break-words text-left text-[32px] font-extrabold leading-snug lg:block',
+              'hidden w-full wrap-break-word text-left text-[32px] font-extrabold leading-snug lg:block',
               bgClass.includes('aurora') ||
                 bgClass.includes('starry') ||
                 bgClass.includes('galaxy') ||

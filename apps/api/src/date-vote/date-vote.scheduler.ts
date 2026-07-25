@@ -14,7 +14,8 @@ export class DateVoteScheduler {
     try {
       await this.service.processExpiredPolls();
     } catch (err) {
-      this.logger.error('processExpiredPolls 실패', err);
+      const e = err as Error;
+      this.logger.error(`processExpiredPolls 실패: ${e?.message}\n${e?.stack}`);
     }
   }
 
@@ -24,7 +25,8 @@ export class DateVoteScheduler {
     try {
       await this.service.sendReminders();
     } catch (err) {
-      this.logger.error('sendReminders 실패', err);
+      const e = err as Error;
+      this.logger.error(`sendReminders 실패: ${e?.message}\n${e?.stack}`);
     }
   }
 }
