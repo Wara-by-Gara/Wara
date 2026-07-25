@@ -14,7 +14,10 @@ export class LocationPreEventScheduler {
     try {
       await this.service.processPreEventNotifications();
     } catch (err) {
-      this.logger.error('processPreEventNotifications 실패', err);
+      const e = err as Error;
+      this.logger.error(
+        `processPreEventNotifications 실패: ${e?.message}\n${e?.stack}`,
+      );
     }
   }
 }
