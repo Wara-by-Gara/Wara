@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { GlobalNotificationSocket } from '@/components/GlobalNotificationSocket';
 import { PushRegistrar } from '@/components/PushRegistrar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { QueryProvider } from '@/providers/query-provider';
@@ -72,6 +73,8 @@ export default function RootLayout() {
               </Stack>
               {/* 로그인 상태에서만 내부적으로 푸시 토큰 등록(훅이 토큰 유무로 게이팅). */}
               <PushRegistrar />
+              {/* 전역 알림 소켓 — 어느 화면에 있어도 실시간 알림 캐시 무효화. 토큰 없으면 no-op. */}
+              <GlobalNotificationSocket />
               <StatusBar style="auto" />
             </ThemeProvider>
           </BottomSheetModalProvider>

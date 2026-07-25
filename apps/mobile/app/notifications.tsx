@@ -151,7 +151,32 @@ export default function NotificationsScreen() {
     },
     [qc],
   );
-  useNotificationSocket({ onNew });
+
+  // 다른 세션(웹 등)에서 읽음 처리 → 캐시 동기화.
+  const onRead = useCallback(
+    (id: string) => {
+      qc.setQueryData<ListCache>(notificationKeys.list, (cache) => {
+        if (!cache) return cache;
+        const readAt = new Date().toISOString();
+        return {
+          ...cache,
+          pages: cache.pages.map((p) => ({
+            ...p,
+            items: p.items.map((it) => (it.id === id ? { ...it, isRead: true, readAt } : it)),
+          })),
+        };
+      });
+      qc.invalidateQueries({ queryKey: notificationKeys.unread });
+    },
+    [qc],
+  );
+
+  const onReadAll = useCallback(() => {
+    qc.setQueryData<{ count: number }>(notificationKeys.unread, { count: 0 });
+    qc.invalidateQueries({ queryKey: notificationKeys.list });
+  }, [qc]);
+
+  useNotificationSocket({ onNew, onRead, onReadAll });
 
   const items = listQuery.data?.pages.flatMap((p) => p.items) ?? [];
   const hasUnread = (unreadCount.data ?? 0) > 0;

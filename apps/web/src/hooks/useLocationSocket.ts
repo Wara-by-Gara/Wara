@@ -15,10 +15,25 @@ export interface ArrivedEvent {
   invitationId: string;
 }
 
+export interface LocationRemovedEvent {
+  participantId: string;
+  invitationId: string;
+}
+
+export interface StatusMessageUpdatedEvent {
+  participantId: string;
+  invitationId: string;
+  statusMessage: string;
+  updatedAt: string;
+}
+
 interface UseLocationSocketOptions {
   invitationId: string;
   onLocationUpdated: (update: LocationUpdate) => void;
   onArrived?: (event: ArrivedEvent) => void;
+  onLocationRemoved?: (event: LocationRemovedEvent) => void;
+  onStatusMessageUpdated?: (event: StatusMessageUpdatedEvent) => void;
+  onStatusMessageRemoved?: (event: LocationRemovedEvent) => void;
   enabled?: boolean;
 }
 
@@ -26,6 +41,9 @@ export function useLocationSocket({
   invitationId,
   onLocationUpdated,
   onArrived,
+  onLocationRemoved,
+  onStatusMessageUpdated,
+  onStatusMessageRemoved,
   enabled = true,
 }: UseLocationSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
@@ -33,6 +51,12 @@ export function useLocationSocket({
   callbackRef.current = onLocationUpdated;
   const arrivedRef = useRef(onArrived);
   arrivedRef.current = onArrived;
+  const removedRef = useRef(onLocationRemoved);
+  removedRef.current = onLocationRemoved;
+  const statusUpdatedRef = useRef(onStatusMessageUpdated);
+  statusUpdatedRef.current = onStatusMessageUpdated;
+  const statusRemovedRef = useRef(onStatusMessageRemoved);
+  statusRemovedRef.current = onStatusMessageRemoved;
 
   useEffect(() => {
     if (!enabled || !invitationId) return;
@@ -55,6 +79,18 @@ export function useLocationSocket({
 
     socket.on("location:arrived", (event: ArrivedEvent) => {
       arrivedRef.current?.(event);
+    });
+
+    socket.on("location:removed", (event: LocationRemovedEvent) => {
+      removedRef.current?.(event);
+    });
+
+    socket.on("status_message:updated", (event: StatusMessageUpdatedEvent) => {
+      statusUpdatedRef.current?.(event);
+    });
+
+    socket.on("status_message:removed", (event: LocationRemovedEvent) => {
+      statusRemovedRef.current?.(event);
     });
 
     return () => {
