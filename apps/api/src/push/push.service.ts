@@ -18,6 +18,9 @@ export interface PushPayload {
   url: string;
   // 같은 tag는 OS에서 알림을 합쳐 표시 — 대화방/타입 단위 중복 방지에 사용.
   tag?: string;
+  // 유저의 현재 미읽음 알림 개수. iOS 홈에 설치된 웹 PWA는 SW에서 navigator.setAppBadge(badge)로,
+  // 네이티브(Expo)는 payload data.badge를 클라이언트가 setBadgeCountAsync로 소비한다.
+  badge?: number;
 }
 
 @Injectable()
@@ -155,8 +158,14 @@ export class PushService implements OnModuleInit {
         to: d.token,
         title: payload.title,
         body: payload.body,
+        // iOS 홈 아이콘 배지 카운트 — Expo가 APNs로 badge 필드 매핑.
+        ...(typeof payload.badge === 'number' ? { badge: payload.badge } : {}),
         // 딥링크용 url(상대 경로) + 중복 합치기용 tag를 data로 전달.
-        data: { url: payload.url, ...(payload.tag ? { tag: payload.tag } : {}) },
+        data: {
+          url: payload.url,
+          ...(payload.tag ? { tag: payload.tag } : {}),
+          ...(typeof payload.badge === 'number' ? { badge: payload.badge } : {}),
+        },
       });
     }
     if (messages.length === 0) return;

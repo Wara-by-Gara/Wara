@@ -12,13 +12,15 @@ import { useRouter, type Href } from 'expo-router';
 import { getAccessToken } from '@/api';
 import { registerPushToken } from '@/api/push';
 
-// foreground(앱 사용 중) 수신 시 배너/사운드 표시. 모듈 로드 시 1회 등록.
+// foreground(앱 사용 중) 수신 시 배너/사운드 + 아이콘 배지 갱신.
+// shouldSetBadge:true — APNs가 보낸 badge 값이 그대로 아이콘에 반영.
+// (background/killed 상태에서는 handler와 무관하게 OS가 APNs badge를 반영함.)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
   }),
 });
 
