@@ -14,6 +14,7 @@ export class UsersRepository {
       where: (t, { eq, isNull, and }) => and(eq(t.id, id), isNull(t.deletedAt)),
       columns: {
         id: true,
+        role: true,
         email: true,
         nickname: true,
         name: true,
