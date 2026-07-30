@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: '대시보드' },
@@ -12,6 +13,16 @@ const NAV_ITEMS = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isLoading, isAuthorized } = useAdminAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <span className="text-sm text-gray-400">로딩 중...</span>
+      </div>
+    );
+  }
+  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen flex bg-gray-50">
