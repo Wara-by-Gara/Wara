@@ -13,7 +13,7 @@ export const DESIGN_BG_THEMES = [
   { id: "y2k", label: "Y2K", cls: "bg-invite-y2k" },
   { id: "flower", label: "플라워", cls: "bg-invite-flower" },
   { id: "film", label: "필름", cls: "bg-invite-film" },
-  { id: "aurora", label: "오로라", cls: "bg-invite-aurora", hidden: true },
+  { id: "aurora", label: "오로라", cls: "bg-invite-aurora" },
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
   { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy", hidden: true },
