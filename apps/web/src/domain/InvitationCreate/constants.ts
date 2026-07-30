@@ -1,3 +1,5 @@
+
+
 // 초대장 만들기 공유 상수 — 컨테이너에서 분리
 
 export const DEFAULT_COVER_KEY = "defaults/cover.jpg";
@@ -11,16 +13,16 @@ export const DESIGN_BG_THEMES = [
   { id: "y2k", label: "Y2K", cls: "bg-invite-y2k" },
   { id: "flower", label: "플라워", cls: "bg-invite-flower" },
   { id: "film", label: "필름", cls: "bg-invite-film" },
-  { id: "aurora", label: "오로라", cls: "bg-invite-aurora" },
+  { id: "aurora", label: "오로라", cls: "bg-invite-aurora", hidden: true },
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
   { id: "starry", label: "밤하늘", cls: "bg-invite-starry" },
-  { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy" },
+  { id: "dreamy", label: "몽환", cls: "bg-invite-dreamy", hidden: true },
   { id: "galaxy", label: "갤럭시", cls: "bg-invite-galaxy" },
   { id: "water", label: "워터", cls: "bg-invite-water" },
   { id: "hologram", label: "홀로그램", cls: "bg-invite-hologram" },
-  { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow" },
-  { id: "blackcat", label: "검은고양이", cls: "bg-invite-blackcat" },
-  { id: "masterpiece", label: "마스터피스", cls: "bg-invite-masterpiece" },
+  { id: "lasershow", label: "레이저쇼", cls: "bg-invite-lasershow", hidden: true },
+  { id: "blackcat", label: "검은고양이", cls: "bg-invite-blackcat", hidden: true },
+  { id: "masterpiece", label: "마스터피스", cls: "bg-invite-masterpiece", hidden: true },
 ] as const;
 
 export type DesignBgColor =
@@ -34,10 +36,10 @@ export const DEFAULT_BG_COLOR: DesignBgColor = DESIGN_BG_THEMES[1].cls;
  * 저장값은 `bg-invite-grad-<id>` 문자열 (DB/DTO 변경 불필요).
  * 색은 GradientScene에서 --c1/--c2 CSS 변수로 주입된다. */
 export const GRADIENT_BG_VARIANTS = [
-  { id: "sunset", label: "선셋", c1: "#ff7e5f", c2: "#feb47b" },
+  { id: "sunset", label: "선셋", c1: "#ff7e5f", c2: "#feb47b", hidden: true },
   { id: "ocean", label: "바다", c1: "#87ceeb", c2: "#0288d1" },
   { id: "lightning", label: "번개", c1: "#191c38", c2: "#23294e" },
-  { id: "soccer", label: "축구", c1: "#2e8020", c2: "#1d5a12" },
+  { id: "soccer", label: "축구", c1: "#2e8020", c2: "#1d5a12", hidden: true },
 ] as const;
 
 export type GradientVariant = (typeof GRADIENT_BG_VARIANTS)[number];
@@ -52,6 +54,7 @@ export const GRADIENT_BG_THEMES = GRADIENT_BG_VARIANTS.map((v) => ({
   cls: gradientCls(v.id),
   c1: v.c1,
   c2: v.c2,
+  hidden: "hidden" in v ? v.hidden : undefined,
 }));
 
 /** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) */
@@ -84,16 +87,16 @@ export function fontStyle(id: string): string {
 /* ---------- 애니메이션 (생성·미리보기 전용) ---------- */
 export const ANIMATIONS = [
   { id: "none", label: "없음", emoji: "🚫" },
-  { id: "cherry", label: "벚꽃", emoji: "🌸" },
+  { id: "cherry", label: "벚꽃", emoji: "🌸", hidden: true },
   { id: "cloud", label: "구름", emoji: "☁️" },
-  { id: "star", label: "별빛", emoji: "✨" },
-  { id: "baseball", label: "야구공", emoji: "⚾️" },
+  { id: "star", label: "별빛", emoji: "✨", hidden: true },
+  { id: "baseball", label: "야구공", emoji: "⚾️", hidden: true },
   { id: "heart", label: "하트", emoji: "💕" },
   { id: "balloon", label: "풍선", emoji: "🎈" },
-  { id: "plane", label: "종이비행기", emoji: "✈️" },
-  { id: "bubble", label: "비눗방울", emoji: "🫧" },
-  { id: "leaf", label: "낙엽", emoji: "🍂" },
-  { id: "confetti", label: "컨페티", emoji: "🎉" },
+  { id: "plane", label: "종이비행기", emoji: "✈️", hidden: true },
+  { id: "bubble", label: "비눗방울", emoji: "🫧", hidden: true },
+  { id: "leaf", label: "낙엽", emoji: "🍂", hidden: true },
+  { id: "confetti", label: "컨페티", emoji: "🎉", hidden: true },
   { id: "paper", label: "색종이", emoji: "🎊" },
   { id: "crystal", label: "크리스탈", emoji: "💎" },
   { id: "bokeh", label: "빛망울", emoji: "✨" },

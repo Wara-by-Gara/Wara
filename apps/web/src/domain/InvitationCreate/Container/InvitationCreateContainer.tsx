@@ -495,8 +495,9 @@ export default function InvitationCreateContainer({
       templateId: t.id,
       mainImageKey: t.previewImageKey ?? prev.mainImageKey,
     }));
-    // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·애니메이션도 템플릿 값으로 프리필
+    // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·폰트·애니메이션도 템플릿 값으로 프리필
     if (t.bgColor) setDesignBgColor(t.bgColor as DesignBgColor);
+    if (t.font) setDesignFont(t.font as DesignFont);
     if (t.animation) setSelectedAnimation(t.animation as AnimationId);
     window.history.replaceState({}, '', ROUTES.INVITATIONS.CREATE);
   }, [templates, editInvitation]);
@@ -1887,7 +1888,7 @@ export default function InvitationCreateContainer({
         {/* 배경색 편집 시트 */}
         <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen} title="배경색">
             <div className="grid grid-cols-5 gap-2">
-              {[...DESIGN_BG_THEMES, ...GRADIENT_BG_THEMES].map(({ id, label, cls }) => {
+              {[...DESIGN_BG_THEMES, ...GRADIENT_BG_THEMES].filter((t) => !('hidden' in t && t.hidden)).map(({ id, label, cls }) => {
                 const grad = getGradientVariant(cls);
                 return (
                 <button
@@ -1924,7 +1925,7 @@ export default function InvitationCreateContainer({
         {/* 애니메이션 효과 편집 시트 */}
         <BottomSheet open={animationSheetOpen} onOpenChange={setAnimationSheetOpen} title="애니메이션 효과">
             <div className="grid grid-cols-3 gap-2">
-              {ANIMATIONS.map(({ id, label, emoji }) => (
+              {ANIMATIONS.filter((t) => !('hidden' in t && t.hidden)).map(({ id, label, emoji }) => (
                 <button
                   key={id}
                   type="button"
