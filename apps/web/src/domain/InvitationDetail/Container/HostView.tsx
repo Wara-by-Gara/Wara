@@ -26,7 +26,7 @@ import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimati
 import { BlackCatGridLayer } from '@/domain/InvitationCreate/BlackCatGrid/BlackCatGridLayer';
 import { MasterpieceSlideLayer } from '@/domain/InvitationCreate/MasterpieceSlide/MasterpieceSlideLayer';
 import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
-import { getGradientVariant } from '@/domain/InvitationCreate/constants';
+import { getGradientVariant, gradientBaseCls } from '@/domain/InvitationCreate/constants';
 import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
 import { WaterBackground } from '@/components/invite/WaterBackground';
 import { HologramBackground } from '@/components/invite/HologramBackground';
@@ -177,8 +177,9 @@ export default function HostView({
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
   const gradientVariant = getGradientVariant(invitation.bgColor);
+  // custom(hue 피커)은 가운데가 밝은 radial이라 흰 글씨를 강제하면 안 보임 — named 4종만 강제
   const isDarkBg =
-    !!gradientVariant ||
+    (!!gradientVariant && gradientVariant.id !== 'custom') ||
     ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'].some((k) => invitation.bgColor.includes(k));
 
   return (
@@ -187,8 +188,13 @@ export default function HostView({
         'relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard',
         'lg:h-auto lg:max-w-none lg:overflow-visible',
         isDarkBg ? 'text-white' : 'text-text',
-        pageBgClass,
+        gradientVariant ? gradientBaseCls(gradientVariant.id) : pageBgClass,
       )}
+      style={
+        gradientVariant
+          ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)
+          : undefined
+      }
     >
       {gradientVariant && <GradientScene variant={gradientVariant} className="fixed inset-0 z-0" />}
       {pageBgClass === 'bg-invite-galaxy' && (
@@ -260,7 +266,7 @@ export default function HostView({
               variant={cover.variant}
               imageUrl={cover.imageUrl}
               gifUrl={cover.gifUrl}
-              backgroundClass={gradientVariant ? 'bg-invite-grad-base' : invitation.bgColor}
+              backgroundClass={gradientVariant ? gradientBaseCls(gradientVariant.id) : invitation.bgColor}
               style={
                 gradientVariant
                   ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)

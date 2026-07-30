@@ -13,7 +13,8 @@ import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
 import { WaterBackground } from '@/components/invite/WaterBackground';
 import { HologramBackground } from '@/components/invite/HologramBackground';
 import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
-import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
+import { GradientScene } from '../GradientScene';
+import { DESIGN_FONTS, fontStyle, getGradientVariant, gradientBaseCls } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
   RsvpType,
@@ -169,6 +170,11 @@ export function CreateCanvas({
     el.style.height = `${el.scrollHeight}px`;
   }, [title, designFont]);
 
+  // 그라데이션(named 4종 + custom) 정적 베이스는 항상 카드에 깔고, named 4종은 그 위에
+  // GradientScene 애니메이션을 덧그린다(custom은 대응 씬이 없어 정적 베이스만 남음).
+  // 홀로그램/갤럭시/워터/레이저쇼와 동일하게 카드 스코프로 렌더링한다.
+  const gradient = getGradientVariant(bgClass);
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <InvitationAnimation
@@ -180,9 +186,13 @@ export function CreateCanvas({
       <div
         className={cn(
           'relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg font-pretendard',
-          bgClass,
+          gradient ? gradientBaseCls(gradient.id) : bgClass,
         )}
+        style={gradient ? { ['--c1' as string]: gradient.c1, ['--c2' as string]: gradient.c2 } as React.CSSProperties : undefined}
       >
+        {gradient && (
+          <GradientScene variant={gradient} className="absolute inset-0 z-0" />
+        )}
         {bgClass === 'bg-invite-galaxy' && (
           <GalaxyBackground className="absolute inset-0 z-0" />
         )}

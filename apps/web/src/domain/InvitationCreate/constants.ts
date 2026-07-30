@@ -44,6 +44,14 @@ export const GRADIENT_BG_VARIANTS = [
 
 export type GradientVariant = (typeof GRADIENT_BG_VARIANTS)[number];
 
+/** GradientScene·렌더 로직이 실제로 쓰는 최소 형태 (named preset과 커스텀 색 공용) */
+export interface GradientColors {
+  id: string;
+  label: string;
+  c1: string;
+  c2: string;
+}
+
 export const gradientCls = (id: string): `bg-invite-grad-${string}` =>
   `bg-invite-grad-${id}`;
 
@@ -57,12 +65,41 @@ export const GRADIENT_BG_THEMES = GRADIENT_BG_VARIANTS.map((v) => ({
   hidden: "hidden" in v ? v.hidden : undefined,
 }));
 
-/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) */
-export function getGradientVariant(bg?: string | null): GradientVariant | undefined {
+function hslToHex(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, "0");
+  };
+  return `${f(0)}${f(8)}${f(4)}`;
+}
+
+const CUSTOM_GRADIENT_ID = "custom";
+const CUSTOM_GRADIENT_RE = /^custom-([0-9a-f]{6})-([0-9a-f]{6})$/;
+
+/** hue(0~360) 하나만 받아 밝은 톤(c1)→깊은 톤(c2) 2색 그라데이션 자동 계산 */
+export function customGradientCls(hue: number): DesignBgColor {
+  const c1 = hslToHex(hue, 0.6, 0.93);
+  const c2 = hslToHex(hue, 0.55, 0.8);
+  return gradientCls(`${CUSTOM_GRADIENT_ID}-${c1}-${c2}`);
+}
+
+/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined). named preset + 커스텀 hue 인코딩 모두 처리 */
+export function getGradientVariant(bg?: string | null): GradientColors | undefined {
   const prefix = "bg-invite-grad-";
   if (!bg?.startsWith(prefix)) return undefined;
   const id = bg.slice(prefix.length);
+  const customMatch = id.match(CUSTOM_GRADIENT_RE);
+  if (customMatch) {
+    return { id: CUSTOM_GRADIENT_ID, label: "커스텀", c1: `#${customMatch[1]}`, c2: `#${customMatch[2]}` };
+  }
   return GRADIENT_BG_VARIANTS.find((v) => v.id === id);
+}
+
+/** 정적 그라데이션 배경 클래스 — named preset은 사선(base), 커스텀은 radial(custom) */
+export function gradientBaseCls(id: string): "bg-invite-grad-base" | "bg-invite-grad-custom" {
+  return id === CUSTOM_GRADIENT_ID ? "bg-invite-grad-custom" : "bg-invite-grad-base";
 }
 
 /* ---------- 제목 폰트 (기본 Pretendard + docs/font.md 8종) ---------- */

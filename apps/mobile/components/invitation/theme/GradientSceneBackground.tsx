@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import type { GradientVariant } from '@/constants/invitationTheme';
+import type { GradientColors } from '@/constants/invitationTheme';
 import { useThemeClock } from './themeClock';
 
 const PLANE_DRIFT_S = 8; // 웹 grad-drift 8s ease-in-out infinite
@@ -88,7 +88,7 @@ function Orb({
   );
 }
 
-export function GradientSceneBackground({ variant }: { variant: GradientVariant }) {
+export function GradientSceneBackground({ variant }: { variant: GradientColors }) {
   const { width, height } = useWindowDimensions();
   const clock = useThemeClock();
 

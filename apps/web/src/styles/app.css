@@ -297,6 +297,18 @@ body {
     background-size: 200% 200%;
   }
 
+  /* 커스텀 컬러(hue 피커) 전용 — 좌우 가장자리만 진하고 가운데는 넓게 밝음, 상하로는 변화 없음(원형 아님) */
+  .bg-invite-grad-custom {
+    background-color: var(--c1, #667eea);
+    background-image: linear-gradient(
+      to right,
+      var(--c2) 0%,
+      var(--c1) 15%,
+      var(--c1) 85%,
+      var(--c2) 100%
+    );
+  }
+
   /* 애니메이션 면 (drift) — GradientScene 바닥 레이어 */
   .grad-plane {
     position: absolute;
