@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "@wara/tokens/css/tokens.css";
+
+@source "../../../../packages/ui/src";
+
+@layer base {
+  html,
+  body {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+}
