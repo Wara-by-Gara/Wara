@@ -32,7 +32,6 @@ import { GifPicker } from '@/components/domain/GifPicker';
 import { setEventLocation, deleteEventLocation } from '@/lib/api/locations';
 import { getMissionTemplates, createMission } from '@/lib/api/missions';
 import { getTemplates } from '@/lib/api/templates';
-import { ROUTES } from '@/constants/routes';
 import { HostCreatingView, type VoteDraft } from '@/screens/DateVote/DateVote';
 import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
 import { createPoll } from '@/lib/api/dateVote';
@@ -482,6 +481,8 @@ export default function InvitationCreateContainer({
     queryFn: getTemplates,
   });
 
+  const appliedTemplateIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (
       editInvitation ||
@@ -490,9 +491,10 @@ export default function InvitationCreateContainer({
     )
       return;
     const tid = new URLSearchParams(window.location.search).get('templateId');
-    if (!tid) return;
+    if (!tid || appliedTemplateIdRef.current === tid) return;
     const t = templates.find((item) => item.id === tid);
     if (!t) return;
+    appliedTemplateIdRef.current = tid;
     setForm((prev) => ({
       ...prev,
       templateId: t.id,
@@ -502,7 +504,7 @@ export default function InvitationCreateContainer({
     if (t.bgColor) setDesignBgColor(t.bgColor as DesignBgColor);
     if (t.font) setDesignFont(t.font as DesignFont);
     if (t.animation) setSelectedAnimation(t.animation as AnimationId);
-    window.history.replaceState({}, '', ROUTES.INVITATIONS.CREATE);
+    // templateId는 URL에 유지 — 새로고침 시에도 이 템플릿 컨텍스트로 복원되도록 함
   }, [templates, editInvitation]);
 
   const { mutate: publish, isPending } = useMutation({
@@ -1168,23 +1170,7 @@ export default function InvitationCreateContainer({
       >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
-            {form.templateId ? (
-              <InvitationCover
-                imageUrl={
-                  localPreviewUrl ??
-                  (form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? form.mainImageKey
-                    : undefined)
-                }
-                variant={
-                  localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? 'image'
-                    : 'no-image'
-                }
-                fitToImage
-              />
-            ) : (
-              <div>
+            <div>
                 {/* 탭: 이미지 업로드 / GIF */}
                 <div className="mb-3 flex gap-2">
                   <button
@@ -1417,7 +1403,6 @@ export default function InvitationCreateContainer({
                   </>
                 )}
               </div>
-            )}
           </BottomSheet>
 
         {/* 날짜·시간 편집 시트 */}
