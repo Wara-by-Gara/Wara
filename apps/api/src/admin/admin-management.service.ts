@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AdminManagementRepository } from './admin-management.repository';
 import { ErrorCode } from '../common/constants/error-codes';
-import type { ListUsersDto, ListInvitationsDto } from './dto/admin-management.dto';
+import type { ListUsersDto, ListInvitationsDto, UpdateUserRoleDto } from './dto/admin-management.dto';
 
 @Injectable()
 export class AdminManagementService {
@@ -11,15 +11,21 @@ export class AdminManagementService {
 
   async listUsers(dto: ListUsersDto) {
     const { rows, total } = await this.repo.listUsers(dto.query, dto.status, dto.limit, dto.offset);
-    return { users: rows, total, limit: dto.limit, offset: dto.offset };
+    const userIds = rows.map((r) => r.id);
+    const providersMap = await this.repo.getSocialProvidersByUserIds(userIds);
+    const users = rows.map((r) => ({ ...r, providers: providersMap.get(r.id) ?? [] }));
+    return { users, total, limit: dto.limit, offset: dto.offset };
   }
 
   async getUser(id: string) {
     const user = await this.repo.findUserById(id);
     if (!user) throw new NotFoundException(ErrorCode.AUTH_USER_NOT_FOUND);
-    const [hostedActive, participations] = await Promise.all([
+    const [hostedActive, hostedTotal, guestCount, participations, socialAccounts] = await Promise.all([
       this.repo.countHostedActive(id),
+      this.repo.countHostedTotal(id),
+      this.repo.countGuestParticipations(id),
       this.repo.countParticipations(id),
+      this.repo.getSocialAccountsByUserId(id),
     ]);
     return {
       id: user.id,
@@ -32,7 +38,9 @@ export class AdminManagementService {
       suspendedReason: user.suspendedReason,
       deletedAt: user.deletedAt,
       createdAt: user.createdAt,
-      stats: { hostedActive, participations },
+      lastLoginAt: user.lastLoginAt,
+      socialAccounts,
+      stats: { hostedActive, hostedTotal, guestCount, participations },
     };
   }
 
@@ -46,6 +54,12 @@ export class AdminManagementService {
     const row = await this.repo.setUserSuspension(id, null, null);
     if (!row) throw new NotFoundException(ErrorCode.AUTH_USER_NOT_FOUND);
     return { id: row.id, suspendedAt: row.suspendedAt };
+  }
+
+  async updateUserRole(id: string, role: UpdateUserRoleDto['role']) {
+    const row = await this.repo.setUserRole(id, role);
+    if (!row) throw new NotFoundException(ErrorCode.AUTH_USER_NOT_FOUND);
+    return { id: row.id, role: row.role };
   }
 
   // ── Invitations ─────────────────────────────────────────────────────────────

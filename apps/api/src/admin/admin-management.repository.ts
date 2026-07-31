@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, or, ilike, isNull, isNotNull, desc, count } from 'drizzle-orm';
+import { and, eq, or, ilike, isNull, isNotNull, desc, count, inArray } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import * as schema from '../database/schema';
 
@@ -79,6 +79,60 @@ export class AdminManagementRepository {
       .from(schema.participants)
       .where(eq(schema.participants.userId, userId));
     return row?.total ?? 0;
+  }
+
+  async getSocialProvidersByUserIds(userIds: string[]): Promise<Map<string, string[]>> {
+    if (userIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({ userId: schema.socialAccounts.userId, provider: schema.socialAccounts.provider })
+      .from(schema.socialAccounts)
+      .where(inArray(schema.socialAccounts.userId, userIds));
+    const map = new Map<string, string[]>();
+    for (const row of rows) {
+      const list = map.get(row.userId) ?? [];
+      list.push(row.provider);
+      map.set(row.userId, list);
+    }
+    return map;
+  }
+
+  async getSocialAccountsByUserId(userId: string): Promise<{ provider: string; createdAt: Date }[]> {
+    return await this.db
+      .select({ provider: schema.socialAccounts.provider, createdAt: schema.socialAccounts.createdAt })
+      .from(schema.socialAccounts)
+      .where(eq(schema.socialAccounts.userId, userId));
+  }
+
+  async countHostedTotal(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(schema.participants)
+      .innerJoin(schema.invitations, eq(schema.participants.invitationId, schema.invitations.id))
+      .where(
+        and(
+          eq(schema.participants.userId, userId),
+          eq(schema.participants.memberRole, 'HOST'),
+          isNull(schema.invitations.deletedAt),
+        ),
+      );
+    return row?.total ?? 0;
+  }
+
+  async countGuestParticipations(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(schema.participants)
+      .where(and(eq(schema.participants.userId, userId), eq(schema.participants.memberRole, 'GUEST')));
+    return row?.total ?? 0;
+  }
+
+  async setUserRole(id: string, role: 'admin' | 'member') {
+    const [row] = await this.db
+      .update(schema.users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(schema.users.id, id))
+      .returning({ id: schema.users.id, role: schema.users.role });
+    return row ?? null;
   }
 
   async setUserSuspension(id: string, suspendedAt: Date | null, reason: string | null) {

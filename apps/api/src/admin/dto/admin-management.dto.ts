@@ -25,3 +25,8 @@ export const updateInvitationStatusSchema = z.object({
   status: z.enum(['active', 'closed']),
 });
 export type UpdateInvitationStatusDto = z.infer<typeof updateInvitationStatusSchema>;
+
+export const updateUserRoleSchema = z.object({
+  role: z.enum(['admin', 'member']),
+});
+export type UpdateUserRoleDto = z.infer<typeof updateUserRoleSchema>;
