@@ -38,7 +38,7 @@ export function PopularTemplatesSection() {
 
   return (
     <section className="home-section">
-      <SectionHeader heading="인기 초대장" />
+      <SectionHeader heading="추천 템플릿" />
       <div className="home-section-content">
         {isLoading ? (
           <TemplateRowSkeleton count={10} />

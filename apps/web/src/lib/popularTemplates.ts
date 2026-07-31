@@ -1,4 +1,4 @@
-/** 홈 인기 초대장 — 이름·미리보기 이미지 1:1 매핑.
+/** 홈 추천 템플릿 — 이름·미리보기 이미지 1:1 매핑.
  * 경로 SoT: public/template_images/{slug}/ */
 export const POPULAR_TEMPLATE_CATALOG = [
   {
@@ -26,7 +26,7 @@ export const POPULAR_TEMPLATE_CATALOG = [
     imageUrl: "/template_images/school-festival/imgi_52_8619a182-5b6f-4d47-ac2a-e44d7586b3f3.png",
   },
   {
-    name: "디너 파티",
+    name: "저녁약속",
     imageUrl: "/template_images/dinner-party/imgi_60_17c72134-2b23-438d-8b6a-bf52de5f7a4d.png",
   },
   {
