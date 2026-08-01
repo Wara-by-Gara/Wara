@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
+import { advanceTwinkle } from '@/lib/canvasTwinkle';
 
 const STREAM_COLORS: [number, number, number][] = [
   [180, 100, 255],
@@ -194,8 +195,7 @@ export function AuroraAnimation({ className, starsOnly = false }: Props) {
 
       // 별
       for (const st of stars) {
-        st.phase += st.speed * dt;
-        const alpha = Math.max(0, Math.sin(st.phase));
+        const alpha = advanceTwinkle(st, dt);
         if (alpha < 0.02) continue;
 
         ctx!.save();

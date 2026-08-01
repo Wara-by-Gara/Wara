@@ -11,15 +11,11 @@ import { SocialLoginButton } from '@/components/primitives/SocialLoginButton';
 import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
 import { InvitationCover, ParticipantProfileModal } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
-import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
+import { InvitationAnimation, InvitationBackgroundAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import { BlackCatGridLayer } from '@/domain/InvitationCreate/BlackCatGrid/BlackCatGridLayer';
 import { MasterpieceSlideLayer } from '@/domain/InvitationCreate/MasterpieceSlide/MasterpieceSlideLayer';
 import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
 import { getGradientVariant, gradientBaseCls } from '@/domain/InvitationCreate/constants';
-import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
-import { WaterBackground } from '@/components/invite/WaterBackground';
-import { HologramBackground } from '@/components/invite/HologramBackground';
-import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
 import { getParticipants } from '@/lib/api/participants';
@@ -157,7 +153,7 @@ export default function GuestView({
   // custom(hue 피커)은 가운데가 밝은 radial이라 흰 글씨를 강제하면 안 보임 — named 4종만 강제
   const isDarkBg =
     (!!gradientVariant && gradientVariant.id !== 'custom') ||
-    ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'].some((k) =>
+    ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow', 'glass-dark'].some((k) =>
       invitation.bgColor.includes(k),
     );
 
@@ -176,18 +172,7 @@ export default function GuestView({
       }
     >
       {gradientVariant && <GradientScene variant={gradientVariant} className="fixed inset-0 z-0" />}
-      {pageBgClass === 'bg-invite-galaxy' && (
-        <GalaxyBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-water' && (
-        <WaterBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-hologram' && (
-        <HologramBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-lasershow' && (
-        <LaserShowBackground className="absolute inset-0 z-0" />
-      )}
+      <InvitationBackgroundAnimation bgClass={pageBgClass} className="absolute inset-0 z-0" />
       {pageBgClass.includes('blackcat') && (
         <BlackCatGridLayer className="z-0" />
       )}

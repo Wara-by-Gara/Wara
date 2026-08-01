@@ -134,8 +134,10 @@ export function CloudSpriteAnimation({ className, startIdx = 0, endIdx }: Props)
               });
 
               // 초기 위치: 왼쪽 밖에서 순차 진입 (구름마다 다른 거리 → 다른 타이밍에 화면 진입)
+              // startIdx를 더해야 함 — 안 더하면 startIdx로 나뉜 두 레이어가 똑같이 0부터 스태거링을 시작해서
+              // 서로 다른 레이어의 구름이 같은 타이밍에 겹쳐 진입함
               const totalClouds = CLOUD_CONFIGS.length * INSTANCES_PER_TYPE;
-              const segmentIdx = clouds.length;
+              const segmentIdx = startIdx + clouds.length;
               const startX = -initAspect - halfW - (segmentIdx / totalClouds) * initAspect * 3 - Math.random() * 0.3;
               const startY = (Math.random() * 2.0) - 1.0;
 
@@ -143,7 +145,7 @@ export function CloudSpriteAnimation({ className, startIdx = 0, endIdx }: Props)
               mesh.position.set(startX, startY, 0);
               scene.add(mesh);
 
-              clouds.push({ mesh, speed: 0.035 + Math.random() * 0.04, halfW });
+              clouds.push({ mesh, speed: 0.06 + Math.random() * 0.045, halfW });
             }
             resolve();
           };
