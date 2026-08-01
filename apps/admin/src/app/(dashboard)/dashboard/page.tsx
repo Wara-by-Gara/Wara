@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useChannels,
   useConversion,
@@ -34,12 +35,16 @@ const PRESETS = [
   { label: '90일', days: 90 },
 ];
 
+function kstDateString(d: Date) {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function defaultPeriod(days = 30) {
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
   return {
-    from: from.toISOString().slice(0, 10),
-    to: to.toISOString().slice(0, 10),
+    from: kstDateString(from),
+    to: kstDateString(to),
   };
 }
 
@@ -95,8 +100,14 @@ export default function DashboardPage() {
     channels.isLoading ||
     conversion.isLoading;
 
+  const queryClient = useQueryClient();
+
   function handleApply() {
     setPeriod({ from: form.from, to: form.to });
+  }
+
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['analytics'] });
   }
 
   function handlePreset(days: number) {
@@ -114,7 +125,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight">대시보드</h1>
           <p className="text-muted-foreground mt-1 text-sm">핵심 지표 및 통계</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap print:hidden">
           <div className="flex items-center gap-1">
             {PRESETS.map(({ label, days }) => (
               <button
@@ -144,15 +155,31 @@ export default function DashboardPage() {
               적용
             </Button>
           </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="h-8 print:hidden">
+            새로고침
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()} className="h-8">
+            PDF 내보내기
+          </Button>
         </div>
       </div>
 
+      {/* 인쇄 전용 헤더 */}
+      <div className="hidden print:block">
+        <p className="text-sm text-muted-foreground">{period.from} ~ {period.to}</p>
+      </div>
+
       {/* KPI 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 print:grid-cols-4 gap-3 mb-6">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => <KpiSkeleton key={i} />)
         ) : (
           <>
+            <KpiCard
+              label="전체 사용자 수"
+              value={num(overview.data?.totals.users ?? 0)}
+              sub="가입 누적"
+            />
             <KpiCard
               label="MAU (최근 30일 활성)"
               value={num(overview.data?.activeUsers.mau ?? 0)}
@@ -162,9 +189,13 @@ export default function DashboardPage() {
               value={num(overview.data?.activeUsers.wau ?? 0)}
             />
             <KpiCard
-              label="모임 생성 건수"
-              value={num(invitations.data?.summary.invitations ?? 0)}
-              sub="기간 내 초대장 생성"
+              label="DAU (최근 24시간)"
+              value={num(overview.data?.activeUsers.dau ?? 0)}
+            />
+            <KpiCard
+              label="전체 모임 수"
+              value={num(overview.data?.totals.invitations ?? 0)}
+              sub="삭제 제외 누적"
             />
             <KpiCard
               label="초대 링크 발송 수"

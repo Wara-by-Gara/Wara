@@ -6,14 +6,19 @@ import { AdminUsersController } from './admin-users.controller';
 import { AdminInvitationsController } from './admin-invitations.controller';
 import { AdminManagementService } from './admin-management.service';
 import { AdminManagementRepository } from './admin-management.repository';
+import { DashboardController } from './dashboard.controller';
+import { DashboardService } from './dashboard.service';
+import { DashboardRepository } from './dashboard.repository';
 
 @Module({
-  controllers: [ShareAnalyticsController, AdminUsersController, AdminInvitationsController],
+  controllers: [ShareAnalyticsController, AdminUsersController, AdminInvitationsController, DashboardController],
   providers: [
     ShareAnalyticsService,
     ShareAnalyticsRepository,
     AdminManagementService,
     AdminManagementRepository,
+    DashboardService,
+    DashboardRepository,
   ],
 })
 export class AdminModule {}

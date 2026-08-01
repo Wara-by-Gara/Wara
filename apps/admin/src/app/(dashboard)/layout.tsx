@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      <aside className="w-44 shrink-0 bg-[#1c2537] flex flex-col">
+      <aside className="w-44 shrink-0 bg-[#1c2537] flex flex-col print:hidden">
         <div className="px-5 py-4">
           <span className="text-base font-bold text-white tracking-wide">Wara Admin</span>
         </div>
@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto print:w-full">
         {children}
       </main>
     </div>
