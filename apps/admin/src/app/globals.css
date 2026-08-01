@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "@wara/tokens/css/tokens.css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 

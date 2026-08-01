@@ -47,11 +47,11 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#1c2537]">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
         {/* 로고 */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-base leading-none">W</span>
           </div>
           <div>

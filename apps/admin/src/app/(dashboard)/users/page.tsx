@@ -19,10 +19,10 @@ import {
 } from '@/components/ui/table';
 
 const PROVIDER_LABEL: Record<SocialProvider, string> = {
-  kakao: 'K',
-  naver: 'N',
-  google: 'G',
-  apple: 'A',
+  kakao: '카카오',
+  naver: '네이버',
+  google: '구글',
+  apple: '애플',
 };
 
 const PROVIDER_STYLE: Record<SocialProvider, string> = {
@@ -162,10 +162,10 @@ export default function UsersPage() {
         </div>
 
         {/* Table card */}
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-lg border bg-white overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="font-semibold">닉네임 / 이름</TableHead>
                 <TableHead className="font-semibold">이메일</TableHead>
                 <TableHead className="font-semibold">소셜</TableHead>
@@ -217,7 +217,7 @@ export default function UsersPage() {
                           {user.providers.map((p) => (
                             <Badge
                               key={p}
-                              className={`w-5 h-5 p-0 flex items-center justify-center text-xs font-bold rounded ${PROVIDER_STYLE[p]}`}
+                              className={`px-2 py-0.5 h-auto text-xs font-medium rounded-full ${PROVIDER_STYLE[p]}`}
                             >
                               {PROVIDER_LABEL[p]}
                             </Badge>

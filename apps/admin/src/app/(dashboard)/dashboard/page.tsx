@@ -106,38 +106,44 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl">
+    <div className="py-8 px-6">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* 헤더 + 기간 필터 */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <h1 className="text-base font-semibold mr-2">대시보드</h1>
-        <div className="flex items-center gap-1">
-          {PRESETS.map(({ label, days }) => (
-            <button
-              key={days}
-              onClick={() => handlePreset(days)}
-              className="px-2.5 py-1 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-            >
-              {label}
-            </button>
-          ))}
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">대시보드</h1>
+          <p className="text-muted-foreground mt-1 text-sm">핵심 지표 및 통계</p>
         </div>
-        <div className="flex items-center gap-1.5 ml-1">
-          <Input
-            type="date"
-            value={form.from}
-            onChange={(e) => setForm((p) => ({ ...p, from: e.target.value }))}
-            className="h-8 text-sm w-36"
-          />
-          <span className="text-muted-foreground text-sm">~</span>
-          <Input
-            type="date"
-            value={form.to}
-            onChange={(e) => setForm((p) => ({ ...p, to: e.target.value }))}
-            className="h-8 text-sm w-36"
-          />
-          <Button size="sm" onClick={handleApply} className="h-8">
-            적용
-          </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1">
+            {PRESETS.map(({ label, days }) => (
+              <button
+                key={days}
+                onClick={() => handlePreset(days)}
+                className="px-2.5 py-1.5 text-xs rounded-md border border-input text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="date"
+              value={form.from}
+              onChange={(e) => setForm((p) => ({ ...p, from: e.target.value }))}
+              className="h-8 text-sm w-36"
+            />
+            <span className="text-muted-foreground text-sm">~</span>
+            <Input
+              type="date"
+              value={form.to}
+              onChange={(e) => setForm((p) => ({ ...p, to: e.target.value }))}
+              className="h-8 text-sm w-36"
+            />
+            <Button size="sm" onClick={handleApply} className="h-8">
+              적용
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -288,6 +294,7 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+      </div>
     </div>
   );
 }
