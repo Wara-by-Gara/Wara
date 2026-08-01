@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LayoutDashboard, Users, MessageSquare, Flag } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: '대시보드' },
-  { href: '/users', label: '사용자 관리' },
-  { href: '/inquiries', label: '문의 관리' },
-  { href: '/reports', label: '신고 처리' },
+  { href: '/dashboard', label: '대시보드', icon: LayoutDashboard },
+  { href: '/users', label: '사용자 관리', icon: Users },
+  { href: '/inquiries', label: '문의 관리', icon: MessageSquare },
+  { href: '/reports', label: '신고 처리', icon: Flag },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -27,20 +28,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex bg-slate-50">
       <aside className="w-56 shrink-0 bg-white border-r border-gray-200 flex flex-col shadow-sm">
-        <div className="px-5 py-4 bg-indigo-600">
+        <div className="px-5 py-3 bg-indigo-600">
           <span className="text-sm font-bold text-white tracking-wide">Wara Admin</span>
         </div>
-        <nav className="flex-1 py-4 px-3 flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ href, label }) => (
+        <nav className="flex-1 py-3 px-3 flex flex-col gap-0.5">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
-              className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 pathname === href
                   ? 'bg-indigo-50 text-indigo-700 font-medium'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
               }`}
             >
+              <Icon className="w-4 h-4 shrink-0" />
               {label}
             </Link>
           ))}
