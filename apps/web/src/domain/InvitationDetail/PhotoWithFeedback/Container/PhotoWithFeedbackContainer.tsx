@@ -30,7 +30,7 @@ export default function PhotoWithFeedbackContainer({ invitationId }: InvitationD
   // custom(hue 피커)은 가운데가 밝은 radial이라 흰 글씨를 강제하면 안 보임 — named 4종만 강제
   const isDarkBg =
     (!!gradientVariant && gradientVariant.id !== 'custom') ||
-    bg.includes('aurora') || bg.includes('starry') || bg.includes('dreamy');
+    ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow', 'glass-dark'].some((k) => bg.includes(k));
   const showMomentLog = isMomentLogVisible(invitation?.eventStartAt ?? null);
   const { data: best9 } = useBest9(showMomentLog ? invitationId : '');
 

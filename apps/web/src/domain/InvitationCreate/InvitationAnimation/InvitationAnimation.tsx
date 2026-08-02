@@ -11,8 +11,8 @@ import { SparkleAnimation } from "@/components/invite/SparkleAnimation";
 import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
 import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
 import { FlowerFallAnimation } from "@/components/invite/FlowerFallAnimation";
+import { PawprintTrailAnimation } from "@/components/invite/PawprintTrailAnimation";
 import type { AnimationId } from "../constants";
-import { ThreeCatScene } from "./ThreeCatScene";
 import { PaintAnimation } from "./PaintAnimation";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -42,7 +42,7 @@ const ANIM_KEYFRAME: Record<AnimKind, string> = {
 
 /** 별도 컴포넌트로 처리하는 effect — buildParticles 대신 분기 렌더 */
 const CUSTOM_EFFECTS = new Set<AnimationId>([
-  "blackcat",
+  "pawprint",
   "paint",
   "stream",
   "sparkle",
@@ -293,17 +293,11 @@ export function InvitationAnimation({
 
   if (effect === "none") return null;
 
-  if (effect === "blackcat") {
+  if (effect === "pawprint") {
     return (
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden",
-          className,
-        )}
-      >
-        <ThreeCatScene />
-      </div>
+      <PawprintTrailAnimation
+        className={cn("absolute inset-0 overflow-hidden", className)}
+      />
     );
   }
 

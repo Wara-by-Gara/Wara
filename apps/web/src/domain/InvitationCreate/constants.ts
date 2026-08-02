@@ -13,6 +13,7 @@ export const DESIGN_BG_THEMES = [
   { id: "glass-dark", label: "다크 글래스", cls: "bg-invite-glass-dark" },
   { id: "y2k", label: "Y2K", cls: "bg-invite-y2k" },
   { id: "flower", label: "플라워", cls: "bg-invite-flower" },
+  { id: "letter", label: "편지", cls: "bg-invite-letter" },
   { id: "film", label: "필름", cls: "bg-invite-film", hidden: true },
   { id: "aurora", label: "오로라", cls: "bg-invite-aurora" },
   { id: "checkdot", label: "도트", cls: "bg-invite-checkdot" },
@@ -141,9 +142,9 @@ export const ANIMATIONS = [
   { id: "stream", label: "보라빛 라인", emoji: "🌌", hidden: true },
   { id: "sparkle", label: "반짝임", emoji: "✨" },
   { id: "firework", label: "폭죽", emoji: "🎆" },
-  { id: "blackcat", label: "검은 고양이", emoji: "🐈‍⬛" },
+  { id: "pawprint", label: "고양이 발자국", emoji: "🐾" },
   { id: "paint", label: "물감", emoji: "🎨" },
-  { id: "flower", label: "꽃 낙화", emoji: "🌸" },
+  { id: "flower", label: "꽃비", emoji: "🌸" },
 ] as const;
 
 export type AnimationId = (typeof ANIMATIONS)[number]["id"];

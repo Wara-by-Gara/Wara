@@ -3,12 +3,13 @@
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 
+// "라이트 스카이" 팔레트 — 맑은 하늘처럼 깨끗한 파스텔 톤
 const PALETTES = [
-  ['#ffd700', '#ffec6e', '#ffffff'],
-  ['#ff69b4', '#ff1493', '#ffffff'],
-  ['#da70d6', '#9b59b6', '#ffffff'],
-  ['#adff2f', '#ffd700', '#ffffff'],
-  ['#ff69b4', '#ffd700', '#adff2f'],
+  ['#B3E5FC', '#E1F5FE', '#ffffff'],
+  ['#F8BBD0', '#FFF59D', '#ffffff'],
+  ['#C8E6C9', '#E1F5FE', '#ffffff'],
+  ['#FFF59D', '#B3E5FC', '#ffffff'],
+  ['#F8BBD0', '#C8E6C9', '#B3E5FC'],
 ];
 
 interface Spark {
@@ -26,6 +27,7 @@ interface Ray {
   angle: number;
   length: number;
   maxLength: number;
+  growDuration: number;
   alpha: number;
   color: string;
   width: number;
@@ -55,7 +57,7 @@ interface Firework {
   bokehs: Bokeh[];
   burstAlpha: number;
   age: number;
-  scale: number; // 폭죽마다 다른 크기 (0.5 ~ 1.8)
+  scale: number; // 폭죽마다 다른 크기 (0.65 ~ 2.05)
 }
 
 function randomPalette(): string[] {
@@ -80,7 +82,7 @@ function createFirework(W: number, H: number): Firework {
     bokehs: [],
     burstAlpha: 1,
     age: 0,
-    scale: 0.5 + Math.random() * 1.3,
+    scale: 0.65 + Math.random() * 1.4,
   };
 }
 
@@ -93,7 +95,8 @@ function burst(fw: Firework): void {
     fw.rays.push({
       angle: (Math.PI * 2 * i) / rayCount + (Math.random() - 0.5) * 0.4,
       length: 0,
-      maxLength: (40 + Math.random() * 90) * fw.scale,
+      maxLength: (55 + Math.random() * 60) * fw.scale,
+      growDuration: 0.32 + Math.random() * 0.18,
       alpha: 1,
       color: pickColor(fw.palette),
       width: (0.8 + Math.random() * 1.4) * fw.scale,
@@ -264,11 +267,12 @@ export function FireworkAnimation({ className }: { className?: string }) {
             ctx!.shadowBlur = 0;
           }
 
-          // Rays
-          const rayGrowSpeed = 180;
+          // Rays — 터지는 순간 빠르게 뻗다가 공기저항으로 느려지는 ease-out
           let allRaysDone = true;
           for (const ray of fw.rays) {
-            ray.length = Math.min(ray.maxLength, ray.length + rayGrowSpeed * dt);
+            const growT = Math.min(burstAge / ray.growDuration, 1);
+            const eased = 1 - Math.pow(1 - growT, 3);
+            ray.length = ray.maxLength * eased;
             ray.alpha = Math.max(0, 1 - burstAge / 0.9);
             if (ray.alpha > 0) allRaysDone = false;
 
@@ -277,29 +281,37 @@ export function FireworkAnimation({ className }: { className?: string }) {
 
             ctx!.save();
             ctx!.shadowColor = ray.color;
-            // 레이어 1: 넓은 glow (두꺼운 선 + 강한 shadowBlur)
-            ctx!.globalAlpha = ray.alpha * 0.45;
-            ctx!.shadowBlur = 50;
-            ctx!.strokeStyle = ray.color;
-            ctx!.lineWidth = ray.width * 4;
-            ctx!.beginPath();
-            ctx!.moveTo(fw.x, fw.y);
-            ctx!.lineTo(ex, ey);
-            ctx!.stroke();
-            // 레이어 2: 선명한 중심선
+            // 하나의 선에 하나의 그라데이션 — 뿌리는 투명, 중간은 색, 끝은 흰색으로 자연스럽게 이어짐
             ctx!.globalAlpha = ray.alpha;
-            ctx!.shadowBlur = 12;
-            ctx!.lineWidth = ray.width * 0.7;
-            ctx!.strokeStyle = '#ffffff';
+            ctx!.shadowBlur = 28;
+            const rayGrad = ctx!.createLinearGradient(fw.x, fw.y, ex, ey);
+            rayGrad.addColorStop(0, hexToRgba(ray.color, 0));
+            rayGrad.addColorStop(0.55, ray.color);
+            rayGrad.addColorStop(1, '#ffffff');
+            ctx!.strokeStyle = rayGrad;
+            ctx!.lineWidth = ray.width * 1.1;
             ctx!.beginPath();
             ctx!.moveTo(fw.x, fw.y);
             ctx!.lineTo(ex, ey);
             ctx!.stroke();
-            // 끝점 반짝임
-            ctx!.shadowBlur = 20;
-            ctx!.fillStyle = '#ffffff';
+            // 끝점 반짝임 — 뻗어나가는 동안은 또렷하게, 다 뻗은 뒤 짧게 페이드아웃
+            const tipR = ray.width * 3.5;
+            const tipFadeDuration = 0.35;
+            const tipAlpha =
+              burstAge < ray.growDuration
+                ? 1
+                : Math.max(0, 1 - (burstAge - ray.growDuration) / tipFadeDuration);
+            ctx!.globalAlpha = tipAlpha;
+            ctx!.shadowBlur = 32;
+            ctx!.shadowColor = '#ffffff';
+            const tipGrad = ctx!.createRadialGradient(ex, ey, 0, ex, ey, tipR);
+            tipGrad.addColorStop(0, '#ffffff');
+            tipGrad.addColorStop(0.15, '#ffffff');
+            tipGrad.addColorStop(0.5, hexToRgba(ray.color, 0.35));
+            tipGrad.addColorStop(1, hexToRgba(ray.color, 0));
+            ctx!.fillStyle = tipGrad;
             ctx!.beginPath();
-            ctx!.arc(ex, ey, ray.width * 2.5, 0, Math.PI * 2);
+            ctx!.arc(ex, ey, tipR, 0, Math.PI * 2);
             ctx!.fill();
             ctx!.restore();
           }
