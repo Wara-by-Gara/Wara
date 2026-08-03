@@ -63,6 +63,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'participant_joined',
   'text_blast',
   'message',
+  'inquiry_answer',
 ]);
 
 export const remindTypeEnum = pgEnum('remind_type', ['D-1', 'D+7', 'D+30', 'D+365']);

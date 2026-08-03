@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InquiriesRepository } from './inquiries.repository';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { UpdateInquiryDto } from './dto/update-inquiry.dto';
 import { AnswerInquiryDto } from './dto/answer-inquiry.dto';
@@ -9,7 +10,10 @@ import type { JwtPayload } from '../common/types/jwt-payload.type';
 
 @Injectable()
 export class InquiriesService {
-  constructor(private readonly repository: InquiriesRepository) {}
+  constructor(
+    private readonly repository: InquiriesRepository,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(userId: string, dto: CreateInquiryDto) {
     return this.repository.create(userId, {
@@ -96,7 +100,8 @@ export class InquiriesService {
   }
 
   async findAll() {
-    return this.repository.findAll();
+    const { items } = await this.repository.findAll();
+    return items;
   }
 
   async findByIdForAdmin(inquiryId: string) {
@@ -118,7 +123,14 @@ export class InquiriesService {
         message: '문의를 찾을 수 없습니다.',
       });
     }
-    return this.repository.answer(inquiryId, adminId, { answer: dto.answer, status: dto.status });
+    const result = await this.repository.answer(inquiryId, adminId, { answer: dto.answer, status: dto.status });
+    void this.notificationsService.notify({
+      userId: inquiry.userId,
+      actorUserId: adminId,
+      type: 'inquiry_answer',
+      content: '문의하신 내용에 답변이 등록됐어요.',
+    });
+    return result;
   }
 
   async findAllPublic() {

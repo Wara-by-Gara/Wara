@@ -35,11 +35,13 @@ const STATUS_LABEL: Record<InquiryStatus, string> = {
 };
 
 const TYPE_LABEL: Record<string, string> = {
+  invitation: '초대장',
+  photo: '사진',
+  notification: '알림',
+  mission: '미션',
   bug: '버그',
   feature: '기능 요청',
-  account: '계정',
-  payment: '결제',
-  other: '기타',
+  general: '기타',
 };
 
 function formatDate(d: string) {

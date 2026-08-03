@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { TopAppBar } from "@wara/ui";
 import { Divider } from "@wara/ui";
-import { useInquiry, useAnswerInquiry } from '@/hooks/useInquiries';
-import type { InquiryType, InquiryStatus, AnswerInquiryInput, Inquiry } from '@/lib/api/inquiries';
-import { getUserRole } from '@/lib/jwt';
+import { useInquiry } from '@/hooks/useInquiries';
+import type { InquiryType, InquiryStatus } from '@/lib/api/inquiries';
 import { InquiryDetailSkeleton } from '@/components/domain/Skeleton';
 import { ROUTES } from '@/constants/routes';
 
@@ -30,13 +29,7 @@ export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { data: inquiry, isLoading, refetch } = useInquiry(id);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isAnswering, setIsAnswering] = useState(false);
-
-  useEffect(() => {
-    setIsAdmin(getUserRole() === 'admin');
-  }, []);
+  const { data: inquiry, isLoading } = useInquiry(id);
 
   return (
     <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background">
@@ -121,28 +114,6 @@ export default function InquiryDetailPage() {
               </>
             )}
 
-            {/* ── 관리자 답변 작성 ── */}
-            {isAdmin && (
-              <>
-                <Divider />
-                <div className="px-page py-5">
-                  {!isAnswering ? (
-                    <button
-                      onClick={() => setIsAnswering(true)}
-                      className="text-[14px] font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      {inquiry.answer ? '답변 수정' : '답변 작성'}
-                    </button>
-                  ) : (
-                    <AnswerForm
-                      inquiry={inquiry}
-                      onClose={() => setIsAnswering(false)}
-                      onSuccess={() => { setIsAnswering(false); refetch(); }}
-                    />
-                  )}
-                </div>
-              </>
-            )}
           </>
         )}
       </main>
@@ -151,68 +122,3 @@ export default function InquiryDetailPage() {
   );
 }
 
-function AnswerForm({
-  inquiry,
-  onClose,
-  onSuccess,
-}: {
-  inquiry: Inquiry;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const { mutate: answer, isPending } = useAnswerInquiry(inquiry.id);
-  const [form, setForm] = useState<AnswerInquiryInput>({
-    answer: inquiry.answer ?? '',
-    status: inquiry.status === 'pending' ? 'in_progress' : inquiry.status,
-  });
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    answer(form, { onSuccess });
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <p className="text-[14px] font-medium text-text">
-        {inquiry.answer ? '답변 수정' : '답변 작성'}
-      </p>
-      <textarea
-        value={form.answer}
-        onChange={(e) => setForm((f) => ({ ...f, answer: e.target.value }))}
-        placeholder="답변을 입력하세요"
-        rows={5}
-        required
-        disabled={isPending}
-        className="w-full resize-none rounded-sm border border-border bg-surface px-4 py-3 text-[15px] text-text placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-      />
-      <div className="flex items-center gap-2">
-        <select
-          value={form.status}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, status: e.target.value as AnswerInquiryInput['status'] }))
-          }
-          disabled={isPending}
-          className="rounded-xs border border-border px-3 py-1.5 text-[14px] disabled:opacity-50"
-        >
-          <option value="in_progress">답변 중</option>
-          <option value="resolved">해결됨</option>
-        </select>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-xs bg-blue-600 px-4 py-1.5 text-[14px] text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? '저장 중...' : '저장'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isPending}
-          className="text-[14px] text-text-disabled hover:text-text-muted disabled:opacity-50"
-        >
-          취소
-        </button>
-      </div>
-    </form>
-  );
-}

@@ -39,6 +39,7 @@ export const notificationSettings = pgTable('notification_settings', {
   isParticipant: boolean('is_participant').notNull().default(true),
   isParticipantLocations: boolean('is_participant_locations').notNull().default(true),
   isEventLocations: boolean('is_event_locations').notNull().default(true),
+  isInquiryAnswer: boolean('is_inquiry_answer').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

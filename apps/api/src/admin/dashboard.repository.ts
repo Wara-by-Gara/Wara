@@ -79,6 +79,15 @@ export class DashboardRepository {
             })
             .from(invitationLinkEvents)
             .where(isNotNull(invitationLinkEvents.userId)),
+        )
+        .unionAll(
+          this.db
+            .select({
+              userId: users.id,
+              createdAt: sql<Date>`${users.lastLoginAt}`.as('created_at'),
+            })
+            .from(users)
+            .where(isNotNull(users.lastLoginAt)),
         ),
     );
   }

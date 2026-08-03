@@ -10,6 +10,7 @@ export const UpdateNotificationSettingsSchema = z.object({
   isParticipant: z.boolean().optional(),
   isParticipantLocations: z.boolean().optional(),
   isEventLocations: z.boolean().optional(),
+  isInquiryAnswer: z.boolean().optional(),
 });
 
 export type UpdateNotificationSettingsDto = z.infer<
