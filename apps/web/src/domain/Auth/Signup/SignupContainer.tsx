@@ -48,6 +48,8 @@ export function SignupContainer() {
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  // 사진 미설정 상태로 저장 시도 시 사용자에게 기본 이미지로 진행됨을 알리는 확인 모달.
+  const [pendingSubmit, setPendingSubmit] = useState<FormValues | null>(null);
   const randomAvatarSeed = useMemo(
     () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     [],
@@ -104,7 +106,7 @@ export function SignupContainer() {
     }
   }
 
-  function onSubmit(data: FormValues) {
+  function submitProfile(data: FormValues) {
     updateMe(
       {
         name: data.name.trim().replace(/\s+/g, " "),
@@ -119,6 +121,15 @@ export function SignupContainer() {
         },
       },
     );
+  }
+
+  function onSubmit(data: FormValues) {
+    // 사진 없으면 기본 아바타로 진행됨을 명시적으로 확인받은 뒤 저장.
+    if (!profileImageUrl) {
+      setPendingSubmit(data);
+      return;
+    }
+    submitProfile(data);
   }
 
   if (isLoading) {
@@ -241,6 +252,44 @@ export function SignupContainer() {
           {isSaving ? "저장 중..." : "저장하기"}
         </Button>
       </footer>
+
+      {pendingSubmit && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="default-avatar-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+          <div className="w-full max-w-sm rounded-lg bg-surface p-6 shadow-lg">
+            <p id="default-avatar-title" className="mb-1 text-lg font-semibold">
+              프로필 사진 없이 진행할까요?
+            </p>
+            <p className="mb-6 text-sm text-text-muted">
+              사진을 설정하지 않으면 기본 이미지로 가입돼요. 언제든지 마이페이지에서 바꿀 수 있어요.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingSubmit(null)}
+                className="flex-1 rounded-xs border border-border-strong bg-transparent px-4 py-2 text-sm hover:bg-surface-muted"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const data = pendingSubmit;
+                  setPendingSubmit(null);
+                  submitProfile(data);
+                }}
+                className="flex-1 rounded-xs bg-black px-4 py-2 text-sm text-white hover:bg-gray-800"
+              >
+                계속하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

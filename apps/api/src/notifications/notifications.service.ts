@@ -196,6 +196,8 @@ export class NotificationsService {
 
     // 백그라운드/앱 닫힘 상태용 Web Push (best-effort — 실패해도 알림 생성은 성공).
     // 같은 설정 게이트를 이미 통과했으므로 off면 위에서 return된 상태.
+    // badge는 방금 삽입한 알림 포함 미읽음 총합 — iOS PWA / 네이티브 앱 아이콘 카운트.
+    const badge = await this.repository.countUnreadByUser(data.userId);
     void this.pushService.send(data.userId, {
       title: TYPE_TO_PUSH_TITLE[data.type] ?? 'WARA',
       body: resolvePushBody(data),
@@ -204,6 +206,7 @@ export class NotificationsService {
         data.targetType === 'conversation' && data.targetId
           ? `dm-${data.targetId}`
           : data.type,
+      badge,
     });
 
     return notification;
@@ -222,11 +225,13 @@ export class NotificationsService {
     const notification = await this.repository.upsertMessageNotification(data);
     this.gateway.sendToUser(data.userId, notification);
 
+    const badge = await this.repository.countUnreadByUser(data.userId);
     void this.pushService.send(data.userId, {
       title: '새 메시지',
       body: data.content,
       url: `/chats/${data.conversationId}`,
       tag: `dm-${data.conversationId}`,
+      badge,
     });
 
     return notification;

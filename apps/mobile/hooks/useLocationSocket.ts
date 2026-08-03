@@ -87,9 +87,59 @@ export function useLocationSocket({ invitationId, enabled = true }: Options) {
         });
       });
 
+      // 상대방이 공유를 껐거나 티어를 hidden으로 전환 — 로컬 마커 제거.
+      socket.on(
+        'location:removed',
+        (data: { participantId: string; invitationId: string }) => {
+          setParticipantLocations((prev) => {
+            if (!prev.has(data.participantId)) return prev;
+            const next = new Map(prev);
+            next.delete(data.participantId);
+            return next;
+          });
+        },
+      );
+
       socket.on('location:arrived', (data: { participantId: string; invitationId: string }) => {
         setArrivedParticipantId(data.participantId);
       });
+
+      // 상태 메시지 변경 broadcast — 기존 location에 병합.
+      socket.on(
+        'status_message:updated',
+        (data: {
+          participantId: string;
+          invitationId: string;
+          statusMessage: string;
+          updatedAt: string;
+        }) => {
+          setParticipantLocations((prev) => {
+            const existing = prev.get(data.participantId);
+            if (!existing) return prev;
+            const next = new Map(prev);
+            next.set(data.participantId, {
+              ...existing,
+              // statusMessage는 WsParticipantLocation에 아직 없어 필드 확장 시 반영.
+              // 지금은 updatedAt만 갱신해 리렌더 유도.
+              updatedAt: data.updatedAt,
+            });
+            return next;
+          });
+        },
+      );
+
+      socket.on(
+        'status_message:removed',
+        (data: { participantId: string; invitationId: string }) => {
+          setParticipantLocations((prev) => {
+            const existing = prev.get(data.participantId);
+            if (!existing) return prev;
+            const next = new Map(prev);
+            next.set(data.participantId, { ...existing, updatedAt: new Date().toISOString() });
+            return next;
+          });
+        },
+      );
     }
 
     connect();
