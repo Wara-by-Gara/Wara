@@ -1,5 +1,5 @@
 import { apiGet, apiPatch } from '@/lib/api/client';
-import type { AdminInquiry, InquiryStatus } from './types';
+import type { AdminInquiry } from './types';
 
 export function fetchInquiries() {
   return apiGet<AdminInquiry[]>('/admin/inquiries');
