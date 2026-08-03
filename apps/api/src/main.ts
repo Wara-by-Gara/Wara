@@ -58,8 +58,12 @@ async function bootstrap() {
 
   // 프론트/백 다른 도메인 배포 → credentials 포함 CORS 허용
   // X-DB-Time은 dev에서 브라우저 콘솔/네트워크 패널 확인용으로 노출
+  const adminFrontendUrl = process.env.ADMIN_FRONTEND_URL?.replace(/\/$/, '');
   app.enableCors({
-    origin: process.env.FRONTEND_URL?.replace(/\/$/, ''),
+    origin: [
+      process.env.FRONTEND_URL?.replace(/\/$/, '') ?? '',
+      ...(adminFrontendUrl ? [adminFrontendUrl] : []),
+    ],
     credentials: true,
     exposedHeaders: process.env.NODE_ENV !== 'production'
       ? ['X-DB-Time', 'X-DB-Query-Count']
@@ -104,6 +108,7 @@ async function bootstrap() {
   // 변경 작업(POST/PUT/PATCH/DELETE)에서 Origin/Referer가 FRONTEND_URL과 일치해야 함.
   // GET은 OAuth callback 등 외부 redirect 호환을 위해 검증하지 않음.
   const allowedOrigin = process.env.FRONTEND_URL!.replace(/\/$/, '');
+  const adminAllowedOrigin = process.env.ADMIN_FRONTEND_URL?.replace(/\/$/, '');
   app.use((req: Request, res: Response, next: NextFunction) => {
     const method = req.method.toUpperCase();
     if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
@@ -123,7 +128,9 @@ async function bootstrap() {
         referer?.startsWith('http://localhost:') === true);
     const isAllowed =
       origin === allowedOrigin ||
+      (!!adminAllowedOrigin && origin === adminAllowedOrigin) ||
       referer?.startsWith(allowedOrigin) === true ||
+      (!!adminAllowedOrigin && referer?.startsWith(adminAllowedOrigin) === true) ||
       isLocalDev;
     if (!isAllowed) {
       return next(
