@@ -25,7 +25,8 @@ type NotificationSettingKey =
   | 'isParticipant'
   | 'isParticipantLocations'
   | 'isEventLocations'
-  | 'isMessage';
+  | 'isMessage'
+  | 'isInquiryAnswer';
 
 const TYPE_TO_SETTING: Partial<
   Record<NotificationType, NotificationSettingKey>
@@ -43,6 +44,7 @@ const TYPE_TO_SETTING: Partial<
   // 투표 독촉/시작은 '리마인드'로 묶어 끌 수 있게 함 (별도 컬럼 없이 단순화).
   // 단, 날짜 확정(vote_confirmed)·마감 동점(vote_tied)은 필수라 게이트 없음.
   vote_reminder: 'isRemind',
+  inquiry_answer: 'isInquiryAnswer',
 };
 
 // 푸시 알림 제목 — 타입별 사람이 읽는 라벨 (body는 notification.content 그대로).
@@ -62,6 +64,7 @@ const TYPE_TO_PUSH_TITLE: Partial<Record<NotificationType, string>> = {
   ai_complete: 'AI 이미지',
   nudge: '모임 알림',
   text_blast: '공지',
+  inquiry_answer: '문의 답변',
 };
 
 // 푸시/표시용 body — 대부분 content 그대로지만, content가 JSON인 ai_complete는

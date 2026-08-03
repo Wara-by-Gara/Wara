@@ -5,8 +5,9 @@ import type { AdminManagementRepository } from './admin-management.repository';
 describe('AdminManagementService', () => {
   let repo: jest.Mocked<Pick<
     AdminManagementRepository,
-    'findUserById' | 'countHostedActive' | 'countParticipations' | 'setUserSuspension'
-    | 'findInvitationById' | 'setInvitationStatus' | 'softDeleteInvitation'
+    'findUserById' | 'countHostedActive' | 'countHostedTotal' | 'countGuestParticipations'
+    | 'countParticipations' | 'getSocialAccountsByUserId' | 'findNicknameById'
+    | 'setUserSuspension' | 'findInvitationById' | 'setInvitationStatus' | 'softDeleteInvitation'
   >>;
   let service: AdminManagementService;
 
@@ -14,7 +15,11 @@ describe('AdminManagementService', () => {
     repo = {
       findUserById: jest.fn(),
       countHostedActive: jest.fn().mockResolvedValue(0),
+      countHostedTotal: jest.fn().mockResolvedValue(0),
+      countGuestParticipations: jest.fn().mockResolvedValue(0),
       countParticipations: jest.fn().mockResolvedValue(0),
+      getSocialAccountsByUserId: jest.fn().mockResolvedValue([]),
+      findNicknameById: jest.fn().mockResolvedValue(null),
       setUserSuspension: jest.fn(),
       findInvitationById: jest.fn(),
       setInvitationStatus: jest.fn(),
@@ -31,9 +36,11 @@ describe('AdminManagementService', () => {
   it('getUser: 프로필 + 통계 반환', async () => {
     repo.findUserById.mockResolvedValue({ id: 'u1', email: 'a@b.c', name: '홍', nickname: null, profileImageUrl: null, role: 'member', suspendedAt: null, suspendedReason: null, deletedAt: null, createdAt: new Date() } as never);
     repo.countHostedActive.mockResolvedValue(2);
+    repo.countHostedTotal.mockResolvedValue(3);
+    repo.countGuestParticipations.mockResolvedValue(1);
     repo.countParticipations.mockResolvedValue(5);
     const res = await service.getUser('u1');
-    expect(res.stats).toEqual({ hostedActive: 2, participations: 5 });
+    expect(res.stats).toEqual({ hostedActive: 2, hostedTotal: 3, guestCount: 1, participations: 5 });
   });
 
   it('suspendUser: suspendedAt 세팅', async () => {

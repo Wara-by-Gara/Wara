@@ -1,13 +1,17 @@
-import { Body, Controller, Get, Param, Post, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { AdminManagementService } from './admin-management.service';
 import {
   listUsersSchema,
   suspendUserSchema,
+  updateUserRoleSchema,
   type ListUsersDto,
   type SuspendUserDto,
+  type UpdateUserRoleDto,
 } from './dto/admin-management.dto';
 
 @Controller('admin/users')
@@ -38,5 +42,15 @@ export class AdminUsersController {
   @HttpCode(HttpStatus.OK)
   unsuspend(@Param('id', ParseUlidPipe) id: string) {
     return this.service.unsuspendUser(id);
+  }
+
+  @Patch(':id/role')
+  @HttpCode(HttpStatus.OK)
+  updateRole(
+    @Param('id', ParseUlidPipe) id: string,
+    @Body(new ZodValidationPipe(updateUserRoleSchema)) dto: UpdateUserRoleDto,
+    @CurrentUser() admin: JwtPayload,
+  ) {
+    return this.service.updateUserRole(id, dto.role, admin.id);
   }
 }

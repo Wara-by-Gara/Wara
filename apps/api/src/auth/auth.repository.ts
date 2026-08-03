@@ -76,7 +76,7 @@ export class AuthRepository {
             // 탈퇴한 유저 → 새 유저 생성 후 소셜 계정 재연결
             const inserted = await tx
               .insert(users)
-              .values({ email, name, profileImageUrl })
+              .values({ email, name, profileImageUrl, lastLoginAt: new Date() })
               .returning({ id: users.id });
 
             const newUserId = inserted[0]!.id;
@@ -149,6 +149,7 @@ export class AuthRepository {
             name,
             nickname: name,
             profileImageUrl,
+            lastLoginAt: new Date(),
           })
           .returning({
             id: users.id,

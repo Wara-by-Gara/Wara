@@ -5,6 +5,7 @@ export interface SocialAuthParams {
   code: string;
   state?: string;
   platform: Platform;
+  redirectUri?: string;
 }
 
 export interface SocialStrategy {

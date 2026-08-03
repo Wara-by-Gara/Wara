@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { eq, and, isNull, desc, count, SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { DRIZZLE, DrizzleDB } from '../database/database.module';
 import * as schema from '../database/schema';
 import type { NewInquiry } from '../database/schema';
@@ -81,9 +82,29 @@ export class InquiriesRepository {
   }
 
   async findAll() {
+    const adminUser = alias(schema.users, 'admin_user');
     const condition = isNull(schema.inquiries.deletedAt);
     const [items, countResult] = await Promise.all([
-      this.db.select().from(schema.inquiries).where(condition).orderBy(desc(schema.inquiries.createdAt)),
+      this.db
+        .select({
+          id: schema.inquiries.id,
+          userId: schema.inquiries.userId,
+          inquiryType: schema.inquiries.inquiryType,
+          status: schema.inquiries.status,
+          title: schema.inquiries.title,
+          content: schema.inquiries.content,
+          isPublic: schema.inquiries.isPublic,
+          answer: schema.inquiries.answer,
+          answeredAt: schema.inquiries.answeredAt,
+          adminId: schema.inquiries.adminId,
+          adminNickname: adminUser.nickname,
+          createdAt: schema.inquiries.createdAt,
+          updatedAt: schema.inquiries.updatedAt,
+        })
+        .from(schema.inquiries)
+        .leftJoin(adminUser, eq(schema.inquiries.adminId, adminUser.id))
+        .where(condition)
+        .orderBy(desc(schema.inquiries.createdAt)),
       this.db.select({ total: count() }).from(schema.inquiries).where(condition),
     ]);
     return { items, total: countResult[0]?.total ?? 0 };

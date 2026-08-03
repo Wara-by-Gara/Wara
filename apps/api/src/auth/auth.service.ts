@@ -89,6 +89,19 @@ export class AuthService {
     return { url, state };
   }
 
+  getAdminKakaoAuthorizationUrl(state: string): string {
+    const clientId = this.config.getOrThrow<string>('KAKAO_CLIENT_ID');
+    const redirectUri = this.config.getOrThrow<string>('KAKAO_ADMIN_REDIRECT_URI');
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'profile_nickname,profile_image,account_email',
+      state,
+    });
+    return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
+  }
+
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
@@ -199,6 +212,7 @@ export class AuthService {
     platform: Platform;
     code: string;
     state?: string;
+    redirectUri?: string;
   }) {
     if (params.state) {
       this.verifyState(params.state);
@@ -212,6 +226,7 @@ export class AuthService {
       code: params.code,
       state: params.state,
       platform: params.platform,
+      redirectUri: params.redirectUri,
     });
 
     const { userId, isNew } = await this.repository.upsertSocialAccount({
