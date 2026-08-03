@@ -257,6 +257,12 @@ export default function UserDetailPage() {
                 : 'admin으로 승격'}
             </Button>
           </div>
+          {user.role === 'admin' && (user.promotedByNickname || user.promotedAt) && (
+            <div className="mt-3 pt-3 border-t flex items-center gap-1.5 text-xs text-muted-foreground">
+              {user.promotedByNickname && <span>승격자: <span className="font-medium text-foreground">{user.promotedByNickname}</span></span>}
+              {user.promotedAt && <span>· {formatDate(user.promotedAt)}</span>}
+            </div>
+          )}
         </CardContent>
       </Card>
 

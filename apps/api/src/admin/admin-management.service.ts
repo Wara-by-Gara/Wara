@@ -20,12 +20,13 @@ export class AdminManagementService {
   async getUser(id: string) {
     const user = await this.repo.findUserById(id);
     if (!user) throw new NotFoundException(ErrorCode.AUTH_USER_NOT_FOUND);
-    const [hostedActive, hostedTotal, guestCount, participations, socialAccounts] = await Promise.all([
+    const [hostedActive, hostedTotal, guestCount, participations, socialAccounts, promotedByNickname] = await Promise.all([
       this.repo.countHostedActive(id),
       this.repo.countHostedTotal(id),
       this.repo.countGuestParticipations(id),
       this.repo.countParticipations(id),
       this.repo.getSocialAccountsByUserId(id),
+      user.promotedBy ? this.repo.findNicknameById(user.promotedBy) : Promise.resolve(null),
     ]);
     return {
       id: user.id,
@@ -39,6 +40,9 @@ export class AdminManagementService {
       deletedAt: user.deletedAt,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
+      promotedBy: user.promotedBy,
+      promotedAt: user.promotedAt,
+      promotedByNickname,
       socialAccounts,
       stats: { hostedActive, hostedTotal, guestCount, participations },
     };
@@ -56,8 +60,8 @@ export class AdminManagementService {
     return { id: row.id, suspendedAt: row.suspendedAt };
   }
 
-  async updateUserRole(id: string, role: UpdateUserRoleDto['role']) {
-    const row = await this.repo.setUserRole(id, role);
+  async updateUserRole(id: string, role: UpdateUserRoleDto['role'], actorId: string) {
+    const row = await this.repo.setUserRole(id, role, actorId);
     if (!row) throw new NotFoundException(ErrorCode.AUTH_USER_NOT_FOUND);
     return { id: row.id, role: row.role };
   }

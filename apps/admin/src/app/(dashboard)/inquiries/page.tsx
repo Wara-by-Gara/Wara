@@ -85,7 +85,12 @@ function ExpandedRow({ inquiry, onClose }: { inquiry: AdminInquiry; onClose: () 
           </div>
           {inquiry.answer && (
             <div className="rounded-lg border bg-emerald-50 p-4">
-              <p className="text-xs font-medium text-emerald-700 mb-1">기존 답변</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-medium text-emerald-700">기존 답변</p>
+                {inquiry.adminNickname && (
+                  <p className="text-xs text-emerald-600">답변자: {inquiry.adminNickname}</p>
+                )}
+              </div>
               <p className="text-sm whitespace-pre-wrap text-emerald-900">{inquiry.answer}</p>
             </div>
           )}

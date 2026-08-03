@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ParseUlidPipe } from '../common/pipes/parse-ulid.pipe';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import type { JwtPayload } from '../common/types/jwt-payload.type';
 import { AdminManagementService } from './admin-management.service';
 import {
   listUsersSchema,
@@ -47,7 +49,8 @@ export class AdminUsersController {
   updateRole(
     @Param('id', ParseUlidPipe) id: string,
     @Body(new ZodValidationPipe(updateUserRoleSchema)) dto: UpdateUserRoleDto,
+    @CurrentUser() admin: JwtPayload,
   ) {
-    return this.service.updateUserRole(id, dto.role);
+    return this.service.updateUserRole(id, dto.role, admin.id);
   }
 }

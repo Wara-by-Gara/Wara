@@ -16,6 +16,9 @@ export type AdminUserListItem = {
 export type AdminUserDetail = AdminUserListItem & {
   suspendedReason: string | null;
   lastLoginAt: string | null;
+  promotedBy: string | null;
+  promotedAt: string | null;
+  promotedByNickname: string | null;
   socialAccounts: { provider: SocialProvider; createdAt: string }[];
   stats: {
     hostedActive: number;

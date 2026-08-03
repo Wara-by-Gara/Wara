@@ -11,6 +11,7 @@ export interface AdminInquiry {
   answer: string | null;
   answeredAt: string | null;
   adminId: string | null;
+  adminNickname?: string | null;
   createdAt: string;
   updatedAt: string;
 }

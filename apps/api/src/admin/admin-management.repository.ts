@@ -126,13 +126,28 @@ export class AdminManagementRepository {
     return row?.total ?? 0;
   }
 
-  async setUserRole(id: string, role: 'admin' | 'member') {
+  async setUserRole(id: string, role: 'admin' | 'member', actorId: string) {
     const [row] = await this.db
       .update(schema.users)
-      .set({ role, updatedAt: new Date() })
+      .set({
+        role,
+        updatedAt: new Date(),
+        ...(role === 'admin'
+          ? { promotedBy: actorId, promotedAt: new Date() }
+          : { promotedBy: null, promotedAt: null }),
+      })
       .where(eq(schema.users.id, id))
       .returning({ id: schema.users.id, role: schema.users.role });
     return row ?? null;
+  }
+
+  async findNicknameById(id: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ nickname: schema.users.nickname })
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1);
+    return row?.nickname ?? null;
   }
 
   async setUserSuspension(id: string, suspendedAt: Date | null, reason: string | null) {
