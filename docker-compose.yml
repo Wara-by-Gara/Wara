@@ -29,6 +29,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - wara-net
 
   # 로컬 S3 (사진 업로드/조회용). 실제 AWS 대신 dev 환경에서 사용.
   minio:
@@ -68,3 +70,7 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+
+networks:
+  wara-net:
+    external: true
