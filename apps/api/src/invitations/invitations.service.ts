@@ -21,6 +21,7 @@ import {
   IMAGE_PROCESSING_QUEUE,
 } from '../queues/queue.constants';
 import { TemplatesRepository } from '../templates/templates.repository';
+import { isTemplateImagePath } from '../common/utils/static-asset-url';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { UpdateInvitationDto } from './dto/update-invitation.dto';
 import { ApplyAiImageDto } from './dto/apply-ai-image.dto';
@@ -255,7 +256,8 @@ export class InvitationsService {
     const isGif = !!dto.mainGifUrl;
     // image 모드이고 mainImageKey가 들어왔으면 매직넘버 sniff + 크기 검증.
     // 통과하지 못하면 invitation 자체가 생성되지 않음.
-    const verified = !isGif && dto.mainImageKey
+    // 템플릿 기본 이미지(정적 에셋)는 S3 업로드 객체가 아니므로 검증 대상에서 제외.
+    const verified = !isGif && dto.mainImageKey && !isTemplateImagePath(dto.mainImageKey)
       ? await this.imageProcessing.verifyUpload(dto.mainImageKey)
       : null;
     const { accessPassword, ...rest } = dto;
@@ -338,9 +340,10 @@ export class InvitationsService {
     ) {
       // 키가 실제로 바뀐 경우에만 verify — FE가 변경 없는 update에도 기존 키를 그대로
       // 보내므로 무조건 verify하면 S3 호출 실패 시 update 자체가 막힘.
-      verifiedImage = await this.imageProcessing.verifyUpload(
-        updatable.mainImageKey,
-      );
+      // 템플릿 기본 이미지(정적 에셋)는 S3 업로드 객체가 아니므로 검증 대상에서 제외.
+      verifiedImage = isTemplateImagePath(updatable.mainImageKey)
+        ? null
+        : await this.imageProcessing.verifyUpload(updatable.mainImageKey);
       coverPatch.mainCoverType = 'image';
       coverPatch.mainImageKey = updatable.mainImageKey;
       coverPatch.mainGifUrl = null;

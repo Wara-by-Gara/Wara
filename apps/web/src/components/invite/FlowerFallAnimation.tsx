@@ -33,8 +33,8 @@ interface Petal {
 }
 
 function makePetal(W: number, H: number, initial: boolean): Petal {
-  const size = 70 + Math.random() * 90;
-  const depth = (size - 70) / 90; // 0(멀다) ~ 1(가깝다)
+  const size = 56 + Math.random() * 72;
+  const depth = (size - 56) / 72; // 0(멀다) ~ 1(가깝다)
   return {
     x: Math.random() * W,
     y: initial ? Math.random() * H * 1.1 - H * 0.05 : -size - Math.random() * 60,

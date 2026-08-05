@@ -16,4 +16,4 @@ export {
   INVITATION_FONT_STYLES,
   INVITE_BG_THEME_IDS,
 } from '@/constants/invitationTheme';
-export type { GradientVariant, InviteBgThemeId } from '@/constants/invitationTheme';
+export type { GradientVariant, GradientColors, InviteBgThemeId } from '@/constants/invitationTheme';

@@ -2,13 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
+import { advanceTwinkle } from '@/lib/canvasTwinkle';
 
 const BOKEH_COLORS: [number, number, number][] = [
-  [255, 215, 0],
-  [255, 237, 138],
-  [255, 200, 60],
-  [255, 255, 200],
-  [255, 170, 40],
+  [255, 232, 224], // #FFE8E0
+  [255, 205, 186], // #FFCDBA
+  [247, 215, 166], // #F7D7A6
 ];
 
 interface Bokeh {
@@ -18,8 +17,8 @@ interface Bokeh {
   phase: number;
   speed: number;
   color: [number, number, number];
-  vx: number;
-  vy: number;
+  opacity: number;
+  edgeStop: number; // 원형 몸체가 끝나고 페이드가 시작되는 지점 (0~1) — 개체마다 랜덤
 }
 
 interface Dust {
@@ -30,6 +29,7 @@ interface Dust {
   speed: number;     // 깜빡임 속도 (빠르게)
   vx: number;        // 떠다니는 속도
   vy: number;
+  color: [number, number, number];
 }
 
 interface Props {
@@ -37,15 +37,16 @@ interface Props {
 }
 
 function makeBokeh(W: number, H: number): Bokeh {
+  const r = Math.min(W, H) * (0.014 + Math.random() * 0.032); // 화면 크기 기반 대형
   return {
     x: Math.random() * W,
     y: Math.random() * H,
-    r: Math.min(W, H) * (0.08 + Math.random() * 0.22), // 화면 크기 기반 대형
+    r,
     phase: Math.random() * Math.PI * 2,
-    speed: 0.2 + Math.random() * 0.4,
+    speed: 0.5 + Math.random() * 1.45,
     color: BOKEH_COLORS[Math.floor(Math.random() * BOKEH_COLORS.length)]!,
-    vx: (Math.random() - 0.5) * 12,
-    vy: (Math.random() - 0.5) * 10,
+    opacity: 0.3 + Math.random() * 0.7, // 개체마다 랜덤한 투명도
+    edgeStop: 0.7 + Math.random() * 0.2, // 0.8 중심으로 랜덤
   };
 }
 
@@ -58,6 +59,7 @@ function makeDust(W: number, H: number): Dust {
     speed: 1.2 + Math.random() * 3.0,   // 빠른 깜빡임
     vx: (Math.random() - 0.5) * 25,     // 떠다니는 속도
     vy: (Math.random() - 0.5) * 18,
+    color: BOKEH_COLORS[Math.floor(Math.random() * BOKEH_COLORS.length)]!,
   };
 }
 
@@ -91,7 +93,7 @@ export function BokehAnimation({ className }: Props) {
     const W0 = canvas.offsetWidth;
     const H0 = canvas.offsetHeight;
 
-    for (let i = 0; i < 10; i++) bokehs.push(makeBokeh(W0, H0));
+    for (let i = 0; i < 16; i++) bokehs.push(makeBokeh(W0, H0));
     for (let i = 0; i < 90; i++) dusts.push(makeDust(W0, H0));
 
     function animate(now: number) {
@@ -108,25 +110,25 @@ export function BokehAnimation({ className }: Props) {
 
       // 대형 소프트 보케
       for (const b of bokehs) {
-        b.phase += b.speed * dt;
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
+        const bAlpha = advanceTwinkle(b, dt);
 
-        // 화면 밖으로 나가면 반대편에서 재진입
-        if (b.x < -b.r * 2) b.x = W + b.r;
-        else if (b.x > W + b.r * 2) b.x = -b.r;
-        if (b.y < -b.r * 2) b.y = H + b.r;
-        else if (b.y > H + b.r * 2) b.y = -b.r;
+        // 주기 끝나서 안 보일 때 새 위치로 재배치 (크리스탈과 동일한 패턴)
+        if (bAlpha < 0.01 && Math.sin(b.phase - b.speed * dt) > 0.01) {
+          b.x = Math.random() * W;
+          b.y = Math.random() * H;
+          b.phase = 0;
+        }
 
-        const sinVal = 0.4 + 0.6 * Math.max(0, Math.sin(b.phase));
+        if (bAlpha < 0.01) continue;
+
         const [r, g, bl] = b.color;
+        const a = bAlpha * b.opacity;
 
-        // 중심부터 투명까지 넓고 부드럽게
+        // 원형 몸체는 균일하게 채우고, 가장자리 끝부분에서만 투명하게 페이드
         const grad = ctx!.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        grad.addColorStop(0,    `rgba(${r},${g},${bl},${0.45 * sinVal})`);
-        grad.addColorStop(0.30, `rgba(${r},${g},${bl},${0.32 * sinVal})`);
-        grad.addColorStop(0.65, `rgba(${r},${g},${bl},${0.12 * sinVal})`);
-        grad.addColorStop(1,    `rgba(${r},${g},${bl},0)`);
+        grad.addColorStop(0,           `rgba(${r},${g},${bl},${0.75 * a})`);
+        grad.addColorStop(b.edgeStop,  `rgba(${r},${g},${bl},${0.75 * a})`);
+        grad.addColorStop(1,           `rgba(${r},${g},${bl},0)`);
 
         ctx!.fillStyle = grad;
         ctx!.beginPath();
@@ -136,7 +138,6 @@ export function BokehAnimation({ className }: Props) {
 
       // 먼지 입자 — 떠다니며 빠르게 깜빡임
       for (const d of dusts) {
-        d.phase += d.speed * dt;
         d.x += d.vx * dt;
         d.y += d.vy * dt;
 
@@ -146,11 +147,12 @@ export function BokehAnimation({ className }: Props) {
         if (d.y < -5) d.y = H + 5;
         else if (d.y > H + 5) d.y = -5;
 
-        const alpha = Math.max(0, Math.sin(d.phase));
+        const alpha = advanceTwinkle(d, dt);
         if (alpha < 0.02) continue;
 
+        const [dr, dg, db] = d.color;
         ctx!.globalAlpha = alpha * 0.9;
-        ctx!.fillStyle = '#ffd700';
+        ctx!.fillStyle = `rgb(${dr},${dg},${db})`;
         ctx!.beginPath();
         ctx!.arc(d.x, d.y, d.r, 0, Math.PI * 2);
         ctx!.fill();

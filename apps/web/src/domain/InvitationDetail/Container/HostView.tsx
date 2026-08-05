@@ -22,15 +22,11 @@ import { QuestionnaireSheet } from '@/domain/InvitationDetail/Questionnaire/Ques
 import { FlyerSheet } from '@/domain/InvitationDetail/Flyer/FlyerSheet';
 import { InvitationCover, ParticipantProfileModal } from '@/components/domain';
 import { InvitationCherryBlossomEffect } from '@/domain/InvitationDetail/CherryBlossomRain';
-import { InvitationAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
+import { InvitationAnimation, InvitationBackgroundAnimation } from '@/domain/InvitationCreate/InvitationAnimation';
 import { BlackCatGridLayer } from '@/domain/InvitationCreate/BlackCatGrid/BlackCatGridLayer';
 import { MasterpieceSlideLayer } from '@/domain/InvitationCreate/MasterpieceSlide/MasterpieceSlideLayer';
 import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
-import { getGradientVariant } from '@/domain/InvitationCreate/constants';
-import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
-import { WaterBackground } from '@/components/invite/WaterBackground';
-import { HologramBackground } from '@/components/invite/HologramBackground';
-import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
+import { getGradientVariant, gradientBaseCls } from '@/domain/InvitationCreate/constants';
 import type { AnimationId } from '@/domain/InvitationCreate/constants';
 import { RsvpSection } from '@/domain/InvitationDetail/Rsvp/RsvpSection';
 import InformationsContainer from '@/domain/InvitationDetail/Informations/Container/InformationsContainer';
@@ -177,9 +173,10 @@ export default function HostView({
 
   const pageBgClass = resolveInvitationBgClass(invitation.bgColor);
   const gradientVariant = getGradientVariant(invitation.bgColor);
+  // custom(hue 피커)은 가운데가 밝은 radial이라 흰 글씨를 강제하면 안 보임 — named 4종만 강제
   const isDarkBg =
-    !!gradientVariant ||
-    ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'].some((k) => invitation.bgColor.includes(k));
+    (!!gradientVariant && gradientVariant.id !== 'custom') ||
+    ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow', 'glass-dark'].some((k) => invitation.bgColor.includes(k));
 
   return (
     <div
@@ -187,22 +184,16 @@ export default function HostView({
         'relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col overflow-hidden font-pretendard',
         'lg:h-auto lg:max-w-none lg:overflow-visible',
         isDarkBg ? 'text-white' : 'text-text',
-        pageBgClass,
+        gradientVariant ? gradientBaseCls(gradientVariant.id) : pageBgClass,
       )}
+      style={
+        gradientVariant
+          ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)
+          : undefined
+      }
     >
       {gradientVariant && <GradientScene variant={gradientVariant} className="fixed inset-0 z-0" />}
-      {pageBgClass === 'bg-invite-galaxy' && (
-        <GalaxyBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-water' && (
-        <WaterBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-hologram' && (
-        <HologramBackground className="absolute inset-0 z-0" />
-      )}
-      {pageBgClass === 'bg-invite-lasershow' && (
-        <LaserShowBackground className="absolute inset-0 z-0" />
-      )}
+      <InvitationBackgroundAnimation bgClass={pageBgClass} className="absolute inset-0 z-0" />
       {pageBgClass.includes('blackcat') && (
         <BlackCatGridLayer className="z-0" />
       )}
@@ -260,7 +251,7 @@ export default function HostView({
               variant={cover.variant}
               imageUrl={cover.imageUrl}
               gifUrl={cover.gifUrl}
-              backgroundClass={gradientVariant ? 'bg-invite-grad-base' : invitation.bgColor}
+              backgroundClass={gradientVariant ? gradientBaseCls(gradientVariant.id) : invitation.bgColor}
               style={
                 gradientVariant
                   ? ({ ['--c1']: gradientVariant.c1, ['--c2']: gradientVariant.c2 } as React.CSSProperties)

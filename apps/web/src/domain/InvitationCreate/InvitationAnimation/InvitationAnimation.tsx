@@ -7,11 +7,12 @@ import { PaperConfettiAnimation } from "@/components/invite/PaperConfettiAnimati
 import { CrystalGlitterAnimation } from "@/components/invite/CrystalGlitterAnimation";
 import { BokehAnimation } from "@/components/invite/BokehAnimation";
 import { AuroraAnimation } from "@/components/invite/AuroraAnimation";
+import { SparkleAnimation } from "@/components/invite/SparkleAnimation";
 import { FireworkAnimation } from "@/components/invite/FireworkAnimation";
 import { BalloonAnimation } from "@/components/invite/BalloonAnimation";
 import { FlowerFallAnimation } from "@/components/invite/FlowerFallAnimation";
+import { PawprintTrailAnimation } from "@/components/invite/PawprintTrailAnimation";
 import type { AnimationId } from "../constants";
-import { ThreeCatScene } from "./ThreeCatScene";
 import { PaintAnimation } from "./PaintAnimation";
 
 type AnimKind = "fall" | "confetti" | "rise" | "drift" | "fly" | "twinkle";
@@ -41,9 +42,10 @@ const ANIM_KEYFRAME: Record<AnimKind, string> = {
 
 /** 별도 컴포넌트로 처리하는 effect — buildParticles 대신 분기 렌더 */
 const CUSTOM_EFFECTS = new Set<AnimationId>([
-  "blackcat",
+  "pawprint",
   "paint",
   "stream",
+  "sparkle",
   "bokeh",
   "crystal",
   "paper",
@@ -76,8 +78,8 @@ const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
     drift: [-120, 120], opacity: [0.95, 1], emojis: ["⚾️"],
   },
   heart: {
-    anim: "rise", visual: "emoji", count: 16, size: [14, 28], duration: [7, 12],
-    drift: [-45, 45], opacity: [0.7, 1], emojis: ["💕", "💗", "🩷", "💖"],
+    anim: "rise", visual: "emoji", count: 40, size: [18, 34], duration: [7, 12],
+    drift: [-45, 45], opacity: [0.7, 1], emojis: ["🩷"],
   },
   balloon: {
     anim: "rise", visual: "emoji", count: 9, size: [26, 46], duration: [12, 20],
@@ -121,6 +123,9 @@ const CONFIG: Partial<Record<AnimationId, EffectConfig>> = {
   },
 };
 
+/** 어두운 배경 테마 — 흰색/파스텔 톤 파티클이 묻히는 걸 방지하기 위한 색상 분기 기준 */
+const DARK_THEMES = ["bg-invite-starry", "bg-invite-aurora", "bg-invite-dreamy", "bg-invite-glass-dark"];
+
 /** index 기반 결정론적 의사난수 (SSR 안정) */
 function rand(i: number, salt: number, min: number, max: number): number {
   const v = ((i * 9301 + salt * 49297 + 233) % 233280) / 233280;
@@ -142,7 +147,6 @@ function buildParticles(
   if (!c || c.count === 0) return [];
 
   // 어두운 테마에서는 pastel 파티클이 묻혀서 더 밝은 팔레트로 교체
-  const DARK_THEMES = ["bg-invite-starry", "bg-invite-aurora", "bg-invite-dreamy"];
   const particleColors =
     c.colors && bgClass && DARK_THEMES.includes(bgClass)
       ? ["#ffffff", "#fff3b0", "#a5d8ff", "#ffd6ef", "#c3fae8"]
@@ -168,7 +172,9 @@ function buildParticles(
         : c.anim === "twinkle"
           ? rand(i, 8, 0, 100)
           : rand(i, 8, 6, 90);
-    const delay = -rand(i, 9, 0, duration); // 음수 delay → 마운트 즉시 진행중
+    // delay는 duration과 같은 i 기반 LCG라 순서대로 나열하면 위상이 선형으로 스윕되어 보임
+    // → sin-hash로 duration과의 상관관계를 끊어서 처음부터 고르게 흩어지도록 함
+    const delay = -sinHash(91.345) * duration; // 음수 delay → 마운트 즉시 진행중
     const entryEdge = i % 4; // 4방향 진입점 순환: 상/우/하/좌
 
     // 애니메이션 종류별 시작 위치 (4방향 다양화)
@@ -287,17 +293,11 @@ export function InvitationAnimation({
 
   if (effect === "none") return null;
 
-  if (effect === "blackcat") {
+  if (effect === "pawprint") {
     return (
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden",
-          className,
-        )}
-      >
-        <ThreeCatScene />
-      </div>
+      <PawprintTrailAnimation
+        className={cn("absolute inset-0 overflow-hidden", className)}
+      />
     );
   }
 
@@ -310,6 +310,15 @@ export function InvitationAnimation({
       <>
         <AuroraAnimation className="absolute inset-0 pointer-events-none z-0" />
         <AuroraAnimation className="absolute inset-0 pointer-events-none z-20" starsOnly />
+      </>
+    );
+  }
+
+  if (effect === "sparkle") {
+    return (
+      <>
+        <SparkleAnimation shape="circle" count={70} className="absolute inset-0 pointer-events-none z-0" />
+        <SparkleAnimation shape="cross" count={100} className="absolute inset-0 pointer-events-none z-20" />
       </>
     );
   }

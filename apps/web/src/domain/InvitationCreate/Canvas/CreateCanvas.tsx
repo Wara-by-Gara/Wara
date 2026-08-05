@@ -6,14 +6,11 @@ import { Icon } from '@/components/icons';
 import type { IconName } from '@/components/icons';
 import { Textarea } from '@wara/ui';
 import { InvitationCover } from '@/components/domain';
-import { InvitationAnimation } from '../InvitationAnimation';
+import { InvitationAnimation, InvitationBackgroundAnimation } from '../InvitationAnimation';
 import { BlackCatGridLayer } from '../BlackCatGrid/BlackCatGridLayer';
 import { MasterpieceSlideLayer } from '../MasterpieceSlide/MasterpieceSlideLayer';
-import { GalaxyBackground } from '@/components/invite/GalaxyBackground';
-import { WaterBackground } from '@/components/invite/WaterBackground';
-import { HologramBackground } from '@/components/invite/HologramBackground';
-import { LaserShowBackground } from '@/components/invite/LaserShowBackground';
-import { DESIGN_FONTS, fontStyle } from '@/domain/InvitationCreate/constants';
+import { GradientScene } from '../GradientScene';
+import { DESIGN_FONTS, fontStyle, getGradientVariant, gradientBaseCls } from '@/domain/InvitationCreate/constants';
 import type {
   DesignFont,
   RsvpType,
@@ -169,6 +166,11 @@ export function CreateCanvas({
     el.style.height = `${el.scrollHeight}px`;
   }, [title, designFont]);
 
+  // 그라데이션(named 4종 + custom) 정적 베이스는 항상 카드에 깔고, named 4종은 그 위에
+  // GradientScene 애니메이션을 덧그린다(custom은 대응 씬이 없어 정적 베이스만 남음).
+  // 홀로그램/갤럭시/워터/레이저쇼와 동일하게 카드 스코프로 렌더링한다.
+  const gradient = getGradientVariant(bgClass);
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <InvitationAnimation
@@ -180,21 +182,14 @@ export function CreateCanvas({
       <div
         className={cn(
           'relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg font-pretendard',
-          bgClass,
+          gradient ? gradientBaseCls(gradient.id) : bgClass,
         )}
+        style={gradient ? { ['--c1' as string]: gradient.c1, ['--c2' as string]: gradient.c2 } as React.CSSProperties : undefined}
       >
-        {bgClass === 'bg-invite-galaxy' && (
-          <GalaxyBackground className="absolute inset-0 z-0" />
+        {gradient && (
+          <GradientScene variant={gradient} className="absolute inset-0 z-0" />
         )}
-        {bgClass === 'bg-invite-water' && (
-          <WaterBackground className="absolute inset-0 z-0" />
-        )}
-        {bgClass === 'bg-invite-hologram' && (
-          <HologramBackground className="absolute inset-0 z-0" />
-        )}
-        {bgClass === 'bg-invite-lasershow' && (
-          <LaserShowBackground className="absolute inset-0 z-0" />
-        )}
+        <InvitationBackgroundAnimation bgClass={bgClass} className="absolute inset-0 z-0" />
         {bgClass.includes('blackcat') && <BlackCatGridLayer className="z-0" />}
         {bgClass.includes('masterpiece') && (
           <MasterpieceSlideLayer className="z-0" />
@@ -241,7 +236,7 @@ export function CreateCanvas({
                       : bgClass.includes('aurora') ||
                           bgClass.includes('starry') ||
                           bgClass.includes('galaxy') ||
-                          bgClass.includes('lasershow')
+                          bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                         ? 'text-white/70'
                         : 'text-text-disabled',
                   )}
@@ -278,7 +273,7 @@ export function CreateCanvas({
                 bgClass.includes('aurora') ||
                   bgClass.includes('starry') ||
                   bgClass.includes('galaxy') ||
-                  bgClass.includes('lasershow')
+                  bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                   ? 'text-white placeholder:text-white/50'
                   : 'text-text placeholder:text-text-disabled/50',
                 fontStyle(designFont),
@@ -337,7 +332,7 @@ export function CreateCanvas({
               bgClass.includes('aurora') ||
                 bgClass.includes('starry') ||
                 bgClass.includes('galaxy') ||
-                bgClass.includes('lasershow')
+                bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                 ? title
                   ? 'text-white'
                   : 'text-white/50'
@@ -365,7 +360,7 @@ export function CreateCanvas({
               bgClass.includes('aurora') ||
               bgClass.includes('starry') ||
               bgClass.includes('galaxy') ||
-              bgClass.includes('lasershow')
+              bgClass.includes('lasershow') || bgClass.includes('glass-dark')
             }
           />
 
@@ -381,7 +376,7 @@ export function CreateCanvas({
               bgClass.includes('aurora') ||
                 bgClass.includes('starry') ||
                 bgClass.includes('galaxy') ||
-                bgClass.includes('lasershow')
+                bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                 ? 'text-white placeholder:text-white/70'
                 : '',
             )}
@@ -398,7 +393,7 @@ export function CreateCanvas({
               bgClass.includes('aurora') ||
               bgClass.includes('starry') ||
               bgClass.includes('galaxy') ||
-              bgClass.includes('lasershow')
+              bgClass.includes('lasershow') || bgClass.includes('glass-dark')
             }
           />
 
@@ -412,7 +407,7 @@ export function CreateCanvas({
               bgClass.includes('aurora') ||
               bgClass.includes('starry') ||
               bgClass.includes('galaxy') ||
-              bgClass.includes('lasershow')
+              bgClass.includes('lasershow') || bgClass.includes('glass-dark')
             }
           />
 
@@ -432,7 +427,7 @@ export function CreateCanvas({
                       bgClass.includes('aurora') ||
                         bgClass.includes('starry') ||
                         bgClass.includes('galaxy') ||
-                        bgClass.includes('lasershow')
+                        bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                         ? 'text-white'
                         : 'text-text-muted',
                     )}
@@ -457,7 +452,7 @@ export function CreateCanvas({
                 bgClass.includes('aurora') ||
                   bgClass.includes('starry') ||
                   bgClass.includes('galaxy') ||
-                  bgClass.includes('lasershow')
+                  bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                   ? 'text-white'
                   : 'text-text',
               )}
@@ -473,7 +468,7 @@ export function CreateCanvas({
                 bgClass.includes('aurora') ||
                   bgClass.includes('starry') ||
                   bgClass.includes('galaxy') ||
-                  bgClass.includes('lasershow')
+                  bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                   ? 'text-white'
                   : 'text-text',
               )}
@@ -489,7 +484,7 @@ export function CreateCanvas({
                 bgClass.includes('aurora') ||
                   bgClass.includes('starry') ||
                   bgClass.includes('galaxy') ||
-                  bgClass.includes('lasershow')
+                  bgClass.includes('lasershow') || bgClass.includes('glass-dark')
                   ? 'text-white'
                   : 'text-text',
               )}

@@ -48,10 +48,25 @@ export const GRADIENT_BG_VARIANTS = [
 
 export type GradientVariant = (typeof GRADIENT_BG_VARIANTS)[number];
 
-/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) — 웹 getGradientVariant 미러 */
-export function getGradientVariant(bg?: string | null): GradientVariant | undefined {
+/** GradientVariant + 커스텀(hue 피커) 공용 최소 형태 */
+export interface GradientColors {
+  id: string;
+  label: string;
+  c1: string;
+  c2: string;
+}
+
+const CUSTOM_GRADIENT_ID = 'custom';
+const CUSTOM_GRADIENT_RE = /^custom-([0-9a-f]{6})-([0-9a-f]{6})$/;
+
+/** bgColor 문자열 → 그라데이션 변형 (아니면 undefined) — 웹 getGradientVariant 미러 (커스텀 hue 인코딩 포함) */
+export function getGradientVariant(bg?: string | null): GradientColors | undefined {
   if (!bg?.startsWith(GRAD_CLASS_PREFIX)) return undefined;
   const id = bg.slice(GRAD_CLASS_PREFIX.length);
+  const customMatch = id.match(CUSTOM_GRADIENT_RE);
+  if (customMatch) {
+    return { id: CUSTOM_GRADIENT_ID, label: '커스텀', c1: `#${customMatch[1]}`, c2: `#${customMatch[2]}` };
+  }
   return GRADIENT_BG_VARIANTS.find((v) => v.id === id);
 }
 
@@ -66,10 +81,12 @@ export function resolveInvitationBgTheme(bgColor?: string | null): InviteBgTheme
 /* ---------- 다크 배경 판정 (웹 GuestView isDarkBg 미러) ---------- */
 const DARK_BG_KEYWORDS = ['aurora', 'starry', 'dreamy', 'galaxy', 'lasershow'] as const;
 
-/** 그라데이션 변형 전체 + aurora/starry/dreamy/galaxy/lasershow 는 다크 배경 */
+/** named 그라데이션 4종 + aurora/starry/dreamy/galaxy/lasershow 는 다크 배경.
+ * custom(hue 피커)은 가운데가 밝은 radial이라 제외. */
 export function isDarkInvitationBg(bgColor: string): boolean {
+  const gradientVariant = getGradientVariant(bgColor);
   return (
-    !!getGradientVariant(bgColor) ||
+    (!!gradientVariant && gradientVariant.id !== 'custom') ||
     DARK_BG_KEYWORDS.some((k) => bgColor.includes(k))
   );
 }

@@ -7,7 +7,7 @@
  * - paper: 웹 PaperConfettiAnimation — confetti 낙하 근사
  * - crystal/bokeh: 웹 글리터/빛망울 — star twinkle 근사
  * - flower: 웹 꽃 PNG 낙하 — 웜톤 petal 낙하 근사
- * - firework/stream/blackcat/paint: 재현 불가(폭죽 물리/Three.js/Lottie) → 생략(null)
+ * - firework/stream/pawprint/paint: 재현 불가(폭죽 물리/Three.js/Lottie) → 생략(null)
  */
 
 import { ParticleField } from './ParticleField';

@@ -32,7 +32,6 @@ import { GifPicker } from '@/components/domain/GifPicker';
 import { setEventLocation, deleteEventLocation } from '@/lib/api/locations';
 import { getMissionTemplates, createMission } from '@/lib/api/missions';
 import { getTemplates } from '@/lib/api/templates';
-import { ROUTES } from '@/constants/routes';
 import { HostCreatingView, type VoteDraft } from '@/screens/DateVote/DateVote';
 import ShareBottomSheet from '@/domain/Invitation/ShareBottomSheet';
 import { createPoll } from '@/lib/api/dateVote';
@@ -47,8 +46,8 @@ import {
 import { useLightTheme } from '@/hooks/useLightTheme';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { CreateCanvas } from '@/domain/InvitationCreate/Canvas/CreateCanvas';
-import { GradientScene } from '@/domain/InvitationCreate/GradientScene';
 import { AiCompositeSheet } from '@/domain/InvitationCreate/Sheets/AiCompositeSheet';
+import { CustomColorPicker } from '@/domain/InvitationCreate/Sheets/CustomColorPicker';
 import {
   DEFAULT_COVER_KEY,
   DEFAULT_BG_COLOR,
@@ -56,6 +55,7 @@ import {
   DESIGN_BG_THEMES,
   GRADIENT_BG_THEMES,
   getGradientVariant,
+  customGradientCls,
   DEFAULT_FONT,
   ANIMATIONS,
   type AnimationId,
@@ -264,6 +264,8 @@ export default function InvitationCreateContainer({
   const [selectedAnimation, setSelectedAnimation] =
     useState<AnimationId>('none');
   const [bgColorSheetOpen, setBgColorSheetOpen] = useState(false);
+  const [customColorOpen, setCustomColorOpen] = useState(false);
+  const [customHue, setCustomHue] = useState(0);
   const [animationSheetOpen, setAnimationSheetOpen] = useState(false);
   const [optionsSheetOpen, setOptionsSheetOpen] = useState(false);
   const [missionSheetOpen, setMissionSheetOpen] = useState(false);
@@ -479,6 +481,8 @@ export default function InvitationCreateContainer({
     queryFn: getTemplates,
   });
 
+  const appliedTemplateIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (
       editInvitation ||
@@ -487,18 +491,20 @@ export default function InvitationCreateContainer({
     )
       return;
     const tid = new URLSearchParams(window.location.search).get('templateId');
-    if (!tid) return;
+    if (!tid || appliedTemplateIdRef.current === tid) return;
     const t = templates.find((item) => item.id === tid);
     if (!t) return;
+    appliedTemplateIdRef.current = tid;
     setForm((prev) => ({
       ...prev,
       templateId: t.id,
       mainImageKey: t.previewImageKey ?? prev.mainImageKey,
     }));
-    // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·애니메이션도 템플릿 값으로 프리필
+    // 인기 초대장에서 진입한 경우 사진뿐 아니라 배경·폰트·애니메이션도 템플릿 값으로 프리필
     if (t.bgColor) setDesignBgColor(t.bgColor as DesignBgColor);
+    if (t.font) setDesignFont(t.font as DesignFont);
     if (t.animation) setSelectedAnimation(t.animation as AnimationId);
-    window.history.replaceState({}, '', ROUTES.INVITATIONS.CREATE);
+    // templateId는 URL에 유지 — 새로고침 시에도 이 템플릿 컨텍스트로 복원되도록 함
   }, [templates, editInvitation]);
 
   const { mutate: publish, isPending } = useMutation({
@@ -988,13 +994,9 @@ export default function InvitationCreateContainer({
     );
   }
 
-  const createGradient = getGradientVariant(designBgColor);
-
   return (
     <div className="relative mx-auto flex h-full min-h-svh w-full max-w-md flex-col bg-background lg:max-w-none">
-      {createGradient && (
-        <GradientScene variant={createGradient} className="absolute inset-0 z-0" />
-      )}
+
       <TopAppBar
         className="relative z-10 shrink-0 lg:mx-auto lg:w-full lg:max-w-5xl"
         title={editInvitation ? '초대장 수정' : '초대장 만들기'}
@@ -1070,7 +1072,7 @@ export default function InvitationCreateContainer({
         <aside className="hidden lg:flex lg:flex-col lg:gap-2">
           {/* 제목 — 실제 상세처럼 우측 상단에 입력 칸 배치 */}
           <div className="flex flex-col gap-2 pb-3">
-            <p className={cn('px-1 text-[13px] font-bold', createGradient ? 'text-white' : 'text-text-muted')}>제목</p>
+            <p className="px-1 text-[13px] font-bold text-text-muted">제목</p>
             <textarea
               value={form.title}
               onChange={(e) => {
@@ -1127,7 +1129,7 @@ export default function InvitationCreateContainer({
             </div>
           </div>
 
-          <p className={cn('px-1 pb-1 text-[13px] font-bold', createGradient ? 'text-white' : 'text-text-muted')}>편집</p>
+          <p className="px-1 pb-1 text-[13px] font-bold text-text-muted">편집</p>
           {[
             { label: '대표 이미지', onClick: () => setImageSheetOpen(true) },
             { label: '날짜·시간', onClick: () => setDateSheetOpen(true) },
@@ -1141,13 +1143,10 @@ export default function InvitationCreateContainer({
               key={it.label}
               type="button"
               onClick={it.onClick}
-              className={cn(
-                'flex items-center justify-between rounded-md border border-border/50 bg-[#dadada2b] px-4 py-3 text-left text-[14px] font-medium backdrop-blur transition-colors',
-                createGradient ? 'text-white hover:bg-white/15' : 'text-text hover:bg-surface-muted',
-              )}
+              className="flex items-center justify-between rounded-md border border-border/50 bg-[#dadada2b] px-4 py-3 text-left text-[14px] font-medium text-text backdrop-blur transition-colors hover:bg-surface-muted"
             >
               {it.label}
-              <span aria-hidden className={createGradient ? 'text-white/60' : 'text-text-disabled'}>›</span>
+              <span aria-hidden className="text-text-disabled">›</span>
             </button>
           ))}
           <button
@@ -1171,23 +1170,7 @@ export default function InvitationCreateContainer({
       >
         {/* 대표 이미지 편집 시트 */}
         <BottomSheet open={imageSheetOpen} onOpenChange={setImageSheetOpen} title="대표 이미지">
-            {form.templateId ? (
-              <InvitationCover
-                imageUrl={
-                  localPreviewUrl ??
-                  (form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? form.mainImageKey
-                    : undefined)
-                }
-                variant={
-                  localPreviewUrl || form.mainImageKey !== DEFAULT_COVER_KEY
-                    ? 'image'
-                    : 'no-image'
-                }
-                fitToImage
-              />
-            ) : (
-              <div>
+            <div>
                 {/* 탭: 이미지 업로드 / GIF */}
                 <div className="mb-3 flex gap-2">
                   <button
@@ -1420,7 +1403,6 @@ export default function InvitationCreateContainer({
                   </>
                 )}
               </div>
-            )}
           </BottomSheet>
 
         {/* 날짜·시간 편집 시트 */}
@@ -1885,9 +1867,41 @@ export default function InvitationCreateContainer({
           </BottomSheet>
 
         {/* 배경색 편집 시트 */}
-        <BottomSheet open={bgColorSheetOpen} onOpenChange={setBgColorSheetOpen} title="배경색">
+        <BottomSheet
+          open={bgColorSheetOpen}
+          onOpenChange={(open) => {
+            setBgColorSheetOpen(open);
+            if (!open) setCustomColorOpen(false);
+          }}
+          title="배경색"
+        >
+            {customColorOpen ? (
+              <CustomColorPicker
+                hue={customHue}
+                onHueChange={(h, cls) => {
+                  setCustomHue(h);
+                  setDesignBgColor(cls);
+                }}
+                onBack={() => setCustomColorOpen(false)}
+              />
+            ) : (
             <div className="grid grid-cols-5 gap-2">
-              {[...DESIGN_BG_THEMES, ...GRADIENT_BG_THEMES].map(({ id, label, cls }) => {
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomColorOpen(true);
+                  setDesignBgColor(customGradientCls(customHue));
+                }}
+                className="flex flex-col items-center gap-1"
+                aria-label="커스텀"
+              >
+                <span
+                  className="aspect-square w-full rounded-md border-2 border-border"
+                  style={{ backgroundImage: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+                />
+                <span className="text-[10px] text-text-disabled">커스텀</span>
+              </button>
+              {[...DESIGN_BG_THEMES, ...GRADIENT_BG_THEMES].filter((t) => !('hidden' in t && t.hidden)).map(({ id, label, cls }) => {
                 const grad = getGradientVariant(cls);
                 return (
                 <button
@@ -1919,12 +1933,13 @@ export default function InvitationCreateContainer({
                 );
               })}
             </div>
+            )}
           </BottomSheet>
 
         {/* 애니메이션 효과 편집 시트 */}
         <BottomSheet open={animationSheetOpen} onOpenChange={setAnimationSheetOpen} title="애니메이션 효과">
             <div className="grid grid-cols-3 gap-2">
-              {ANIMATIONS.map(({ id, label, emoji }) => (
+              {ANIMATIONS.filter((t) => !('hidden' in t && t.hidden)).map(({ id, label, emoji }) => (
                 <button
                   key={id}
                   type="button"

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
+import { advanceTwinkle } from '@/lib/canvasTwinkle';
 
 const COLORS = [
   '#c9b8ff', '#a8d8ff', '#ffb3de', '#b3fff0',
@@ -108,10 +109,7 @@ export function CrystalGlitterAnimation({ className, count = DEFAULT_COUNT }: Pr
       ctx!.clearRect(0, 0, W, H);
 
       for (const s of sparkles) {
-        s.phase += s.speed * dt;
-
-        // sin → 0~1 범위, 음수 구간은 0 처리 (off 상태)
-        const alpha = Math.max(0, Math.sin(s.phase));
+        const alpha = advanceTwinkle(s, dt);
 
         // alpha가 한 주기 끝나서 0으로 돌아오면 새 위치로 이동
         if (alpha < 0.01 && Math.sin(s.phase - s.speed * dt) > 0.01) {
