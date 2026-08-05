@@ -1,0 +1,8 @@
+services:
+  redis:
+    networks:
+      - wara-net
+
+networks:
+  wara-net:
+    external: true
