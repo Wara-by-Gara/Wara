@@ -105,8 +105,8 @@ WARA는 단순한 사이드 프로젝트가 아니라, **실제 시장의 문제
 |---|---|---|---|
 | 강에스더 | [@lareina7486](https://github.com/lareina7486) | [역할 기입] | [담당 파트 기입] |
 | 김현제 | [@KIMHYUNJE](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
-| 김민성 | [@Minsung Kim](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
 | 윤숙희 | [@ZoeYoon](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
+| 김민성 | [@Minsung Kim](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
 | 이하림 | [@sumforest-ha](https://github.com/sumforest-ha) | [역할 기입] | [담당 파트 기입] |
 | 박영서 | [@YoungSeo1104](https://github.com/YoungSeo1104) | [역할 기입] | [담당 파트 기입] |
 | 최우진 | [@DevWoojin97](https://github.com/DevWoojin97) | [역할 기입] | [담당 파트 기입] |
