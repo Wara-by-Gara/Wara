@@ -1,10 +1,12 @@
-# WARA(와라) | 요즘 모이는 방식
+# 💫 WARA(와라) | 요즘 모이는 방식
 
-**'준비의 부담'을 '만남의 설렘'으로 바꾸기 위한 첫걸음**
+<p align="center">
+🔗 서비스 바로가기: https://wara.kr
+</p>
 
-[사진 준비중: WARA 서비스 대표 배너 이미지]
-
-**🔗 서비스 바로가기: [wara.kr](https://wara.kr)**
+<p align="center">
+<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/5e8ab5ee-1aa2-43d4-9f0c-44e7cc399f82" />
+</p>
 
 ---
 
