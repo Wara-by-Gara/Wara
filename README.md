@@ -101,14 +101,14 @@ WARA는 이 파편화된 경험을 하나의 플랫폼으로 통합하여 호스
 
 | 이름 | GitHub | 역할 | 담당 |
 |---|---|---|---|
-| 강에스더 | [@lareina7486](https://github.com/lareina7486) | 팀장, 개발총괄 | [담당 파트 기입] |
-| 김현제 | [@KIMHYUNJE](https://github.com/Wara-by-Gara) | PM | [담당 파트 기입] |
-| 윤숙희 | [@ZoeYoon](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
-| 김민성 | [@Minsung Kim](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
-| 이하림 | [@sumforest-ha](https://github.com/sumforest-ha) | [역할 기입] | [담당 파트 기입] |
-| 박영서 | [@YoungSeo1104](https://github.com/YoungSeo1104) | [역할 기입] | [담당 파트 기입] |
-| 최우진 | [@DevWoojin97](https://github.com/DevWoojin97) | [역할 기입] | [담당 파트 기입] |
-| 박수훈 | [@mdeeno](https://github.com/mdeeno) | [역할 기입] | [담당 파트 기입] |
+| 강에스더 | [@lareina7486](https://github.com/lareina7486) | 팀장, 개발총괄 | 전체 개발 총괄, 서비스 구조 설계, Web·Mobile·API 통합, 인프라·배포 |
+| 김현제 | [@KIMHYUNJE](https://github.com/KIMHYUNJE) | PM | 서비스 기획 총괄, 프로젝트 매니징, 일정 및 협업 관리 |
+| 윤숙희 | [@zoeyoon90](https://github.com/zoeyoon90) | 풀스택 개발 | 관리자 페이지, 사용자·문의·신고 관리, 인증·권한, Docker·Redis 운영 환경 |
+| 김민성 | [@alstjddl0513-sys](https://github.com/alstjddl0513-sys) | 풀스택 개발 | AI 초대장 이미지 합성, 초대장 UI·템플릿, 알림·위치 실시간 기능, 테스트·동시성 처리 |
+| 이하림 | [@sumforest-ha](https://github.com/sumforest-ha) | 풀스택 개발 | 초대장 템플릿·디자인, 공유 기능, 날씨·참여자 기능 |
+| 박영서 | [@YoungSeo1104](https://github.com/YoungSeo1104) | 풀스택 개발 | 일정 투표, 초대장 기능, 알림·온보딩 |
+| 최우진 | [@DevWoojin97](https://github.com/DevWoojin97) | 풀스택 개발 | 친구, 1:1·그룹 채팅, 실시간 메시징, 마이페이지 |
+| 박수훈 | [@mdeeno](https://github.com/mdeeno) | 모바일·백엔드 개발 | Expo 모바일 기반, API 연동, 디자인 시스템, 미션·관리자 API |
 
 ---
 
