@@ -101,16 +101,14 @@ WARA는 이 파편화된 경험을 하나의 플랫폼으로 통합하여 호스
 
 | 이름 | GitHub | 역할 | 담당 |
 |---|---|---|---|
-| 강에스더 | [@lareina7486](https://github.com/lareina7486) | [역할 기입] | [담당 파트 기입] |
-| 김현제 | [@KIMHYUNJE](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
+| 강에스더 | [@lareina7486](https://github.com/lareina7486) | 팀장, 개발총괄 | [담당 파트 기입] |
+| 김현제 | [@KIMHYUNJE](https://github.com/Wara-by-Gara) | PM | [담당 파트 기입] |
 | 윤숙희 | [@ZoeYoon](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
 | 김민성 | [@Minsung Kim](https://github.com/Wara-by-Gara) | [역할 기입] | [담당 파트 기입] |
 | 이하림 | [@sumforest-ha](https://github.com/sumforest-ha) | [역할 기입] | [담당 파트 기입] |
 | 박영서 | [@YoungSeo1104](https://github.com/YoungSeo1104) | [역할 기입] | [담당 파트 기입] |
 | 최우진 | [@DevWoojin97](https://github.com/DevWoojin97) | [역할 기입] | [담당 파트 기입] |
 | 박수훈 | [@mdeeno](https://github.com/mdeeno) | [역할 기입] | [담당 파트 기입] |
-
-[사진 준비중]
 
 ---
 
@@ -226,8 +224,6 @@ Docker 이미지 빌드 ──▶ AWS ECR 푸시 ──▶ EC2 SSH 접속
 | k6 API p95 응답 시간 | 42.25ms | 53.44ms | 유의미한 차이 없음 |
 
 **배운 것**: 쿼리 레벨에서 530배 개선됐지만 **API 응답 시간 전체에서는 효과가 묻혔습니다.** NestJS 처리, JSON 직렬화, JWT 검증 등의 오버헤드가 지배적이었기 때문입니다. "성능 개선 = 인덱스 추가"라는 단순 공식이 아니라, **응답 경로 전체의 병목을 측정하고 지배 요인을 찾아야 한다**는 것을 데이터로 체득했습니다.
-
-[사진 준비중: k6 부하 테스트 결과 그래프 / EXPLAIN ANALYZE 비교]
 
 ## 7-2. Idempotency-Key 전역 인터셉터 — 중복 요청으로부터 안전한 API
 
