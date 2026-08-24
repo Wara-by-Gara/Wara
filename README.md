@@ -175,7 +175,8 @@ Wara/
 - JWT Access/Refresh + 세션 쿠키, 역할 기반 Guard(사용자/호스트/공동호스트/관리자)
 - 신규 가입 vs 기존 계정 연결·병합 분기, Apple 숨김 이메일 정책 대응
 
-[사진 준비중: 인증 Guard 플로우 다이어그램 (docs/architecture/guard-flow.png 활용 가능)]
+<img width="2172" height="724" alt="image" src="https://github.com/user-attachments/assets/f4001a65-a457-4c14-a4bb-2ce811a4da56" />
+
 
 ## 배포 파이프라인 (CI/CD)
 
