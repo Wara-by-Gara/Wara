@@ -60,9 +60,9 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "@wara/tsconfig": "workspace:*",
-    "eslint": "^9.25.0",
-    "eslint-config-expo": "~10.0.0",
+    "eslint": "^10.9.1",
+    "eslint-config-expo": "~57.0.2",
     "eslint-plugin-import": "^2.32.0",
-    "typescript": "~5.9.2"
+    "typescript": "~7.0.2"
   }
 }
