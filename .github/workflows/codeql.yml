@@ -3,12 +3,18 @@ name: CodeQL
 on:
   pull_request:
     branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '0 0 * * 1'  # 매주 월요일 00:00 UTC
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
     name: Analyze
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       actions: read
